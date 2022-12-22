@@ -16,9 +16,9 @@ const { uniqueNamesGenerator, animals, colors } = require('unique-names-generato
 
 class SnapdropServer {
 
-    constructor(port) {
+    constructor(host, port) {
         const WebSocket = require('ws');
-        this._wss = new WebSocket.Server({ port: port });
+        this._wss = new WebSocket.Server({ host: host, port: port });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
         this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
@@ -50,7 +50,7 @@ class SnapdropServer {
     }
 
     _onMessage(sender, message) {
-        // Try to parse message 
+        // Try to parse message
         try {
             message = JSON.parse(message);
         } catch (e) {
@@ -176,7 +176,7 @@ class Peer {
         this._setPeerId(request)
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
-        // set name 
+        // set name
         this._setName(request);
         // for keepalive
         this.timerId = 0;
@@ -223,11 +223,11 @@ class Peer {
 
 
         let deviceName = '';
-        
+
         if (ua.os && ua.os.name) {
             deviceName = ua.os.name.replace('Mac OS', 'Mac') + ' ';
         }
-        
+
         if (ua.device.model) {
             deviceName += ua.device.model;
         } else {
@@ -302,4 +302,4 @@ Object.defineProperty(String.prototype, 'hashCode', {
   }
 });
 
-const server = new SnapdropServer(process.env.PORT || 3000);
+const server = new SnapdropServer(process.env.HOST || null, process.env.PORT || 3000);
