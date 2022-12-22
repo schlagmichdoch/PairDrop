@@ -423,7 +423,7 @@ class PeersManager {
 
 }
 
-class WSPeer {
+class WSPeer extends Peer {
     _send(message) {
         message.to = this._peerId;
         this._server.send(message);
