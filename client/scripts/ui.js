@@ -18,14 +18,21 @@ class PeersUI {
     constructor() {
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail));
+        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
+        this.peers = {};
     }
 
     _onPeerJoined(peer) {
-        if ($(peer.id)) return; // peer already exists
-        const peerUI = new PeerUI(peer);
+        if (this.peers[peer.id]) return; // peer already exists
+        this.peers[peer.id] = peer;
+    }
+
+    _onPeerConnected(peerId) {
+        new PeerUI(this.peers[peerId]);
     }
 
     _onPeers(peers) {
@@ -33,10 +40,14 @@ class PeersUI {
         peers.forEach(peer => this._onPeerJoined(peer));
     }
 
-    _onPeerLeft(peerId) {
+    _onPeerDisconnected(peerId) {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+    }
+
+    _onPeerLeft(peerId) {
+        delete this.peers[peerId];
     }
 
     _onFileProgress(progress) {
@@ -48,6 +59,7 @@ class PeersUI {
 
     _clearPeers() {
         const $peers = $$('x-peers').innerHTML = '';
+        Object.keys(this.peers).forEach(key => delete this.peers[key]);
     }
 
     _onPaste(e) {
@@ -89,18 +101,10 @@ class PeerUI {
 
     constructor(peer) {
         this._peer = peer;
-        this.callbackFunction = (e) => this._onPeerConnected(e.detail);
-        Events.on('peer-connected', this.callbackFunction);
-    }
-
-    _onPeerConnected(peerId) {
-        if (peerId === this._peer.id) {
-            Events.off('peer-connected', this.callbackFunction)
-            this._initDom();
-            this._bindListeners(this.$el);
-            $$('x-peers').appendChild(this.$el);
-            setTimeout(e => window.animateBackground(false), 1750); // Stop animation
-        }
+        this._initDom();
+        this._bindListeners(this.$el);
+        $$('x-peers').appendChild(this.$el);
+        setTimeout(e => window.animateBackground(false), 1750); // Stop animation
     }
 
     _initDom() {
@@ -443,12 +447,12 @@ class Notifications {
         }
 
         // Notification is persistent on Android. We have to close it manually
-        const visibilitychangeHandler = () => {                             
-            if (document.visibilityState === 'visible') {    
+        const visibilitychangeHandler = () => {
+            if (document.visibilityState === 'visible') {
                 notification.close();
                 Events.off('visibilitychange', visibilitychangeHandler);
-            }                                                       
-        };                                                                                
+            }
+        };
         Events.on('visibilitychange', visibilitychangeHandler);
 
         return notification;
@@ -500,8 +504,8 @@ class Notifications {
 class NetworkStatusUI {
 
     constructor() {
-        window.addEventListener('offline', e => this._showOfflineMessage(), false);
-        window.addEventListener('online', e => this._showOnlineMessage(), false);
+        Events.on('offline', e => this._showOfflineMessage());
+        Events.on('online', e => this._showOnlineMessage());
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
