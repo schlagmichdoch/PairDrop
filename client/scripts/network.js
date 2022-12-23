@@ -8,6 +8,7 @@ class ServerConnection {
         Events.on('beforeunload', e => this._disconnect());
         Events.on('pagehide', e => this._disconnect());
         document.addEventListener('visibilitychange', e => this._onVisibilityChange());
+        Events.on('online', this._reconnect);
     }
 
     _connect() {
@@ -15,11 +16,13 @@ class ServerConnection {
         if (this._isConnected() || this._isConnecting()) return;
         const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
-        ws.onopen = e => console.log('WS: server connected');
+        ws.onopen = _ => console.log('WS: server connected');
         ws.onmessage = e => this._onMessage(e.data);
-        ws.onclose = e => this._onDisconnect();
-        ws.onerror = e => console.error(e);
+        ws.onclose = _ => this._onDisconnect();
+        ws.onerror = e => this._onError(e);
         this._socket = ws;
+
+        Events.on('force-disconnect', this._onForceDisconnect);
     }
 
     _onMessage(msg) {
@@ -45,7 +48,7 @@ class ServerConnection {
                 Events.fire('display-name', msg);
                 break;
             default:
-                console.error('WS: unkown message type', msg);
+                console.error('WS: unknown message type', msg);
         }
     }
 
@@ -58,21 +61,28 @@ class ServerConnection {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
-        const url = protocol + '://' + location.host + location.pathname + 'server' + webrtc;
-        return url;
+        return protocol + '://' + location.host + location.pathname + 'server' + webrtc;
     }
 
     _disconnect() {
         this.send({ type: 'disconnect' });
         this._socket.onclose = null;
         this._socket.close();
+        Events.fire('disconnect');
     }
 
     _onDisconnect() {
         console.log('WS: server disconnected');
         Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
+        this._reconnectTimer = setTimeout(this._connect, 5000);
+        Events.fire('disconnect');
+    }
+
+    _onForceDisconnect() {
+        document.cookie = "peerid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        this._disconnect();
+        this._connect();
     }
 
     _onVisibilityChange() {
@@ -86,6 +96,17 @@ class ServerConnection {
 
     _isConnecting() {
         return this._socket && this._socket.readyState === this._socket.CONNECTING;
+    }
+
+    _reconnect() {
+        console.log("reconnect")
+        this._disconnect();
+        this._connect();
+    }
+
+    _onError(e) {
+        console.error(e);
+        this._onForceDisconnect();
     }
 }
 
@@ -189,7 +210,7 @@ class Peer {
     }
 
     _onChunkReceived(chunk) {
-        if(!chunk.byteLength) return;
+        if(!(chunk.byteLength || chunk.size)) return;
 
         this._digester.unchunk(chunk);
         const progress = this._digester.progress;
@@ -333,6 +354,7 @@ class RTCPeer extends Peer {
         switch (this._conn.iceConnectionState) {
             case 'failed':
                 console.error('ICE Gathering failed');
+                Events.fire('force-disconnect');
                 break;
             default:
                 console.log('ICE Gathering', this._conn.iceConnectionState);
@@ -379,6 +401,7 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
+        Events.on('disconnect', this._clearPeers);
     }
 
     _onMessage(message) {
@@ -421,6 +444,11 @@ class PeersManager {
         peer._peer.close();
     }
 
+    _clearPeers() {
+        if (this.peers) {
+            Object.keys(this.peers).forEach(peerId => this._onPeerLeft(peerId));
+        }
+    }
 }
 
 class WSPeer extends Peer {
@@ -529,10 +557,41 @@ class Events {
     }
 }
 
-
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
-    'iceServers': [{
-        urls: 'stun:stun.l.google.com:19302'
-    }]
+    // iceServers: [
+    //     {
+    //         urls: 'stun:127.0.0.1:3478',
+    //     },
+    //     {
+    //         urls: 'turn:127.0.0.1:3478',
+    //         username: 'snapdrop',
+    //         credential: 'ifupvrwelijmoyjxmefcsvfxxmcphvxo'
+    //     }
+    // ]
+    iceServers: [
+        {
+            urls: "stun:relay.metered.ca:80",
+        },
+        {
+            urls: "turn:relay.metered.ca:80",
+            username: "411061cd290de7ca6cc1a753",
+            credential: "CuCIGdVfA9Gias1E",
+        },
+        {
+            urls: "turn:relay.metered.ca:443",
+            username: "411061cd290de7ca6cc1a753",
+            credential: "CuCIGdVfA9Gias1E",
+        },
+    ],
+    // iceServers: [
+    //     {
+    //         urls: 'stun:stun.l.google.com:19302'
+    //     },
+    //     {
+    //         urls: 'turn:om.wulingate.com',
+    //         username: 'hmzJ0OHZivkod703',
+    //         credential: 'KDF04PBYD9xHAp0s'
+    //     },
+    // ]
 }

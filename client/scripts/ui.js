@@ -23,6 +23,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
+        Events.on('offline', () => this._clearPeers());
         this.peers = {};
     }
 
@@ -32,7 +33,8 @@ class PeersUI {
     }
 
     _onPeerConnected(peerId) {
-        new PeerUI(this.peers[peerId]);
+        if(this.peers[peerId])
+            new PeerUI(this.peers[peerId]);
     }
 
     _onPeers(peers) {
@@ -47,6 +49,7 @@ class PeersUI {
     }
 
     _onPeerLeft(peerId) {
+        this._onPeerDisconnected(peerId);
         delete this.peers[peerId];
     }
 
@@ -59,7 +62,7 @@ class PeersUI {
 
     _clearPeers() {
         const $peers = $$('x-peers').innerHTML = '';
-        Object.keys(this.peers).forEach(key => delete this.peers[key]);
+        Object.keys(this.peers).forEach(peerId => delete this.peers[peerId]);
     }
 
     _onPaste(e) {
@@ -223,8 +226,8 @@ class Dialog {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', e => this.hide()))
         this.$el.querySelectorAll('[role="textbox"]').forEach((el) => {
-          el.addEventListener("keypress", (e) => {
-            if (e.key == "Escape") {
+          el.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
               this.hide();
             }
           });
@@ -511,8 +514,8 @@ class Notifications {
 class NetworkStatusUI {
 
     constructor() {
-        Events.on('offline', e => this._showOfflineMessage());
-        Events.on('online', e => this._showOnlineMessage());
+        Events.on('offline', this._showOfflineMessage);
+        Events.on('online', this._showOnlineMessage);
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
