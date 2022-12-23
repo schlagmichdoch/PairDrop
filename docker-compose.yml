@@ -25,3 +25,28 @@ services:
     entrypoint: /mnt/openssl/create.sh
     command: ["nginx", "-g", "daemon off;"]
     restart: unless-stopped
+  coturn:
+    image: coturn/coturn:alpine
+    container_name: coturn_server
+    network_mode: host
+    restart: unless-stopped
+    command:
+      - "--log-file=stdout"
+      - "--external-ip=$$(detect-external-ip)"
+      #      - "--no-auth"
+      - "--no-tcp"
+      - "--no-tls"
+      - "--no-dtls"
+      - "--no-cli"
+      #      - "--stun-only"
+      - "--listening-ip=0.0.0.0"
+      - "--listening-port=3478"
+      - "--tls-listening-port=5349"
+      - "--min-port=49152"
+      - "--max-port=65535"
+      - "--fingerprint"
+      - "--realm=127.0.0.1"
+      - "-a"
+      - "--user=snapdrop:ifupvrwelijmoyjxmefcsvfxxmcphvxo"
+      - "--lt-cred-mech"
+#      - "--static-auth-secret=ifupvrwelijmoyjxmefcsvfxxmcphvxo"
