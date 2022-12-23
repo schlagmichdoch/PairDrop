@@ -2,24 +2,56 @@ var process = require('process')
 var net = require('net')
 // Handle SIGINT
 process.on('SIGINT', () => {
-  console.info("SIGINT Received, exiting...")
-  process.exit(0)
+    console.info("SIGINT Received, exiting...")
+    process.exit(0)
 })
 
 // Handle SIGTERM
 process.on('SIGTERM', () => {
-  console.info("SIGTERM Received, exiting...")
-  process.exit(0)
+    console.info("SIGTERM Received, exiting...")
+    process.exit(0)
 })
+
+// Handle APP ERRORS
+process.on('uncaughtException', (error, origin) => {
+    console.log('----- Uncaught exception -----')
+    console.log(error)
+    console.log('----- Exception origin -----')
+    console.log(origin)
+})
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('----- Unhandled Rejection at -----')
+    console.log(promise)
+    console.log('----- Reason -----')
+    console.log(reason)
+})
+
+const express = require('express');
+const http = require('http');
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(express.static('public'));
+
+app.use(function(req, res) {
+    res.redirect('/');
+});
+
+app.get('/', (req, res) => {
+    res.sendFile('index.html');
+});
+
+const server = http.createServer(app);
+server.listen(port);
 
 const parser = require('ua-parser-js');
 const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
 
 class SnapdropServer {
 
-    constructor(host, port) {
+    constructor() {
         const WebSocket = require('ws');
-        this._wss = new WebSocket.Server({ host: host, port: port });
+        this._wss = new WebSocket.Server({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
         this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
@@ -217,7 +249,7 @@ class Peer {
         if (/^fe[c-f][0-f]$/.test(firstWord))
             return true;
 
-        // These days Unique Local Addresses (ULA) are used in place of Site Local.
+            // These days Unique Local Addresses (ULA) are used in place of Site Local.
         // Range: fc00 - fcff
         else if (/^fc[0-f]{2}$/.test(firstWord))
             return true;
@@ -323,15 +355,15 @@ class Peer {
 }
 
 Object.defineProperty(String.prototype, 'hashCode', {
-  value: function() {
-    var hash = 0, i, chr;
-    for (i = 0; i < this.length; i++) {
-      chr   = this.charCodeAt(i);
-      hash  = ((hash << 5) - hash) + chr;
-      hash |= 0; // Convert to 32bit integer
+    value: function() {
+        var hash = 0, i, chr;
+        for (i = 0; i < this.length; i++) {
+            chr   = this.charCodeAt(i);
+            hash  = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash;
     }
-    return hash;
-  }
 });
 
-const server = new SnapdropServer(process.env.HOST || null, process.env.PORT || 3000);
+new SnapdropServer();
