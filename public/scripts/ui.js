@@ -24,6 +24,7 @@ class PeersUI {
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
         Events.on('offline', () => this._clearPeers());
+        Events.on('online', () => window.animateBackground(true));
         this.peers = {};
     }
 
@@ -46,6 +47,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+        setTimeout(e => window.animateBackground(true), 1750); // Start animation again
     }
 
     _onPeerLeft(peerId) {
