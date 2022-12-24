@@ -81,7 +81,6 @@ class ServerConnection {
 
     _onForceDisconnect() {
         document.cookie = "peerid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        this._disconnect();
         this._connect();
     }
 
