@@ -5,10 +5,10 @@ class ServerConnection {
 
     constructor() {
         this._connect();
-        Events.on('beforeunload', e => this._disconnect());
-        Events.on('pagehide', e => this._disconnect());
-        document.addEventListener('visibilitychange', e => this._onVisibilityChange());
-        Events.on('online', this._connect);
+        Events.on('beforeunload', _ => this._disconnect());
+        Events.on('pagehide', _ => this._disconnect());
+        document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
+        Events.on('online', _ => this._connect());
     }
 
     _connect() {
@@ -21,7 +21,7 @@ class ServerConnection {
         ws.onclose = _ => this._onDisconnect();
         ws.onerror = e => this._onError(e);
         this._socket = ws;
-        Events.on('reconnect', this._connect);
+        Events.on('reconnect', _ => this._connect());
     }
 
     _onMessage(msg) {
@@ -67,7 +67,6 @@ class ServerConnection {
         this.send({ type: 'disconnect' });
         this._socket.onclose = null;
         this._socket.close();
-        Events.fire('disconnect');
     }
 
     _onDisconnect() {
@@ -79,7 +78,10 @@ class ServerConnection {
     }
 
     _onVisibilityChange() {
-        if (document.hidden) return;
+        if (document.hidden) {
+            Events.fire('disconnect');
+            return;
+        }
         this._connect();
     }
 
