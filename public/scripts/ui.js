@@ -227,13 +227,6 @@ class Dialog {
     constructor(id) {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', e => this.hide()))
-        this.$el.querySelectorAll('[role="textbox"]').forEach((el) => {
-            el.addEventListener("keydown", (e) => {
-                if (e.key === "Escape") {
-                    this.hide();
-                }
-            });
-        })
         this.$autoFocus = this.$el.querySelector('[autofocus]');
     }
 
@@ -333,7 +326,6 @@ class ReceiveDialog extends Dialog {
     }
 }
 
-
 class SendTextDialog extends Dialog {
     constructor() {
         super('sendTextDialog');
@@ -341,6 +333,13 @@ class SendTextDialog extends Dialog {
         this.$text = this.$el.querySelector('#textInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', e => this._send(e));
+        Events.on("keydown", e => this._onKeyDown(e))
+    }
+
+    async _onKeyDown(e) {
+        if (this.$el.attributes["show"] && e.code === "Escape") {
+            this.hide();
+        }
     }
 
     _onRecipient(recipient) {
@@ -377,8 +376,16 @@ class ReceiveTextDialog extends Dialog {
         super('receiveTextDialog');
         Events.on('text-received', e => this._onText(e.detail))
         this.$text = this.$el.querySelector('#text');
-        const $copy = this.$el.querySelector('#copy');
+        const copy = this.$el.querySelector('#copy');
         copy.addEventListener('click', _ => this._onCopy());
+        Events.on("keydown", e => this._onKeyDown(e))
+    }
+
+    async _onKeyDown(e) {
+        if (this.$el.attributes["show"] && e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+            await this._onCopy()
+            this.hide();
+        }
     }
 
     _onText(e) {
