@@ -9,6 +9,9 @@ window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('displayName')
+    if ($displayName.textContent !== '') {
+        Events.fire('notify-user', 'Your name has changed.');
+    }
     $displayName.textContent = 'You are known as ' + me.displayName;
     $displayName.title = me.deviceName;
 });
@@ -65,6 +68,7 @@ class PeersUI {
     _clearPeers() {
         const $peers = $$('x-peers').innerHTML = '';
         Object.keys(this.peers).forEach(peerId => delete this.peers[peerId]);
+        setTimeout(e => window.animateBackground(true), 1750); // Start animation again
     }
 
     _onPaste(e) {

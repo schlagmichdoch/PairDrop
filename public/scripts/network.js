@@ -21,13 +21,12 @@ class ServerConnection {
         ws.onclose = _ => this._onDisconnect();
         ws.onerror = e => this._onError(e);
         this._socket = ws;
-
-        Events.on('force-disconnect', this._onForceDisconnect);
+        Events.on('reconnect', this._reconnect);
     }
 
     _onMessage(msg) {
         msg = JSON.parse(msg);
-        console.log('WS:', msg);
+        if (msg.type !== 'ping') console.log('WS:', msg);
         switch (msg.type) {
             case 'peers':
                 Events.fire('peers', msg.peers);
@@ -79,11 +78,6 @@ class ServerConnection {
         Events.fire('disconnect');
     }
 
-    _onForceDisconnect() {
-        document.cookie = "peerid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        this._connect();
-    }
-
     _onVisibilityChange() {
         if (document.hidden) return;
         this._connect();
@@ -105,7 +99,7 @@ class ServerConnection {
 
     _onError(e) {
         console.error(e);
-        this._onForceDisconnect();
+        this._connect();
     }
 }
 
@@ -353,7 +347,7 @@ class RTCPeer extends Peer {
         switch (this._conn.iceConnectionState) {
             case 'failed':
                 console.error('ICE Gathering failed');
-                Events.fire('force-disconnect');
+                Events.fire('reconnect');
                 break;
             default:
                 console.log('ICE Gathering', this._conn.iceConnectionState);
