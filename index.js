@@ -26,6 +26,25 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log(reason)
 })
 
+process.on(
+    'uncaughtException',
+    () => {
+        process.once(
+            'exit',
+            () => spawn(
+                process.argv.shift(),
+                process.argv,
+                {
+                    cwd: process.cwd(),
+                    detached: true,
+                    stdio: 'inherit'
+                }
+            )
+        );
+        process.exit();
+    }
+);
+
 const express = require('express');
 const RateLimit = require('express-rate-limit');
 const http = require('http');
