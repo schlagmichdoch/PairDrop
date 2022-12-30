@@ -1,4 +1,5 @@
 var process = require('process')
+var {spawn} = require('child_process')
 var net = require('net')
 // Handle SIGINT
 process.on('SIGINT', () => {
