@@ -85,7 +85,6 @@ class SnapdropServer {
         const WebSocket = require('ws');
         this._wss = new WebSocket.Server({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
-        this._wss.on('headers', (headers, response) => this._onHeaders(headers, response));
 
         this._rooms = {};
 
@@ -106,12 +105,6 @@ class SnapdropServer {
                 deviceName: peer.name.deviceName
             }
         });
-    }
-
-    _onHeaders(headers, request) {
-        if (request.headers.cookie && request.headers.cookie.indexOf('peerid=') > -1) return;
-        request.peerId = Peer.uuid();
-        headers.push('Set-Cookie: peerid=' + request.peerId + "; SameSite=Strict; Secure");
     }
 
     _onMessage(sender, message) {
@@ -233,16 +226,18 @@ class Peer {
         // set socket
         this.socket = socket;
 
-
         // set remote ip
         this._setIP(request);
 
         // set peer id
-        this._setPeerId(request)
+        this._setPeerId()
+
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
+
         // set name
         this._setName(request);
+
         // for keepalive
         this.timerId = 0;
         this.lastBeat = Date.now();
@@ -302,12 +297,8 @@ class Peer {
         return false;
     }
 
-    _setPeerId(request) {
-        if (request.peerId) {
-            this.id = request.peerId;
-        } else {
-            this.id = request.headers.cookie.replace('peerid=', '');
-        }
+    _setPeerId() {
+        this.id = Peer.uuid();
     }
 
     toString() {
