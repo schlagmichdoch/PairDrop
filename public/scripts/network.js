@@ -8,7 +8,7 @@ class ServerConnection {
         Events.on('beforeunload', e => this._disconnect());
         Events.on('pagehide', e => this._disconnect());
         document.addEventListener('visibilitychange', e => this._onVisibilityChange());
-        Events.on('online', this._reconnect);
+        Events.on('online', this._connect);
     }
 
     _connect() {
@@ -21,7 +21,7 @@ class ServerConnection {
         ws.onclose = _ => this._onDisconnect();
         ws.onerror = e => this._onError(e);
         this._socket = ws;
-        Events.on('reconnect', this._reconnect);
+        Events.on('reconnect', this._connect);
     }
 
     _onMessage(msg) {
@@ -89,12 +89,6 @@ class ServerConnection {
 
     _isConnecting() {
         return this._socket && this._socket.readyState === this._socket.CONNECTING;
-    }
-
-    _reconnect() {
-        console.log("reconnect")
-        this._disconnect();
-        this._connect();
     }
 
     _onError(e) {
