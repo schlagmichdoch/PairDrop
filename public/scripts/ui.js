@@ -228,11 +228,11 @@ class Dialog {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', e => this.hide()))
         this.$el.querySelectorAll('[role="textbox"]').forEach((el) => {
-          el.addEventListener("keydown", (e) => {
-            if (e.key === "Escape") {
-              this.hide();
-            }
-          });
+            el.addEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    this.hide();
+                }
+            });
         })
         this.$autoFocus = this.$el.querySelector('[autofocus]');
     }
@@ -653,6 +653,13 @@ Events.on('load', () => {
     };
     init();
     animate();
+});
+
+// close About Snapdrop page on Escape
+window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        window.location.hash = '#';
+    }
 });
 
 Notifications.PERMISSION_ERROR = `
