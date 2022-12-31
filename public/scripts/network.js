@@ -94,9 +94,7 @@ class ServerConnection {
     }
 
     _onError(e) {
-        console.log("_onError")
         console.error(e);
-        // this._connect();
     }
 }
 
