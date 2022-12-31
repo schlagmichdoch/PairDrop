@@ -8,7 +8,7 @@ class ServerConnection {
         Events.on('beforeunload', _ => this._disconnect());
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
-        Events.on('online', _ => this._connect());
+        Events.on('reconnect', _ => this._reconnect());
     }
 
     _connect() {
@@ -21,7 +21,6 @@ class ServerConnection {
         ws.onclose = _ => this._onDisconnect();
         ws.onerror = e => this._onError(e);
         this._socket = ws;
-        Events.on('reconnect', _ => this._connect());
     }
 
     _onMessage(msg) {
@@ -67,6 +66,8 @@ class ServerConnection {
         this.send({ type: 'disconnect' });
         this._socket.onclose = null;
         this._socket.close();
+        this._socket = null;
+        Events.fire('disconnect');
     }
 
     _onDisconnect() {
@@ -78,10 +79,7 @@ class ServerConnection {
     }
 
     _onVisibilityChange() {
-        if (document.hidden) {
-            Events.fire('disconnect');
-            return;
-        }
+        if (document.hidden) return;
         this._connect();
     }
 
@@ -95,6 +93,11 @@ class ServerConnection {
 
     _onError(e) {
         console.error(e);
+    }
+
+    _reconnect() {
+        this._disconnect();
+        this._connect();
     }
 }
 
@@ -322,6 +325,7 @@ class RTCPeer extends Peer {
         console.log('RTC: channel closed', this._peerId);
         Events.fire('peer-disconnected', this._peerId);
         if (!this._isCaller) return;
+        if (!this._conn)
         this._connect(this._peerId, true); // reopen the channel
     }
 
@@ -351,6 +355,7 @@ class RTCPeer extends Peer {
 
     _onError(error) {
         console.error(error);
+        Events.fire('reconnect');
     }
 
     _send(message) {
@@ -388,6 +393,7 @@ class PeersManager {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('send-text', e => this._onSendText(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('disconnect', _ => this._clearPeers());
     }
@@ -425,11 +431,15 @@ class PeersManager {
         this.peers[message.to].sendText(message.text);
     }
 
+    _onPeerJoined(peer) {
+        this._onMessage(peer.id);
+    }
+
     _onPeerLeft(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
-        if (!peer || !peer._peer) return;
-        peer._peer.close();
+        if (!peer || !peer._conn) return;
+        peer._conn.close();
     }
 
     _clearPeers() {

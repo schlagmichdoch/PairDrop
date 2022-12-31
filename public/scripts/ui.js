@@ -26,8 +26,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('offline', () => this._clearPeers());
-        Events.on('online', () => window.animateBackground(true));
+        Events.on('disconnect', _ => this._clearPeers());
         this.peers = {};
     }
 
@@ -534,10 +533,12 @@ class NetworkStatusUI {
 
     _showOfflineMessage() {
         Events.fire('notify-user', 'You are offline');
+        window.animateBackground(false);
     }
 
     _showOnlineMessage() {
         Events.fire('notify-user', 'You are back online');
+        window.animateBackground(true);
     }
 }
 
