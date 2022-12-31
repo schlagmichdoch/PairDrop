@@ -43,6 +43,7 @@ class ServerConnection {
                 this.send({ type: 'pong' });
                 break;
             case 'display-name':
+                sessionStorage.setItem("peer_id", msg.message.peerId);
                 Events.fire('display-name', msg);
                 break;
             default:
@@ -59,7 +60,11 @@ class ServerConnection {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
-        return protocol + '://' + location.host + location.pathname + 'server' + webrtc;
+        let url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
+        if (sessionStorage.getItem('peer_id')) {
+            url.searchParams.append('peer_id', sessionStorage.getItem('peer_id'))
+        }
+        return url.toString();
     }
 
     _disconnect() {

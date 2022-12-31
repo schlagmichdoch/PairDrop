@@ -102,7 +102,8 @@ class SnapdropServer {
             type: 'display-name',
             message: {
                 displayName: peer.name.displayName,
-                deviceName: peer.name.deviceName
+                deviceName: peer.name.deviceName,
+                peerId: peer.id
             }
         });
     }
@@ -230,7 +231,7 @@ class Peer {
         this._setIP(request);
 
         // set peer id
-        this._setPeerId()
+        this._setPeerId(request)
 
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
@@ -297,8 +298,13 @@ class Peer {
         return false;
     }
 
-    _setPeerId() {
-        this.id = Peer.uuid();
+    _setPeerId(request) {
+        let peer_id = new URL(request.url, "http://server").searchParams.get("peer_id");
+        if (peer_id && /^([0-9]|[a-f]){8}-(([0-9]|[a-f]){4}-){3}([0-9]|[a-f]){12}$/.test(peer_id)) {
+            this.id = peer_id;
+        } else {
+            this.id = Peer.uuid();
+        }
     }
 
     toString() {
