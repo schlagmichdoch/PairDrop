@@ -73,7 +73,7 @@ class ServerConnection {
         console.log('WS: server disconnected');
         Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(this._connect, 5000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
         Events.fire('disconnect');
     }
 
@@ -94,8 +94,9 @@ class ServerConnection {
     }
 
     _onError(e) {
+        console.log("_onError")
         console.error(e);
-        this._connect();
+        // this._connect();
     }
 }
 
