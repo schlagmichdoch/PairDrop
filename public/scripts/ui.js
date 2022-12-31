@@ -659,8 +659,12 @@ Events.on('load', () => {
         }
     }
     window.animateBackground = function(l) {
-        loading = l;
-        animate();
+        if (!l) {
+            loading = false;
+        } else if (!loading) {
+            loading = true;
+            animate();
+        }
     };
     init();
     animate();

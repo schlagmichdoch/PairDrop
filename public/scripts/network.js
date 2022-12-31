@@ -390,7 +390,7 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
-        Events.on('disconnect', this._clearPeers);
+        Events.on('disconnect', _ => this._clearPeers());
     }
 
     _onMessage(message) {
