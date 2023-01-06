@@ -43,7 +43,7 @@ class ServerConnection {
                 this.send({ type: 'pong' });
                 break;
             case 'display-name':
-                sessionStorage.setItem("peer_id", msg.message.peerId);
+                sessionStorage.setItem("peerId", msg.message.peerId);
                 Events.fire('display-name', msg);
                 break;
             default:
@@ -61,8 +61,8 @@ class ServerConnection {
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
         let url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
-        if (sessionStorage.getItem('peer_id')) {
-            url.searchParams.append('peer_id', sessionStorage.getItem('peer_id'))
+        if (sessionStorage.getItem('peerId')) {
+            url.searchParams.append('peer_id', sessionStorage.getItem('peerId'))
         }
         return url.toString();
     }
