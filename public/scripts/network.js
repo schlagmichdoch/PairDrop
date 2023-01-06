@@ -499,7 +499,7 @@ class FileChunker {
 
     repeatPartition() {
         this._offset -= this._partitionSize;
-        this._nextPartition();
+        this.nextPartition();
     }
 
     _isPartitionEnd() {
