@@ -16,11 +16,20 @@ class ServerConnection {
         if (this._isConnected() || this._isConnecting()) return;
         const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
-        ws.onopen = _ => console.log('WS: server connected');
+        ws.onopen = _ => this._onOpen();
         ws.onmessage = e => this._onMessage(e.data);
         ws.onclose = _ => this._onDisconnect();
         ws.onerror = e => this._onError(e);
         this._socket = ws;
+    }
+
+    _onOpen() {
+        console.log('WS: server connected');
+        if (!this.firstConnect) {
+            this.firstConnect = true;
+            return;
+        }
+        Events.fire('ws-connected');
     }
 
     _onMessage(msg) {
@@ -72,7 +81,7 @@ class ServerConnection {
         this._socket.onclose = null;
         this._socket.close();
         this._socket = null;
-        Events.fire('disconnect');
+        Events.fire('ws-disconnect');
     }
 
     _onDisconnect() {
@@ -80,7 +89,7 @@ class ServerConnection {
         Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(this._connect, 5000);
-        Events.fire('disconnect');
+        Events.fire('ws-disconnect');
     }
 
     _onVisibilityChange() {
@@ -399,7 +408,7 @@ class PeersManager {
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
-        Events.on('disconnect', _ => this._clearPeers());
+        Events.on('ws-disconnect', _ => this._clearPeers());
     }
 
     _onMessage(message) {

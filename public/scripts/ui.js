@@ -23,7 +23,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('disconnect', _ => this._clearPeers());
+        Events.on('ws-disconnect', _ => this._clearPeers());
         this.peers = {};
     }
 
@@ -523,8 +523,9 @@ class Notifications {
 class NetworkStatusUI {
 
     constructor() {
-        Events.on('offline', this._showOfflineMessage);
-        Events.on('online', this._showOnlineMessage);
+        Events.on('offline', _ => this._showOfflineMessage());
+        Events.on('online', _ => this._showOnlineMessage());
+        Events.on('ws-connected', _ => this._showOnlineMessage());
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
