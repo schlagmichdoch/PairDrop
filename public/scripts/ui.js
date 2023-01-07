@@ -526,6 +526,7 @@ class NetworkStatusUI {
         Events.on('offline', _ => this._showOfflineMessage());
         Events.on('online', _ => this._showOnlineMessage());
         Events.on('ws-connected', _ => this._showOnlineMessage());
+        Events.on('ws-disconnected', _ => window.animateBackground(false));
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
