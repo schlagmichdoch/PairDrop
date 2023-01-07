@@ -88,7 +88,7 @@ class ServerConnection {
         console.log('WS: server disconnected');
         Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(this._connect, 5000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
         Events.fire('ws-disconnect');
     }
 
@@ -571,39 +571,14 @@ class Events {
 
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
-    // iceServers: [
-    //     {
-    //         urls: 'stun:127.0.0.1:3478',
-    //     },
-    //     {
-    //         urls: 'turn:127.0.0.1:3478',
-    //         username: 'snapdrop',
-    //         credential: 'ifupvrwelijmoyjxmefcsvfxxmcphvxo'
-    //     }
-    // ]
     iceServers: [
         {
-            urls: "stun:relay.metered.ca:80",
+            urls: 'stun:stun.l.google.com:19302'
         },
         {
-            urls: "turn:relay.metered.ca:80",
-            username: "411061cd290de7ca6cc1a753",
-            credential: "CuCIGdVfA9Gias1E",
+            urls: "turn:openrelay.metered.ca:443",
+            username: "openrelayproject",
+            credential: "openrelayproject",
         },
-        {
-            urls: "turn:relay.metered.ca:443",
-            username: "411061cd290de7ca6cc1a753",
-            credential: "CuCIGdVfA9Gias1E",
-        },
-    ],
-    // iceServers: [
-    //     {
-    //         urls: 'stun:stun.l.google.com:19302'
-    //     },
-    //     {
-    //         urls: 'turn:om.wulingate.com',
-    //         username: 'hmzJ0OHZivkod703',
-    //         credential: 'KDF04PBYD9xHAp0s'
-    //     },
-    // ]
+    ]
 }
