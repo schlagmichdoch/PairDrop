@@ -25,7 +25,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('ws-disconnected', _ => this._clearPeers());
+        Events.on('ws-disconnected', _ => this._clearPeers('all', false));
         Events.on('secret-room-deleted', _ => this._clearPeers('secret'));
         this.peers = {};
     }
@@ -99,7 +99,7 @@ class PeersUI {
         $peer.ui.setProgress(progress.progress);
     }
 
-    _clearPeers(roomType = 'all') {
+    _clearPeers(roomType = 'all', restartAnimation = true) {
         for (const peerId in this.peers) {
             if (roomType === 'all' || this.peers[peerId].roomType === roomType) {
                 const peerNode = $(peerId);
@@ -107,7 +107,7 @@ class PeersUI {
                 delete this.peers[peerId];
             }
         }
-        if ($$('x-peers').innerHTML === '') {
+        if (restartAnimation && $$('x-peers').innerHTML === '') {
             setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
         }
     }
@@ -1254,19 +1254,24 @@ Events.on('load', () => {
     let loading = true;
 
     function animate() {
-        if (loading || step % dw < dw - 5) {
+        if (loading || !finished()) {
             requestAnimationFrame(function() {
                 drawCircles();
                 animate();
             });
         }
     }
+
+    function finished() {
+        return step % dw >= dw - 5;
+    }
+
     window.animateBackground = function(l) {
         if (!l) {
             loading = false;
         } else if (!loading) {
             loading = true;
-            animate();
+            if (finished()) animate();
         }
     };
     init();
