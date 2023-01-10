@@ -391,11 +391,11 @@ class PeerUI {
 
 
 class Dialog {
-    constructor(id) {
+    constructor(id, hideOnDisconnect = true) {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()))
         this.$autoFocus = this.$el.querySelector('[autofocus]');
-        Events.on('ws-disconnected', _ => this.hide());
+        if (hideOnDisconnect) Events.on('ws-disconnected', _ => this.hide());
     }
 
     show() {
@@ -415,7 +415,7 @@ class Dialog {
 class ReceiveDialog extends Dialog {
 
     constructor() {
-        super('receiveDialog');
+        super('receiveDialog', false);
         Events.on('file-received', e => {
             this._nextFile(e.detail);
             window.blop.play();
@@ -802,7 +802,7 @@ class SendTextDialog extends Dialog {
 
 class ReceiveTextDialog extends Dialog {
     constructor() {
-        super('receiveTextDialog');
+        super('receiveTextDialog', false);
         Events.on('text-received', e => this._onText(e.detail))
         this.$text = this.$el.querySelector('#text');
         const copy = this.$el.querySelector('#copy');
