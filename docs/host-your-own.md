@@ -5,10 +5,10 @@ First, [Install docker with docker-compose.](https://docs.docker.com/compose/ins
 
 Then, clone the repository and run docker-compose:
 ```shell
-    git clone https://github.com/RobinLinus/snapdrop.git
+    git clone https://github.com/schlagmichdoch/pairdrop.git
 ```
 ```shell
-    cd snapdrop
+    cd pairdrop
 ```
 ```shell
     docker-compose up -d
@@ -17,20 +17,8 @@ Now point your browser to `http://localhost:8080`.
 
 - To restart the containers run `docker-compose restart`.
 - To stop the containers run `docker-compose stop`.
-- To debug the NodeJS server run `docker logs snapdrop_node_1`.
+- To debug the NodeJS server run `docker logs pairdrop_node_1`.
 
-
-## Run locally by pulling image from Docker Hub
-
-Have docker installed, then use the command:
-```shell
-    docker pull linuxserver/snapdrop
-```
-
-To run the image, type (if port 8080 is occupied by host use another random port <random port>:80):
-```shell
-    docker run -d -p 8080:80 linuxserver/snapdrop
-```
 
 <br>
 
@@ -69,7 +57,7 @@ server {
     expires epoch;
 
     location / {
-        root   /var/www/snapdrop/client;
+        root   /var/www/pairdrop/client;
         index  index.html index.htm;
     }
 
@@ -84,13 +72,13 @@ server {
 
 server {
     listen       443 ssl http2;
-    ssl_certificate /etc/ssl/certs/snapdrop-dev.crt;
-    ssl_certificate_key /etc/ssl/certs/snapdrop-dev.key;
+    ssl_certificate /etc/ssl/certs/pairdrop-dev.crt;
+    ssl_certificate_key /etc/ssl/certs/pairdrop-dev.key;
 
     expires epoch;
 
     location / {
-        root   /var/www/snapdrop/client;
+        root   /var/www/pairdrop/client;
         index  index.html;
     }
 
@@ -107,7 +95,7 @@ server {
 ### Using Apache
 ```
 <VirtualHost *:80>	
-	DocumentRoot "/var/www/snapdrop/client"
+	DocumentRoot "/var/www/pairdrop/client"
 	DirectoryIndex index.html	
 
 	RewriteEngine on
@@ -116,7 +104,7 @@ server {
 	RewriteRule ^/?(.*) "ws://127.0.0.1:3000/$1" [P,L]
 </VirtualHost>
 <VirtualHost *:443>	
-	DocumentRoot "/var/www/snapdrop/client"
+	DocumentRoot "/var/www/pairdrop/client"
 	DirectoryIndex index.html
 	
 	RewriteEngine on
@@ -127,11 +115,11 @@ server {
 ```
 
 ## Deployment with Docker
-The easiest way to get snapdrop up and running is by using Docker.
+The easiest way to get Pairdrop up and running is by using Docker.
 
 By default, docker listens on ports 8080 (http) and 8443 (https) (specified in `docker-compose.yml`).
 
-When running Snapdrop via Docker, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
+When running Pairdrop via Docker, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
 
 ### Installation
 [See Local Development > Install](#install)
@@ -162,8 +150,8 @@ server {
 
 server {
     listen       443 ssl http2;
-    ssl_certificate /etc/ssl/certs/snapdrop-dev.crt;
-    ssl_certificate_key /etc/ssl/certs/snapdrop-dev.key;
+    ssl_certificate /etc/ssl/certs/pairdrop-dev.crt;
+    ssl_certificate_key /etc/ssl/certs/pairdrop-dev.key;
 
     expires epoch;
 
@@ -198,7 +186,7 @@ a2enmod proxy_wstunnel
 
 Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 
-**snapdrop.conf**
+**pairdrop.conf**
 ```
 <VirtualHost *:80>	
 	ProxyPass / http://127.0.0.1:8080/
@@ -217,7 +205,7 @@ Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 ```
 Activate the new virtual host and reload apache:
 ```shell
-a2ensite snapdrop
+a2ensite pairdrop
 ```
 ```shell
 service apache2 reload

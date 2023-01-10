@@ -81,7 +81,7 @@ server.listen(port);
 const parser = require('ua-parser-js');
 const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
 
-class SnapdropServer {
+class PairdropServer {
 
     constructor() {
         const WebSocket = require('ws');
@@ -91,7 +91,7 @@ class SnapdropServer {
         this._rooms = {};
         this._roomSecrets = {};
 
-        console.log('Snapdrop is running on port', port);
+        console.log('Pairdrop is running on port', port);
     }
 
     _onConnection(peer) {
@@ -588,4 +588,4 @@ Object.defineProperty(String.prototype, 'hashCode', {
     }
 });
 
-new SnapdropServer();
+new PairdropServer();

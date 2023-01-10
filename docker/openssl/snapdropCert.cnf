@@ -9,7 +9,7 @@ string_mask         = utf8only
 prompt              = no
 
 [ subject ]
-organizationName    = Snapdrop
+organizationName    = Pairdrop
 OU                  = Development
 
 # Use a friendly name here because it's presented to the user. The server's DNS

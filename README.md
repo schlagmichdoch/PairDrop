@@ -1,9 +1,31 @@
-# Snapdrop 
+# Pairdrop 
 
-[Snapdrop](https://snapdrop.net): local file sharing in your browser. Inspired by Apple's Airdrop.
+[Pairdrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's Airdrop. 
+
+Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
+
+## Differences to Snapdrop
+
+### Device Pairing
+* Pair devices via 6-digit code or QR-Code
+* Pair devices outside your local network or in complex network environment (public wifi, company network, Apple Private Relay, VPN etc.).
+* Paired devices will always find each other via shared secrets even after reopening the browser or the Progressive Web App
+* You will always discover devices on your local network. Paired devices are shown additionally.
+* Paired devices outside your local network that are behind a NAT are connected automatically via [Open Relay: Free WebRTC TURN Server](https://www.metered.ca/tools/openrelay/)
 
 
-#### Snapdrop is built with the following awesome technologies:
+### Other changes
+* node-only implementation (thanks [@Bellisario](https://github.com/Bellisario))
+* automatic restart on error (thanks [@KaKi87](https://github.com/KaKi87))
+* lots of stability fixes (thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) [@willstott101](https://github.com/willstott101))
+* [Paste Mode](https://github.com/RobinLinus/snapdrop/pull/534)
+* [Video and Audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (thanks [@victorwads](https://github.com/victorwads))
+
+## Screenshot
+![test](/docs/pairdrop_screenshot_desktop.png)
+
+
+## Snapdrop and Pairdrop are built with the following awesome technologies:
 * Vanilla HTML5 / ES6 / CSS3 frontend
 * [WebRTC](http://webrtc.org/) / [WebSockets](http://www.websocket.org/)
 * [NodeJS](https://nodejs.org/en/) backend
@@ -15,18 +37,13 @@ Have any questions? Read our [FAQ](/docs/faq.md).
 You can [host your own instance with Docker](/docs/host-your-own.md).
 
 
-## Support the Snapdrop Community
-Snapdrop is free. Still, we have to pay for the server. If you want to contribute, please use PayPal:
+## Support the Community
+Pairdrop is free and always will be!
 
-[<img src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif">](https://www.paypal.com/donate/?hosted_button_id=MG8GV7YCYT352)
+If you want to support me and my work you can [buy me a coffee](https://www.buymeacoffee.com/pairdrop) ☕
 
-or Bitcoin:
+<br>
 
-[<img src="https://coins.github.io/thx/logo-color-large-pill-320px.png" alt="CoinThx" width="200"/>](https://coins.github.io/thx/#1K9zQ8f4iTyhKyHWmiDKt21cYX2QSDckWB?label=Snapdrop&message=Thanks!%20Your%20contribution%20helps%20to%20keep%20Snapdrop%20free%20for%20everybody!) 
-
-Alternatively, you can become a [Github Sponsor](https://github.com/sponsors/RobinLinus).
+To support the original Snapdrop and its creator go to [his GitHub page](https://github.com/RobinLinus/snapdrop).
 
 Thanks a lot for supporting free and open software!
-
-
- 

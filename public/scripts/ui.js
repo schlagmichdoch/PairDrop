@@ -146,13 +146,13 @@ class PeersUI {
 
             if (files.length === 1) {
                 descriptor = files[0].name;
-                noPeersMessage = `Open Snapdrop on other devices to send <i>${descriptor}</i> directly`;
+                noPeersMessage = `Open Pairdrop on other devices to send <i>${descriptor}</i> directly`;
             } else if (files.length > 1) {
                 descriptor = `${files.length} files`;
-                noPeersMessage = `Open Snapdrop on other devices to send ${descriptor} directly`;
+                noPeersMessage = `Open Pairdrop on other devices to send ${descriptor} directly`;
             } else if (text.length > 0) {
                 descriptor = `pasted text`;
-                noPeersMessage = `Open Snapdrop on other devices to send ${descriptor} directly`;
+                noPeersMessage = `Open Pairdrop on other devices to send ${descriptor} directly`;
             }
 
             const xInstructions = document.querySelectorAll('x-instructions')[0];
@@ -197,7 +197,7 @@ class PeersUI {
             xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
 
             const xNoPeers = document.querySelectorAll('x-no-peers')[0];
-            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open Snapdrop on other devices to send files';
+            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open Pairdrop on other devices to send files';
 
             const cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
             cancelPasteModeBtn.removeEventListener('click', this._cancelPasteMode);
@@ -1001,7 +1001,7 @@ class PersistentStorage {
             this.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store');
         DBOpenRequest.onerror = (e) => {
             this.logBrowserNotCapable();
             console.log('Error initializing database: ');
@@ -1025,7 +1025,7 @@ class PersistentStorage {
 
     static set(key, value) {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
@@ -1044,7 +1044,7 @@ class PersistentStorage {
 
     static get(key) {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
@@ -1062,7 +1062,7 @@ class PersistentStorage {
     }
     static delete(key) {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
@@ -1081,7 +1081,7 @@ class PersistentStorage {
 
     static addRoomSecret(roomSecret) {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
@@ -1100,7 +1100,7 @@ class PersistentStorage {
 
     static getAllRoomSecrets() {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
@@ -1123,7 +1123,7 @@ class PersistentStorage {
 
     static deleteRoomSecret(room_secret) {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
@@ -1153,7 +1153,7 @@ class PersistentStorage {
 
     static clearRoomSecrets() {
         return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('snapdrop_store');
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
@@ -1171,7 +1171,7 @@ class PersistentStorage {
     }
 }
 
-class Snapdrop {
+class Pairdrop {
     constructor() {
         Events.on('load', _ => {
             const server = new ServerConnection();
@@ -1191,7 +1191,7 @@ class Snapdrop {
 }
 
 const persistentStorage = new PersistentStorage();
-const snapdrop = new Snapdrop();
+const pairdrop = new Pairdrop();
 
 
 if ('serviceWorker' in navigator) {
@@ -1292,7 +1292,7 @@ Events.on('load', () => {
     animate();
 });
 
-// close About Snapdrop page on Escape
+// close About Pairdrop page on Escape
 window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         window.location.hash = '#';
