@@ -143,6 +143,10 @@ a {
     cursor: pointer;
 }
 
+hr {
+    background-color: white;
+}
+
 
 
 /* Icons */
