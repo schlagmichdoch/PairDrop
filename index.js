@@ -98,7 +98,7 @@ class SnapdropServer {
         this._joinRoom(peer);
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
-        peer.socket.onclose = _ => console.log('disconnect');
+        peer.socket.onclose = _ => this._onDisconnect(peer);
         this._keepAlive(peer);
 
         // send displayName
@@ -384,8 +384,8 @@ class SnapdropServer {
     }
 
     _leaveAllSecretRooms(peer) {
-        for (const roomSecret in peer.roomSecrets) {
-            this._leaveRoom(peer, 'secret', roomSecret);
+        for (let i=0; i<peer.roomSecrets.length; i++) {
+            this._leaveRoom(peer, 'secret', peer.roomSecrets[i]);
         }
     }
 
@@ -564,7 +564,7 @@ class Peer {
     }
 
     addRoomSecret(roomSecret) {
-        if (!roomSecret in this.roomSecrets) {
+        if (!(roomSecret in this.roomSecrets)) {
             this.roomSecrets.push(roomSecret);
         }
     }
