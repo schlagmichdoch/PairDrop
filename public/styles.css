@@ -35,8 +35,13 @@ body {
     flex-direction: row-reverse;
 }
 
+.space-between {
+    justify-content: space-between;
+}
+
 .row {
     display: flex;
+    justify-content: center;
     flex-direction: row;
 }
 
@@ -106,13 +111,18 @@ h3 {
     font-size: 20px;
     font-weight: 500;
     margin: 16px 0;
+    color: var(--primary-color);
 }
 
 .font-subheading {
     font-size: 16px;
     font-weight: 400;
     line-height: 24px;
-    word-break: break-all;
+    word-break: normal;
+}
+
+.text-center {
+    text-align: center;
 }
 
 .font-body1,
@@ -183,6 +193,7 @@ x-peers {
     overflow: hidden;
     flex-flow: row wrap;
     z-index: 2;
+    transition: color 300ms;
 }
 
 /* Empty Peers List */
@@ -199,6 +210,7 @@ x-no-peers {
 x-no-peers h2,
 x-no-peers a {
     color: var(--primary-color);
+    margin-bottom: 5px;
 }
 
 x-peers:not(:empty)+x-no-peers {
@@ -249,6 +261,10 @@ x-peer x-icon {
     will-change: transform;
 }
 
+x-peer:not(.type-ip) x-icon {
+    background: #00a69c;
+}
+
 x-peer:not([transfer]):hover x-icon,
 x-peer:not([transfer]):focus x-icon {
     transform: scale(1.05);
@@ -264,6 +280,11 @@ x-peer[transfer] x-icon {
 .device-name {
     height: 18px;
     opacity: 0.7;
+}
+
+.device-name {
+    font-size: 14px;
+    white-space: nowrap;
 }
 
 x-peer[transfer] .status:before {
@@ -305,6 +326,7 @@ footer {
     align-items: center;
     padding: 0 0 16px 0;
     text-align: center;
+    transition: color 300ms;
 }
 
 footer .logo {
@@ -316,13 +338,6 @@ footer .logo {
 footer .font-body2 {
     color: var(--primary-color);
 }
-
-@media (min-height: 800px) {
-    footer {
-        margin-bottom: 16px;
-    }
-}
-
 
 /* Dialog */
 
@@ -359,7 +374,7 @@ x-dialog:not([show]) x-background {
 }
 
 x-dialog .row-reverse>.button {
-    margin-top: 16px;
+    margin-top: 10px;
     margin-left: 8px;
 }
 
@@ -367,10 +382,75 @@ x-dialog a {
     color: var(--primary-color);
 }
 
+x-dialog .font-subheading {
+    margin-bottom: 5px;
+}
+
+/* PairDevicesDialog */
+
+#keyInputContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#keyInputContainer>input {
+    width: 45px;
+    height: 45px;
+    font-size: 30px;
+    padding: 0;
+    text-align: center;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: -moz-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -webkit-justify-content: center;
+    -ms-justify-content: center;
+    justify-content: center;
+}
+
+#keyInputContainer>input + * {
+    margin-left: 6px;
+}
+
+#keyInputContainer>input:nth-of-type(4) {
+    margin-left: 18px;
+}
+
+#roomKey {
+    font-size: 50px;
+    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 23px);
+    display: inline-block;
+    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 23px)));
+    margin: 15px -15px;
+}
+
+#roomKeyQrCode {
+    padding: inherit;
+    margin: auto;
+    width: 80px;
+    height: 80px;
+}
+
+#pairDeviceDialog>*>*>*>hr {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
 /* Receive Dialog */
+
 #receiveDialog .row {
     margin-top: 24px;
     margin-bottom: 8px;
+}
+
+#fileName{
+    word-break: break-all;
+}
+
+#fileSize{
+    padding-bottom: 5px;
 }
 
 /* Receive Text Dialog */
@@ -420,6 +500,11 @@ x-dialog a {
     color: var(--primary-color);
 }
 
+.button[disabled] {
+    color: #5B5B66;
+}
+
+
 .button,
 .icon-button {
     position: relative;
@@ -445,7 +530,7 @@ x-dialog a {
     transition: opacity 300ms;
 }
 
-.button:hover:before,
+.button:not([disabled]):hover:before,
 .icon-button:hover:before {
     opacity: 0.1;
 }
@@ -487,7 +572,7 @@ button::-moz-focus-inner {
     outline: none;
     padding: 16px 24px;
     border-radius: 16px;
-    margin: 8px 0;
+    margin: 10px 0;
     font-size: 14px;
     font-family: inherit;
     background: #f1f3f4;
@@ -521,7 +606,7 @@ button::-moz-focus-inner {
 #about:not(:target) .fade-in {
     opacity: 0;
     pointer-events: none;
-    transition-delay: 0;
+    transition-delay: 0s;
 }
 
 #about .logo {
@@ -561,7 +646,7 @@ button::-moz-focus-inner {
     width: 80px;
     height: 80px;
     position: absolute;
-    top: 0px;
+    top: 0;
     clip: rect(0px, 80px, 80px, 40px);
     --progress: rotate(0deg);
     transition: transform 200ms;
@@ -755,4 +840,16 @@ x-dialog x-paper {
     body {
         overflow: hidden;
     }
+}
+
+/* webkit scrollbar style*/
+
+::-webkit-scrollbar{
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius: 4px;
 }

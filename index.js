@@ -1,6 +1,8 @@
 var process = require('process')
+var crypto = require('crypto')
 var {spawn} = require('child_process')
 var net = require('net')
+
 // Handle SIGINT
 process.on('SIGINT', () => {
     console.info("SIGINT Received, exiting...")
@@ -87,6 +89,7 @@ class SnapdropServer {
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
 
         this._rooms = {};
+        this._roomSecrets = {};
 
         console.log('Snapdrop is running on port', port);
     }
@@ -94,7 +97,8 @@ class SnapdropServer {
     _onConnection(peer) {
         this._joinRoom(peer);
         peer.socket.on('message', message => this._onMessage(peer, message));
-        peer.socket.on('error', console.error);
+        peer.socket.onerror = e => console.error(e);
+        peer.socket.onclose = _ => console.log('disconnect');
         this._keepAlive(peer);
 
         // send displayName
@@ -118,74 +122,270 @@ class SnapdropServer {
 
         switch (message.type) {
             case 'disconnect':
-                this._leaveRoom(sender);
+                this._onDisconnect(sender);
                 break;
             case 'pong':
                 sender.lastBeat = Date.now();
                 break;
+            case 'room-secrets':
+                this._onRoomSecrets(sender, message);
+                break;
+            case 'room-secret-deleted':
+                this._onRoomSecretDeleted(sender, message);
+                break;
+            case 'room-secrets-cleared':
+                this._onRoomSecretsCleared(sender, message);
+                break;
+            case 'pair-device-initiate':
+                this._onPairDeviceInitiate(sender);
+                break;
+            case 'pair-device-join':
+                this._onPairDeviceJoin(sender, message);
+                break;
+            case 'pair-device-cancel':
+                this._onPairDeviceCancel(sender);
+                break;
+            case 'resend-peers':
+                this._notifyPeers(sender);
+                break;
+            case 'signal':
+                this._onSignal(sender, message);
         }
+    }
+
+    _onSignal(sender, message) {
+        const room = message.roomType === 'ip' ? sender.ip : message.roomSecret;
 
         // relay message to recipient
-        if (message.to && this._rooms[sender.ip]) {
-            const recipientId = message.to; // TODO: sanitize
-            const recipient = this._rooms[sender.ip][recipientId];
+        if (message.to && Peer.isValidUuid(message.to) && this._rooms[room]) {
+            const recipientId = message.to;
+            const recipient = this._rooms[room][recipientId];
             delete message.to;
             // add sender id
             message.sender = sender.id;
             this._send(recipient, message);
-            return;
         }
     }
 
-    _joinRoom(peer) {
-        // if room doesn't exist, create it
-        if (!this._rooms[peer.ip]) {
-            this._rooms[peer.ip] = {};
+    _onDisconnect(sender) {
+        this._leaveRoom(sender);
+        this._leaveAllSecretRooms(sender);
+        this._removeRoomKey(sender.roomKey);
+        sender.roomKey = null;
+    }
+
+    _onRoomSecrets(sender, message) {
+        const roomSecrets = message.roomSecrets.filter(roomSecret => {
+            return /^[\x00-\x7F]{64}$/.test(roomSecret);
+        })
+        this._joinSecretRooms(sender, roomSecrets);
+    }
+
+    _onRoomSecretDeleted(sender, message) {
+        this._deleteSecretRoom(sender, message.roomSecret)
+    }
+
+    _onRoomSecretsCleared(sender, message) {
+        for (let i = 0; i<message.roomSecrets.length; i++) {
+            this._deleteSecretRoom(sender, message.roomSecrets[i]);
+        }
+    }
+
+    _deleteSecretRoom(sender, roomSecret) {
+        const room = this._rooms[roomSecret];
+        if (room) {
+            for (const peerId in room) {
+                const peer = room[peerId];
+                this._leaveRoom(peer, 'secret', roomSecret);
+                this._send(peer, {
+                    type: 'secret-room-deleted',
+                    roomSecret: roomSecret,
+                });
+            }
+        }
+        this._notifyPeers(sender);
+    }
+
+    getRandomString(length) {
+        let string = "";
+        while (string.length < length) {
+            let arr = new Uint16Array(length);
+            crypto.webcrypto.getRandomValues(arr);
+            arr = Array.apply([], arr); /* turn into non-typed array */
+            arr = arr.map(function (r) {
+                return r % 128
+            })
+            arr = arr.filter(function (r) {
+                /* strip non-printables: if we transform into desirable range we have a propability bias, so I suppose we better skip this character */
+                return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
+            });
+            string += String.fromCharCode.apply(String, arr);
+        }
+        return string.substring(0, length)
+    }
+
+    _onPairDeviceInitiate(sender) {
+        let roomSecret = this.getRandomString(64);
+        let roomKey = this._createRoomKey(sender, roomSecret);
+        sender.roomKey = roomKey;
+        this._send(sender, {
+            type: 'pair-device-initiated',
+            roomSecret: roomSecret,
+            roomKey: roomKey
+        });
+        this._joinRoom(sender, 'secret', roomSecret);
+    }
+
+    _onPairDeviceJoin(sender, message) {
+        if (sender.roomKeyRate >= 10) {
+            this._send(sender, { type: 'pair-device-join-key-rate-limit' });
+            return;
+        }
+        sender.roomKeyRate += 1;
+        setTimeout(_ => sender.roomKeyRate -= 1, 10000);
+        if (!this._roomSecrets[message.roomKey] || sender.id === this._roomSecrets[message.roomKey].creator.id) {
+            this._send(sender, { type: 'pair-device-join-key-invalid' });
+            return;
+        }
+        const roomSecret = this._roomSecrets[message.roomKey].roomSecret;
+        const creator = this._roomSecrets[message.roomKey].creator;
+        this._removeRoomKey(message.roomKey);
+        this._send(sender, {
+            type: 'pair-device-joined',
+            roomSecret: roomSecret,
+        });
+        this._send(creator, {
+            type: 'pair-device-joined',
+            roomSecret: roomSecret,
+        });
+        this._joinRoom(sender, 'secret', roomSecret);
+        this._removeRoomKey(sender.roomKey);
+    }
+
+    _onPairDeviceCancel(sender) {
+        if (sender.roomKey) {
+            this._send(sender, {
+                type: 'pair-device-canceled',
+                roomKey: sender.roomKey,
+            });
+            this._removeRoomKey(sender.roomKey);
+        }
+    }
+
+    _createRoomKey(creator, roomSecret) {
+        let roomKey;
+        do {
+            // get randomInt until keyRoom not occupied
+            roomKey = crypto.randomInt(1000000, 1999999).toString().substring(1); // include numbers with leading 0s
+        } while (roomKey in this._roomSecrets)
+
+        this._roomSecrets[roomKey] = {
+            roomSecret: roomSecret,
+            creator: creator
         }
 
+        return roomKey;
+    }
+
+    _removeRoomKey(roomKey) {
+        if (roomKey in this._roomSecrets) {
+            this._roomSecrets[roomKey].creator.roomKey = null
+            delete this._roomSecrets[roomKey];
+        }
+    }
+
+    _joinRoom(peer, roomType = 'ip', roomSecret = '') {
+        const room = roomType === 'ip' ? peer.ip : roomSecret;
+
+        // if room doesn't exist, create it
+        if (!this._rooms[room]) {
+            this._rooms[room] = {};
+        }
+
+        this._notifyPeers(peer, roomType, roomSecret);
+
+        // add peer to room
+        this._rooms[room][peer.id] = peer;
+        // add secret to peer
+        if (roomType === 'secret') {
+            peer.addRoomSecret(roomSecret);
+        }
+    }
+
+    _leaveRoom(peer, roomType = 'ip', roomSecret = '') {
+        const room = roomType === 'ip' ? peer.ip : roomSecret;
+
+        if (!this._rooms[room] || !this._rooms[room][peer.id]) return;
+        this._cancelKeepAlive(this._rooms[room][peer.id]);
+
+        // delete the peer
+        delete this._rooms[room][peer.id];
+
+        if (roomType === 'ip') {
+            peer.socket.terminate();
+        }
+
+        //if room is empty, delete the room
+        if (!Object.keys(this._rooms[room]).length) {
+            delete this._rooms[room];
+        } else {
+            // notify all other peers
+            for (const otherPeerId in this._rooms[room]) {
+                const otherPeer = this._rooms[room][otherPeerId];
+                this._send(otherPeer, {
+                    type: 'peer-left',
+                    peerId: peer.id,
+                    roomType: roomType,
+                    roomSecret: roomSecret
+                });
+            }
+        }
+        //remove secret from peer
+        if (roomType === 'secret') {
+            peer.removeRoomSecret(roomSecret);
+        }
+    }
+
+    _notifyPeers(peer, roomType = 'ip', roomSecret = '') {
+        const room = roomType === 'ip' ? peer.ip : roomSecret;
+        if (!this._rooms[room]) return;
+
         // notify all other peers
-        for (const otherPeerId in this._rooms[peer.ip]) {
+        for (const otherPeerId in this._rooms[room]) {
             if (otherPeerId === peer.id) continue;
-            const otherPeer = this._rooms[peer.ip][otherPeerId];
+            const otherPeer = this._rooms[room][otherPeerId];
             this._send(otherPeer, {
                 type: 'peer-joined',
-                peer: peer.getInfo()
+                peer: peer.getInfo(),
+                roomType: roomType,
+                roomSecret: roomSecret
             });
         }
 
         // notify peer about the other peers
         const otherPeers = [];
-        for (const otherPeerId in this._rooms[peer.ip]) {
+        for (const otherPeerId in this._rooms[room]) {
             if (otherPeerId === peer.id) continue;
-            otherPeers.push(this._rooms[peer.ip][otherPeerId].getInfo());
+            otherPeers.push(this._rooms[room][otherPeerId].getInfo());
         }
 
         this._send(peer, {
             type: 'peers',
-            peers: otherPeers
+            peers: otherPeers,
+            roomType: roomType,
+            roomSecret: roomSecret
         });
-
-        // add peer to room
-        this._rooms[peer.ip][peer.id] = peer;
     }
 
-    _leaveRoom(peer) {
-        if (!this._rooms[peer.ip] || !this._rooms[peer.ip][peer.id]) return;
-        this._cancelKeepAlive(this._rooms[peer.ip][peer.id]);
+    _joinSecretRooms(peer, roomSecrets) {
+        for (let i=0; i<roomSecrets.length; i++) {
+            this._joinRoom(peer, 'secret', roomSecrets[i])
+        }
+    }
 
-        // delete the peer
-        delete this._rooms[peer.ip][peer.id];
-
-        peer.socket.terminate();
-        //if room is empty, delete the room
-        if (!Object.keys(this._rooms[peer.ip]).length) {
-            delete this._rooms[peer.ip];
-        } else {
-            // notify all other peers
-            for (const otherPeerId in this._rooms[peer.ip]) {
-                const otherPeer = this._rooms[peer.ip][otherPeerId];
-                this._send(otherPeer, { type: 'peer-left', peerId: peer.id });
-            }
+    _leaveAllSecretRooms(peer) {
+        for (const roomSecret in peer.roomSecrets) {
+            this._leaveRoom(peer, 'secret', roomSecret);
         }
     }
 
@@ -193,7 +393,7 @@ class SnapdropServer {
         if (!peer) return;
         if (this._wss.readyState !== this._wss.OPEN) return;
         message = JSON.stringify(message);
-        peer.socket.send(message, error => '');
+        peer.socket.send(message);
     }
 
     _keepAlive(peer) {
@@ -204,6 +404,7 @@ class SnapdropServer {
         }
         if (Date.now() - peer.lastBeat > 2 * timeout) {
             this._leaveRoom(peer);
+            this._leaveAllSecretRooms(peer);
             return;
         }
 
@@ -242,7 +443,10 @@ class Peer {
         // for keepalive
         this.timerId = 0;
         this.lastBeat = Date.now();
-        console.debug(this.name.displayName)
+
+        this.roomSecrets = [];
+        this.roomKey = null;
+        this.roomKeyRate = 0;
     }
 
     _setIP(request) {
@@ -258,7 +462,6 @@ class Peer {
         if (this.ip === '::1' || this.ip === '::ffff:127.0.0.1' || this.ip === '::1' || this.ipIsPrivate(this.ip)) {
             this.ip = '127.0.0.1';
         }
-        console.debug(this.ip)
     }
 
     ipIsPrivate(ip) {
@@ -300,10 +503,10 @@ class Peer {
 
     _setPeerId(request) {
         let peer_id = new URL(request.url, "http://server").searchParams.get("peer_id");
-        if (peer_id && /^([0-9]|[a-f]){8}-(([0-9]|[a-f]){4}-){3}([0-9]|[a-f]){12}$/.test(peer_id)) {
+        if (peer_id && Peer.isValidUuid(peer_id)) {
             this.id = peer_id;
         } else {
-            this.id = Peer.uuid();
+            this.id = crypto.randomUUID();
         }
     }
 
@@ -356,31 +559,21 @@ class Peer {
         }
     }
 
-    // return uuid of form xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    static uuid() {
-        let uuid = '',
-            ii;
-        for (ii = 0; ii < 32; ii += 1) {
-            switch (ii) {
-                case 8:
-                case 20:
-                    uuid += '-';
-                    uuid += (Math.random() * 16 | 0).toString(16);
-                    break;
-                case 12:
-                    uuid += '-';
-                    uuid += '4';
-                    break;
-                case 16:
-                    uuid += '-';
-                    uuid += (Math.random() * 4 | 8).toString(16);
-                    break;
-                default:
-                    uuid += (Math.random() * 16 | 0).toString(16);
-            }
+    static isValidUuid(uuid) {
+        return /^([0-9]|[a-f]){8}-(([0-9]|[a-f]){4}-){3}([0-9]|[a-f]){12}$/.test(uuid);
+    }
+
+    addRoomSecret(roomSecret) {
+        if (!roomSecret in this.roomSecrets) {
+            this.roomSecrets.push(roomSecret);
         }
-        return uuid;
-    };
+    }
+
+    removeRoomSecret(roomSecret) {
+        if (roomSecret in this.roomSecrets) {
+            delete this.roomSecrets[roomSecret];
+        }
+    }
 }
 
 Object.defineProperty(String.prototype, 'hashCode', {

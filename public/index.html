@@ -11,6 +11,7 @@
     <meta name="color-scheme" content="dark light">
     <meta name="apple-mobile-web-app-capable" content="no">
     <meta name="apple-mobile-web-app-title" content="Snapdrop">
+    <meta name="application-name" content="Snapdrop">
     <!-- Descriptions -->
     <meta name="description" content="Instantly share images, videos, PDFs, and links with people nearby. Peer2Peer and Open Source. No Setup, No Signup.">
     <meta name="keywords" content="File, Transfer, Share, Peer2Peer">
@@ -43,19 +44,29 @@
                 <use xlink:href="#info-outline" />
             </svg>
         </a>
-        <a href="#" id="theme" class="icon-button" title="Switch Darkmode/Lightmode" >
+        <a id="theme" class="icon-button" title="Switch Darkmode/Lightmode" >
             <svg class="icon">
                 <use xlink:href="#icon-theme" />
             </svg>
         </a>
-        <a href="#" id="notification" class="icon-button" title="Enable Notifications" hidden>
+        <a id="notification" class="icon-button" title="Enable Notifications" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
             </svg>
         </a>
-        <a href="#" id="install" class="icon-button" title="Install Snapdrop" hidden>
+        <a id="install" class="icon-button" title="Install Snapdrop" hidden>
             <svg class="icon">
                 <use xlink:href="#homescreen" />
+            </svg>
+        </a>
+        <a id="pair-device" class="icon-button" >
+            <svg class="icon">
+                <use xlink:href="#pair-device-icon" />
+            </svg>
+        </a>
+        <a id="clear-pair-devices" class="icon-button" hidden>
+            <svg class="icon">
+                <use xlink:href="#clear-pair-devices-icon" />
             </svg>
         </a>
     </header>
@@ -63,6 +74,7 @@
     <x-peers class="center"></x-peers>
     <x-no-peers>
         <h2>Open Snapdrop on other devices to send files</h2>
+        <div>Pair devices to be discoverable on other networks</div>
     </x-no-peers>
     <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message"></x-instructions>
     <a id="cancelPasteModeBtn" class="button" close hidden style="z-index: 2">Cancel</a>
@@ -71,9 +83,50 @@
         <svg class="icon logo">
             <use xlink:href="#wifi-tethering" />
         </svg>
-        <div id="displayName" placeholder="The easiest way to transfer data across devices"></div>
+        <div id="displayName" placeholder="&nbsp;"></div>
         <div class="font-body2">You can be discovered by everyone on this network</div>
     </footer>
+    <!-- JoinRoom Dialog -->
+    <x-dialog id="pairDeviceDialog">
+        <form action="#">
+            <x-background class="full center text-center">
+                <x-paper shadow="2">
+                    <h2 class="center">Pair Devices</h2>
+                    <div class="center" id="roomKeyQrCode"></div>
+                    <h1 class="center" id="roomKey">000 000</h1>
+                    <div id="pairInstructions" class="font-subheading center text-center">Input this key on another device<br>or scan the QR-Code.</div>
+                    <hr>
+                    <div id="keyInputContainer">
+                        <input type="tel" id="char0" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="">
+                        <input type="tel" id="char1" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="">
+                        <input type="tel" id="char2" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="">
+                        <input type="tel" id="char3" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="">
+                        <input type="tel" id="char4" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="">
+                        <input type="tel" id="char5" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="">
+                    </div>
+                    <div class="font-subheading center text-center">Enter key from another device to continue.</div>
+                    <div class="row-reverse space-between">
+                        <button class="button" type="submit" disabled>Pair</button>
+                        <a class="button" close>Cancel</a>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
+    <x-dialog id="clearDevicesDialog">
+        <form action="#">
+            <x-background class="full center text-center">
+                <x-paper shadow="2">
+                    <h2 class="center">Unpair Devices</h2>
+                    <div class="font-subheading center text-center">Are you sure to unpair all devices?</div>
+                    <div class="row-reverse space-between">
+                        <button class="button" type="submit">Unpair all devices</button>
+                        <a class="button" close>Cancel</a>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
     <!-- Receive Dialog -->
     <x-dialog id="receiveDialog">
         <x-background class="full center">
@@ -211,9 +264,18 @@
         <symbol id="icon-theme" viewBox="0 0 24 24">
          <rect fill="none" height="24" width="24"/><path d="M12,3c-4.97,0-9,4.03-9,9s4.03,9,9,9s9-4.03,9-9c0-0.46-0.04-0.92-0.1-1.36c-0.98,1.37-2.58,2.26-4.4,2.26 c-2.98,0-5.4-2.42-5.4-5.4c0-1.81,0.89-3.42,2.26-4.4C12.92,3.04,12.46,3,12,3L12,3z"/>
         </symbol>
+        <symbol id="pair-device-icon" viewBox="0 0 640 512">
+            <!--! Font Awesome Pro 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+            <path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/>
+        </symbol>
+        <symbol id="clear-pair-devices-icon" viewBox="0 0 640 512">
+            <!--! Font Awesome Pro 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
+            <path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L489.3 358.2l90.5-90.5c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114l-96 96-31.9-25C430.9 239.6 420.1 175.1 377 132c-52.2-52.3-134.5-56.2-191.3-11.7L38.8 5.1zM239 162c30.1-14.9 67.7-9.9 92.8 15.3c20 20 27.5 48.3 21.7 74.5L239 162zM406.6 416.4L220.9 270c-2.1 39.8 12.2 80.1 42.2 110c38.9 38.9 94.4 51 143.6 36.3zm-290-228.5L60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5l61.8-61.8-50.6-39.9z"/>
+        </symbol>
     </svg>
     <!-- Scripts -->
     <script src="scripts/network.js"></script>
+    <script src="scripts/qrcode.js" async></script>
     <script src="scripts/ui.js"></script>
     <script src="scripts/theme.js" async></script>
     <script src="scripts/clipboard.js" async></script>

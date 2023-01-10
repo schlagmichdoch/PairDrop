@@ -9,6 +9,13 @@ class ServerConnection {
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         Events.on('reconnect', _ => this._reconnect());
+        Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
+        Events.on('room-secret-deleted', e => this.send({ type: 'room-secret-deleted', roomSecret: e.detail}));
+        Events.on('room-secrets-cleared', e => this.send({ type: 'room-secrets-cleared', roomSecrets: e.detail}));
+        Events.on('resend-peers', _ => this.send({ type: 'resend-peers'}));
+        Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
+        Events.on('pair-device-join', e => this._onPairDeviceJoin(e.detail));
+        Events.on('pair-device-cancel', _ => this.send({ type: 'pair-device-cancel' }));
     }
 
     _connect() {
@@ -25,11 +32,27 @@ class ServerConnection {
 
     _onOpen() {
         console.log('WS: server connected');
-        if (!this.firstConnect) {
-            this.firstConnect = true;
+        Events.fire('ws-connected');
+    }
+
+    _sendRoomSecrets(roomSecrets) {
+        this.send({ type: 'room-secrets', roomSecrets: roomSecrets });
+    }
+
+    _onPairDeviceInitiate() {
+        if (!this._isConnected()) {
+            Events.fire('notify-user', 'You need to be online to pair devices.');
             return;
         }
-        Events.fire('ws-connected');
+        this.send({ type: 'pair-device-initiate' })
+    }
+
+    _onPairDeviceJoin(roomKey) {
+        if (!this._isConnected()) {
+            setTimeout(_ => this._onPairDeviceJoin(roomKey), 200);
+            return;
+        }
+        this.send({ type: 'pair-device-join', roomKey: roomKey })
     }
 
     _onMessage(msg) {
@@ -37,10 +60,10 @@ class ServerConnection {
         if (msg.type !== 'ping') console.log('WS:', msg);
         switch (msg.type) {
             case 'peers':
-                Events.fire('peers', msg.peers);
+                Events.fire('peers', msg);
                 break;
             case 'peer-joined':
-                Events.fire('peer-joined', msg.peer);
+                Events.fire('peer-joined', msg);
                 break;
             case 'peer-left':
                 Events.fire('peer-left', msg.peerId);
@@ -52,28 +75,61 @@ class ServerConnection {
                 this.send({ type: 'pong' });
                 break;
             case 'display-name':
-                sessionStorage.setItem("peerId", msg.message.peerId);
-                Events.fire('display-name', msg);
+                this._onDisplayName(msg);
+                break;
+            case 'pair-device-initiated':
+                Events.fire('pair-device-initiated', msg);
+                break;
+            case 'pair-device-joined':
+                Events.fire('pair-device-joined', msg.roomSecret);
+                break;
+            case 'pair-device-join-key-invalid':
+                Events.fire('pair-device-join-key-invalid');
+                break;
+            case 'pair-device-canceled':
+                Events.fire('pair-device-canceled', msg.roomKey);
+                break;
+            case 'pair-device-join-key-rate-limit':
+                Events.fire('notify-user', 'Rate limit reached. Wait 10 seconds and try again.');
+                break;
+            case 'secret-room-deleted':
+                Events.fire('secret-room-deleted', msg.roomSecret);
                 break;
             default:
                 console.error('WS: unknown message type', msg);
         }
     }
 
-    send(message) {
+    send(msg) {
         if (!this._isConnected()) return;
-        this._socket.send(JSON.stringify(message));
+        this._socket.send(JSON.stringify(msg));
+    }
+
+    _onDisplayName(msg) {
+        sessionStorage.setItem("peerId", msg.message.peerId);
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            // make peerId persistent when pwa installed
+            PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
+                console.log(`peerId saved to indexedDB: ${peerId}`);
+            }).catch(e => console.error(e));
+        }
+        Events.fire('display-name', msg);
     }
 
     _endpoint() {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
-        let url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
-        if (sessionStorage.getItem('peerId')) {
-            url.searchParams.append('peer_id', sessionStorage.getItem('peerId'))
+        let ws_url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
+        const peerId = this._peerId();
+        if (peerId) {
+            ws_url.searchParams.append('peer_id', peerId)
         }
-        return url.toString();
+        return ws_url.toString();
+    }
+
+    _peerId() {
+        return sessionStorage.getItem("peerId");
     }
 
     _disconnect() {
@@ -81,7 +137,7 @@ class ServerConnection {
         this._socket.onclose = null;
         this._socket.close();
         this._socket = null;
-        Events.fire('ws-disconnect');
+        Events.fire('ws-disconnected');
     }
 
     _onDisconnect() {
@@ -89,7 +145,7 @@ class ServerConnection {
         Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
-        Events.fire('ws-disconnect');
+        Events.fire('ws-disconnected');
     }
 
     _onVisibilityChange() {
@@ -117,9 +173,11 @@ class ServerConnection {
 
 class Peer {
 
-    constructor(serverConnection, peerId) {
+    constructor(serverConnection, peerId, roomType, roomSecret) {
         this._server = serverConnection;
         this._peerId = peerId;
+        this._roomType = roomType;
+        this._roomSecret = roomSecret;
         this._filesQueue = [];
         this._busy = false;
     }
@@ -262,8 +320,8 @@ class Peer {
 
 class RTCPeer extends Peer {
 
-    constructor(serverConnection, peerId) {
-        super(serverConnection, peerId);
+    constructor(serverConnection, peerId, roomType, roomSecret) {
+        super(serverConnection, peerId, roomType, roomSecret);
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
     }
@@ -283,7 +341,7 @@ class RTCPeer extends Peer {
         this._peerId = peerId;
         this._conn = new RTCPeerConnection(RTCPeer.config);
         this._conn.onicecandidate = e => this._onIceCandidate(e);
-        this._conn.onconnectionstatechange = e => this._onConnectionStateChange(e);
+        this._conn.onconnectionstatechange = _ => this._onConnectionStateChange();
         this._conn.oniceconnectionstatechange = e => this._onIceConnectionStateChange(e);
     }
 
@@ -342,7 +400,7 @@ class RTCPeer extends Peer {
         this._connect(this._peerId, true); // reopen the channel
     }
 
-    _onConnectionStateChange(e) {
+    _onConnectionStateChange() {
         console.log('RTC: state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
             case 'disconnected':
@@ -379,11 +437,15 @@ class RTCPeer extends Peer {
     _sendSignal(signal) {
         signal.type = 'signal';
         signal.to = this._peerId;
+        signal.roomType = this._roomType;
+        signal.roomSecret = this._roomSecret;
         this._server.send(signal);
     }
 
     refresh() {
         // check if channel is open. otherwise create one
+        console.debug("refresh:");
+        console.debug(this._conn);
         if (this._isConnected() || this._isConnecting()) return;
         this._connect(this._peerId, this._isCaller);
     }
@@ -394,6 +456,15 @@ class RTCPeer extends Peer {
 
     _isConnecting() {
         return this._channel && this._channel.readyState === 'connecting';
+    }
+}
+
+class WSPeer extends Peer {
+    _send(message) {
+        message.to = this._peerId;
+        message.roomType = this._roomType;
+        message.roomSecret = this._roomSecret;
+        this._server.send(message);
     }
 }
 
@@ -408,26 +479,40 @@ class PeersManager {
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
-        Events.on('ws-disconnect', _ => this._clearPeers());
+        Events.on('ws-disconnected', _ => this._clearPeers());
+        Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
     }
 
     _onMessage(message) {
-        if (!this.peers[message.sender]) {
-            this.peers[message.sender] = new RTCPeer(this._server);
-        }
+        this._refreshOrCreatePeer(message.sender, message.roomType, message.roomSecret);
         this.peers[message.sender].onServerMessage(message);
     }
 
-    _onPeers(peers) {
-        peers.forEach(peer => {
+    _refreshOrCreatePeer(id, roomType, roomSecret) {
+        if (!this.peers[id]) {
+            this.peers[id] = new RTCPeer(this._server, undefined, roomType, roomSecret);
+        }else if (this.peers[id]._roomType !== roomType) {
+            this.peers[id]._roomType = roomType;
+            this.peers[id]._roomSecret = roomSecret;
+        }
+    }
+
+    _onPeers(msg) {
+        console.debug(msg)
+        msg.peers.forEach(peer => {
             if (this.peers[peer.id]) {
-                this.peers[peer.id].refresh();
+                if (this.peers[peer.id].roomType === msg.roomType) {
+                    this.peers[peer.id].refresh();
+                } else {
+                    this.peers[peer.id].roomType = msg.roomType;
+                    this.peers[peer.id].roomSecret = msg.roomSecret;
+                }
                 return;
             }
             if (window.isRtcSupported && peer.rtcSupported) {
-                this.peers[peer.id] = new RTCPeer(this._server, peer.id);
+                this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
             } else {
-                this.peers[peer.id] = new WSPeer(this._server, peer.id);
+                this.peers[peer.id] = new WSPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
             }
         })
     }
@@ -444,8 +529,8 @@ class PeersManager {
         this.peers[message.to].sendText(message.text);
     }
 
-    _onPeerJoined(peer) {
-        this._onMessage(peer.id);
+    _onPeerJoined(message) {
+        this._onMessage({sender: message.peer.id, roomType: message.roomType, roomSecret: message.roomSecret});
     }
 
     _onPeerLeft(peerId) {
@@ -461,12 +546,14 @@ class PeersManager {
             Object.keys(this.peers).forEach(peerId => this._onPeerLeft(peerId));
         }
     }
-}
 
-class WSPeer extends Peer {
-    _send(message) {
-        message.to = this._peerId;
-        this._server.send(message);
+    _onSecretRoomDeleted(roomSecret) {
+        for (const peerId in this.peers) {
+            const peer = this.peers[peerId];
+            if (peer._roomSecret === roomSecret) {
+                this._onPeerLeft(peerId);
+            }
+        }
     }
 }
 
@@ -538,7 +625,6 @@ class FileDigester {
     unchunk(chunk) {
         this._buffer.push(chunk);
         this._bytesReceived += chunk.byteLength || chunk.size;
-        const totalChunks = this._buffer.length;
         this.progress = this._bytesReceived / this._size;
         if (isNaN(this.progress)) this.progress = 1
 
@@ -571,7 +657,7 @@ class Events {
 
 RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
-    iceServers: [
+    'iceServers': [
         {
             urls: 'stun:stun.l.google.com:19302'
         },
