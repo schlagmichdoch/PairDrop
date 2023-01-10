@@ -25,7 +25,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('file-progress', e => this._onFileProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('ws-disconnected', _ => this._clearPeers('all', false));
+        Events.on('ws-disconnected', _ => this._clearPeers());
         Events.on('secret-room-deleted', _ => this._clearPeers('secret'));
         this.peers = {};
     }
@@ -99,16 +99,13 @@ class PeersUI {
         $peer.ui.setProgress(progress.progress);
     }
 
-    _clearPeers(roomType = 'all', restartAnimation = true) {
+    _clearPeers(roomType = 'all') {
         for (const peerId in this.peers) {
             if (roomType === 'all' || this.peers[peerId].roomType === roomType) {
                 const peerNode = $(peerId);
                 if(peerNode) peerNode.remove();
                 delete this.peers[peerId];
             }
-        }
-        if (restartAnimation && $$('x-peers').innerHTML === '') {
-            setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
         }
     }
 
