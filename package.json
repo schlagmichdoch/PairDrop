@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js public",
+    "start:prod": "node index.js public --rate-limit --auto-restart",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

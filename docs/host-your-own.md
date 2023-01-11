@@ -45,9 +45,55 @@ The client expects the server at http(s)://your.domain/server.
 When serving the node server behind a proxy, the `X-Forwarded-For` header has to be set by the proxy. Otherwise, all clients that are served by the proxy will be mutually visible.
 
 ## Deployment with node
-By default, the node server listens on port 3000.
 
-Use nginx or apache to set the header correctly:
+```bash
+git clone https://github.com/Bellisario/node-snapdrop.git && cd node-snapdrop
+```
+
+Install all dependencies with NPM:
+
+```bash
+npm install
+```
+
+Start the server with:
+
+```bash
+npm start
+```
+
+### Public Run
+
+If you want to run in your public "sharable" IP instead of locally, you can use this command:
+
+```bash
+node index.js public
+```
+or
+```bash
+npm start
+```
+
+> Remember to check your IP Address using your OS command to see where you can access the server.
+
+> By default, the node server listens on port 3000.
+
+#### Automatic restart on error
+```bash
+npm start -- --auto-restart 
+```
+#### Rate limiting requests:
+```bash
+npm start -- --rate-limit 
+```
+
+#### Production (autostart and rate-limit)
+```bash
+npm start:prod
+```
+
+## HTTP-Server
+You must use nginx or apache to set the x-forwarded-for header correctly. Otherwise, all clients will be mutually visible.
 
 ### Using nginx
 ```

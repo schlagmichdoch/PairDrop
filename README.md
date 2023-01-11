@@ -47,3 +47,10 @@ If you want to support me and my work you can [buy me a coffee](https://www.buym
 To support the original Snapdrop and its creator go to [his GitHub page](https://github.com/RobinLinus/snapdrop).
 
 Thanks a lot for supporting free and open software!
+
+
+## How to contribute
+
+Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a
+[pull request](https://github.com/schlagmichdoch/pairdrop/pulls) but follow
+[Contributing Guidelines](/CONTRIBUTING.md).
