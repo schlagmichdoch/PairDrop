@@ -226,19 +226,19 @@ class PeerUI {
 
     html() {
         let title;
-        let textInput;
+        let input;
 
         if (window.pasteMode.activated) {
             title = `Click to send ${window.pasteMode.descriptor} directly`;
-            textInput = '';
+            input = '';
         } else {
             title = 'Click to send files or right click to send a message';
-            textInput = '<input type="file" multiple>';
+            input = '<input type="file" multiple>';
         }
 
         return `
             <label class="column center" title="${title}">
-                ${textInput}
+                ${input}
                 <x-icon shadow="1">
                     <svg class="icon"><use xlink:href="#"/></svg>
                 </x-icon>
@@ -757,13 +757,18 @@ class SendTextDialog extends Dialog {
         Events.on('text-recipient', e => this._onRecipient(e.detail));
         this.$text = this.$el.querySelector('#textInput');
         const button = this.$el.querySelector('form');
-        button.addEventListener('submit', e => this._send(e));
+        button.addEventListener('submit', _ => this._send());
         Events.on("keydown", e => this._onKeyDown(e))
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
-            this.hide();
+        if (this.$el.attributes["show"]) {
+            if (e.code === "Escape") {
+                this.hide();
+            }
+            if (e.code === "Enter" && (!e.ctrlKey && !e.metaKey)) {
+                e.preventDefault();
+            }
         }
     }
 
@@ -775,10 +780,8 @@ class SendTextDialog extends Dialog {
         const range = document.createRange();
         const sel = window.getSelection();
 
-        range.selectNodeContents(this.$text);
-        sel.removeAllRanges();
-        sel.addRange(range);
-
+        this.$text.focus();
+        this.$text.select();
     }
 
     _handleShareTargetText() {
@@ -787,13 +790,12 @@ class SendTextDialog extends Dialog {
         window.shareTargetText = '';
     }
 
-    _send(e) {
-        e.preventDefault();
+    _send() {
         Events.fire('send-text', {
             to: this._recipient,
-            text: this.$text.innerText
+            text: this.$text.value
         });
-        this.$text.innerText = "";
+        this.$text.value = "";
     }
 }
 
