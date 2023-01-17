@@ -522,8 +522,9 @@ class PairDeviceDialog extends Dialog {
 
         this.$el.querySelector('[close]').addEventListener('click', _ => this._pairDeviceCancel())
         this.$inputRoomKeyChars.forEach(el => el.addEventListener('input', e => this._onCharsInput(e)));
-        this.$inputRoomKeyChars.forEach(el => el.addEventListener('keyup', _ => this.evaluateRoomKeyChars()));
         this.$inputRoomKeyChars.forEach(el => el.addEventListener('keydown', e => this._onCharsKeyDown(e)));
+        this.$inputRoomKeyChars.forEach(el => el.addEventListener('focus', e => e.target.select()));
+        this.$inputRoomKeyChars.forEach(el => el.addEventListener('click', e => e.target.select()));
 
         Events.on('keydown', e => this._onKeyDown(e));
         Events.on('ws-connected', _ => this._onWsConnected());
@@ -543,11 +544,12 @@ class PairDeviceDialog extends Dialog {
     _onCharsInput(e) {
         e.target.value = e.target.value.replace(/\D/g,'');
         if (!e.target.value) return;
+        this.evaluateRoomKeyChars();
+
         let nextSibling = e.target.nextElementSibling;
         if (nextSibling) {
             e.preventDefault();
             nextSibling.focus();
-            nextSibling.select();
         }
     }
 
@@ -574,11 +576,9 @@ class PairDeviceDialog extends Dialog {
         } else if (e.key === "ArrowRight" && nextSibling) {
             e.preventDefault();
             nextSibling.focus();
-            nextSibling.select();
         } else if (e.key === "ArrowLeft" && previousSibling) {
             e.preventDefault();
             previousSibling.focus();
-            previousSibling.select();
         }
     }
 
@@ -590,7 +590,6 @@ class PairDeviceDialog extends Dialog {
             let nextSibling = document.activeElement.nextElementSibling;
             if (!nextSibling) break;
             nextSibling.focus();
-            nextSibling.select();
         }
     }
 
@@ -603,6 +602,9 @@ class PairDeviceDialog extends Dialog {
                 this.inputRoomKey += el.value;
             })
             this.$submitBtn.removeAttribute("disabled");
+            if (document.activeElement === this.$inputRoomKeyChars[5]) {
+                this._onSubmit();
+            }
         }
     }
 
@@ -641,6 +643,7 @@ class PairDeviceDialog extends Dialog {
             join: true
         });
         this.$qrCode.innerHTML = qr.svg();
+        this.$inputRoomKeyChars.forEach(el => el.removeAttribute("disabled"));
         this.show();
     }
 
@@ -660,7 +663,6 @@ class PairDeviceDialog extends Dialog {
             Events.fire('pair-device-join', roomKey);
             let lastChar = this.$inputRoomKeyChars[5];
             lastChar.focus();
-            lastChar.select();
         }
     }
 
@@ -694,6 +696,7 @@ class PairDeviceDialog extends Dialog {
         this.roomKey = null;
         this.inputRoomKey = '';
         this.$inputRoomKeyChars.forEach(el => el.value = '');
+        this.$inputRoomKeyChars.forEach(el => el.setAttribute("disabled", ""));
     }
 
     _onRoomSecretDelete(roomSecret) {
@@ -919,7 +922,6 @@ class Notifications {
     _downloadNotification(message) {
         if (document.visibilityState !== 'visible') {
             const notification = this._notify(message, 'Click to download');
-            if (!window.isDownloadSupported) return;
             this._bind(notification, _ => this._download(notification));
         }
     }
