@@ -469,6 +469,12 @@ x-dialog .font-subheading {
     padding-bottom: 5px;
 }
 
+/* Send Text Dialog */
+
+#textInput {
+    min-height: 120px;
+}
+
 /* Receive Text Dialog */
 
 #receiveTextDialog #text {

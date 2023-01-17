@@ -915,8 +915,9 @@ class SendTextDialog extends Dialog {
             if (e.code === "Escape") {
                 this.hide();
             }
-            if (e.code === "Enter" && (!e.ctrlKey && !e.metaKey)) {
-                e.preventDefault();
+            if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+                this._send();
+                this.hide();
             }
         }
     }
@@ -930,7 +931,9 @@ class SendTextDialog extends Dialog {
         const sel = window.getSelection();
 
         this.$text.focus();
-        this.$text.select();
+        range.selectNodeContents(this.$text);
+        sel.removeAllRanges();
+        sel.addRange(range);
     }
 
     _handleShareTargetText() {
@@ -942,7 +945,7 @@ class SendTextDialog extends Dialog {
     _send() {
         Events.fire('send-text', {
             to: this._recipient,
-            text: this.$text.value
+            text: this.$text.innerText
         });
         this.$text.value = "";
     }
