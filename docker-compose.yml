@@ -1,4 +1,3 @@
-#Todo: fix turn server
 version: "3"
 services:
   node:
@@ -6,8 +5,8 @@ services:
     user: "node"
     working_dir: /home/node/app
     volumes:
-      - ./server/:/home/node/app
-    command: ash -c "npm i && node index.js"
+      - ./:/home/node/app
+    command: ash -c "npm i && npm start"
     restart: unless-stopped
   nginx:
     build:
@@ -15,7 +14,7 @@ services:
       dockerfile: nginx-with-openssl.Dockerfile
     image: "nginx-with-openssl"
     volumes:
-      - ./client:/usr/share/nginx/html
+      - ./public:/usr/share/nginx/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./docker/certs:/etc/ssl/certs
       - ./docker/openssl:/mnt/openssl
@@ -26,28 +25,3 @@ services:
     entrypoint: /mnt/openssl/create.sh
     command: ["nginx", "-g", "daemon off;"]
     restart: unless-stopped
-  coturn:
-    image: coturn/coturn:alpine
-    container_name: coturn_server
-    network_mode: host
-    restart: unless-stopped
-    command:
-      - "--log-file=stdout"
-      - "--external-ip=$$(detect-external-ip)"
-      #      - "--no-auth"
-      - "--no-tcp"
-      - "--no-tls"
-      - "--no-dtls"
-      - "--no-cli"
-      #      - "--stun-only"
-      - "--listening-ip=0.0.0.0"
-      - "--listening-port=3478"
-      - "--tls-listening-port=5349"
-      - "--min-port=49152"
-      - "--max-port=65535"
-      - "--fingerprint"
-      - "--realm=127.0.0.1"
-      - "-a"
-      - "--user=snapdrop:ifupvrwelijmoyjxmefcsvfxxmcphvxo"
-      - "--lt-cred-mech"
-#      - "--static-auth-secret=ifupvrwelijmoyjxmefcsvfxxmcphvxo"
