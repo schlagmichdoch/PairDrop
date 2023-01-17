@@ -361,7 +361,7 @@ class Peer {
                 this._onDownloadProgress(message.progress);
                 break;
             case 'files-transfer-response':
-                this._onFileTransferResponded(message);
+                this._onFileTransferRequestResponded(message);
                 break;
             case 'file-transfer-complete':
                 this._onFileTransferCompleted();
@@ -456,7 +456,7 @@ class Peer {
         Events.fire('deactivate-paste-mode');
     }
 
-    _onFileTransferResponded(message) {
+    _onFileTransferRequestResponded(message) {
         if (!message.accepted) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
 

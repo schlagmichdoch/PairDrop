@@ -471,6 +471,11 @@ x-dialog h2 {
     margin-top: 1rem;
 }
 
+#receiveRequestDialog h2,
+#receiveFileDialog h2 {
+    margin-bottom: 0.5rem;
+}
+
 x-dialog .row-reverse {
     margin: auto -24px;
     margin-top: 40px;
@@ -489,7 +494,7 @@ x-dialog .row-reverse {
 }
 
 .file-size{
-    padding-bottom: 5px;
+    margin-bottom: 30px;
 }
 
 /* Send Text Dialog */

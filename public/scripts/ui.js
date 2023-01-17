@@ -438,9 +438,10 @@ class ReceiveDialog extends Dialog {
 class ReceiveFileDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveDialog', false);
+        super('receiveFileDialog', false);
 
         this.$shareOrDownloadBtn = this.$el.querySelector('#shareOrDownload');
+        this.$receiveTitleNode = this.$el.querySelector('#receiveTitle')
 
         Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files));
         this._filesQueue = [];
@@ -503,13 +504,16 @@ class ReceiveFileDialog extends ReceiveDialog {
         let description;
         let size;
         let filename;
+        let title;
 
         if (files.length === 1) {
+            title = 'PairDrop - File Received'
             description = files[0].name;
             size = this._formatFileSize(files[0].size);
             filename = files[0].name;
             url = URL.createObjectURL(files[0])
         } else {
+            title = `PairDrop - ${files.length} Files Received`
             let completeSize = 0
             for (let i=0; i<files.length; i++) {
                 completeSize += files[0].size;
@@ -535,9 +539,9 @@ class ReceiveFileDialog extends ReceiveDialog {
             filename = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
         }
 
+        this.$receiveTitleNode.textContent = title;
         this.$fileDescriptionNode.textContent = description;
         this.$fileSizeNode.textContent = size;
-        this.$shareOrDownloadBtn.download = filename;
 
         if ((window.iOS || window.android) && !!navigator.share && navigator.canShare({files})) {
             this.$shareOrDownloadBtn.innerText = "Share";
@@ -549,6 +553,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
         } else {
             this.$shareOrDownloadBtn.innerText = "Download";
+            this.$shareOrDownloadBtn.download = filename;
             this.$shareOrDownloadBtn.href = url;
         }
 
