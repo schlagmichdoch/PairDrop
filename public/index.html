@@ -107,6 +107,7 @@
                     <div class="font-subheading center text-center">Enter key from another device to continue.</div>
                     <div class="row-reverse space-between">
                         <button class="button" type="submit" disabled>Pair</button>
+                        <div class="separator"></div>
                         <a class="button" close>Cancel</a>
                     </div>
                 </x-paper>
@@ -137,6 +138,7 @@
                 <div class="center file-preview"></div>
                 <div class="row-reverse space-between">
                     <a class="button" id="shareOrDownload" autofocus></a>
+                    <div class="separator"></div>
                     <button class="button" close>Close</button>
                 </div>
             </x-paper>
@@ -152,6 +154,7 @@
                 <div class="center file-preview"></div>
                 <div class="row-reverse space-between">
                     <button class="button" id="acceptRequest" title="Accept Request" close autofocus>Accept</button>
+                    <div class="separator"></div>
                     <button class="button" id="declineRequest" title="Decline Request" close>Decline</button>
                 </div>
             </x-paper>
@@ -162,10 +165,11 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h3>Send a Message</h3>
+                    <h2 class="center text-center">Send a Message</h2>
                     <div id="textInput" class="textarea" role="textbox" placeholder="Send a message" autocomplete="off" autofocus contenteditable></div>
                     <div class="row-reverse">
                         <button class="button" type="submit" close>Send</button>
+                        <div class="separator"></div>
                         <a class="button" close>Cancel</a>
                     </div>
                 </x-paper>
@@ -176,10 +180,11 @@
     <x-dialog id="receiveTextDialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h3>Message Received</h3>
+                <h2>Message Received</h2>
                 <div class="font-subheading" id="text"></div>
                 <div class="row-reverse">
                     <button class="button" id="copy" close autofocus>Copy</button>
+                    <div class="separator"></div>
                     <button class="button" close>Close</button>
                 </div>
             </x-paper>

@@ -362,7 +362,7 @@ x-dialog x-background {
     z-index: 10;
     transition: opacity 300ms;
     will-change: opacity;
-    padding: 16px;
+    padding: 35px;
 }
 
 x-dialog x-paper {
@@ -390,8 +390,10 @@ x-dialog:not([show]) x-background {
 }
 
 x-dialog .row-reverse>.button {
-    margin-top: 10px;
-    margin-left: 8px;
+    margin-top: 0;
+    margin-bottom: -16px;
+    width: 50%;
+    height: 50px;
 }
 
 x-dialog a {
@@ -454,18 +456,39 @@ x-dialog .font-subheading {
     margin-bottom: 40px;
 }
 
+#pairDeviceDialog x-background {
+    padding: 16px!important;
+}
+
 /* Receive Dialog */
 
-#receiveDialog .row {
+x-dialog .row {
     margin-top: 24px;
     margin-bottom: 8px;
 }
 
-#fileName{
-    word-break: break-all;
+x-dialog h2 {
+    margin-top: 1rem;
 }
 
-#fileSize{
+x-dialog .row-reverse {
+    margin: auto -24px;
+    margin-top: 40px;
+    border-top: solid 2.5px var(--border-color);
+}
+
+.separator {
+    border: solid 1.25px var(--border-color);
+    margin-bottom: -16px;
+}
+
+.file-description {
+    word-break: break-word;
+    width: 80%;
+    margin: auto;
+}
+
+.file-size{
     padding-bottom: 5px;
 }
 
@@ -555,10 +578,6 @@ x-dialog .font-subheading {
 .button:not([disabled]):hover:before,
 .icon-button:hover:before {
     opacity: 0.1;
-}
-
-.button:before {
-    border-radius: 8px;
 }
 
 .button:focus:before,
@@ -801,6 +820,7 @@ body {
     --text-color: #333;
     --bg-color: #fff;
     --bg-color-secondary: #f1f3f4;
+    --border-color: #e7e8e8;
 }
 
 /* Dark theme colors */
@@ -808,6 +828,7 @@ body.dark-theme {
     --text-color: #eee;
     --bg-color: #121212;
     --bg-color-secondary: #333;
+    --border-color: #252525;
 }
 
 /* Colored Elements */
@@ -825,14 +846,18 @@ x-dialog x-paper {
     color: var(--text-color);
     background-color: var(--bg-color-secondary);
 }
+
 /* Image/Video/Audio Preview */
+.file-preview {
+    margin: 10px -24px 40px -24px;
+}
+
 .element-preview {
     max-width: 100%;
-    max-height: 50vh;
+    max-height: 40vh;
     margin: auto;
     display: block;
 }
-
 
 /* Styles for users who prefer dark mode at the OS level */
 @media (prefers-color-scheme: dark) {
@@ -842,6 +867,7 @@ x-dialog x-paper {
         --text-color: #eee;
         --bg-color: #121212;
         --bg-color-secondary: #333;
+        --border-color: #252525;
     }
 
     /* Override dark mode with light mode styles if the user decides to swap */
@@ -849,7 +875,8 @@ x-dialog x-paper {
         --text-color: #333;
         --bg-color: #fafafa;
         --bg-color-secondary: #f1f3f4;
-    }
+        --border-color: #e7e8e8;
+   }
 }
 
 
