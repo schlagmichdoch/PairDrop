@@ -152,13 +152,13 @@ class PeersUI {
 
             if (files.length === 1) {
                 descriptor = files[0].name;
-                noPeersMessage = `Open Pairdrop on other devices to send <i>${descriptor}</i> directly`;
+                noPeersMessage = `Open PairDrop on other devices to send <i>${descriptor}</i> directly`;
             } else if (files.length > 1) {
                 descriptor = `${files.length} files`;
-                noPeersMessage = `Open Pairdrop on other devices to send ${descriptor} directly`;
+                noPeersMessage = `Open PairDrop on other devices to send ${descriptor} directly`;
             } else if (text.length > 0) {
                 descriptor = `pasted text`;
-                noPeersMessage = `Open Pairdrop on other devices to send ${descriptor} directly`;
+                noPeersMessage = `Open PairDrop on other devices to send ${descriptor} directly`;
             }
 
             const xInstructions = document.querySelectorAll('x-instructions')[0];
@@ -200,7 +200,7 @@ class PeersUI {
             xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
 
             const xNoPeers = document.querySelectorAll('x-no-peers')[0];
-            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open Pairdrop on other devices to send files';
+            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open PairDrop on other devices to send files';
 
             const cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
             cancelPasteModeBtn.removeEventListener('click', this._cancelPasteMode);
@@ -1321,7 +1321,7 @@ class PersistentStorage {
     }
 }
 
-class Pairdrop {
+class PairDrop {
     constructor() {
         Events.on('load', _ => {
             const server = new ServerConnection();
@@ -1342,7 +1342,7 @@ class Pairdrop {
 }
 
 const persistentStorage = new PersistentStorage();
-const pairdrop = new Pairdrop();
+const pairDrop = new PairDrop();
 
 
 if ('serviceWorker' in navigator) {
@@ -1443,7 +1443,7 @@ Events.on('load', () => {
     animate();
 });
 
-// close About Pairdrop page on Escape
+// close About PairDrop page on Escape
 window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         window.location.hash = '#';

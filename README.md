@@ -1,6 +1,6 @@
-# Pairdrop 
+# PairDrop 
 
-[Pairdrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's Airdrop. 
+[PairDrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's Airdrop. 
 
 Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
@@ -25,7 +25,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 ![test](/docs/pairdrop_screenshot_desktop.png)
 
 
-## Snapdrop and Pairdrop are built with the following awesome technologies:
+## Snapdrop and PairDrop are built with the following awesome technologies:
 * Vanilla HTML5 / ES6 / CSS3 frontend
 * [WebRTC](http://webrtc.org/) / [WebSockets](http://www.websocket.org/)
 * [NodeJS](https://nodejs.org/en/) backend
@@ -38,11 +38,13 @@ You can [host your own instance with Docker](/docs/host-your-own.md).
 
 
 ## Support the Community
-Pairdrop is free and always will be!
+PairDrop is free and always will be!
 
-If you want to support me and my work you can [buy me a coffee](https://www.buymeacoffee.com/pairdrop) ☕
+Do you want to support me?<br>
+<a href="https://www.buymeacoffee.com/pairdrop" target="_blank">
+<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
+</a>
 
-<br>
 
 To support the original Snapdrop and its creator go to [his GitHub page](https://github.com/RobinLinus/snapdrop).
 

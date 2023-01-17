@@ -161,11 +161,11 @@ server {
 ```
 
 ## Deployment with Docker
-The easiest way to get Pairdrop up and running is by using Docker.
+The easiest way to get PairDrop up and running is by using Docker.
 
 By default, docker listens on ports 8080 (http) and 8443 (https) (specified in `docker-compose.yml`).
 
-When running Pairdrop via Docker, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
+When running PairDrop via Docker, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
 
 ### Installation
 [See Local Development > Install](#install)
