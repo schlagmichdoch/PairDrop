@@ -402,7 +402,7 @@ class PairdropServer {
 
     _keepAlive(peer) {
         this._cancelKeepAlive(peer);
-        let timeout = 2500;
+        let timeout = 30000;
         if (!peer.lastBeat) {
             peer.lastBeat = Date.now();
         }
