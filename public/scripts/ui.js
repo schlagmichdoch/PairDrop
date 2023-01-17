@@ -503,16 +503,13 @@ class ReceiveFileDialog extends ReceiveDialog {
         let description;
         let size;
         let filename;
-        let shareTitle
 
         if (files.length === 1) {
-            shareTitle = "PairDrop File"
             description = files[0].name;
             size = this._formatFileSize(files[0].size);
             filename = files[0].name;
             url = URL.createObjectURL(files[0])
         } else {
-            shareTitle = "PairDrop Files";
             let completeSize = 0
             for (let i=0; i<files.length; i++) {
                 completeSize += files[0].size;
@@ -546,8 +543,6 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$shareOrDownloadBtn.innerText = "Share";
             this.continueCallback = async _ => {
                 navigator.share({
-                    title: shareTitle,
-                    text: description,
                     files: files
                 }).catch(err => console.error(err));
             }
