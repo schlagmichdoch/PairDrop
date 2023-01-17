@@ -17,6 +17,8 @@ class ServerConnection {
         Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
         Events.on('pair-device-join', e => this._onPairDeviceJoin(e.detail));
         Events.on('pair-device-cancel', _ => this.send({ type: 'pair-device-cancel' }));
+        Events.on('offline', _ => clearTimeout(this._reconnectTimer));
+        Events.on('online', _ => this._connect());
     }
 
     _connect() {
@@ -50,7 +52,7 @@ class ServerConnection {
 
     _onPairDeviceJoin(roomKey) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onPairDeviceJoin(roomKey), 200);
+            setTimeout(_ => this._onPairDeviceJoin(roomKey), 1000);
             return;
         }
         this.send({ type: 'pair-device-join', roomKey: roomKey })
@@ -143,9 +145,9 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'Connection lost. Retry in 5 seconds...');
+        Events.fire('notify-user', 'Connection lost. Retrying...');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         Events.fire('ws-disconnected');
     }
 
@@ -187,10 +189,114 @@ class Peer {
         this._send(JSON.stringify(message));
     }
 
-    sendFiles(files) {
-        for (let i = 0; i < files.length; i++) {
-            this._filesQueue.push(files[i]);
+    async createHeader(file) {
+        let hashHex = await this.getHashHex(file);
+        return {
+            name: file.name,
+            mime: file.type,
+            size: file.size,
+            hashHex: hashHex
+        };
+    }
+
+    async getHashHex(file) {
+        if (!crypto.subtle) {
+            console.error("PairDrop only works in secure contexts.")
         }
+        const hashBuffer = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+        // Convert hex to hash, see https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join(''); // convert bytes to hex string
+        return(hashHex);
+    }
+
+    getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
+        return new Promise((resolve) => {
+            let image = new Image();
+            image.src = URL.createObjectURL(file);
+            image.onload = _ => {
+                let imageWidth = image.width;
+                let imageHeight = image.height;
+                let canvas = document.createElement('canvas');
+
+                // resize the canvas and draw the image data into it
+                if (width && height) {
+                    canvas.width = width;
+                    canvas.height = height;
+                } else if (width) {
+                    canvas.width = width;
+                    canvas.height = Math.floor(imageHeight * width / imageWidth)
+                } else if (height) {
+                    canvas.width = Math.floor(imageWidth * height / imageHeight);
+                    canvas.height = height;
+                } else {
+                    canvas.width = imageWidth;
+                    canvas.height = imageHeight
+                }
+
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+                let dataUrl = canvas.toDataURL("image/jpeg", quality);
+                resolve(dataUrl);
+            }
+        }).then(dataUrl => {
+            return dataUrl;
+        })
+    }
+
+    async requestFileTransfer(files) {
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'prepare'})
+
+        let header = [];
+        let allFilesAreImages = true;
+        let combinedSize = 0;
+        for (let i=0; i<files.length; i++) {
+            header.push(await this.createHeader(files[i]));
+            if (files[i].type.split('/')[0] !== 'image') {
+                allFilesAreImages = false;
+            }
+            combinedSize += files[i].size;
+        }
+        this._fileHeaderRequested = header;
+        let bytesCompleted = 0;
+
+        for (let i=0; i<files.length; i++) {
+            const entry = await zipper.addFile(files[i], {
+                onprogress: (progress, total) => {
+                    Events.fire('set-progress', {
+                        peerId: this._peerId,
+                        progress: (bytesCompleted + progress) / combinedSize,
+                        status: 'prepare'
+                    })
+                }
+            });
+            bytesCompleted += files[i].size;
+        }
+        this.zipFileRequested = await zipper.getZipFile();
+
+        if (allFilesAreImages) {
+            this.getResizedImageDataUrl(files[0], 400, null, 0.9).then(dataUrl => {
+                this.sendJSON({type: 'request',
+                    header: header,
+                    size: combinedSize,
+                    thumbnailDataUrl: dataUrl
+                });
+            })
+        } else {
+            this.sendJSON({type: 'request',
+                header: header,
+                size: combinedSize,
+            });
+        }
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'})
+    }
+
+    async sendFiles() {
+        console.debug("sendFiles")
+        console.debug(this.zipFileRequested);
+        this._filesQueue.push({zipFile: this.zipFileRequested, fileHeader: this._fileHeaderRequested});
+        this._fileHeaderRequested = null
         if (this._busy) return;
         this._dequeueFile();
     }
@@ -202,14 +308,13 @@ class Peer {
         this._sendFile(file);
     }
 
-    _sendFile(file) {
+    async _sendFile(file) {
         this.sendJSON({
             type: 'header',
-            name: file.name,
-            mime: file.type,
-            size: file.size
+            size: file.zipFile.size,
+            fileHeader: file.fileHeader
         });
-        this._chunker = new FileChunker(file,
+        this._chunker = new FileChunker(file.zipFile,
             chunk => this._send(chunk),
             offset => this._onPartitionEnd(offset));
         this._chunker.nextPartition();
@@ -240,8 +345,11 @@ class Peer {
         message = JSON.parse(message);
         console.log('RTC:', message);
         switch (message.type) {
+            case 'request':
+                this._onFilesTransferRequest(message);
+                break;
             case 'header':
-                this._onFileHeader(message);
+                this._onFilesHeader(message);
                 break;
             case 'partition':
                 this._onReceivedPartitionEnd(message);
@@ -251,6 +359,9 @@ class Peer {
                 break;
             case 'progress':
                 this._onDownloadProgress(message.progress);
+                break;
+            case 'files-transfer-response':
+                this._onFileTransferResponded(message);
                 break;
             case 'file-transfer-complete':
                 this._onFileTransferCompleted();
@@ -264,17 +375,37 @@ class Peer {
         }
     }
 
-    _onFileHeader(header) {
-        this._lastProgress = 0;
-        this._digester = new FileDigester({
-            name: header.name,
-            mime: header.mime,
-            size: header.size
-        }, file => this._onFileReceived(file));
+    _onFilesTransferRequest(request) {
+        if (this._requestPending) {
+            // Only accept one request at a time
+            this.sendJSON({type: 'files-transfer-response', accepted: false});
+            return;
+        }
+        this._requestPending = true;
+        Events.fire('files-transfer-request', {
+            request: request,
+            peerId: this._peerId
+        });
+    }
+
+    _respondToFileTransferRequest(header, accepted) {
+        this._requestPending = false;
+        this._acceptedHeader = header;
+        this.sendJSON({type: 'files-transfer-response', accepted: accepted});
+        if (accepted) this._busy = true;
+    }
+
+
+    _onFilesHeader(msg) {
+        if (JSON.stringify(this._acceptedHeader) === JSON.stringify(msg.fileHeader)) {
+            this._lastProgress = 0;
+            this._digester = new FileDigester(msg.size, blob => this._onFileReceived(blob, msg.fileHeader));
+            this._acceptedHeader = null;
+        }
     }
 
     _onChunkReceived(chunk) {
-        if(!(chunk.byteLength || chunk.size)) return;
+        if(!this._digester || !(chunk.byteLength || chunk.size)) return;
 
         this._digester.unchunk(chunk);
         const progress = this._digester.progress;
@@ -287,24 +418,58 @@ class Peer {
     }
 
     _onDownloadProgress(progress) {
-        Events.fire('file-progress', { sender: this._peerId, progress: progress });
+        if (this._busy) {
+            Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
+        }
     }
 
-    _onFileReceived(proxyFile) {
-        Events.fire('file-received', proxyFile);
-        this.sendJSON({ type: 'file-transfer-complete' });
+    async _onFileReceived(zipBlob, fileHeader) {
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
+
+        this._busy = false;
+        this.sendJSON({type: 'file-transfer-complete'});
+        let zipEntries = await zipper.getEntries(zipBlob);
+        let files = [];
+        let hashHexs = [];
+        for (let i=0; i<zipEntries.length; i++) {
+            let fileBlob = await zipper.getData(zipEntries[i]);
+            let hashHex = await this.getHashHex(fileBlob)
+            if (hashHex !== fileHeader[i].hashHex) {
+                Events.fire('notify-user', 'Files are malformed.');
+                Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
+                throw new Error("Hash of received file differs from hash of requested file. Abort!");
+            }
+            files.push(new File([fileBlob], zipEntries[i].filename, {
+                type: fileHeader[i].mime,
+                lastModified: new Date().getTime()
+            }));
+        }
+        Events.fire('files-received', {sender: this._peerId, files: files});
     }
 
     _onFileTransferCompleted() {
         this._onDownloadProgress(1);
-        this._reader = null;
+        this._digester = null;
         this._busy = false;
         this._dequeueFile();
         Events.fire('notify-user', 'File transfer completed.');
+        Events.fire('deactivate-paste-mode');
+    }
+
+    _onFileTransferResponded(message) {
+        if (!message.accepted) {
+            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
+
+            this.zipFile = null;
+            return;
+        }
+        Events.fire('file-transfer-accepted');
+        this.sendFiles();
     }
 
     _onMessageTransferCompleted() {
         Events.fire('notify-user', 'Message transfer completed.');
+        Events.fire('deactivate-paste-mode');
     }
 
     sendText(text) {
@@ -477,6 +642,7 @@ class PeersManager {
         Events.on('signal', e => this._onMessage(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
+        Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
@@ -522,8 +688,12 @@ class PeersManager {
         this.peers[peerId].send(message);
     }
 
+    _onRespondToFileTransferRequest(detail) {
+        this.peers[detail.to]._respondToFileTransferRequest(detail.header, detail.accepted);
+    }
+
     _onFilesSelected(message) {
-        this.peers[message.to].sendFiles(message.files);
+        this.peers[message.to].requestFileTransfer(message.files);
     }
 
     _onSendText(message) {
@@ -614,12 +784,10 @@ class FileChunker {
 
 class FileDigester {
 
-    constructor(meta, callback) {
+    constructor(size, callback) {
         this._buffer = [];
         this._bytesReceived = 0;
-        this._size = meta.size;
-        this._mime = meta.mime || 'application/octet-stream';
-        this._name = meta.name;
+        this._size = size;
         this._callback = callback;
     }
 
@@ -631,13 +799,7 @@ class FileDigester {
 
         if (this._bytesReceived < this._size) return;
         // we are done
-        let blob = new Blob(this._buffer, { type: this._mime });
-        this._callback({
-            name: this._name,
-            mime: this._mime,
-            size: this._size,
-            blob: blob
-        });
+        this._callback(new Blob(this._buffer));
     }
 
 }

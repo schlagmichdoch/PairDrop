@@ -1,11 +1,13 @@
-var CACHE_NAME = 'pairdrop-cache-v2';
+var CACHE_NAME = 'pairdrop-cache-v3';
 var urlsToCache = [
   'index.html',
   './',
   'styles.css',
   'scripts/network.js',
   'scripts/ui.js',
-  'scripts/clipboard.js',
+  'scripts/util.js',
+  'scripts/qrcode.js',
+  'scripts/zip.min.js',
   'scripts/theme.js',
   'sounds/blop.mp3',
   'images/favicon-96x96.png'

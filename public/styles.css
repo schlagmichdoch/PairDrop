@@ -105,7 +105,7 @@ h2 {
     font-weight: 400;
     letter-spacing: -.012em;
     line-height: 32px;
-}
+    color: var(--primary-color);}
 
 h3 {
     font-size: 20px;
@@ -269,12 +269,12 @@ x-peer:not(.type-ip) x-icon {
     background: #00a69c;
 }
 
-x-peer:not([transfer]):hover x-icon,
-x-peer:not([transfer]):focus x-icon {
+x-peer:not([status]):hover x-icon,
+x-peer:not([status]):focus x-icon {
     transform: scale(1.05);
 }
 
-x-peer[transfer] x-icon {
+x-peer[status] x-icon {
     box-shadow: none;
     opacity: 0.8;
     transform: scale(1);
@@ -291,13 +291,25 @@ x-peer[transfer] x-icon {
     white-space: nowrap;
 }
 
-x-peer[transfer] .status:before {
+x-peer[status=transfer] .status:before {
     content: 'Transferring...';
 }
 
-x-peer:not([transfer]) .status,
-x-peer[transfer] .device-name {
+x-peer[status=prepare] .status:before {
+    content: 'Preparing...';
+}
+
+x-peer[status=wait] .status:before {
+    content: 'Waiting...';
+}
+
+x-peer:not([status]) .status,
+x-peer[status] .device-name {
     display: none;
+}
+
+x-peer[status] {
+    pointer-events: none;
 }
 
 x-peer x-icon {
@@ -437,7 +449,7 @@ x-dialog .font-subheading {
     height: 80px;
 }
 
-#pairDeviceDialog>*>*>*>hr {
+#pairDeviceDialog hr {
     margin-top: 40px;
     margin-bottom: 40px;
 }

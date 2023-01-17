@@ -131,17 +131,28 @@
     <x-dialog id="receiveDialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h3>File Received</h3>
-                <div class="font-subheading" id="fileName">Filename</div>
-                <div class="font-body2" id="fileSize"></div>
-                <div class='preview' style="visibility: hidden;"></div>
-                <div class="row">
-                    <label for="autoDownload" class="grow">Ask to save each file before downloading</label>
-                    <input type="checkbox" id="autoDownload" checked="">
+                <h2 class="center">Pairdrop</h2>
+                <div class="text-center file-description"></div>
+                <div class="font-body2 text-center file-size"></div>
+                <div class="center file-preview"></div>
+                <div class="row-reverse space-between">
+                    <a class="button" id="shareOrDownload" autofocus></a>
+                    <button class="button" close>Close</button>
                 </div>
-                <div class="row-reverse">
-                    <a class="button" close id="download" title="Download File" autofocus>Save</a>
-                    <button class="button" close>Ignore</button>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Receive Dialog -->
+    <x-dialog id="receiveRequestDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <h2 class="center">Pairdrop</h2>
+                <div class="text-center file-description"></div>
+                <div class="font-body2 text-center file-size"></div>
+                <div class="center file-preview"></div>
+                <div class="row-reverse space-between">
+                    <button class="button" id="acceptRequest" title="Accept Request" close autofocus>Accept</button>
+                    <button class="button" id="declineRequest" title="Decline Request" close>Decline</button>
                 </div>
             </x-paper>
         </x-background>
@@ -272,11 +283,12 @@
         </symbol>
     </svg>
     <!-- Scripts -->
+    <script src="scripts/zip.min.js" async></script>
+    <script src="scripts/util.js"></script>
     <script src="scripts/network.js"></script>
     <script src="scripts/qrcode.js" async></script>
     <script src="scripts/ui.js"></script>
     <script src="scripts/theme.js" async></script>
-    <script src="scripts/clipboard.js" async></script>
     <!-- Sounds -->
     <audio id="blop" autobuffer="true">
         <source src="/sounds/blop.mp3" type="audio/mpeg">

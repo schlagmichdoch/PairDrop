@@ -1,9 +1,9 @@
 const $ = query => document.getElementById(query);
 const $$ = query => document.body.querySelector(query);
 const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
-window.isDownloadSupported = (typeof document.createElement('a').download !== 'undefined');
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+window.android = /android/i.test(navigator.userAgent);
 window.pasteMode = {};
 window.pasteMode.activated = false;
 
@@ -23,11 +23,22 @@ class PeersUI {
         Events.on('peer-connected', e => this._onPeerConnected(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('file-progress', e => this._onFileProgress(e.detail));
+        Events.on('set-progress', e => this._onSetProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
         Events.on('ws-disconnected', _ => this._clearPeers());
         Events.on('secret-room-deleted', _ => this._clearPeers('secret'));
         this.peers = {};
+
+        this.$cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
+        this.$cancelPasteModeBtn.addEventListener('click', this._cancelPasteMode);
+
+        Events.on('keydown', e => this._onKeyDown(e));
+    }
+
+    _onKeyDown(e) {
+        if (window.pasteMode.activated && e.code === "Escape") {
+            Events.fire('deactivate-paste-mode');
+        }
     }
 
     _onPeerJoined(msg) {
@@ -85,18 +96,16 @@ class PeersUI {
     _onSecretRoomDeleted(roomSecret) {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
-            console.debug(peer);
             if (peer.roomSecret === roomSecret) {
                 this._onPeerLeft(peerId);
             }
         }
     }
 
-    _onFileProgress(progress) {
-        const peerId = progress.sender || progress.recipient;
-        const $peer = $(peerId);
+    _onSetProgress(progress) {
+        const $peer = $(progress.peerId);
         if (!$peer) return;
-        $peer.ui.setProgress(progress.progress);
+        $peer.ui.setProgress(progress.progress, progress.status)
     }
 
     _clearPeers(roomType = 'all') {
@@ -161,13 +170,9 @@ class PeersUI {
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
+            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback));
 
-            const _deactivateCallback = (e) => this._deactivatePasteMode(e, _callback)
-            const cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
-            cancelPasteModeBtn.addEventListener('click', this._cancelPasteMode)
-            cancelPasteModeBtn.removeAttribute('hidden');
-
-            Events.on('notify-user', _deactivateCallback);
+            this.$cancelPasteModeBtn.removeAttribute('hidden');
 
             window.pasteMode.descriptor = descriptor;
             window.pasteMode.activated = true;
@@ -179,10 +184,11 @@ class PeersUI {
 
     _cancelPasteMode() {
         Events.fire('notify-user', 'Paste Mode canceled');
+        Events.fire('deactivate-paste-mode');
     }
 
-    _deactivatePasteMode(e, _callback) {
-        if (window.pasteMode.activated && ['File transfer completed.', 'Message transfer completed.', 'Paste Mode canceled'].includes(e.detail)) {
+    _deactivatePasteMode(_callback) {
+        if (window.pasteMode.activated) {
             window.pasteMode.descriptor = undefined;
             window.pasteMode.activated = false;
             console.log('Paste mode deactivated.')
@@ -328,24 +334,23 @@ class PeerUI {
             files: files,
             to: this._peer.id
         });
-        $input.value = null; // reset input
+        $input.files = null; // reset input
     }
 
-    setProgress(progress) {
-        if (progress > 0) {
-            this.$el.setAttribute('transfer', '1');
-        }
-        if (progress > 0.5) {
+    setProgress(progress, status) {
+        if (0.5 < progress && progress < 1) {
             this.$progress.classList.add('over50');
         } else {
             this.$progress.classList.remove('over50');
         }
+        if (progress < 1) {
+            this.$el.setAttribute('status', status);
+        } else {
+            this.$el.removeAttribute('status');
+            progress = 0;
+        }
         const degrees = `rotate(${360 * progress}deg)`;
         this.$progress.style.setProperty('--progress', degrees);
-        if (progress >= 1) {
-            this.setProgress(0);
-            this.$el.removeAttribute('transfer');
-        }
     }
 
     _onDrop(e) {
@@ -410,76 +415,12 @@ class Dialog {
 }
 
 class ReceiveDialog extends Dialog {
+    constructor(id, hideOnDisconnect = true) {
+        super(id, hideOnDisconnect);
 
-    constructor() {
-        super('receiveDialog', false);
-        Events.on('file-received', e => {
-            this._nextFile(e.detail);
-            window.blop.play();
-        });
-        this._filesQueue = [];
-        this.$previewBox = this.$el.querySelector('.preview')
-    }
-
-    _nextFile(nextFile) {
-        if (nextFile) this._filesQueue.push(nextFile);
-        if (this._busy) return;
-        this._busy = true;
-        const file = this._filesQueue.shift();
-        this._displayFile(file);
-    }
-
-    _dequeueFile() {
-        if (!this._filesQueue.length) { // nothing to do
-            this._busy = false;
-            return;
-        }
-        // dequeue next file
-        setTimeout(_ => {
-            this._busy = false;
-            this._nextFile();
-        }, 300);
-    }
-
-    _displayFile(file) {
-        const $a = this.$el.querySelector('#download');
-        const url = URL.createObjectURL(file.blob);
-        $a.href = url;
-        $a.download = file.name;
-
-        if(this._autoDownload()){
-            $a.click()
-            return
-        }
-
-        let mime = file.mime.split('/')[0]
-        let previewElement = {
-            image: 'img',
-            audio: 'audio',
-            video: 'video'
-        }
-
-        if(Object.keys(previewElement).indexOf(mime) !== -1){
-            console.log('the file is able to preview');
-            let element = document.createElement(previewElement[mime]);
-            element.src = url;
-            element.controls = true;
-            element.classList = 'element-preview'
-
-            this.$previewBox.style.visibility = 'inherit';
-            this.$previewBox.appendChild(element)
-        }
-
-        this.$el.querySelector('#fileName').textContent = file.name;
-        this.$el.querySelector('#fileSize').textContent = this._formatFileSize(file.size);
-        this.show();
-
-        if (window.isDownloadSupported) return;
-        // fallback for iOS
-        $a.target = '_blank';
-        const reader = new FileReader();
-        reader.onload = _ => $a.href = reader.result;
-        reader.readAsDataURL(file.blob);
+        this.$fileDescriptionNode = this.$el.querySelector('.file-description');
+        this.$fileSizeNode = this.$el.querySelector('.file-size');
+        this.$previewBox = this.$el.querySelector('.file-preview')
     }
 
     _formatFileSize(bytes) {
@@ -493,17 +434,221 @@ class ReceiveDialog extends Dialog {
             return bytes + ' Bytes';
         }
     }
+}
+class ReceiveFileDialog extends ReceiveDialog {
+
+    constructor() {
+        super('receiveDialog', false);
+
+        this.$shareOrDownloadBtn = this.$el.querySelector('#shareOrDownload');
+
+        Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files));
+        this._filesQueue = [];
+    }
+
+    _onFilesReceived(sender, files) {
+        this._nextFiles(sender, files);
+        window.blop.play();
+    }
+
+    _nextFiles(sender, nextFiles) {
+        if (nextFiles) this._filesQueue.push({peerId: sender, files: nextFiles});
+        if (this._busy) return;
+        this._busy = true;
+        const {peerId, files} = this._filesQueue.shift();
+        this._displayFiles(peerId, files);
+    }
+
+    _dequeueFile() {
+        if (!this._filesQueue.length) { // nothing to do
+            this._busy = false;
+            return;
+        }
+        // dequeue next file
+        setTimeout(_ => {
+            this._busy = false;
+            this._nextFiles();
+        }, 300);
+    }
+
+    createPreviewElement(file) {
+        return new Promise((resolve) => {
+            let mime = file.type.split('/')[0]
+            let previewElement = {
+                image: 'img',
+                audio: 'audio',
+                video: 'video'
+            }
+
+            if (Object.keys(previewElement).indexOf(mime) === -1) {
+                resolve(false);
+            } else {
+                console.log('the file is able to preview');
+                let element = document.createElement(previewElement[mime]);
+                element.src = URL.createObjectURL(file);
+                element.controls = true;
+                element.classList = 'element-preview'
+
+                this.$previewBox.style.display = 'block';
+                this.$previewBox.appendChild(element)
+                element.onload = _ => resolve(true);
+            }
+        });
+    }
+
+    async _displayFiles(peerId, files) {
+        if (this.continueCallback) this.$shareOrDownloadBtn.removeEventListener("click", this.continueCallback);
+
+        let url;
+        let description;
+        let size;
+        let filename;
+        let shareTitle
+
+        if (files.length === 1) {
+            shareTitle = "PairDrop File"
+            description = files[0].name;
+            size = this._formatFileSize(files[0].size);
+            filename = files[0].name;
+            url = URL.createObjectURL(files[0])
+        } else {
+            shareTitle = "PairDrop Files";
+            let completeSize = 0
+            for (let i=0; i<files.length; i++) {
+                completeSize += files[0].size;
+            }
+            description = `${files[0].name} and ${files.length-1} more ${files.length>2 ? "files" : "file"}`;
+            size = this._formatFileSize(completeSize);
+
+            for (let i=0; i<files.length; i++) {
+                await zipper.addFile(files[i]);
+            }
+            url = await zipper.getBlobURL();
+
+            let now = new Date(Date.now());
+            let year = now.getFullYear().toString();
+            let month = (now.getMonth()+1).toString();
+            month = month.length < 2 ? "0" + month : month;
+            let date = now.getDate().toString();
+            date = date.length < 2 ? "0" + date : date;
+            let hours = now.getHours().toString();
+            hours = hours.length < 2 ? "0" + hours : hours;
+            let minutes = now.getMinutes().toString();
+            minutes = minutes.length < 2 ? "0" + minutes : minutes;
+            filename = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
+        }
+
+        this.$fileDescriptionNode.textContent = description;
+        this.$fileSizeNode.textContent = size;
+        this.$shareOrDownloadBtn.download = filename;
+
+        if ((window.iOS || window.android) && !!navigator.share && navigator.canShare({files})) {
+            this.$shareOrDownloadBtn.innerText = "Share";
+            this.continueCallback = async _ => {
+                navigator.share({
+                    title: shareTitle,
+                    text: description,
+                    files: files
+                }).catch(err => console.error(err));
+            }
+            this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
+        } else {
+            this.$shareOrDownloadBtn.innerText = "Download";
+            this.$shareOrDownloadBtn.href = url;
+        }
+
+        this.createPreviewElement(files[0]).then(_ => {
+            this.show()
+            Events.fire('set-progress', {
+                peerId: peerId,
+                progress: 1,
+                status: 'wait'
+            })
+            this.$shareOrDownloadBtn.click();
+        });
+    }
 
     hide() {
-        this.$previewBox.style.visibility = 'hidden';
+        this.$shareOrDownloadBtn.href = '';
+        this.$previewBox.style.display = 'none';
         this.$previewBox.innerHTML = '';
         super.hide();
         this._dequeueFile();
     }
+}
 
+class ReceiveRequestDialog extends ReceiveDialog {
 
-    _autoDownload(){
-        return !this.$el.querySelector('#autoDownload').checked
+    constructor() {
+        super('receiveRequestDialog', true);
+
+        this.$acceptRequestBtn = this.$el.querySelector('#acceptRequest');
+        this.$declineRequestBtn = this.$el.querySelector('#declineRequest');
+
+        this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
+        this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
+
+        Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
+        Events.on('peer-left', e => this._onPeerDisconnectedOrLeft(e.detail))
+        Events.on('peer-disconnected', e => this._onPeerDisconnectedOrLeft(e.detail))
+        Events.on('keydown', e => this._onKeyDown(e));
+    }
+
+    _onKeyDown(e) {
+        if (this.$el.attributes["show"] && e.code === "Escape") {
+            this._respondToFileTransferRequest(false)
+            this.hide();
+        }
+    }
+
+    _onPeerDisconnectedOrLeft(peerId) {
+        if (peerId === this.requestingPeerId) {
+            this._respondToFileTransferRequest(false)
+            this.hide();
+        }
+    }
+
+    _onRequestFileTransfer(request, peerId) {
+        this.requestingPeerId = peerId;
+        this.requestedHeader = request.header;
+
+        const peer = $(peerId);
+        let peerDisplayName = peer.ui._displayName();
+        let fileDesc = request.header.length === 1
+            ? "a file"
+            : `${request.header.length} files`
+
+        this.$fileDescriptionNode.innerText = `${peerDisplayName} would like to share ${fileDesc}`;
+        this.$fileSizeNode.innerText = this._formatFileSize(request.size);
+
+        if (request.thumbnailDataUrl) {
+            let element = document.createElement('img');
+            element.src = request.thumbnailDataUrl;
+            element.classList = 'element-preview'
+
+            this.$previewBox.style.display = 'block';
+            this.$previewBox.appendChild(element)
+        }
+
+        this.show()
+    }
+
+    _respondToFileTransferRequest(accepted) {
+        Events.fire('respond-to-files-transfer-request', {
+            to: this.requestingPeerId,
+            header: this.requestedHeader,
+            accepted: accepted
+        })
+        this.requestingPeerId = null;
+        if (accepted) {
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
+        }
+    }
+
+    hide() {
+        this.$previewBox.style.display = 'none';
+        this.$previewBox.innerHTML = '';
+        super.hide();
     }
 }
 
@@ -554,12 +699,14 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
-            this.hide();
-            this._pairDeviceCancel();
-        }
-        if (this.$el.attributes["show"] && e.code === "keyO") {
-            this._onRoomSecretDelete()
+        if (this.$el.attributes["show"]) {
+            if (e.code === "Escape") {
+                this.hide();
+                this._pairDeviceCancel();
+            }
+            if (e.code === "keyO") {
+                this._onRoomSecretDelete()
+            }
         }
     }
 
@@ -701,7 +848,6 @@ class PairDeviceDialog extends Dialog {
 
     _onRoomSecretDelete(roomSecret) {
         PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
-            console.debug("then secret: " + roomSecret)
             Events.fire('room-secret-deleted', roomSecret)
             this._evaluateNumberRoomSecrets();
         }).catch((e) => console.error(e));
@@ -867,7 +1013,7 @@ class Notifications {
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
         Events.on('text-received', e => this._messageNotification(e.detail.text));
-        Events.on('file-received', e => this._downloadNotification(e.detail.name));
+        Events.on('files-received', _ => this._downloadNotification());
     }
 
     _requestPermission() {
@@ -919,7 +1065,7 @@ class Notifications {
         }
     }
 
-    _downloadNotification(message) {
+    _downloadNotification() {
         if (document.visibilityState !== 'visible') {
             const notification = this._notify(message, 'Click to download');
             this._bind(notification, _ => this._download(notification));
@@ -927,7 +1073,7 @@ class Notifications {
     }
 
     _download(notification) {
-        document.querySelector('x-dialog [download]').click();
+        $('shareOrDownload').click();
         notification.close();
     }
 
@@ -1178,7 +1324,8 @@ class Pairdrop {
             const server = new ServerConnection();
             const peers = new PeersManager(server);
             const peersUI = new PeersUI();
-            const receiveDialog = new ReceiveDialog();
+            const receiveFileDialog = new ReceiveFileDialog();
+            const receiveRequestDialog = new ReceiveRequestDialog();
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const pairDeviceDialog = new PairDeviceDialog();
