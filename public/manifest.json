@@ -27,7 +27,7 @@
     "background_color": "#efefef",
     "start_url": "/",
     "scope": "/",
-    "display": "standalone",
+    "display": "minimal-ui",
     "theme_color": "#3367d6",
     "share_target": {
         "method":"GET",
