@@ -284,6 +284,8 @@ class PeerUI {
     _bindListeners(el) {
         if(!window.pasteMode.activated) {
             el.querySelector('input').addEventListener('change', e => this._onFilesSelected(e));
+            el.addEventListener('click', _ => NoSleepUI.enable());
+            el.addEventListener('touchstart', _ => NoSleepUI.enable());
             el.addEventListener('drop', e => this._onDrop(e));
             el.addEventListener('dragend', e => this._onDragEnd(e));
             el.addEventListener('dragleave', e => this._onDragEnd(e));
@@ -435,6 +437,7 @@ class ReceiveDialog extends Dialog {
         }
     }
 }
+
 class ReceiveFileDialog extends ReceiveDialog {
 
     constructor() {
@@ -642,6 +645,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.requestingPeerId = null;
         if (accepted) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
+            NoSleepUI.enable();
         }
     }
 
@@ -1145,6 +1149,26 @@ class WebShareTargetUI {
     }
 }
 
+class NoSleepUI {
+    constructor() {
+        NoSleepUI._nosleep = new NoSleep();
+    }
+
+    static enable() {
+        if (!this._interval) {
+            NoSleepUI._nosleep.enable();
+            NoSleepUI._interval = setInterval(_ => NoSleepUI.disable(), 10000);
+        }
+    }
+
+    static disable() {
+        if ($$('x-peer[status]') === null) {
+            clearInterval(NoSleepUI._interval);
+            NoSleepUI._nosleep.disable();
+        }
+    }
+}
+
 class PersistentStorage {
     constructor() {
         if (!('indexedDB' in window)) {
@@ -1337,6 +1361,7 @@ class PairDrop {
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();
             const webShareTargetUI = new WebShareTargetUI();
+            const noSleepUI = new NoSleepUI();
         });
     }
 }

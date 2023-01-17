@@ -8,6 +8,7 @@ var urlsToCache = [
   'scripts/util.js',
   'scripts/qrcode.js',
   'scripts/zip.min.js',
+  'scripts/NoSleep.min.js',
   'scripts/theme.js',
   'sounds/blop.mp3',
   'images/favicon-96x96.png'
