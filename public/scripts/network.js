@@ -1,5 +1,10 @@
 window.URL = window.URL || window.webkitURL;
 window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
+if (!crypto.subtle && localStorage.getItem('unsecure_warning') !== 'received') {
+    // Warn once per session
+    alert("PairDrops functionality to compare received with requested files works in secure contexts only (https or localhost).")
+    localStorage.setItem('unsecure_warning', 'received')
+}
 
 class ServerConnection {
 
@@ -201,7 +206,8 @@ class Peer {
 
     async getHashHex(file) {
         if (!crypto.subtle) {
-            console.error("PairDrop only works in secure contexts.")
+            console.warn("PairDrops functionality to compare received with requested files works in secure contexts only (https or localhost).")
+            return;
         }
         const hashBuffer = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
         // Convert hex to hash, see https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/digest#converting_a_digest_to_a_hex_string
@@ -249,13 +255,9 @@ class Peer {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'prepare'})
 
         let header = [];
-        let allFilesAreImages = true;
         let combinedSize = 0;
         for (let i=0; i<files.length; i++) {
             header.push(await this.createHeader(files[i]));
-            if (files[i].type.split('/')[0] !== 'image') {
-                allFilesAreImages = false;
-            }
             combinedSize += files[i].size;
         }
         this._fileHeaderRequested = header;
@@ -275,7 +277,7 @@ class Peer {
         }
         this.zipFileRequested = await zipper.getZipFile();
 
-        if (allFilesAreImages) {
+        if (files[0].type.split('/')[0] === 'image') {
             this.getResizedImageDataUrl(files[0], 400, null, 0.9).then(dataUrl => {
                 this.sendJSON({type: 'request',
                     header: header,
@@ -425,20 +427,24 @@ class Peer {
 
     async _onFileReceived(zipBlob, fileHeader) {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
-
         this._busy = false;
         this.sendJSON({type: 'file-transfer-complete'});
+
         let zipEntries = await zipper.getEntries(zipBlob);
         let files = [];
-        let hashHexs = [];
         for (let i=0; i<zipEntries.length; i++) {
             let fileBlob = await zipper.getData(zipEntries[i]);
-            let hashHex = await this.getHashHex(fileBlob)
-            if (hashHex !== fileHeader[i].hashHex) {
+            let hashHex = await this.getHashHex(fileBlob);
+
+            let sameHex = hashHex === fileHeader[i].hashHex;
+            let sameSize = fileBlob.size === fileHeader[i].size;
+            let sameName = zipEntries[i].filename === fileHeader[i].name
+            if (!sameHex || !sameSize || !sameName) {
                 Events.fire('notify-user', 'Files are malformed.');
                 Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
-                throw new Error("Hash of received file differs from hash of requested file. Abort!");
+                throw new Error("Received files differ from requested files. Abort!");
             }
+
             files.push(new File([fileBlob], zipEntries[i].filename, {
                 type: fileHeader[i].mime,
                 lastModified: new Date().getTime()

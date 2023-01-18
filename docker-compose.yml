@@ -15,9 +15,11 @@ services:
     image: "nginx-with-openssl"
     volumes:
       - ./public:/usr/share/nginx/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
       - ./docker/certs:/etc/ssl/certs
       - ./docker/openssl:/mnt/openssl
+      # Use production.conf instead of development.conf to redirect http to https (/ca.crt still available)
+      - ./docker/nginx/development.conf:/etc/nginx/conf.d/default.conf
+#      - ./docker/nginx/production.conf:/etc/nginx/conf.d/default.conf
     ports:
       - "8080:80"
       - "8443:443"
