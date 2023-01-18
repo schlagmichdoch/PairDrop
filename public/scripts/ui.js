@@ -931,7 +931,6 @@ class SendTextDialog extends Dialog {
 
     _onRecipient(recipient) {
         this._recipient = recipient;
-        this._handleShareTargetText();
         this.show();
 
         const range = document.createRange();
@@ -941,12 +940,6 @@ class SendTextDialog extends Dialog {
         range.selectNodeContents(this.$text);
         sel.removeAllRanges();
         sel.addRange(range);
-    }
-
-    _handleShareTargetText() {
-        if (!window.shareTargetText) return;
-        this.$text.textContent = window.shareTargetText;
-        window.shareTargetText = '';
     }
 
     _send() {
@@ -1135,20 +1128,34 @@ class NetworkStatusUI {
 
 class WebShareTargetUI {
     constructor() {
-        const parsedUrl = new URL(window.location);
-        const title = parsedUrl.searchParams.get('title');
-        const text = parsedUrl.searchParams.get('text');
-        const url = parsedUrl.searchParams.get('url');
+        const urlParams = new URL(window.location).searchParams;
+        const share_target_type = urlParams.get("share-target")
+        if (share_target_type) {
+            if (share_target_type === "text") {
+                const title = urlParams.get('title') || '';
+                const text = urlParams.get('text') || '';
+                const url = urlParams.get('url') || '';
+                let shareTargetText;
 
-        let shareTargetText = title ? title : '';
-        shareTargetText += text ? shareTargetText ? ' ' + text : text : '';
+                if (url) {
+                    shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
+                } else if (title && text) {
+                    shareTargetText = title + '\r\n' + text;
+                } else {
+                    shareTargetText = title + text;
+                }
 
-        if(url) shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
-
-        if (!shareTargetText) return;
-        window.shareTargetText = shareTargetText;
-        history.pushState({}, 'URL Rewrite', '/');
-        console.log('Shared Target Text:', '"' + shareTargetText + '"');
+                console.log('Shared Target Text:', '"' + shareTargetText + '"');
+                Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
+            } else if (share_target_type === "files") {
+                caches.match("share_target_files")
+                    .then(files => {
+                        console.debug(files)
+                        Events.fire('activate-paste-mode', {files: files, text: ""})
+                    })
+            }
+            history.pushState({}, 'URL Rewrite', '/');
+        }
     }
 }
 
