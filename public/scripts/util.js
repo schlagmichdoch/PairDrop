@@ -56,9 +56,6 @@ const zipper = (() => {
                 throw new Error("Zip file closed");
             }
         },
-        specifyOnProgress(onprogressCallback) {
-            zipWriter.onprogress = onprogressCallback;
-        },
         async getZipFile(filename = "archive.zip") {
             if (zipWriter) {
                 const file = new File([await zipWriter.close()], filename, {type: "application/zip"});

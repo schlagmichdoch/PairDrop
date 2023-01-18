@@ -669,7 +669,6 @@ class PeersManager {
     }
 
     _onPeers(msg) {
-        console.debug(msg)
         msg.peers.forEach(peer => {
             if (this.peers[peer.id]) {
                 if (this.peers[peer.id].roomType === msg.roomType) {

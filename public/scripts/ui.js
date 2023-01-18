@@ -43,7 +43,7 @@ class PeersUI {
     }
 
     _onPeerJoined(msg) {
-        this._joinPeer(msg.peer, msg.roomType, msg.roomType);
+        this._joinPeer(msg.peer, msg.roomType, msg.roomSecret);
     }
 
     _joinPeer(peer, roomType, roomSecret) {
@@ -714,22 +714,13 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"]) {
-            if (e.code === "Escape") {
-                this.hide();
-                this._pairDeviceCancel();
-            }
-            if (e.code === "keyO") {
-                this._onRoomSecretDelete()
-            }
+        if (this.$el.attributes["show"] && e.code === "Escape") {
+            // Timeout to prevent paste mode from getting cancelled simultaneously
+            setTimeout(_ => this._pairDeviceCancel(), 50);
         }
     }
 
     _onCharsKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
-            this.hide();
-            this._pairDeviceCancel();
-        }
         let previousSibling = e.target.previousElementSibling;
         let nextSibling = e.target.nextElementSibling;
         if (e.key === "Backspace" && previousSibling && !e.target.value) {
@@ -922,7 +913,7 @@ class SendTextDialog extends Dialog {
         this.$text = this.$el.querySelector('#textInput');
         const button = this.$el.querySelector('form');
         button.addEventListener('submit', _ => this._send());
-        Events.on("keydown", e => this._onKeyDown(e))
+        Events.on("keydown", e => this._onKeyDown(e));
     }
 
     async _onKeyDown(e) {

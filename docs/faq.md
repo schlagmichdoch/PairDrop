@@ -20,7 +20,7 @@ It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a S
 If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
 
 ### What about privacy? Will files be saved on third-party-servers?
-None of your files are ever sent to any server. Files are sent only between peers. PairDrop doesn't even use a database. If you are curious have a look [at the Server](https://github.com/schlagmichdoch/pairdrop/blob/master/server/).
+None of your files are ever sent to any server. Files are sent only between peers. PairDrop doesn't even use a database. If you are curious have a look [at the Server](https://github.com/schlagmichdoch/pairdrop/blob/master/index.js).
 WebRTC encrypts the files on transit.
 
 If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
