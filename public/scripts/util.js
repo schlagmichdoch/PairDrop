@@ -41,10 +41,10 @@ const zipper = (() => {
 
     let zipWriter;
     return {
+        createNewZipWriter() {
+            zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true, level: 0 });
+        },
         addFile(file, options) {
-            if (!zipWriter) {
-                zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true, level: 0 });
-            }
             return zipWriter.add(file.name, new zip.BlobReader(file), options);
         },
         async getBlobURL() {

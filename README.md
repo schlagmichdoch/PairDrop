@@ -13,6 +13,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * You will always discover devices on your local network. Paired devices are shown additionally.
 * Paired devices outside your local network that are behind a NAT are connected automatically via [Open Relay: Free WebRTC TURN Server](https://www.metered.ca/tools/openrelay/)
 
+[//]: # (Todo: add File Handler API Doku)
 
 ### Other changes
 * node-only implementation (thanks [@Bellisario](https://github.com/Bellisario))

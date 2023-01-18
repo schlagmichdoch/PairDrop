@@ -535,6 +535,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             description = `${files[0].name} and ${files.length-1} other ${files.length>2 ? "files" : "file"}`;
             size = this._formatFileSize(completeSize);
 
+            zipper.createNewZipWriter();
             for (let i=0; i<files.length; i++) {
                 await zipper.addFile(files[i]);
             }
@@ -1151,6 +1152,28 @@ class WebShareTargetUI {
     }
 }
 
+class WebFileHandlersUI {
+    constructor() {
+        if ("launchQueue" in window) {
+            launchQueue.setConsumer(async launchParams => {
+                console.log("Launched with: ", launchParams);
+                if (!launchParams.files.length)
+                    return;
+                let files = [];
+
+                for (let i=0; i<launchParams.files.length; i++) {
+                    if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
+                    const fileHandle = launchParams.files[i];
+                    const file = await fileHandle.getFile();
+                    files.push(file);
+                }
+                Events.fire('activate-paste-mode', {files: files, text: ""})
+                launchParams = null;
+            });
+        }
+    }
+}
+
 class NoSleepUI {
     constructor() {
         NoSleepUI._nosleep = new NoSleep();
@@ -1363,6 +1386,7 @@ class PairDrop {
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();
             const webShareTargetUI = new WebShareTargetUI();
+            const webFileHandlersUI = new WebFileHandlersUI();
             const noSleepUI = new NoSleepUI();
         });
     }

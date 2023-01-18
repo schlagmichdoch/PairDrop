@@ -263,6 +263,7 @@ class Peer {
         this._fileHeaderRequested = header;
         let bytesCompleted = 0;
 
+        zipper.createNewZipWriter();
         for (let i=0; i<files.length; i++) {
             const entry = await zipper.addFile(files[i], {
                 onprogress: (progress, total) => {
