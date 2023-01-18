@@ -1153,9 +1153,11 @@ class WebShareTargetUI {
                         console.debug(files)
                         Events.fire('activate-paste-mode', {files: files, text: ""})
                     })
+                caches.delete("share_target_files").then( _ => console.log("shared files deleted from cache"));
             }
-            history.pushState({}, 'URL Rewrite', '/');
+            window.history.replaceState({}, "Rewrite URL", '/'); //remove room_key from url
         }
+
     }
 }
 
@@ -1226,7 +1228,7 @@ class PersistentStorage {
     }
 
     logBrowserNotCapable() {
-        console.log("This browser does not support IndexedDB. Paired devices will be gone after closing the browser.");
+        console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 
     static set(key, value) {
