@@ -27,16 +27,17 @@ class PeersUI {
         Events.on('paste', e => this._onPaste(e));
         Events.on('ws-disconnected', _ => this._clearPeers());
         Events.on('secret-room-deleted', _ => this._clearPeers('secret'));
+        Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
-        this.$cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
-        this.$cancelPasteModeBtn.addEventListener('click', this._cancelPasteMode);
+        this.$cancelPasteModeBtn = $('cancelPasteModeBtn');
+        this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
     _onKeyDown(e) {
-        if (window.pasteMode.activated && e.code === "Escape") {
+        if (document.querySelectorAll('x-dialog[show]').length === 0 && window.pasteMode.activated && e.code === "Escape") {
             Events.fire('deactivate-paste-mode');
         }
     }
@@ -66,15 +67,6 @@ class PeersUI {
         if (!peerNode) return;
         peerNode.classList.remove('type-ip', 'type-secret');
         peerNode.classList.add(`type-${peer.roomType}`)
-    }
-
-    _redrawPeers() {
-        const peers = this._getPeers();
-        this._clearPeers();
-        peers.forEach(peer => {
-            this._joinPeer(peer, peer.roomType, peer.roomSecret);
-            this._onPeerConnected(peer.id);
-        });
     }
 
     _onPeers(msg) {
@@ -118,54 +110,41 @@ class PeersUI {
         }
     }
 
-    _getPeers() {
-        let peers = []
-        const peersNodes = document.querySelectorAll('x-peer');
-        peersNodes.forEach(function(peersNode) {
-            peers.push({
-                id: peersNode.id,
-                name: peersNode.name,
-                rtcSupported: peersNode.rtcSupported,
-                roomType: peersNode.roomType,
-                roomSecret: peersNode.roomSecret
-            })
-        });
-        return peers;
-    }
-
     _onPaste(e) {
         if(document.querySelectorAll('x-dialog[show]').length === 0) {
             // prevent send on paste when dialog is open
             e.preventDefault()
             const files = e.clipboardData.files;
             const text = e.clipboardData.getData("Text");
-            if (files.length === 0 && text === 0) return;
+            if (files.length === 0 && text.length === 0) return;
             this._activatePasteMode(files, text);
         }
     }
 
-
     _activatePasteMode(files, text) {
-        if (!window.pasteMode.activated) {
+        if (!window.pasteMode.activated && (files.length > 0 || text.length > 0)) {
             let descriptor;
             let noPeersMessage;
 
+            const xNoPeers = document.querySelectorAll('x-no-peers')[0];
+            const xInstructions = document.querySelectorAll('x-instructions')[0];
+
             if (files.length === 1) {
                 descriptor = files[0].name;
-                noPeersMessage = `Open PairDrop on other devices to send <i>${descriptor}</i> directly`;
+                noPeersMessage = `Open PairDrop on other devices to send<br><i>${descriptor}</i>`;
             } else if (files.length > 1) {
-                descriptor = `${files.length} files`;
-                noPeersMessage = `Open PairDrop on other devices to send ${descriptor} directly`;
-            } else if (text.length > 0) {
-                descriptor = `pasted text`;
-                noPeersMessage = `Open PairDrop on other devices to send ${descriptor} directly`;
+                descriptor = `${files[0].name} and ${files.length-1} other files`;
+                noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
+            } else {
+                descriptor = "pasted text";
+                noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
             }
 
-            const xInstructions = document.querySelectorAll('x-instructions')[0];
-            xInstructions.setAttribute('desktop', `Click to send ${descriptor} directly`);
-            xInstructions.setAttribute('mobile', `Tap to send ${descriptor} directly`);
+            xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
+            xInstructions.querySelector('p').style.display = 'block';
+            xInstructions.setAttribute('desktop', `Click to send`);
+            xInstructions.setAttribute('mobile', `Tap to send`);
 
-            const xNoPeers = document.querySelectorAll('x-no-peers')[0];
             xNoPeers.getElementsByTagName('h2')[0].innerHTML = noPeersMessage;
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
@@ -176,14 +155,13 @@ class PeersUI {
 
             window.pasteMode.descriptor = descriptor;
             window.pasteMode.activated = true;
-            console.log('Paste mode activated.')
 
-            this._redrawPeers();
+            console.log('Paste mode activated.');
+            Events.fire('paste-mode-changed');
         }
     }
 
     _cancelPasteMode() {
-        Events.fire('notify-user', 'Paste Mode canceled');
         Events.fire('deactivate-paste-mode');
     }
 
@@ -191,22 +169,24 @@ class PeersUI {
         if (window.pasteMode.activated) {
             window.pasteMode.descriptor = undefined;
             window.pasteMode.activated = false;
-            console.log('Paste mode deactivated.')
-
             Events.off('paste-pointerdown', _callback);
 
             const xInstructions = document.querySelectorAll('x-instructions')[0];
+
+            xInstructions.querySelector('p').innerText = '';
+            xInstructions.querySelector('p').style.display = 'none';
+
             xInstructions.setAttribute('desktop', 'Click to send files or right click to send a message');
             xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
-
             const xNoPeers = document.querySelectorAll('x-no-peers')[0];
-            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open PairDrop on other devices to send files';
 
+            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open PairDrop on other devices to send files';
             const cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
-            cancelPasteModeBtn.removeEventListener('click', this._cancelPasteMode);
+
             cancelPasteModeBtn.setAttribute('hidden', "");
 
-            this._redrawPeers();
+            console.log('Paste mode deactivated.')
+            Events.fire('paste-mode-changed');
         }
     }
 
@@ -232,17 +212,14 @@ class PeerUI {
 
     html() {
         let title;
-        let input;
-
+        let input = '';
         if (window.pasteMode.activated) {
-            title = `Click to send ${window.pasteMode.descriptor} directly`;
-            input = '';
+            title = `Click to send ${window.pasteMode.descriptor}`;
         } else {
             title = 'Click to send files or right click to send a message';
             input = '<input type="file" multiple>';
         }
-
-        return `
+        this.$el.innerHTML = `
             <label class="column center" title="${title}">
                 ${input}
                 <x-icon shadow="1">
@@ -256,6 +233,10 @@ class PeerUI {
                 <div class="device-name font-body2"></div>
                 <div class="status font-body2"></div>
             </label>`;
+
+        this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
+        this.$el.querySelector('.name').textContent = this._displayName();
+        this.$el.querySelector('.device-name').textContent = this._deviceName();
     }
 
     constructor(peer) {
@@ -263,41 +244,70 @@ class PeerUI {
         this._roomType = peer.roomType;
         this._roomSecret = peer.roomSecret;
         this._initDom();
-        this._bindListeners(this.$el);
+        this._bindListeners();
         $$('x-peers').appendChild(this.$el);
         setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
     }
 
     _initDom() {
-        const el = document.createElement('x-peer');
-        el.id = this._peer.id;
-        el.innerHTML = this.html();
-        el.ui = this;
-        el.querySelector('svg use').setAttribute('xlink:href', this._icon());
-        el.querySelector('.name').textContent = this._displayName();
-        el.querySelector('.device-name').textContent = this._deviceName();
-        el.classList.add(`type-${this._roomType}`);
-        this.$el = el;
-        this.$progress = el.querySelector('.progress');
+        this.$el = document.createElement('x-peer');
+        this.$el.id = this._peer.id;
+        this.$el.ui = this;
+        this.$el.classList.add(`type-${this._roomType}`);
+        this.html();
+
+        this._callbackInput = e => this._onFilesSelected(e)
+        this._callbackClickSleep = _ => NoSleepUI.enable()
+        this._callbackTouchStartSleep = _ => NoSleepUI.enable()
+        this._callbackDrop = e => this._onDrop(e)
+        this._callbackDragEnd = e => this._onDragEnd(e)
+        this._callbackDragLeave = e => this._onDragEnd(e)
+        this._callbackDragOver = e => this._onDragOver(e)
+        this._callbackContextMenu = e => this._onRightClick(e)
+        this._callbackTouchStart = _ => this._onTouchStart()
+        this._callbackTouchEnd = e => this._onTouchEnd(e)
+        this._callbackPointerDown = e => this._onPointerDown(e)
+        // prevent browser's default file drop behavior
+        Events.on('dragover', e => e.preventDefault());
+        Events.on('drop', e => e.preventDefault());
+        Events.on('paste-mode-changed', _ => this._onPasteModeChanged());
     }
 
-    _bindListeners(el) {
+    _onPasteModeChanged() {
+        this.html();
+        this._bindListeners();
+    }
+
+    _bindListeners() {
         if(!window.pasteMode.activated) {
-            el.querySelector('input').addEventListener('change', e => this._onFilesSelected(e));
-            el.addEventListener('click', _ => NoSleepUI.enable());
-            el.addEventListener('touchstart', _ => NoSleepUI.enable());
-            el.addEventListener('drop', e => this._onDrop(e));
-            el.addEventListener('dragend', e => this._onDragEnd(e));
-            el.addEventListener('dragleave', e => this._onDragEnd(e));
-            el.addEventListener('dragover', e => this._onDragOver(e));
-            el.addEventListener('contextmenu', e => this._onRightClick(e));
-            el.addEventListener('touchstart', _ => this._onTouchStart());
-            el.addEventListener('touchend', e => this._onTouchEnd(e));
-            // prevent browser's default file drop behavior
-            Events.on('dragover', e => e.preventDefault());
-            Events.on('drop', e => e.preventDefault());
+            // Remove Events Paste Mode
+            this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
+
+            // Add Events Normal Mode
+            this.$el.querySelector('input').addEventListener('change', this._callbackInput);
+            this.$el.addEventListener('click', this._callbackClickSleep);
+            this.$el.addEventListener('touchstart', this._callbackTouchStartSleep);
+            this.$el.addEventListener('drop', this._callbackDrop);
+            this.$el.addEventListener('dragend', this._callbackDragEnd);
+            this.$el.addEventListener('dragleave', this._callbackDragLeave);
+            this.$el.addEventListener('dragover', this._callbackDragOver);
+            this.$el.addEventListener('contextmenu', this._callbackContextMenu);
+            this.$el.addEventListener('touchstart', this._callbackTouchStart);
+            this.$el.addEventListener('touchend', this._callbackTouchEnd);
         } else {
-            el.addEventListener('pointerdown', (e) => this._onPointerDown(e));
+            // Remove Events Normal Mode
+            this.$el.removeEventListener('click', this._callbackClickSleep);
+            this.$el.removeEventListener('touchstart', this._callbackTouchStartSleep);
+            this.$el.removeEventListener('drop', this._callbackDrop);
+            this.$el.removeEventListener('dragend', this._callbackDragEnd);
+            this.$el.removeEventListener('dragleave', this._callbackDragLeave);
+            this.$el.removeEventListener('dragover', this._callbackDragOver);
+            this.$el.removeEventListener('contextmenu', this._callbackContextMenu);
+            this.$el.removeEventListener('touchstart', this._callbackTouchStart);
+            this.$el.removeEventListener('touchend', this._callbackTouchEnd);
+
+            // Add Events Paste Mode
+            this.$el.addEventListener('pointerdown', this._callbackPointerDown);
         }
     }
 
@@ -340,10 +350,11 @@ class PeerUI {
     }
 
     setProgress(progress, status) {
+        const $progress = this.$el.querySelector('.progress');
         if (0.5 < progress && progress < 1) {
-            this.$progress.classList.add('over50');
+            $progress.classList.add('over50');
         } else {
-            this.$progress.classList.remove('over50');
+            $progress.classList.remove('over50');
         }
         if (progress < 1) {
             this.$el.setAttribute('status', status);
@@ -352,7 +363,7 @@ class PeerUI {
             progress = 0;
         }
         const degrees = `rotate(${360 * progress}deg)`;
-        this.$progress.style.setProperty('--progress', degrees);
+        $progress.style.setProperty('--progress', degrees);
     }
 
     _onDrop(e) {
@@ -521,7 +532,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             for (let i=0; i<files.length; i++) {
                 completeSize += files[0].size;
             }
-            description = `${files[0].name} and ${files.length-1} more ${files.length>2 ? "files" : "file"}`;
+            description = `${files[0].name} and ${files.length-1} other ${files.length>2 ? "files" : "file"}`;
             size = this._formatFileSize(completeSize);
 
             for (let i=0; i<files.length; i++) {
@@ -600,7 +611,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
     _onKeyDown(e) {
         if (this.$el.attributes["show"] && e.code === "Escape") {
             this._respondToFileTransferRequest(false)
-            this.hide();
+            setTimeout(_ => this.hide(), 500);
         }
     }
 

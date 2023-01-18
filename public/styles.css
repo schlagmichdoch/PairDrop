@@ -203,6 +203,7 @@ x-peers {
 /* Empty Peers List */
 
 x-no-peers {
+    height: 114px;
     padding: 8px;
     text-align: center;
     /* prevent flickering on load */
@@ -585,6 +586,10 @@ x-dialog .row-reverse {
     opacity: 0.1;
 }
 
+#cancelPasteModeBtn:before {
+    border-radius: 8px;
+}
+
 .button:focus:before,
 .icon-button:focus:before {
     opacity: 0.2;
@@ -760,15 +765,22 @@ x-toast:not([show]):not(:hover) {
 
 x-instructions {
     position: absolute;
-    top: 120px;
+    top: 20vh;
     opacity: 0.5;
     transition: opacity 300ms;
     z-index: -1;
     text-align: center;
+    width: 80%;
 }
 
 x-instructions:before {
     content: attr(mobile);
+}
+
+x-instructions p {
+    display: none;
+    margin: 0 auto auto;
+    max-width: 80%;
 }
 
 x-peers:empty~x-instructions {

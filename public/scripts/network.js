@@ -453,7 +453,6 @@ class Peer {
         this._busy = false;
         this._dequeueFile();
         Events.fire('notify-user', 'File transfer completed.');
-        Events.fire('deactivate-paste-mode');
     }
 
     _onFileTransferRequestResponded(message) {
@@ -469,7 +468,6 @@ class Peer {
 
     _onMessageTransferCompleted() {
         Events.fire('notify-user', 'Message transfer completed.');
-        Events.fire('deactivate-paste-mode');
     }
 
     sendText(text) {
