@@ -859,9 +859,10 @@ x-dialog x-paper {
     background-color: var(--bg-color);
 }
 
-.textarea {
-    color: var(--text-color);
-    background-color: var(--bg-color-secondary);
+.textarea,
+.textarea * {
+    color: var(--text-color) !important;
+    background-color: var(--bg-color-secondary) !important;
 }
 
 /* Image/Video/Audio Preview */
