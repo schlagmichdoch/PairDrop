@@ -36,19 +36,17 @@ self.addEventListener('fetch', function(event) {
                 const text = formData.get("text");
                 const url = formData.get("url");
                 const files = formData.get("files");
-                console.debug(title)
-                console.debug(text)
-                console.debug(url)
-                console.debug(files)
                 let share_url = "/";
                 if (files.length > 0) {
-                    // Save to Cache?
-                    caches.open("share_target_files")
-                        .then(cache => {
-                            cache.addAll(files)
-                            console.debug("files added to cache")
-                        });
                     share_url = "/?share-target=files";
+                    const db = await window.indexedDB.open('pairdrop_store');
+                    const tx = db.transaction('share_target_files', 'readwrite');
+                    const store = tx.objectStore('share_target_files');
+                    for (let i=0; i<files.length; i++) {
+                        await store.add(files[i]);
+                    }
+                    await tx.complete
+                    db.close()
                 } else if (title.length > 0 || text.length > 0 || url.length) {
                     share_url = `/?share-target=text&title=${title}&text=${text}&url=${url}`;
                 }

@@ -1191,12 +1191,17 @@ class WebShareTargetUI {
                 console.log('Shared Target Text:', '"' + shareTargetText + '"');
                 Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
             } else if (share_target_type === "files") {
-                caches.match("share_target_files")
-                    .then(files => {
-                        console.debug(files)
-                        Events.fire('activate-paste-mode', {files: files, text: ""})
-                    })
-                caches.delete("share_target_files").then( _ => console.log("shared files deleted from cache"));
+                const openRequest = window.indexedDB.open('pairdrop_store')
+                openRequest.onsuccess( db => {
+                    const tx = db.transaction('share_target_files', 'readwrite');
+                    const store = tx.objectStore('share_target_files');
+                    const request = store.getAll();
+                    request.onsuccess = _ => {
+                        Events.fire('activate-paste-mode', {files: request.result, text: ""})
+                        const clearRequest = store.clear()
+                        clearRequest.onsuccess = _ => db.close();
+                    }
+                })
             }
             window.history.replaceState({}, "Rewrite URL", '/');
         }
@@ -1251,7 +1256,7 @@ class PersistentStorage {
             this.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store');
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 2);
         DBOpenRequest.onerror = (e) => {
             this.logBrowserNotCapable();
             console.log('Error initializing database: ');
@@ -1263,9 +1268,24 @@ class PersistentStorage {
         DBOpenRequest.onupgradeneeded = (e) => {
             const db = e.target.result;
             db.onerror = e => console.log('Error loading database: ' + e);
-            db.createObjectStore('keyval');
-            const roomSecretsObjectStore = db.createObjectStore('room_secrets', {autoIncrement: true});
-            roomSecretsObjectStore.createIndex('secret', 'secret', { unique: true });
+            try {
+                db.createObjectStore('keyval');
+            } catch (error) {
+                console.log("Object store named 'keyval' already exists")
+            }
+
+            try {
+                const roomSecretsObjectStore = db.createObjectStore('room_secrets', {autoIncrement: true});
+                roomSecretsObjectStore.createIndex('secret', 'secret', { unique: true });
+            } catch (error) {
+                console.log("Object store named 'room_secrets' already exists")
+            }
+
+            try {
+                db.createObjectStore('share_target_files');
+            } catch (error) {
+                console.log("Object store named 'share_target_files' already exists")
+            }
         }
     }
 
@@ -1310,6 +1330,7 @@ class PersistentStorage {
             }
         });
     }
+
     static delete(key) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
