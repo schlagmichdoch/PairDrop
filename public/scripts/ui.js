@@ -181,9 +181,8 @@ class PeersUI {
             const xNoPeers = document.querySelectorAll('x-no-peers')[0];
 
             xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open PairDrop on other devices to send files';
-            const cancelPasteModeBtn = document.getElementById('cancelPasteModeBtn');
 
-            cancelPasteModeBtn.setAttribute('hidden', "");
+            this.$cancelPasteModeBtn.setAttribute('hidden', "");
 
             console.log('Paste mode deactivated.')
             Events.fire('paste-mode-changed');
@@ -745,6 +744,7 @@ class PairDeviceDialog extends Dialog {
             if (!nextSibling) break;
             nextSibling.focus();
         }
+        this.evaluateRoomKeyChars();
     }
 
     evaluateRoomKeyChars() {

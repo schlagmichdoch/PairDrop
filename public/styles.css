@@ -604,8 +604,16 @@ x-dialog .row-reverse {
     opacity: 0.1;
 }
 
-#cancelPasteModeBtn:before {
-    border-radius: 8px;
+#cancelPasteModeBtn {
+    z-index: 2;
+    margin-top: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    border-bottom: solid 2.5px var(--border-color);
 }
 
 .button:focus:before,
@@ -783,7 +791,7 @@ x-toast:not([show]):not(:hover) {
 
 x-instructions {
     position: absolute;
-    top: 20vh;
+    top: 120px;
     opacity: 0.5;
     transition: opacity 300ms;
     z-index: -1;
