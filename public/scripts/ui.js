@@ -931,7 +931,6 @@ class SendTextDialog extends Dialog {
 
     _onRecipient(recipient) {
         this._recipient = recipient;
-        this._handleShareTargetText();
         this.show();
 
         const range = document.createRange();
@@ -941,12 +940,6 @@ class SendTextDialog extends Dialog {
         range.selectNodeContents(this.$text);
         sel.removeAllRanges();
         sel.addRange(range);
-    }
-
-    _handleShareTargetText() {
-        if (!window.shareTargetText) return;
-        this.$text.textContent = window.shareTargetText;
-        window.shareTargetText = '';
     }
 
     _send() {
@@ -994,6 +987,45 @@ class ReceiveTextDialog extends Dialog {
     async _onCopy() {
         await navigator.clipboard.writeText(this.$text.textContent);
         Events.fire('notify-user', 'Copied to clipboard');
+    }
+}
+
+class Base64ZipDialog extends Dialog {
+
+    constructor() {
+        super('base64ZipDialog');
+        const urlParams = new URL(window.location).searchParams;
+        const base64zip = urlParams.get('base64zip');
+        this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
+        this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
+        if (base64zip) this.show();
+    }
+
+    async processClipboard() {
+        this.$pasteBtn.pointerEvents = "none";
+        this.$pasteBtn.innerText = "Processing...";
+        try {
+            const base64zip = await navigator.clipboard.readText();
+            let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+
+            const zipBlob = new File([u8arr], 'archive.zip');
+
+            let files = [];
+            const zipEntries = await zipper.getEntries(zipBlob);
+            for (let i = 0; i < zipEntries.length; i++) {
+                let fileBlob = await zipper.getData(zipEntries[i]);
+                files.push(new File([fileBlob], zipEntries[i].filename));
+            }
+            Events.fire('activate-paste-mode', {files: files, text: ""})
+        } catch (e) {
+            Events.fire('notify-user', 'Clipboard content is malformed.')
+        } finally {
+            window.history.replaceState({}, "Rewrite URL", '/');
+            this.hide();
+        }
     }
 }
 
@@ -1135,20 +1167,35 @@ class NetworkStatusUI {
 
 class WebShareTargetUI {
     constructor() {
-        const parsedUrl = new URL(window.location);
-        const title = parsedUrl.searchParams.get('title');
-        const text = parsedUrl.searchParams.get('text');
-        const url = parsedUrl.searchParams.get('url');
+        const urlParams = new URL(window.location).searchParams;
+        const share_target_type = urlParams.get("share-target")
+        if (share_target_type) {
+            if (share_target_type === "text") {
+                const title = urlParams.get('title') || '';
+                const text = urlParams.get('text') || '';
+                const url = urlParams.get('url') || '';
+                let shareTargetText;
 
-        let shareTargetText = title ? title : '';
-        shareTargetText += text ? shareTargetText ? ' ' + text : text : '';
+                if (url) {
+                    shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
+                } else if (title && text) {
+                    shareTargetText = title + '\r\n' + text;
+                } else {
+                    shareTargetText = title + text;
+                }
 
-        if(url) shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
-
-        if (!shareTargetText) return;
-        window.shareTargetText = shareTargetText;
-        history.pushState({}, 'URL Rewrite', '/');
-        console.log('Shared Target Text:', '"' + shareTargetText + '"');
+                console.log('Shared Target Text:', '"' + shareTargetText + '"');
+                Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
+            } else if (share_target_type === "files") {
+                caches.match("share_target_files")
+                    .then(files => {
+                        console.debug(files)
+                        Events.fire('activate-paste-mode', {files: files, text: ""})
+                    })
+                caches.delete("share_target_files").then( _ => console.log("shared files deleted from cache"));
+            }
+            window.history.replaceState({}, "Rewrite URL", '/');
+        }
     }
 }
 
@@ -1219,7 +1266,7 @@ class PersistentStorage {
     }
 
     logBrowserNotCapable() {
-        console.log("This browser does not support IndexedDB. Paired devices will be gone after closing the browser.");
+        console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 
     static set(key, value) {
@@ -1382,6 +1429,7 @@ class PairDrop {
             const receiveTextDialog = new ReceiveTextDialog();
             const pairDeviceDialog = new PairDeviceDialog();
             const clearDevicesDialog = new ClearDevicesDialog();
+            const base64ZipDialog = new Base64ZipDialog();
             const toast = new Toast();
             const notifications = new Notifications();
             const networkStatusUI = new NetworkStatusUI();

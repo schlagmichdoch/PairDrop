@@ -532,10 +532,28 @@ x-dialog .row-reverse {
     pointer-events: none;
 }
 
+#base64ZipPasteBtn {
+    width: 100%;
+    height: 40vh;
+    border: solid 12px #438cff;
+}
+
+#base64ZipDialog button {
+    margin: auto;
+    border-radius: 8px;
+}
+
+#base64ZipDialog button[close] {
+    margin-top: 20px;
+}
+#base64ZipDialog button[close]:before {
+    border-radius: 8px;
+}
+
 /* Button */
 
 .button {
-    padding: 0 16px;
+    padding: 2px 16px 0;
     box-sizing: border-box;
     min-height: 36px;
     min-width: 100px;

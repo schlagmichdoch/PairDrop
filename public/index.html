@@ -88,7 +88,7 @@
         <div id="displayName" placeholder="&nbsp;"></div>
         <div class="font-body2">You can be discovered by everyone on this network</div>
     </footer>
-    <!-- JoinRoom Dialog -->
+    <!-- Pair Device Dialog -->
     <x-dialog id="pairDeviceDialog">
         <form action="#">
             <x-background class="full center text-center">
@@ -116,6 +116,7 @@
             </x-background>
         </form>
     </x-dialog>
+    <!-- Clear Devices Dialog -->
     <x-dialog id="clearDevicesDialog">
         <form action="#">
             <x-background class="full center text-center">
@@ -189,6 +190,15 @@
                     <div class="separator"></div>
                     <button class="button" close>Close</button>
                 </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Receive Dialog -->
+    <x-dialog id="base64ZipDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <button class="button center" id="base64ZipPasteBtn" title="Paste">Tap here to paste files</button>
+                <button class="button center" close>Close</button>
             </x-paper>
         </x-background>
     </x-dialog>
