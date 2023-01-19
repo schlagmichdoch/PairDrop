@@ -56,7 +56,7 @@ class ServerConnection {
 
     _onPairDeviceJoin(roomKey) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onPairDeviceJoin(roomKey), 1000);
+            setTimeout(_ => this._onPairDeviceJoin(roomKey), 5000);
             return;
         }
         this.send({ type: 'pair-device-join', roomKey: roomKey })

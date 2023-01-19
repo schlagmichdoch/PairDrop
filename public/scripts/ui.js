@@ -993,7 +993,7 @@ class ReceiveTextDialog extends Dialog {
 class Base64ZipDialog extends Dialog {
 
     constructor() {
-        super('base64ZipDialog');
+        super('base64ZipDialog', false);
         const urlParams = new URL(window.location).searchParams;
         const base64zip = urlParams.get('base64zip');
         if (!navigator.clipboard.readText) {
