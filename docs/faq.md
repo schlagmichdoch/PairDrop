@@ -43,4 +43,7 @@ If you want to learn more about simplicity you can read [Insanely Simple: The Ob
 * Do security analysis and suggestions
 
 
+### How does it work?
+[See here for Information about the Technical Implementation](/docs/technical-documentation.md)
+
 [< Back](/README.md)
