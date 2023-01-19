@@ -5,12 +5,10 @@ First, [Install docker with docker-compose.](https://docs.docker.com/compose/ins
 
 Then, clone the repository and run docker-compose:
 ```shell
-    git clone https://github.com/schlagmichdoch/pairdrop.git
-```
-```shell
-    cd pairdrop
-```
-```shell
+    git clone https://github.com/schlagmichdoch/PairDrop.git
+
+    cd PairDrop
+
     docker-compose up -d
 ```
 Now point your browser to `http://localhost:8080`.
@@ -103,7 +101,7 @@ server {
     expires epoch;
 
     location / {
-        root   /var/www/pairdrop/client;
+        root   /var/www/pairdrop/public;
         index  index.html index.htm;
     }
 
@@ -124,7 +122,7 @@ server {
     expires epoch;
 
     location / {
-        root   /var/www/pairdrop/client;
+        root   /var/www/pairdrop/public;
         index  index.html;
     }
 
@@ -141,7 +139,7 @@ server {
 ### Using Apache
 ```
 <VirtualHost *:80>	
-	DocumentRoot "/var/www/pairdrop/client"
+	DocumentRoot "/var/www/pairdrop/public"
 	DirectoryIndex index.html	
 
 	RewriteEngine on
@@ -150,7 +148,7 @@ server {
 	RewriteRule ^/?(.*) "ws://127.0.0.1:3000/$1" [P,L]
 </VirtualHost>
 <VirtualHost *:443>	
-	DocumentRoot "/var/www/pairdrop/client"
+	DocumentRoot "/var/www/pairdrop/public"
 	DirectoryIndex index.html
 	
 	RewriteEngine on
@@ -173,7 +171,7 @@ When running PairDrop via Docker, the `X-Forwarded-For` header has to be set by 
 Use nginx or apache to set the header correctly:
 
 ### Using nginx
-(This differs from the config under `/docker/nginx/default.conf)
+(This differs from `/docker/nginx/production.conf`)
 ```
 server {
     listen       80;
@@ -203,12 +201,12 @@ server {
 
     location / {
         proxy_connect_timeout 300;
-        proxy_pass http://127.0.0.1:443;
+        proxy_pass http://127.0.0.1:8443;
     }
 
     location /server {
         proxy_connect_timeout 300;
-        proxy_pass http://127.0.0.1:443;
+        proxy_pass http://127.0.0.1:8443;
         proxy_set_header Connection "upgrade";
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header X-Forwarded-for $remote_addr;
