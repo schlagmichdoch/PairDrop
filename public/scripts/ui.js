@@ -996,9 +996,13 @@ class Base64ZipDialog extends Dialog {
         super('base64ZipDialog');
         const urlParams = new URL(window.location).searchParams;
         const base64zip = urlParams.get('base64zip');
-        this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
-        this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
-        if (base64zip) this.show();
+        if (!navigator.clipboard.readText) {
+            setTimeout(_ => Events.fire('notify-user', 'This feature is not available on your device.'), 500);
+        } else if (base64zip) {
+            this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
+            this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
+            this.show();
+        }
     }
 
     async processClipboard() {
