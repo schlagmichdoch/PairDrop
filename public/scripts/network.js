@@ -5,7 +5,6 @@ if (!crypto.subtle && localStorage.getItem('unsecure_warning') !== 'received') {
     alert("PairDrops functionality to compare received with requested files works in secure contexts only (https or localhost).")
     localStorage.setItem('unsecure_warning', 'received')
 }
-
 class ServerConnection {
 
     constructor() {
@@ -697,7 +696,20 @@ class PeersManager {
     }
 
     _onFilesSelected(message) {
-        this.peers[message.to].requestFileTransfer(message.files);
+        const files = this._addTypeIfMissing(message.files);
+        this.peers[message.to].requestFileTransfer(files);
+    }
+
+    _addTypeIfMissing(files) {
+        let filesWithType = [], file;
+        for (let i=0; i<files.length; i++) {
+            // when filename is empty guess via suffix
+            file = files[i].type
+                ? files[i]
+                : new File([files[i]], files[i].name, {type: mime.getMimeByFilename(files[i].name)});
+            filesWithType.push(file)
+        }
+        return filesWithType;
     }
 
     _onSendText(message) {

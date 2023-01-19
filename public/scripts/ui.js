@@ -639,7 +639,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         if (request.thumbnailDataUrl) {
             let element = document.createElement('img');
             element.src = request.thumbnailDataUrl;
-            element.classList = 'element-preview'
+            element.classList.add('element-preview');
 
             this.$previewBox.style.display = 'block';
             this.$previewBox.appendChild(element)
