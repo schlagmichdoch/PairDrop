@@ -423,7 +423,7 @@ class Dialog {
             window.blur();
         }
         document.title = 'PairDrop';
-        document.getElementById('favicon').href = "images/favicon-96x96.png";
+        document.changeFavicon("images/favicon-96x96.png");
     }
 }
 
@@ -574,7 +574,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 
         this.createPreviewElement(files[0]).then(_ => {
             document.title = `PairDrop - ${files.length} Files received`;
-            document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
+            document.changeFavicon("images/favicon-96x96-notification.png");
             this.show();
             Events.fire('set-progress', {
                 peerId: peerId,
@@ -648,7 +648,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         }
 
         document.title = 'PairDrop - File Transfer Requested';
-        document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
+        document.changeFavicon("images/favicon-96x96-notification.png");
         this.show()
     }
 
@@ -986,7 +986,7 @@ class ReceiveTextDialog extends Dialog {
             this.$text.textContent = text;
         }
         document.title = 'PairDrop - Message Received';
-        document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
+        document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
         window.blop.play();
     }
@@ -1572,6 +1572,14 @@ Events.on('load', () => {
     };
     init();
     animate();
+
+    let icon = document.querySelector('[rel="icon"]'),
+        shortcutIcon = document.querySelector('[rel="shortcut icon"]');
+
+    document.changeFavicon = function (src) {
+        icon.href = src;
+        shortcutIcon.href = src;
+    }
 });
 
 // close About PairDrop page on Escape
