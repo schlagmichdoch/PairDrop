@@ -403,7 +403,6 @@ class PeerUI {
     }
 }
 
-
 class Dialog {
     constructor(id, hideOnDisconnect = true) {
         this.$el = $(id);
@@ -423,6 +422,8 @@ class Dialog {
             document.activeElement.blur();
             window.blur();
         }
+        document.title = 'PairDrop';
+        document.getElementById('favicon').href = "images/favicon-96x96.png";
     }
 }
 
@@ -572,7 +573,9 @@ class ReceiveFileDialog extends ReceiveDialog {
         }
 
         this.createPreviewElement(files[0]).then(_ => {
-            this.show()
+            document.title = `PairDrop - ${files.length} Files received`;
+            document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
+            this.show();
             Events.fire('set-progress', {
                 peerId: peerId,
                 progress: 1,
@@ -594,7 +597,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 class ReceiveRequestDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveRequestDialog', true);
+        super('receiveRequestDialog');
 
         this.$acceptRequestBtn = this.$el.querySelector('#acceptRequest');
         this.$declineRequestBtn = this.$el.querySelector('#declineRequest');
@@ -644,6 +647,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
             this.$previewBox.appendChild(element)
         }
 
+        document.title = 'PairDrop - File Transfer Requested';
+        document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
         this.show()
     }
 
@@ -980,6 +985,8 @@ class ReceiveTextDialog extends Dialog {
         } else {
             this.$text.textContent = text;
         }
+        document.title = 'PairDrop - Message Received';
+        document.getElementById('favicon').href = "images/favicon-96x96-notification.png";
         this.show();
         window.blop.play();
     }
