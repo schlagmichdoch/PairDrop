@@ -26,9 +26,10 @@ Outstandingly, it is also possible to send multiple files to PairDrop via the co
 [//]: # (Todo: add screenshots)
 
 ## Share directly from share menu on iOS
-implemented but not documented yet
+I created an iOS shortcut to send images, files, folder, URLs or text directly from the share-menu 
+https://routinehub.co/shortcut/13990/
 
-[//]: # (Todo: add shortcut to routinehub.co and add doku with screenshots)
+[//]: # (Todo: add doku with screenshots)
 
 
 ## Share directly from share menu on Android

@@ -14,6 +14,13 @@
 if you are using a Chromium-based browser (Chrome, Edge, Brave, etc.), you can easily install PairDrop PWA on your desktop by clicking the install button in the top-right corner while on [pairdrop.net](https://pairdrop.net) (see below).
 <img src="pwa-install.png">
 
+### On iOS received images cannot be added to the gallery!
+Apparently, iOS does not allow images shared from a website to be saved to the gallery directly.
+
+Shortcuts to win:
+I created a simple iOS shortcut, that takes your photos and saves them to your gallery:
+https://routinehub.co/shortcut/13988/
+
 ### What about the connection? Is it a P2P-connection directly from device to device or is there any third-party-server?
 It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a Signaling Server, but it is only used to establish a connection and is not involved in the file transfer.
 
