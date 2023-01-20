@@ -1,6 +1,6 @@
 # PairDrop 
 
-[PairDrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's Airdrop. 
+[PairDrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's AirDrop. 
 
 Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
