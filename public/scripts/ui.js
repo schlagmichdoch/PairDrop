@@ -77,7 +77,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
-        setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
+        if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
     }
 
     _onPeerLeft(peerId) {
