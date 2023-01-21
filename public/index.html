@@ -152,7 +152,19 @@
         <x-background class="full center">
             <x-paper shadow="2">
                 <h2 class="center">PairDrop</h2>
-                <div class="text-center file-description"></div>
+                <div class="text-center file-description">
+                    <div>
+                        <span id="requestingPeerDisplayName"></span>
+                        <span>would like to share</span>
+                    </div>
+                    <div class="row" id="fileName">
+                        <span id="fileStem"></span>
+                        <span id="fileExtension"></span>
+                    </div>
+                    <div class="row">
+                        <span id="fileOther"></span>
+                    </div>
+                </div>
                 <div class="font-body2 text-center file-size"></div>
                 <div class="center file-preview"></div>
                 <div class="row-reverse space-between">

@@ -494,6 +494,25 @@ x-dialog .row-reverse {
     margin: auto;
 }
 
+.file-description .row {
+    margin: 0
+}
+
+.file-description span {
+    display: inline;
+    word-break: normal;
+}
+
+#fileName {
+    font-style: italic;
+}
+
+#fileStem {
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .file-size{
     margin-bottom: 30px;
 }

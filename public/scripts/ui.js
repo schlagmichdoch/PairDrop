@@ -487,7 +487,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     createPreviewElement(file) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             let mime = file.type.split('/')[0]
             let previewElement = {
                 image: 'img',
@@ -582,7 +582,7 @@ class ReceiveFileDialog extends ReceiveDialog {
                 status: 'wait'
             })
             this.$shareOrDownloadBtn.click();
-        });
+        }).catch(r => console.error(r));
     }
 
     hide() {
@@ -599,9 +599,13 @@ class ReceiveRequestDialog extends ReceiveDialog {
     constructor() {
         super('receiveRequestDialog');
 
+        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requestingPeerDisplayName');
+        this.$fileStemNode = this.$el.querySelector('#fileStem');
+        this.$fileExtensionNode = this.$el.querySelector('#fileExtension');
+        this.$fileOtherNode = this.$el.querySelector('#fileOther');
+
         this.$acceptRequestBtn = this.$el.querySelector('#acceptRequest');
         this.$declineRequestBtn = this.$el.querySelector('#declineRequest');
-
         this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
 
@@ -630,12 +634,27 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.requestedHeader = request.header;
 
         const peer = $(peerId);
-        let peerDisplayName = peer.ui._displayName();
-        let fileDesc = request.header.length === 1
-            ? "a file"
-            : `${request.header.length} files`
+        let imagesOnly = true;
+        for(let i=0; i<request.header.length; i++) {
+            if (request.header[i].mime.split('/')[0] !== 'image') {
+                imagesOnly = false;
+                break;
+            }
+        }
+        this.$requestingPeerDisplayNameNode.innerText = peer.ui._displayName();
+        const fileName = request.header[0].name;
+        const fileNameSplit = fileName.split('.');
+        const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
+        this.$fileStemNode.innerText = fileName.substring(0, fileName.length - fileExtension.length);
+        this.$fileExtensionNode.innerText = fileExtension
 
-        this.$fileDescriptionNode.innerText = `${peerDisplayName} would like to share ${fileDesc}`;
+        if (request.header.length >= 2) {
+            let fileOtherText = ` and ${request.header.length - 1} other `;
+            fileOtherText += imagesOnly ? 'image' : 'file';
+            if (request.header.length > 2) fileOtherText += "s";
+            this.$fileOtherNode.innerText = fileOtherText;
+        }
+
         this.$fileSizeNode.innerText = this._formatFileSize(request.size);
 
         if (request.thumbnailDataUrl) {
@@ -666,6 +685,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     hide() {
         this.$previewBox.innerHTML = '';
+        this.$fileOtherNode.innerText = '';
         super.hide();
     }
 }
@@ -1064,7 +1084,7 @@ class Notifications {
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
         Events.on('text-received', e => this._messageNotification(e.detail.text));
-        Events.on('files-received', _ => this._downloadNotification());
+        Events.on('files-received', e => this._downloadNotification(e.detail.files));
     }
 
     _requestPermission() {
@@ -1116,9 +1136,22 @@ class Notifications {
         }
     }
 
-    _downloadNotification() {
+    _downloadNotification(files) {
         if (document.visibilityState !== 'visible') {
-            const notification = this._notify(message, 'Click to download');
+            let imagesOnly = true;
+            for(let i=0; i<files.length; i++) {
+                if (files[i].mime.split('/')[0] !== 'image') {
+                    imagesOnly = false;
+                    break;
+                }
+            }
+            let title = files[0].name;
+            if (files.length >= 2) {
+                title += ` and ${files.length - 1} other `;
+                title += imagesOnly ? 'image' : 'file';
+                if (files.length > 2) title += "s";
+            }
+            const notification = this._notify(title, 'Click to download');
             this._bind(notification, _ => this._download(notification));
         }
     }
