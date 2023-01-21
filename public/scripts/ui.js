@@ -502,11 +502,11 @@ class ReceiveFileDialog extends ReceiveDialog {
                 let element = document.createElement(previewElement[mime]);
                 element.src = URL.createObjectURL(file);
                 element.controls = true;
-                element.classList = 'element-preview'
-
-                this.$previewBox.style.display = 'block';
+                element.classList.add('element-preview');
                 this.$previewBox.appendChild(element)
                 element.onload = _ => resolve(true);
+                element.addEventListener('loadeddata', _ => resolve(true));
+                element.onerror = _ => reject(`${mime} preview could not be loaded`);
             }
         });
     }
@@ -572,7 +572,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$shareOrDownloadBtn.href = url;
         }
 
-        this.createPreviewElement(files[0]).then(_ => {
+        this.createPreviewElement(files[0]).finally(_ => {
             document.title = `PairDrop - ${files.length} Files received`;
             document.changeFavicon("images/favicon-96x96-notification.png");
             this.show();
@@ -643,7 +643,6 @@ class ReceiveRequestDialog extends ReceiveDialog {
             element.src = request.thumbnailDataUrl;
             element.classList.add('element-preview');
 
-            this.$previewBox.style.display = 'block';
             this.$previewBox.appendChild(element)
         }
 
@@ -666,7 +665,6 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     hide() {
-        this.$previewBox.style.display = 'none';
         this.$previewBox.innerHTML = '';
         super.hide();
     }
