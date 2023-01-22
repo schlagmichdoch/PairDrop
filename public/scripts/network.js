@@ -114,7 +114,7 @@ class ServerConnection {
 
     _onDisplayName(msg) {
         sessionStorage.setItem("peerId", msg.message.peerId);
-        if (window.matchMedia('(display-mode: standalone)').matches) {
+        if (window.matchMedia('(display-mode: minimal-ui)').matches) {
             // make peerId persistent when pwa installed
             PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
                 console.log(`peerId saved to indexedDB: ${peerId}`);
