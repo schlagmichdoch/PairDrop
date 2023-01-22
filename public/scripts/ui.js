@@ -872,7 +872,10 @@ class PairDeviceDialog extends Dialog {
         }).finally(_ => {
             this._cleanUp()
         })
-        .catch(_ => PersistentStorage.logBrowserNotCapable());
+        .catch(_ => {
+            Events.fire('notify-user', 'Paired devices are not persistent.')
+            PersistentStorage.logBrowserNotCapable()
+        });
     }
 
     _pairDeviceJoinKeyInvalid() {
