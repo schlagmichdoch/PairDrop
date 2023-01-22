@@ -231,6 +231,7 @@ class PairDropServer {
     _onPairDeviceInitiate(sender) {
         let roomSecret = this.getRandomString(64);
         let roomKey = this._createRoomKey(sender, roomSecret);
+        if (sender.roomKey) this._removeRoomKey(sender.roomKey);
         sender.roomKey = roomKey;
         this._send(sender, {
             type: 'pair-device-initiated',
