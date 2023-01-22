@@ -33,7 +33,15 @@ class PeersUI {
         this.$cancelPasteModeBtn = $('cancelPasteModeBtn');
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
+        Events.on('dragover', _ => this._onDragOver());
+        Events.on('dragleave', _ => this._onDragEnd());
+        Events.on('dragend', _ => this._onDragEnd());
+
+        Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
+
+        this.$xNoPeers = $$('x-no-peers');
+        this.$xInstructions = $$('x-instructions');
     }
 
     _onKeyDown(e) {
@@ -110,6 +118,22 @@ class PeersUI {
         }
     }
 
+    _onDrop(e) {
+        e.preventDefault();
+        if (!$$('x-peer').contains(e.target)) {
+            this._activatePasteMode(e.dataTransfer.files, '')
+        }
+        this._onDragEnd();
+    }
+
+    _onDragOver() {
+        this.$xInstructions.setAttribute('drop-bg', 1);
+    }
+
+    _onDragEnd() {
+        this.$xInstructions.removeAttribute('drop-bg', 1);
+    }
+
     _onPaste(e) {
         if(document.querySelectorAll('x-dialog[show]').length === 0) {
             // prevent send on paste when dialog is open
@@ -126,9 +150,6 @@ class PeersUI {
             let descriptor;
             let noPeersMessage;
 
-            const xNoPeers = document.querySelectorAll('x-no-peers')[0];
-            const xInstructions = document.querySelectorAll('x-instructions')[0];
-
             if (files.length === 1) {
                 descriptor = files[0].name;
                 noPeersMessage = `Open PairDrop on other devices to send<br><i>${descriptor}</i>`;
@@ -140,12 +161,12 @@ class PeersUI {
                 noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
             }
 
-            xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
-            xInstructions.querySelector('p').style.display = 'block';
-            xInstructions.setAttribute('desktop', `Click to send`);
-            xInstructions.setAttribute('mobile', `Tap to send`);
+            this.$xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
+            this.$xInstructions.querySelector('p').style.display = 'block';
+            this.$xInstructions.setAttribute('desktop', `Click to send`);
+            this.$xInstructions.setAttribute('mobile', `Tap to send`);
 
-            xNoPeers.getElementsByTagName('h2')[0].innerHTML = noPeersMessage;
+            this.$xNoPeers.querySelector('h2').innerHTML = noPeersMessage;
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
@@ -171,16 +192,13 @@ class PeersUI {
             window.pasteMode.activated = false;
             Events.off('paste-pointerdown', _callback);
 
-            const xInstructions = document.querySelectorAll('x-instructions')[0];
+            this.$xInstructions.querySelector('p').innerText = '';
+            this.$xInstructions.querySelector('p').style.display = 'none';
 
-            xInstructions.querySelector('p').innerText = '';
-            xInstructions.querySelector('p').style.display = 'none';
+            this.$xInstructions.setAttribute('desktop', 'Click to send files or right click to send a message');
+            this.$xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
 
-            xInstructions.setAttribute('desktop', 'Click to send files or right click to send a message');
-            xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
-            const xNoPeers = document.querySelectorAll('x-no-peers')[0];
-
-            xNoPeers.getElementsByTagName('h2')[0].innerHTML = 'Open PairDrop on other devices to send files';
+            this.$xNoPeers.querySelector('h2').innerHTML = 'Open PairDrop on other devices to send files';
 
             this.$cancelPasteModeBtn.setAttribute('hidden', "");
 
@@ -245,6 +263,7 @@ class PeerUI {
         this._initDom();
         this._bindListeners();
         $$('x-peers').appendChild(this.$el);
+        this.$xInstructions = $$('x-instructions');
         setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
     }
 
@@ -367,9 +386,8 @@ class PeerUI {
 
     _onDrop(e) {
         e.preventDefault();
-        const files = e.dataTransfer.files;
         Events.fire('files-selected', {
-            files: files,
+            files: e.dataTransfer.files,
             to: this._peer.id
         });
         this._onDragEnd();
@@ -377,10 +395,12 @@ class PeerUI {
 
     _onDragOver() {
         this.$el.setAttribute('drop', 1);
+        this.$xInstructions.setAttribute('drop-peer', 1);
     }
 
     _onDragEnd() {
         this.$el.removeAttribute('drop');
+        this.$xInstructions.removeAttribute('drop-peer', 1);
     }
 
     _onRightClick(e) {

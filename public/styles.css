@@ -818,8 +818,16 @@ x-instructions {
     width: 80%;
 }
 
-x-instructions:before {
+x-instructions:not([drop-peer]):not([drop-bg]):before {
     content: attr(mobile);
+}
+
+x-instructions[drop-peer]:before {
+    content: "Release to send to peer";
+}
+
+x-instructions[drop-bg]:not([drop-peer]):before {
+    content: "Release to select recepient";
 }
 
 x-instructions p {
@@ -843,7 +851,7 @@ x-peers:empty~x-instructions {
 
 @media screen and (min-height: 800px),
 screen and (min-width: 1100px) {
-    x-instructions:before {
+    x-instructions:not([drop-peer]):not([drop-bg]):before {
         content: attr(desktop);
     }
 }
