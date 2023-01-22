@@ -222,6 +222,22 @@ x-peers:not(:empty)+x-no-peers {
     display: none;
 }
 
+x-no-peers::before {
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -.012em;
+    line-height: 32px;
+}
+
+x-no-peers[drop-bg]::before {
+    content: "Release to select recipient";
+}
+
+x-no-peers[drop-bg] * {
+    display: none;
+}
+
 
 
 /* Peer */
@@ -827,7 +843,7 @@ x-instructions[drop-peer]:before {
 }
 
 x-instructions[drop-bg]:not([drop-peer]):before {
-    content: "Release to select recepient";
+    content: "Release to select recipient";
 }
 
 x-instructions p {

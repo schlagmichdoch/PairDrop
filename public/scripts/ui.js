@@ -33,7 +33,7 @@ class PeersUI {
         this.$cancelPasteModeBtn = $('cancelPasteModeBtn');
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
-        Events.on('dragover', _ => this._onDragOver());
+        Events.on('dragover', e => this._onDragOver(e));
         Events.on('dragleave', _ => this._onDragEnd());
         Events.on('dragend', _ => this._onDragEnd());
 
@@ -120,18 +120,21 @@ class PeersUI {
 
     _onDrop(e) {
         e.preventDefault();
-        if (!$$('x-peer').contains(e.target)) {
+        if (!$$('x-peer') || !$$('x-peer').contains(e.target)) {
             this._activatePasteMode(e.dataTransfer.files, '')
         }
         this._onDragEnd();
     }
 
-    _onDragOver() {
+    _onDragOver(e) {
+        e.preventDefault();
         this.$xInstructions.setAttribute('drop-bg', 1);
+        this.$xNoPeers.setAttribute('drop-bg', 1);
     }
 
     _onDragEnd() {
         this.$xInstructions.removeAttribute('drop-bg', 1);
+        this.$xNoPeers.removeAttribute('drop-bg');
     }
 
     _onPaste(e) {
@@ -285,9 +288,7 @@ class PeerUI {
         this._callbackTouchStart = _ => this._onTouchStart()
         this._callbackTouchEnd = e => this._onTouchEnd(e)
         this._callbackPointerDown = e => this._onPointerDown(e)
-        // prevent browser's default file drop behavior
-        Events.on('dragover', e => e.preventDefault());
-        Events.on('drop', e => e.preventDefault());
+        // PasteMode
         Events.on('paste-mode-changed', _ => this._onPasteModeChanged());
     }
 
