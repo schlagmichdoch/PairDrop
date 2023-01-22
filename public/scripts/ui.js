@@ -1376,7 +1376,7 @@ class PersistentStorage {
                 const objectStoreRequest = objectStore.put(value, key);
                 objectStoreRequest.onsuccess = _ => {
                     console.log(`Request successful. Added key-pair: ${key} - ${value}`);
-                    resolve();
+                    resolve(value);
                 };
             }
             DBOpenRequest.onerror = (e) => {
@@ -1551,20 +1551,13 @@ if ('serviceWorker' in navigator) {
 }
 
 window.addEventListener('beforeinstallprompt', e => {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-        // make peerId persistent when pwa installed
-        PersistentStorage.get('peerId').then(peerId => {
-            sessionStorage.setItem("peerId", peerId);
-        }).catch(e => console.error(e));
-
-        // don't display install banner when installed
-        return e.preventDefault();
-    } else {
+    if (!window.matchMedia('(display-mode: minimal-ui)').matches) {
+        // only display install btn when installed
         const btn = document.querySelector('#install')
         btn.hidden = false;
         btn.onclick = _ => e.prompt();
-        return e.preventDefault();
     }
+    return e.preventDefault();
 });
 
 // Background Animation

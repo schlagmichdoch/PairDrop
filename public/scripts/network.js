@@ -25,10 +25,10 @@ class ServerConnection {
         Events.on('online', _ => this._connect());
     }
 
-    _connect() {
+    async _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
-        const ws = new WebSocket(this._endpoint());
+        const ws = new WebSocket(await this._endpoint());
         ws.binaryType = 'arraybuffer';
         ws.onopen = _ => this._onOpen();
         ws.onmessage = e => this._onMessage(e.data);
@@ -114,29 +114,32 @@ class ServerConnection {
 
     _onDisplayName(msg) {
         sessionStorage.setItem("peerId", msg.message.peerId);
-        if (window.matchMedia('(display-mode: minimal-ui)').matches) {
-            // make peerId persistent when pwa installed
-            PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
-                console.log(`peerId saved to indexedDB: ${peerId}`);
-            }).catch(_ => _ => PersistentStorage.logBrowserNotCapable());
-        }
+        PersistentStorage.get('peerId').then(peerId => {
+            if (!peerId) {
+                // save peerId to indexedDB to retrieve after PWA is installed
+                PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
+                    console.log(`peerId saved to indexedDB: ${peerId}`);
+                });
+            }
+        }).catch(_ => _ => PersistentStorage.logBrowserNotCapable())
         Events.fire('display-name', msg);
     }
 
-    _endpoint() {
+    async _endpoint() {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
         let ws_url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
-        const peerId = this._peerId();
-        if (peerId) {
-            ws_url.searchParams.append('peer_id', peerId)
-        }
+        const peerId = await this._peerId();
+        if (peerId) ws_url.searchParams.append('peer_id', peerId)
         return ws_url.toString();
     }
 
-    _peerId() {
-        return sessionStorage.getItem("peerId");
+    async _peerId() {
+        // make peerId persistent when pwa is installed
+        return window.matchMedia('(display-mode: minimal-ui)').matches
+            ? await PersistentStorage.get('peerId')
+            : sessionStorage.getItem("peerId");
     }
 
     _disconnect() {
