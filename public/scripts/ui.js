@@ -818,7 +818,7 @@ class PairDeviceDialog extends Dialog {
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             Events.fire('room-secrets', roomSecrets);
             this._evaluateNumberRoomSecrets();
-        }).catch((e) => console.error(e));
+        }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 
     _pairDeviceInitiate() {
@@ -872,7 +872,7 @@ class PairDeviceDialog extends Dialog {
         }).finally(_ => {
             this._cleanUp()
         })
-        .catch((e) => console.error(e));
+        .catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 
     _pairDeviceJoinKeyInvalid() {
@@ -901,7 +901,7 @@ class PairDeviceDialog extends Dialog {
         PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
             Events.fire('room-secret-deleted', roomSecret)
             this._evaluateNumberRoomSecrets();
-        }).catch((e) => console.error(e));
+        }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 
     _onClearRoomSecrets() {
@@ -911,7 +911,7 @@ class PairDeviceDialog extends Dialog {
                 Events.fire('notify-user', 'All Devices unpaired.')
                 this._evaluateNumberRoomSecrets();
             })
-        }).catch((e) => console.error(e));
+        }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 
     _onSecretRoomDeleted(roomSecret) {
@@ -929,7 +929,7 @@ class PairDeviceDialog extends Dialog {
                 this.$clearSecretsBtn.setAttribute('hidden', '');
                 this.$footerInstructions.innerText = "You can be discovered by everyone on this network";
             }
-        }).catch((e) => console.error(e));
+        }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 }
 
@@ -1323,14 +1323,14 @@ class NoSleepUI {
 class PersistentStorage {
     constructor() {
         if (!('indexedDB' in window)) {
-            this.logBrowserNotCapable();
+            PersistentStorage.logBrowserNotCapable();
             return;
         }
         const DBOpenRequest = window.indexedDB.open('pairdrop_store', 2);
         DBOpenRequest.onerror = (e) => {
-            this.logBrowserNotCapable();
+            PersistentStorage.logBrowserNotCapable();
             console.log('Error initializing database: ');
-            console.error(e)
+            console.log(e)
         };
         DBOpenRequest.onsuccess = () => {
             console.log('Database initialised.');
@@ -1359,7 +1359,7 @@ class PersistentStorage {
         }
     }
 
-    logBrowserNotCapable() {
+    static logBrowserNotCapable() {
         console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 

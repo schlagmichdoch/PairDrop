@@ -118,7 +118,7 @@ class ServerConnection {
             // make peerId persistent when pwa installed
             PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
                 console.log(`peerId saved to indexedDB: ${peerId}`);
-            }).catch(e => console.error(e));
+            }).catch(_ => _ => PersistentStorage.logBrowserNotCapable());
         }
         Events.fire('display-name', msg);
     }
