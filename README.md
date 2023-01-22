@@ -1,6 +1,15 @@
 # PairDrop 
 
-[PairDrop](https://pairdrop.net): local file sharing in your browser. Inspired by Apple's AirDrop. 
+[PairDrop](https://pairdrop.net) is a sublime alternative to AirDrop that works on all platforms.
+
+It uses peer to peer connection in the same local network/Wi-Fi or with paired devices to send images, documents or text.
+As it is web based, it runs on all devices including Android, Linux and Windows.
+
+You want to quickly send a file from your iPhone to your Windows Laptop?
+<br>You want to share photos in original quality with friends using a mixture of Android and iOS?
+<br>You want to share private files peer to peer between Linux systems?
+<br>AirDrop is unreliable again?
+<br>_Send it with PairDrop!_
 
 Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
