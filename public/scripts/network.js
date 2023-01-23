@@ -518,6 +518,7 @@ class RTCPeer extends Peer {
     }
 
     _openChannel() {
+        if (this._conn.signalingState === "closed") return;
         const channel = this._conn.createDataChannel('data-channel', {
             ordered: true,
             reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
