@@ -498,8 +498,7 @@ x-dialog h2 {
 }
 
 x-dialog .row-reverse {
-    margin: auto -24px;
-    margin-top: 40px;
+    margin: 40px -24px auto;
     border-top: solid 2.5px var(--border-color);
 }
 
@@ -532,7 +531,7 @@ x-dialog .row-reverse {
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;
-    max-height: 1rem;
+    max-height: 20px;
 }
 
 .file-size{
