@@ -1,17 +1,23 @@
-var CACHE_NAME = 'pairdrop-cache-v4';
-var urlsToCache = [
-  'index.html',
-  './',
-  'styles.css',
-  'scripts/network.js',
-  'scripts/ui.js',
-  'scripts/util.js',
-  'scripts/qrcode.js',
-  'scripts/zip.min.js',
-  'scripts/NoSleep.min.js',
-  'scripts/theme.js',
-  'sounds/blop.mp3',
-  'images/favicon-96x96.png'
+const CACHE_NAME = 'pairdrop-cache-v4';
+const urlsToCache = [
+    'index.html',
+    './',
+    'styles.css',
+    'scripts/network.js',
+    'scripts/ui.js',
+    'scripts/util.js',
+    'scripts/qrcode.js',
+    'scripts/zip.min.js',
+    'scripts/NoSleep.min.js',
+    'scripts/theme.js',
+    'sounds/blop.mp3',
+    'images/favicon-96x96.png',
+    'images/favicon-96x96-notification.png',
+    'images/android-chrome-192x192.png',
+    'images/android-chrome-192x192-maskable.png',
+    'images/android-chrome-512x512.png',
+    'images/android-chrome-512x512-maskable.png',
+    'images/apple-touch-icon.png',
 ];
 
 self.addEventListener('install', function(event) {

@@ -320,6 +320,10 @@ x-peer[status=wait] .status:before {
     content: 'Waiting...';
 }
 
+x-peer[status=process] .status:before {
+    content: 'Processing...';
+}
+
 x-peer:not([status]) .status,
 x-peer[status] .device-name {
     display: none;
@@ -527,6 +531,8 @@ x-dialog .row-reverse {
     max-width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
+    word-break: break-all;
+    max-height: 1rem;
 }
 
 .file-size{

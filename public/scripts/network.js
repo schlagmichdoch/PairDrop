@@ -12,7 +12,7 @@ class ServerConnection {
         Events.on('beforeunload', _ => this._disconnect());
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
-        if (navigator.connection) navigator.connection.addEventListener('change', _ => this._disconnect());
+        if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
         Events.on('reconnect', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
         Events.on('room-secret-deleted', e => this.send({ type: 'room-secret-deleted', roomSecret: e.detail}));
@@ -152,9 +152,10 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'Connection lost. Retrying...');
+        Events.fire('notify-user', 'Server connection lost. Retrying...');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
+        this._connect();
         Events.fire('ws-disconnected');
     }
 
@@ -298,8 +299,6 @@ class Peer {
     }
 
     async sendFiles() {
-        console.debug("sendFiles")
-        console.debug(this.zipFileRequested);
         this._filesQueue.push({zipFile: this.zipFileRequested, fileHeader: this._fileHeaderRequested});
         this._fileHeaderRequested = null
         if (this._busy) return;
@@ -429,7 +428,7 @@ class Peer {
     }
 
     async _onFileReceived(zipBlob, fileHeader) {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
         this._busy = false;
         this.sendJSON({type: 'file-transfer-complete'});
 
@@ -563,7 +562,15 @@ class RTCPeer extends Peer {
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
         channel.onclose = _ => this._onChannelClosed();
+        Events.on('beforeunload', _ => this._closeChannel());
+        Events.on('pagehide', _ => this._closeChannel());
         this._channel = channel;
+    }
+
+    _closeChannel() {
+        this._channel.onclose = null;
+        this._conn.close();
+        this._conn = null;
     }
 
     _onChannelClosed() {
@@ -603,7 +610,7 @@ class RTCPeer extends Peer {
     }
 
     _send(message) {
-        if (!this._channel) return this.refresh();
+        if (!this._channel) this.refresh();
         this._channel.send(message);
     }
 
@@ -617,8 +624,6 @@ class RTCPeer extends Peer {
 
     refresh() {
         // check if channel is open. otherwise create one
-        console.debug("refresh:");
-        console.debug(this._conn);
         if (this._isConnected() || this._isConnecting()) return;
         this._connect(this._peerId, this._isCaller);
     }
@@ -652,8 +657,7 @@ class PeersManager {
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-left', e => this._onPeerLeft(e.detail));
-        Events.on('ws-disconnected', _ => this._clearPeers());
+        Events.on('peer-disconnected', e => this._onPeerLeft(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
     }
 
@@ -699,20 +703,15 @@ class PeersManager {
     }
 
     _onFilesSelected(message) {
-        const files = this._addTypeIfMissing(message.files);
-        this.peers[message.to].requestFileTransfer(files);
-    }
-
-    _addTypeIfMissing(files) {
-        let filesWithType = [], file;
-        for (let i=0; i<files.length; i++) {
+        let files = [];
+        for (let i=0; i<message.files.length; i++) {
             // when filename is empty guess via suffix
-            file = files[i].type
-                ? files[i]
-                : new File([files[i]], files[i].name, {type: mime.getMimeByFilename(files[i].name)});
-            filesWithType.push(file)
+            const file = message.files[i].type
+                ? message.files[i]
+                : new File([message.files[i]], message.files[i].name, {type: mime.getMimeByFilename(message.files[i].name)});
+            files.push(file)
         }
-        return filesWithType;
+        this.peers[message.to].requestFileTransfer(files);
     }
 
     _onSendText(message) {
@@ -729,12 +728,6 @@ class PeersManager {
         if (!peer || !peer._conn) return;
         if (peer._channel) peer._channel.onclose = null;
         peer._conn.close();
-    }
-
-    _clearPeers() {
-        if (this.peers) {
-            Object.keys(this.peers).forEach(peerId => this._onPeerLeft(peerId));
-        }
     }
 
     _onSecretRoomDeleted(roomSecret) {

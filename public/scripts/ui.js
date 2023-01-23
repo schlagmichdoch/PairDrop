@@ -19,14 +19,12 @@ class PeersUI {
 
     constructor() {
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('set-progress', e => this._onSetProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('ws-disconnected', _ => this._clearPeers());
-        Events.on('secret-room-deleted', _ => this._clearPeers('secret'));
+        Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
@@ -88,16 +86,11 @@ class PeersUI {
         if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
     }
 
-    _onPeerLeft(peerId) {
-        this._onPeerDisconnected(peerId);
-        delete this.peers[peerId];
-    }
-
     _onSecretRoomDeleted(roomSecret) {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
             if (peer.roomSecret === roomSecret) {
-                this._onPeerLeft(peerId);
+                this._onPeerDisconnected(peerId);
             }
         }
     }
@@ -106,16 +99,6 @@ class PeersUI {
         const $peer = $(progress.peerId);
         if (!$peer) return;
         $peer.ui.setProgress(progress.progress, progress.status)
-    }
-
-    _clearPeers(roomType = 'all') {
-        for (const peerId in this.peers) {
-            if (roomType === 'all' || this.peers[peerId].roomType === roomType) {
-                const peerNode = $(peerId);
-                if(peerNode) peerNode.remove();
-                delete this.peers[peerId];
-            }
-        }
     }
 
     _onDrop(e) {
@@ -429,7 +412,7 @@ class Dialog {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()))
         this.$autoFocus = this.$el.querySelector('[autofocus]');
-        if (hideOnDisconnect) Events.on('ws-disconnected', _ => this.hide());
+        if (hideOnDisconnect) Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
 
     show() {
@@ -445,6 +428,14 @@ class Dialog {
         }
         document.title = 'PairDrop';
         document.changeFavicon("images/favicon-96x96.png");
+        if (this.correspondingPeerId) setTimeout(_ => this.correspondingPeerId = undefined, 300);
+    }
+
+    _onPeerDisconnected(peerId) {
+        if (this.correspondingPeerId && this.correspondingPeerId === peerId) {
+            this.hide();
+            Events.fire('notify-user', 'Selected peer left.')
+        }
     }
 }
 
@@ -600,7 +591,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             Events.fire('set-progress', {
                 peerId: peerId,
                 progress: 1,
-                status: 'wait'
+                status: 'process'
             })
             this.$shareOrDownloadBtn.click();
         }).catch(r => console.error(r));
@@ -631,8 +622,6 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
 
         Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
-        Events.on('peer-left', e => this._onPeerDisconnectedOrLeft(e.detail))
-        Events.on('peer-disconnected', e => this._onPeerDisconnectedOrLeft(e.detail))
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
@@ -643,15 +632,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
         }
     }
 
-    _onPeerDisconnectedOrLeft(peerId) {
-        if (peerId === this.requestingPeerId) {
-            this._respondToFileTransferRequest(false)
-            this.hide();
-        }
-    }
-
     _onRequestFileTransfer(request, peerId) {
-        this.requestingPeerId = peerId;
+        this.correspondingPeerId = peerId;
         this.requestedHeader = request.header;
 
         const peer = $(peerId);
@@ -693,13 +675,12 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     _respondToFileTransferRequest(accepted) {
         Events.fire('respond-to-files-transfer-request', {
-            to: this.requestingPeerId,
+            to: this.correspondingPeerId,
             header: this.requestedHeader,
             accepted: accepted
         })
-        this.requestingPeerId = null;
         if (accepted) {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
+            Events.fire('set-progress', {peerId: this.correspondingPeerId, progress: 0, status: 'wait'});
             NoSleepUI.enable();
         }
     }
@@ -732,6 +713,7 @@ class PairDeviceDialog extends Dialog {
 
         Events.on('keydown', e => this._onKeyDown(e));
         Events.on('ws-connected', _ => this._onWsConnected());
+        Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._pairDeviceInitiated(e.detail));
         Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail));
         Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
@@ -976,8 +958,8 @@ class SendTextDialog extends Dialog {
         }
     }
 
-    _onRecipient(recipient) {
-        this._recipient = recipient;
+    _onRecipient(peerId) {
+        this.correspondingPeerId = peerId;
         this.show();
 
         const range = document.createRange();
@@ -991,7 +973,7 @@ class SendTextDialog extends Dialog {
 
     _send() {
         Events.fire('send-text', {
-            to: this._recipient,
+            to: this.correspondingPeerId,
             text: this.$text.innerText
         });
         this.$text.value = "";
@@ -1096,13 +1078,14 @@ class Base64ZipDialog extends Dialog {
 class Toast extends Dialog {
     constructor() {
         super('toast');
-        Events.on('notify-user', e => this._onNotifiy(e.detail));
+        Events.on('notify-user', e => this._onNotify(e.detail));
     }
 
-    _onNotifiy(message) {
+    _onNotify(message) {
+        if (this.hideTimeout) clearTimeout(this.hideTimeout);
         this.$el.textContent = message;
         this.show();
-        setTimeout(_ => this.hide(), 3000);
+        this.hideTimeout = setTimeout(_ => this.hide(), 3000);
     }
 }
 
