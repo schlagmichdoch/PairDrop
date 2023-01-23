@@ -449,12 +449,14 @@ class ReceiveDialog extends Dialog {
     }
 
     _formatFileSize(bytes) {
-        if (bytes >= 1e9) {
-            return (Math.round(bytes / 1e8) / 10) + ' GB';
-        } else if (bytes >= 1e6) {
-            return (Math.round(bytes / 1e5) / 10) + ' MB';
-        } else if (bytes > 1000) {
-            return Math.round(bytes / 1000) + ' KB';
+        // 1 GB = 1024 MB = 1024^2 KB = 1024^3 B
+        // 1024^2 = 104876; 1024^3 = 1073741824
+        if (bytes >= 1073741824) {
+            return Math.round(10 * bytes / 1073741824) / 10 + ' GB';
+        } else if (bytes >= 1048576) {
+            return Math.round(bytes / 1048576) + ' MB';
+        } else if (bytes > 1024) {
+            return Math.round(bytes / 1048576) + ' KB';
         } else {
             return bytes + ' Bytes';
         }
@@ -527,29 +529,41 @@ class ReceiveFileDialog extends ReceiveDialog {
         if (this.continueCallback) this.$shareOrDownloadBtn.removeEventListener("click", this.continueCallback);
 
         let url;
-        let description;
-        let size;
-        let filename;
         let title;
+        let filenameDownload;
+        let combinedSize = 0
+        let descriptor = "Image";
+
+        for (let i=0; i<files.length; i++) {
+            combinedSize += files[i].size;
+            if (files[i].type.split('/')[0] !== "image") descriptor = "File";
+        }
+
+        let size = this._formatFileSize(combinedSize);
+        let description = files[0].name;
 
         if (files.length === 1) {
-            title = 'PairDrop - File Received'
-            description = files[0].name;
-            size = this._formatFileSize(files[0].size);
-            filename = files[0].name;
             url = URL.createObjectURL(files[0])
+            title = `PairDrop - ${descriptor} Received`
+            filenameDownload = files[0].name;
         } else {
-            title = `PairDrop - ${files.length} Files Received`
-            let completeSize = 0
-            for (let i=0; i<files.length; i++) {
-                completeSize += files[0].size;
-            }
-            description = `${files[0].name} and ${files.length-1} other ${files.length>2 ? "files" : "file"}`;
-            size = this._formatFileSize(completeSize);
+            title = `PairDrop - ${files.length} ${descriptor}s Received`
+            description += ` and ${files.length-1} other ${descriptor.toLowerCase()}`;
+            if(files.length>2) description += "s";
 
+            let bytesCompleted = 0;
             zipper.createNewZipWriter();
             for (let i=0; i<files.length; i++) {
-                await zipper.addFile(files[i]);
+                await zipper.addFile(files[i], {
+                    onprogress: (progress) => {
+                        Events.fire('set-progress', {
+                            peerId: peerId,
+                            progress: (bytesCompleted + progress) / combinedSize,
+                            status: 'process'
+                        })
+                    }
+                });
+                bytesCompleted += files[i].size;
             }
             url = await zipper.getBlobURL();
 
@@ -563,7 +577,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             hours = hours.length < 2 ? "0" + hours : hours;
             let minutes = now.getMinutes().toString();
             minutes = minutes.length < 2 ? "0" + minutes : minutes;
-            filename = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
+            filenameDownload = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
         }
 
         this.$receiveTitleNode.textContent = title;
@@ -580,7 +594,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
         } else {
             this.$shareOrDownloadBtn.innerText = "Download";
-            this.$shareOrDownloadBtn.download = filename;
+            this.$shareOrDownloadBtn.download = filenameDownload;
             this.$shareOrDownloadBtn.href = url;
         }
 
@@ -599,7 +613,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 
     hide() {
         this.$shareOrDownloadBtn.href = '';
-        this.$previewBox.style.display = 'none';
+        this.$shareOrDownloadBtn.download = '';
         this.$previewBox.innerHTML = '';
         super.hide();
         this._dequeueFile();
@@ -1158,7 +1172,7 @@ class Notifications {
         if (document.visibilityState !== 'visible') {
             let imagesOnly = true;
             for(let i=0; i<files.length; i++) {
-                if (files[i].mime.split('/')[0] !== 'image') {
+                if (files[i].type.split('/')[0] !== 'image') {
                     imagesOnly = false;
                     break;
                 }
@@ -1191,7 +1205,7 @@ class Notifications {
 
     _bind(notification, handler) {
         if (notification.then) {
-            notification.then(_ => serviceWorker.getNotifications().then(notifications => {
+            notification.then(_ => serviceWorker.getNotifications().then(_ => {
                 serviceWorker.addEventListener('notificationclick', handler);
             }));
         } else {
