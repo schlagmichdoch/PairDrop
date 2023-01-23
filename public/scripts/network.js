@@ -264,12 +264,12 @@ class Peer {
             combinedSize += files[i].size;
         }
         this._fileHeaderRequested = header;
-        let bytesCompleted = 0;
 
+        let bytesCompleted = 0;
         zipper.createNewZipWriter();
         for (let i=0; i<files.length; i++) {
-            const entry = await zipper.addFile(files[i], {
-                onprogress: (progress, total) => {
+            await zipper.addFile(files[i], {
+                onprogress: (progress) => {
                     Events.fire('set-progress', {
                         peerId: this._peerId,
                         progress: (bytesCompleted + progress) / combinedSize,
@@ -543,7 +543,7 @@ class RTCPeer extends Peer {
         if (!this._conn) this._connect(message.sender, false);
 
         if (message.sdp) {
-            this._conn.setRemoteDescription(new RTCSessionDescription(message.sdp))
+            this._conn.setRemoteDescription(message.sdp)
                 .then( _ => {
                     if (message.sdp.type === 'offer') {
                         return this._conn.createAnswer()
@@ -663,29 +663,20 @@ class PeersManager {
     }
 
     _onMessage(message) {
-        this._refreshOrCreatePeer(message.sender, message.roomType, message.roomSecret);
-        this.peers[message.sender].onServerMessage(message);
-    }
-
-    _refreshOrCreatePeer(id, roomType, roomSecret) {
-        if (!this.peers[id]) {
-            this.peers[id] = new RTCPeer(this._server, undefined, roomType, roomSecret);
-        }else if (this.peers[id]._roomType !== roomType) {
-            this.peers[id]._roomType = roomType;
-            this.peers[id]._roomSecret = roomSecret;
+        // if different roomType -> abort
+        if (this.peers[message.sender] && this.peers[message.sender]._roomType !== message.roomType) return;
+        if (!this.peers[message.sender]) {
+            this.peers[message.sender] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
         }
+        this.peers[message.sender].onServerMessage(message);
     }
 
     _onPeers(msg) {
         msg.peers.forEach(peer => {
             if (this.peers[peer.id]) {
-                if (this.peers[peer.id].roomType === msg.roomType) {
-                    this.peers[peer.id].refresh();
-                } else {
-                    this.peers[peer.id].roomType = msg.roomType;
-                    this.peers[peer.id].roomSecret = msg.roomSecret;
-                }
-                return;
+                // if different roomType -> abort
+                if (this.peers[peer.id].roomType !== msg.roomType) return;
+                this.peers[peer.id].refresh();
             }
             if (window.isRtcSupported && peer.rtcSupported) {
                 this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
