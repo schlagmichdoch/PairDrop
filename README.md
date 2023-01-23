@@ -38,11 +38,12 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
 ### Other changes
 * [Paste Mode](https://github.com/RobinLinus/snapdrop/pull/534)
-* [Video and Audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (thanks [@victorwads](https://github.com/victorwads))
-* [Prevent device from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
-* node-only implementation (thanks [@Bellisario](https://github.com/Bellisario))
-* automatic restart on error (thanks [@KaKi87](https://github.com/KaKi87))
-* lots of stability fixes (thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) [@willstott101](https://github.com/willstott101))
+* [Prevent devices from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
+* Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
+* [Video and Audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (Thanks [@victorwads](https://github.com/victorwads))
+* node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
+* automatic restart on error (Thanks [@KaKi87](https://github.com/KaKi87))
+* lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
 
 ## Screenshots
