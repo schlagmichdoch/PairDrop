@@ -1220,7 +1220,7 @@ class NetworkStatusUI {
         Events.on('offline', _ => this._showOfflineMessage());
         Events.on('online', _ => this._showOnlineMessage());
         Events.on('ws-connected', _ => this._showOnlineMessage());
-        Events.on('ws-disconnected', _ => window.animateBackground(false));
+        Events.on('ws-disconnected', _ => this._onWsDisconnected());
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
@@ -1230,12 +1230,17 @@ class NetworkStatusUI {
     }
 
     _showOnlineMessage() {
+        window.animateBackground(true);
         if (!this.firstConnect) {
             this.firstConnect = true;
             return;
         }
         Events.fire('notify-user', 'You are back online');
-        window.animateBackground(true);
+    }
+
+    _onWsDisconnected() {
+        window.animateBackground(false);
+        if (!this.firstConnect) this.firstConnect = true;
     }
 }
 

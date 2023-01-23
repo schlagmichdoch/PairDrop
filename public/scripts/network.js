@@ -152,10 +152,9 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'Server connection lost. Retrying...');
+        Events.fire('notify-user', 'No server connection. Retry in 5s...');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
-        this._connect();
         Events.fire('ws-disconnected');
     }
 

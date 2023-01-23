@@ -1,4 +1,5 @@
-const CACHE_NAME = 'pairdrop-cache-v4';
+const cacheVersion = 'v5';
+const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const urlsToCache = [
     'index.html',
     './',
@@ -23,15 +24,50 @@ const urlsToCache = [
 self.addEventListener('install', function(event) {
   // Perform install steps
     event.waitUntil(
-        caches.open(CACHE_NAME)
+        caches.open(cacheTitle)
             .then(function(cache) {
-                console.log('Opened cache');
-                return cache.addAll(urlsToCache);
-        })
+                return cache.addAll(urlsToCache).then(_ => {
+                    console.log('All files cached.');
+                });
+            })
     );
 });
 
+// fetch the resource from the network
+const fromNetwork = (request, timeout) =>
+    new Promise((fulfill, reject) => {
+        const timeoutId = setTimeout(reject, timeout);
+        fetch(request).then(response => {
+            clearTimeout(timeoutId);
+            fulfill(response);
+            update(request);
+        }, reject);
+    });
 
+// fetch the resource from the browser cache
+const fromCache = request =>
+    caches
+        .open(cacheTitle)
+        .then(cache =>
+            cache
+                .match(request)
+                .then(matching => matching || cache.match('/offline/'))
+        );
+
+// cache the current page to make it available for offline
+const update = request =>
+    caches
+        .open(cacheTitle)
+        .then(cache =>
+            fetch(request).then(response => {
+                cache.put(request, response).then(_ => {
+                    console.log("Page successfully cached.")
+                })
+            })
+        );
+
+// general strategy when making a request (eg if online try to fetch it
+// from the network with a timeout, if something fails serve from cache)
 self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
@@ -62,34 +98,24 @@ self.addEventListener('fetch', function(event) {
     } else {
         // Regular requests not related to Web Share Target.
         event.respondWith(
-            caches.match(event.request)
-                .then(function (response) {
-                        // Cache hit - return response
-                        if (response) {
-                            return response;
-                        }
-                        return fetch(event.request);
-                    }
-                )
+            fromNetwork(event.request, 10000).catch(() => fromCache(event.request))
         );
+        event.waitUntil(update(event.request));
     }
 });
 
 
-self.addEventListener('activate', function(event) {
-  console.log('Updating Service Worker...')
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.filter(function(cacheName) {
-          // Return true if you want to remove this cache,
-          // but remember that caches are shared across
-          // the whole origin
-          return true
-        }).map(function(cacheName) {
-          return caches.delete(cacheName);
+// on activation, we clean up the previously registered service workers
+self.addEventListener('activate', evt =>
+    evt.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== cacheTitle) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
         })
-      );
-    })
-  );
-});
+    )
+);
