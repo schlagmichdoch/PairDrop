@@ -1042,22 +1042,30 @@ class Base64ZipDialog extends Dialog {
         const urlParams = new URL(window.location).searchParams;
         const base64Zip = urlParams.get('base64zip');
         const base64Text = urlParams.get('base64text');
+        this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
+        this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
+
         if (base64Text) {
             this.processBase64Text(base64Text);
-        }else if (!navigator.clipboard.readText) {
-            setTimeout(_ => Events.fire('notify-user', 'This feature is not available on your device.'), 500);
         } else if (base64Zip) {
-            this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
-            this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
+            if (!navigator.clipboard.readText) {
+                setTimeout(_ => Events.fire('notify-user', 'This feature is not available on your device.'), 500);
+                this.clearBrowserHistory();
+                return;
+            }
             this.show();
         }
     }
 
     processBase64Text(base64Text){
         try {
-            Events.fire('activate-paste-mode', {files: [], text: atob(base64Text)});
+            let decodedText = decodeURIComponent(escape(window.atob(base64Text)));
+            Events.fire('activate-paste-mode', {files: [], text: decodedText});
         } catch (e) {
-            Events.fire('notify-user', 'Clipboard content is malformed.')
+            setTimeout(_ => Events.fire('notify-user', 'Content incorrect.'), 500);
+        } finally {
+            this.clearBrowserHistory();
+            this.hide();
         }
     }
 
@@ -1081,11 +1089,15 @@ class Base64ZipDialog extends Dialog {
             }
             Events.fire('activate-paste-mode', {files: files, text: ""})
         } catch (e) {
-            Events.fire('notify-user', 'Clipboard content is malformed.')
+            Events.fire('notify-user', 'Clipboard content is incorrect.')
         } finally {
-            window.history.replaceState({}, "Rewrite URL", '/');
+            this.clearBrowserHistory();
             this.hide();
         }
+    }
+
+    clearBrowserHistory() {
+        window.history.replaceState({}, "Rewrite URL", '/');
     }
 }
 
@@ -1633,15 +1645,12 @@ Events.on('load', () => {
     };
     init();
     animate();
-
-    let icon = document.querySelector('[rel="icon"]'),
-        shortcutIcon = document.querySelector('[rel="shortcut icon"]');
-
-    document.changeFavicon = function (src) {
-        icon.href = src;
-        shortcutIcon.href = src;
-    }
 });
+
+document.changeFavicon = function (src) {
+    document.querySelector('[rel="icon"]').href = src;
+    document.querySelector('[rel="shortcut icon"]').href = src;
+}
 
 // close About PairDrop page on Escape
 window.addEventListener("keydown", (e) => {
