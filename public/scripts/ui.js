@@ -964,8 +964,7 @@ class SendTextDialog extends Dialog {
         if (this.$el.attributes["show"]) {
             if (e.code === "Escape") {
                 this.hide();
-            }
-            if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+            } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
                 this._send();
                 this.hide();
             }
@@ -1005,9 +1004,13 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
-            await this._onCopy()
-            this.hide();
+        if (this.$el.attributes["show"]) {
+            if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+                await this._onCopy()
+                this.hide();
+            } else if (e.code === "Escape") {
+                this.hide();
+            }
         }
     }
 

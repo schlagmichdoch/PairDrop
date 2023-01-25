@@ -168,9 +168,9 @@
                 <div class="font-body2 text-center file-size"></div>
                 <div class="center file-preview"></div>
                 <div class="row-reverse space-between">
-                    <button class="button" id="acceptRequest" title="Accept Request" close autofocus>Accept</button>
+                    <button class="button" id="acceptRequest" title="ENTER" close autofocus>Accept</button>
                     <div class="separator"></div>
-                    <button class="button" id="declineRequest" title="Decline Request" close>Decline</button>
+                    <button class="button" id="declineRequest" title="ESCAPE" close>Decline</button>
                 </div>
             </x-paper>
         </x-background>
@@ -183,9 +183,9 @@
                     <h2 class="center text-center">Send a Message</h2>
                     <div id="textInput" class="textarea" role="textbox" placeholder="Send a message" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="row-reverse">
-                        <button class="button" type="submit" close>Send</button>
+                        <button class="button" type="submit" title="STR + ENTER" close>Send</button>
                         <div class="separator"></div>
-                        <a class="button" close>Cancel</a>
+                        <a class="button" title="ESCAPE" close>Cancel</a>
                     </div>
                 </x-paper>
             </x-background>
@@ -198,14 +198,14 @@
                 <h2>Message Received</h2>
                 <div class="font-subheading" id="text"></div>
                 <div class="row-reverse">
-                    <button class="button" id="copy" close autofocus>Copy</button>
+                    <button class="button" id="copy" title="CTRL/⌘ + C" close>Copy</button>
                     <div class="separator"></div>
-                    <button class="button" close>Close</button>
+                    <button class="button" title="ESCAPE" close>Close</button>
                 </div>
             </x-paper>
         </x-background>
     </x-dialog>
-    <!-- Receive Dialog -->
+    <!-- base64ZipDialog Dialog -->
     <x-dialog id="base64ZipDialog">
         <x-background class="full center">
             <x-paper shadow="2">
