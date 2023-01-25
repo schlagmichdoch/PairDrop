@@ -11,15 +11,33 @@
 * [Producthunt](https://www.producthunt.com/posts/snapdrop)
 
 ### Help! I can't install the PWA!
-if you are using a Chromium-based browser (Chrome, Edge, Brave, etc.), you can easily install PairDrop PWA on your desktop by clicking the install button in the top-right corner while on [pairdrop.net](https://pairdrop.net) (see below).
-<img src="pwa-install.png">
+if you are using a Chromium-based browser (Chrome, Edge, Brave, etc.), you can easily install PairDrop PWA on your desktop 
+by clicking the install-button in the top-right corner while on [pairdrop.net](https://pairdrop.net).
 
-### On iOS received images cannot be added to the gallery!
+<img src="pwa-install.png" alt="Example on how to install a pwa with Edge">
+
+On Firefox, PWAs are installable via [this browser extensions](https://addons.mozilla.org/de/firefox/addon/pwas-for-firefox/)
+
+### Are there any shortcuts?
+Sure!
+- Send a message with `CTRL + ENTER`
+- Close all send and pair dialogs by pressing `Escape`.
+- Copy a received message to clipboard with `CTRL/⌘ + C`.
+- Accept file transfer request with `Enter` and decline with `Escape`.
+
+### When I receive images on iOS I cannot add them directly to the gallery?
 Apparently, iOS does not allow images shared from a website to be saved to the gallery directly.
+It simply does not offer the option for images shared from a website.
 
-Shortcuts to win:
-I created a simple iOS shortcut, that takes your photos and saves them to your gallery:
+iOS Shortcuts to the win:
+I created a simple iOS shortcut that takes your photos and saves them to your gallery:
 https://routinehub.co/shortcut/13988/
+
+### Is it possible to share files directly from the context / share menu?
+Yes it finally is!
+* [Share files directly from context menu on Windows](/docs/how-to.md#share-files-directly-from-context-menu-on-windows)
+* [Share directly from share menu on iOS](/docs/how-to.md#share-directly-from-share-menu-on-ios)
+* [Share directly from share menu on Android](/docs/how-to.md#share-directly-from-share-menu-on-android)
 
 ### What about the connection? Is it a P2P-connection directly from device to device or is there any third-party-server?
 It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a Signaling Server, but it is only used to establish a connection and is not involved in the file transfer.
@@ -34,6 +52,17 @@ If your devices are paired and behind a NAT, the public TURN Server from [Open R
 
 ### What about security? Are my files encrypted while being sent between the computers?
 Yes. Your files are sent using WebRTC, which encrypts them on transit.
+
+### Transferring many files with paired devices takes too long
+Naturally, if traffic needs to be routed through the turn server transfer speed decreases.
+As a workaround you can open a hotspot on one of your devices to bridge the connection which makes transfers much faster.
+
+- [How to open a hotspot on Windows](https://support.microsoft.com/en-us/windows/use-your-windows-pc-as-a-mobile-hotspot-c89b0fad-72d5-41e8-f7ea-406ad9036b85#WindowsVersion=Windows_11)
+- [How to open a hotspot on Mac](https://support.apple.com/guide/mac-help/share-internet-connection-mac-network-users-mchlp1540/mac)
+- [Library to open a hotspot on Linux](https://github.com/lakinduakash/linux-wifi-hotspot)
+
+You can also use mobile hotspots on phones to do that. 
+Then, all data should be sent directly between devices and your data plan should not be charged.
 
 ### Why don't you implement feature xyz?
 Snapdrop and PairDrop are a study in radical simplicity. The user interface is insanely simple. Features are chosen very carefully because complexity grows quadratically since every feature potentially interferes with each other feature. We focus very narrowly on a single use case: instant file transfer. 
