@@ -456,7 +456,7 @@ class ReceiveDialog extends Dialog {
         } else if (bytes >= 1048576) {
             return Math.round(bytes / 1048576) + ' MB';
         } else if (bytes > 1024) {
-            return Math.round(bytes / 1048576) + ' KB';
+            return Math.round(bytes / 1024) + ' KB';
         } else {
             return bytes + ' Bytes';
         }
