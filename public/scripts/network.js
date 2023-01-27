@@ -9,7 +9,6 @@ class ServerConnection {
 
     constructor() {
         this._connect();
-        Events.on('beforeunload', _ => this._disconnect());
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
@@ -561,7 +560,6 @@ class RTCPeer extends Peer {
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
         channel.onclose = _ => this._onChannelClosed();
-        Events.on('beforeunload', _ => this._closeChannel());
         Events.on('pagehide', _ => this._closeChannel());
         this._channel = channel;
     }
@@ -658,6 +656,16 @@ class PeersManager {
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-disconnected', e => this._onPeerLeft(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('beforeunload', e => this._onBeforeUnload(e));
+    }
+
+    _onBeforeUnload(e) {
+        for (const peerId in this.peers) {
+            if (this.peers[peerId]._busy) {
+                e.preventDefault();
+                return "There are unfinished transfers. Are you sure you want to close?";
+            }
+        }
     }
 
     _onMessage(message) {
