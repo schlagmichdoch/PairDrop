@@ -28,8 +28,6 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Multiple files are downloaded as ZIP file
 * On iOS and Android the devices share menu is opened instead of downloading the files
 * Multiple files are transferred at once with an overall progress indicator
-* The integrity of the files is checked on receive
-* All metadata is preserved
 
 ### Share Files Directly From Share / Context Menu
 * [Share files directly from context menu on Windows](/docs/how-to.md#share-files-directly-from-context-menu-on-windows)
