@@ -1,0 +1,22 @@
+name: Sync server via SSH
+on:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    # Prevent running this on forks
+    if: github.repository_owner == 'FoxtrotSierra6829'
+    runs-on: ubuntu-18.04
+    steps:
+      - name: executing remote ssh commands using ssh key
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd PairDrop
+            git pull
+            sudo docker compose up -d
