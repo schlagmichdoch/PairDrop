@@ -1,10 +1,6 @@
 window.URL = window.URL || window.webkitURL;
 window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
-if (!crypto.subtle && localStorage.getItem('unsecure_warning') !== 'received') {
-    // Warn once per session
-    alert("PairDrops functionality to compare received with requested files works in secure contexts only (https or localhost).")
-    localStorage.setItem('unsecure_warning', 'received')
-}
+
 class ServerConnection {
 
     constructor() {
