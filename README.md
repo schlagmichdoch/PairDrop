@@ -1,8 +1,28 @@
-# PairDrop 
+<!-- PROJECT LOGO -->
+<br />
+<div  style="text-align: center">
+  <a href="https://github.com/schlagmichdoch/PairDrop">
+    <img src="https://raw.githubusercontent.com/schlagmichdoch/PairDrop/master/public/images/android-chrome-512x512.png" alt="Logo"  width="150" height="150">
+  </a>
+ 
+  <h1 style="text-align: center">PairDrop</h1>
 
+  <p  style="text-align: center">
+    Local file sharing in your browser. Inspired by Apple's Airdrop.
+    <br />
+    <a href="https://pairdrop.net"><strong>Explore  »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/schlagmichdoch/PairDrop/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/schlagmichdoch/PairDrop/issues">Request Feature</a>
+  </p>
+</div>
+
+## Features
 [PairDrop](https://pairdrop.net) is a sublime alternative to AirDrop that works on all platforms.
 
-It uses peer to peer connection in the same local network/Wi-Fi or with paired devices to send images, documents or text.
+Send images, documents or text via peer to peer connection to devices in the same local network/Wi-Fi or to paired devices.
 As it is web based, it runs on all devices.
 
 You want to quickly send a file from your phone to your laptop?
