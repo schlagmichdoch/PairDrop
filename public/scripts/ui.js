@@ -1287,7 +1287,8 @@ class WebShareTargetUI {
 
 class WebFileHandlersUI {
     constructor() {
-        if ("launchQueue" in window) {
+        const urlParams = new URL(window.location).searchParams;
+        if (urlParams.has("file_handler")  && "launchQueue" in window) {
             launchQueue.setConsumer(async launchParams => {
                 console.log("Launched with: ", launchParams);
                 if (!launchParams.files.length)
@@ -1303,6 +1304,7 @@ class WebFileHandlersUI {
                 Events.fire('activate-paste-mode', {files: files, text: ""})
                 launchParams = null;
             });
+            window.history.replaceState({}, "Rewrite URL", '/');
         }
     }
 }
