@@ -1,6 +1,8 @@
 window.URL = window.URL || window.webkitURL;
 window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
 
+if (!window.isRtcSupported) alert("WebRTC must be enabled for PairDrop to work");
+
 class ServerConnection {
 
     constructor() {
@@ -632,15 +634,6 @@ class RTCPeer extends Peer {
     }
 }
 
-class WSPeer extends Peer {
-    _send(message) {
-        message.to = this._peerId;
-        message.roomType = this._roomType;
-        message.roomSecret = this._roomSecret;
-        this._server.send(message);
-    }
-}
-
 class PeersManager {
 
     constructor(serverConnection) {
@@ -682,11 +675,7 @@ class PeersManager {
                 if (this.peers[peer.id].roomType !== msg.roomType) return;
                 this.peers[peer.id].refresh();
             }
-            if (window.isRtcSupported && peer.rtcSupported) {
-                this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
-            } else {
-                this.peers[peer.id] = new WSPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
-            }
+            this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
         })
     }
 
