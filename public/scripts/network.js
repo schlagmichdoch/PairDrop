@@ -139,10 +139,12 @@ class ServerConnection {
 
     _disconnect() {
         this.send({ type: 'disconnect' });
-        this._socket.onclose = null;
-        this._socket.close();
-        this._socket = null;
-        Events.fire('ws-disconnected');
+        if (this._socket) {
+            this._socket.onclose = null;
+            this._socket.close();
+            this._socket = null;
+            Events.fire('ws-disconnected');
+        }
     }
 
     _onDisconnect() {
