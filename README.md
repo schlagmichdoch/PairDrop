@@ -1,13 +1,11 @@
-<!-- PROJECT LOGO -->
-<br />
-<div  style="text-align: center">
+<div align="center">
   <a href="https://github.com/schlagmichdoch/PairDrop">
     <img src="https://raw.githubusercontent.com/schlagmichdoch/PairDrop/master/public/images/android-chrome-512x512.png" alt="Logo"  width="150" height="150">
   </a>
  
-  <h1 style="text-align: center">PairDrop</h1>
+  <h1>PairDrop</h1>
 
-  <p  style="text-align: center">
+  <p>
     Local file sharing in your browser. Inspired by Apple's Airdrop.
     <br />
     <a href="https://pairdrop.net"><strong>Explore  »</strong></a>
@@ -66,7 +64,11 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
 
 ## Screenshots
+<div align="center">
+
 ![Pairdrop Preview](/docs/pairdrop_screenshot_mobile.gif)
+
+</div>
 
 ## PairDrop is built with the following awesome technologies:
 * Vanilla HTML5 / ES6 / CSS3 frontend
