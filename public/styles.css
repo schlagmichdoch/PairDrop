@@ -147,6 +147,11 @@ hr {
     background-color: white;
 }
 
+x-noscript {
+    background: var(--primary-color);
+    color: white;
+    z-index: 2;
+}
 
 
 /* Icons */
