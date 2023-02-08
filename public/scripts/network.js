@@ -204,7 +204,7 @@ class Peer {
     }
 
     getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             let image = new Image();
             image.src = URL.createObjectURL(file);
             image.onload = _ => {
@@ -233,9 +233,10 @@ class Peer {
                 let dataUrl = canvas.toDataURL("image/jpeg", quality);
                 resolve(dataUrl);
             }
+            image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
         }).then(dataUrl => {
             return dataUrl;
-        })
+        }).catch(e => console.error(e));
     }
 
     async requestFileTransfer(files) {

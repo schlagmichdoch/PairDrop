@@ -516,10 +516,12 @@ class ReceiveFileDialog extends ReceiveDialog {
                 element.src = URL.createObjectURL(file);
                 element.controls = true;
                 element.classList.add('element-preview');
-                this.$previewBox.appendChild(element)
-                element.onload = _ => resolve(true);
+                element.onload = _ => {
+                    this.$previewBox.appendChild(element);
+                    resolve(true)
+                };
                 element.addEventListener('loadeddata', _ => resolve(true));
-                element.onerror = _ => reject(`${mime} preview could not be loaded`);
+                element.onerror = _ => reject(`${mime} preview could not be loaded from type ${file.type}`);
             }
         });
     }
