@@ -381,6 +381,7 @@ footer .logo {
 footer .font-body2 {
     color: var(--primary-color);
     text-underline-position: under;
+    margin: auto 18px;
 }
 
 #on-this-network {

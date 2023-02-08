@@ -1569,15 +1569,20 @@ Events.on('load', () => {
     style.top = 0;
     style.left = 0;
     let ctx = c.getContext('2d');
-    let x0, y0, w, h, dw;
+    let x0, y0, w, h, dw, offset;
 
     function init() {
         w = window.innerWidth;
         h = window.innerHeight;
         c.width = w;
         c.height = h;
-        let offset = h > 380 ? 100 : 65;
-        offset = h > 800 ? 116 : offset;
+        offset = h > 800
+            ? 116
+            : h > 380
+                ? 100
+                : 65;
+
+        if (w < 420) offset += 20;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
