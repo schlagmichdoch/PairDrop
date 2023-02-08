@@ -81,7 +81,7 @@ const mime = (() => {
         getMimeByFilename(filename) {
             try {
                 const arr = filename.split('.');
-                const suffix = arr[arr.length - 1];
+                const suffix = arr[arr.length - 1].toLowerCase();
                 return {
                     "cpl": "application/cpl+xml",
                     "gpx": "application/gpx+xml",
