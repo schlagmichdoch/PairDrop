@@ -385,11 +385,17 @@ footer .font-body2 {
 }
 
 #on-this-network {
-    text-decoration: underline solid var(--primary-color) 4px;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--primary-color);
+    text-decoration-thickness: 4px;
 }
 
 #paired-devices {
-    text-decoration: underline solid var(--paired-device-color) 4px;
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--paired-device-color);
+    text-decoration-thickness: 4px;
 }
 
 /* Dialog */
