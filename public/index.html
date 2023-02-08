@@ -134,23 +134,7 @@
             </x-background>
         </form>
     </x-dialog>
-    <!-- Receive File Dialog -->
-    <x-dialog id="receiveFileDialog">
-        <x-background class="full center">
-            <x-paper shadow="2">
-                <h2 class="center" id="receiveTitle"></h2>
-                <div class="text-center file-description"></div>
-                <div class="font-body2 text-center file-size"></div>
-                <div class="center file-preview"></div>
-                <div class="row-reverse space-between">
-                    <a class="button" id="shareOrDownload" autofocus></a>
-                    <div class="separator"></div>
-                    <button class="button" close>Close</button>
-                </div>
-            </x-paper>
-        </x-background>
-    </x-dialog>
-    <!-- Receive Dialog -->
+    <!-- Receive Request Dialog -->
     <x-dialog id="receiveRequestDialog">
         <x-background class="full center">
             <x-paper shadow="2">
@@ -171,9 +155,25 @@
                 <div class="font-body2 text-center file-size"></div>
                 <div class="center file-preview"></div>
                 <div class="row-reverse space-between">
-                    <button class="button" id="acceptRequest" title="ENTER" close autofocus>Accept</button>
+                    <button class="button" id="acceptRequest" title="ENTER" autofocus>Accept</button>
                     <div class="separator"></div>
-                    <button class="button" id="declineRequest" title="ESCAPE" close>Decline</button>
+                    <button class="button" id="declineRequest" title="ESCAPE">Decline</button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Receive File Dialog -->
+    <x-dialog id="receiveFileDialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <h2 class="center" id="receiveTitle"></h2>
+                <div class="text-center file-description"></div>
+                <div class="font-body2 text-center file-size"></div>
+                <div class="center file-preview"></div>
+                <div class="row-reverse space-between">
+                    <a class="button" id="shareOrDownload" autofocus></a>
+                    <div class="separator"></div>
+                    <button class="button" close>Close</button>
                 </div>
             </x-paper>
         </x-background>

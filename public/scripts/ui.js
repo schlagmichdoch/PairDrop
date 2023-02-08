@@ -408,11 +408,11 @@ class PeerUI {
 }
 
 class Dialog {
-    constructor(id, hideOnDisconnect = true) {
+    constructor(id) {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()))
         this.$autoFocus = this.$el.querySelector('[autofocus]');
-        if (hideOnDisconnect) Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
+        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
 
     show() {
@@ -428,11 +428,10 @@ class Dialog {
         }
         document.title = 'PairDrop';
         document.changeFavicon("images/favicon-96x96.png");
-        if (this.correspondingPeerId) setTimeout(_ => this.correspondingPeerId = undefined, 300);
     }
 
     _onPeerDisconnected(peerId) {
-        if (this.correspondingPeerId && this.correspondingPeerId === peerId) {
+        if (this.correspondingPeerId === peerId) {
             this.hide();
             Events.fire('notify-user', 'Selected peer left.')
         }
@@ -440,8 +439,8 @@ class Dialog {
 }
 
 class ReceiveDialog extends Dialog {
-    constructor(id, hideOnDisconnect = true) {
-        super(id, hideOnDisconnect);
+    constructor(id) {
+        super(id);
 
         this.$fileDescriptionNode = this.$el.querySelector('.file-description');
         this.$fileSizeNode = this.$el.querySelector('.file-size');
@@ -466,7 +465,7 @@ class ReceiveDialog extends Dialog {
 class ReceiveFileDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveFileDialog', false);
+        super('receiveFileDialog');
 
         this.$shareOrDownloadBtn = this.$el.querySelector('#shareOrDownload');
         this.$receiveTitleNode = this.$el.querySelector('#receiveTitle')
@@ -632,16 +631,28 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
         Events.on('keydown', e => this._onKeyDown(e));
+        this._filesTransferRequestQueue = [];
     }
 
     _onKeyDown(e) {
         if (this.$el.attributes["show"] && e.code === "Escape") {
             this._respondToFileTransferRequest(false)
-            setTimeout(_ => this.hide(), 500);
         }
     }
 
     _onRequestFileTransfer(request, peerId) {
+        this._filesTransferRequestQueue.push({request: request, peerId: peerId});
+        if (this.$el.attributes["show"]) return;
+        this._dequeueRequests();
+    }
+
+    _dequeueRequests() {
+        if (!this._filesTransferRequestQueue.length) return;
+        let {request, peerId} = this._filesTransferRequestQueue.shift();
+        this._showRequestDialog(request, peerId)
+    }
+
+    _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
 
         const peer = $(peerId);
@@ -684,12 +695,13 @@ class ReceiveRequestDialog extends ReceiveDialog {
             Events.fire('set-progress', {peerId: this.correspondingPeerId, progress: 0, status: 'wait'});
             NoSleepUI.enable();
         }
+        this.hide();
     }
 
     hide() {
         this.$previewBox.innerHTML = '';
-        this.$fileOtherNode.innerText = '';
         super.hide();
+        this._dequeueRequests();
     }
 }
 
@@ -974,7 +986,7 @@ class SendTextDialog extends Dialog {
 
 class ReceiveTextDialog extends Dialog {
     constructor() {
-        super('receiveTextDialog', false);
+        super('receiveTextDialog');
         Events.on('text-received', e => this._onText(e.detail))
         this.$text = this.$el.querySelector('#text');
         const copy = this.$el.querySelector('#copy');
@@ -1020,7 +1032,7 @@ class ReceiveTextDialog extends Dialog {
 class Base64ZipDialog extends Dialog {
 
     constructor() {
-        super('base64ZipDialog', false);
+        super('base64ZipDialog');
         const urlParams = new URL(window.location).searchParams;
         const base64Zip = urlParams.get('base64zip');
         const base64Text = urlParams.get('base64text');
