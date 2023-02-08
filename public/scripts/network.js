@@ -467,7 +467,7 @@ class Peer {
             return;
         }
         Events.fire('file-transfer-accepted');
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
         this.sendFiles();
     }
 
@@ -644,7 +644,6 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-disconnected', e => this._onPeerLeft(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('beforeunload', e => this._onBeforeUnload(e));
@@ -674,6 +673,7 @@ class PeersManager {
                 // if different roomType -> abort
                 if (this.peers[peer.id].roomType !== msg.roomType) return;
                 this.peers[peer.id].refresh();
+                return;
             }
             this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
         })
@@ -705,10 +705,6 @@ class PeersManager {
 
     _onSendText(message) {
         this.peers[message.to].sendText(message.text);
-    }
-
-    _onPeerJoined(message) {
-        this._onMessage({sender: message.peer.id, roomType: message.roomType, roomSecret: message.roomSecret});
     }
 
     _onPeerLeft(peerId) {
