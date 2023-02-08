@@ -719,7 +719,6 @@ class PairDeviceDialog extends Dialog {
         Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail));
         Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._pairDeviceCanceled(e.detail));
-        Events.on('room-secret-delete', e => this._onRoomSecretDelete(e.detail))
         Events.on('clear-room-secrets', e => this._onClearRoomSecrets(e.detail))
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         this.$el.addEventListener('paste', e => this._onPaste(e));
@@ -851,9 +850,9 @@ class PairDeviceDialog extends Dialog {
         this.hide();
         PersistentStorage.addRoomSecret(roomSecret).then(_ => {
             Events.fire('notify-user', 'Devices paired successfully.')
-            this._evaluateNumberRoomSecrets()
+            this._evaluateNumberRoomSecrets();
         }).finally(_ => {
-            this._cleanUp()
+            this._cleanUp();
         })
         .catch(_ => {
             Events.fire('notify-user', 'Paired devices are not persistent.')
@@ -881,13 +880,6 @@ class PairDeviceDialog extends Dialog {
         this.inputRoomKey = '';
         this.$inputRoomKeyChars.forEach(el => el.value = '');
         this.$inputRoomKeyChars.forEach(el => el.setAttribute("disabled", ""));
-    }
-
-    _onRoomSecretDelete(roomSecret) {
-        PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
-            Events.fire('room-secret-deleted', roomSecret)
-            this._evaluateNumberRoomSecrets();
-        }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 
     _onClearRoomSecrets() {
