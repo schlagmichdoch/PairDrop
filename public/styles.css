@@ -3,6 +3,7 @@
 :root {
     --icon-size: 24px;
     --primary-color: #4285f4;
+    --paired-device-color: #00a69c;
     --peer-width: 120px;
     color-scheme: light dark;
 }
@@ -288,7 +289,7 @@ x-peer x-icon {
 }
 
 x-peer:not(.type-ip) x-icon {
-    background: #00a69c;
+    background: var(--paired-device-color);
 }
 
 x-peer:not([status]):hover x-icon,
@@ -379,6 +380,15 @@ footer .logo {
 
 footer .font-body2 {
     color: var(--primary-color);
+    text-underline-position: under;
+}
+
+#on-this-network {
+    text-decoration: underline solid var(--primary-color) 4px;
+}
+
+#paired-devices {
+    text-decoration: underline solid var(--paired-device-color) 4px;
 }
 
 /* Dialog */

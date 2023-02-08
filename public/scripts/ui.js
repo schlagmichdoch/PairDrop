@@ -702,7 +702,7 @@ class PairDeviceDialog extends Dialog {
         this.$roomKey = this.$el.querySelector('#roomKey');
         this.$qrCode = this.$el.querySelector('#roomKeyQrCode');
         this.$clearSecretsBtn = $('clear-pair-devices');
-        this.$footerInstructions = $$('footer>.font-body2');
+        this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
         let createJoinForm = this.$el.querySelector('form');
         createJoinForm.addEventListener('submit', _ => this._onSubmit());
 
@@ -902,10 +902,10 @@ class PairDeviceDialog extends Dialog {
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             if (roomSecrets.length > 0) {
                 this.$clearSecretsBtn.removeAttribute('hidden');
-                this.$footerInstructions.innerText = "You can be discovered on this network and by paired devices";
+                this.$footerInstructionsPairedDevices.removeAttribute('hidden');
             } else {
                 this.$clearSecretsBtn.setAttribute('hidden', '');
-                this.$footerInstructions.innerText = "You can be discovered by everyone on this network";
+                this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
             }
         }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
