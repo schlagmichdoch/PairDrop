@@ -482,8 +482,9 @@ class Peer {
     }
 
     _onTextReceived(message) {
+        if (!message.text) return;
         const escaped = decodeURIComponent(escape(atob(message.text)));
-        Events.fire('text-received', { text: escaped, sender: this._peerId });
+        Events.fire('text-received', { text: escaped, peerId: this._peerId });
         this.sendJSON({ type: 'message-transfer-complete' });
     }
 }

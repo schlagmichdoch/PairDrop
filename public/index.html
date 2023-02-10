@@ -183,10 +183,10 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2 class="center text-center">Send a Message</h2>
+                    <h2>PairDrop - Send a Message</h2>
                     <div id="textInput" class="textarea" role="textbox" placeholder="Send a message" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="row-reverse">
-                        <button class="button" type="submit" title="STR + ENTER" close>Send</button>
+                        <button class="button" type="submit" title="STR + ENTER" disabled close>Send</button>
                         <div class="separator"></div>
                         <a class="button" title="ESCAPE" close>Cancel</a>
                     </div>
@@ -198,12 +198,17 @@
     <x-dialog id="receiveTextDialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2>Message Received</h2>
-                <div class="font-subheading" id="text"></div>
+                <h2>PairDrop - Message Received</h2>
+                <div id="receiveTextDescriptionContainer">
+                    <span id="receiveTextPeerDisplayName"></span>
+                    <span>sent the following message:</span>
+                </div>
+                <div class="row-separator"></div>
+                <div id="text"></div>
                 <div class="row-reverse">
-                    <button class="button" id="copy" title="CTRL/⌘ + C" close>Copy</button>
+                    <button class="button" id="copy" title="CTRL/⌘ + C">Copy</button>
                     <div class="separator"></div>
-                    <button class="button" title="ESCAPE" close>Close</button>
+                    <button class="button" id="close" title="ESCAPE">Close</button>
                 </div>
             </x-paper>
         </x-background>

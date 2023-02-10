@@ -1,6 +1,6 @@
 const $ = query => document.getElementById(query);
 const $$ = query => document.body.querySelector(query);
-const isURL = text => /^((https?:\/\/|www)[^\s]+)/g.test(text.toLowerCase());
+const isURL = text => /^(https?:\/\/|www)[^\s]+$/g.test(text.toLowerCase());
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.android = /android/i.test(navigator.userAgent);
@@ -410,7 +410,7 @@ class PeerUI {
 class Dialog {
     constructor(id) {
         this.$el = $(id);
-        this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()))
+        this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
         this.$autoFocus = this.$el.querySelector('[autofocus]');
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
@@ -638,7 +638,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     _onKeyDown(e) {
         if (this.$el.attributes["show"] && e.code === "Escape") {
-            this._respondToFileTransferRequest(false)
+            this._respondToFileTransferRequest(false);
         }
     }
 
@@ -657,9 +657,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
     _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
 
-        const peer = $(peerId);
+        this.$requestingPeerDisplayNameNode.innerText = $(peerId).ui._displayName();
 
-        this.$requestingPeerDisplayNameNode.innerText = peer.ui._displayName();
         const fileName = request.header[0].name;
         const fileNameSplit = fileName.split('.');
         const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
@@ -685,7 +684,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         document.title = 'PairDrop - File Transfer Requested';
         document.changeFavicon("images/favicon-96x96-notification.png");
-        this.show()
+        this.show();
     }
 
     _respondToFileTransferRequest(accepted) {
@@ -703,7 +702,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
     hide() {
         this.$previewBox.innerHTML = '';
         super.hide();
-        this._dequeueRequests();
+        setTimeout(_ => this._dequeueRequests(), 500);
     }
 }
 
@@ -948,8 +947,10 @@ class SendTextDialog extends Dialog {
         super('sendTextDialog');
         Events.on('text-recipient', e => this._onRecipient(e.detail));
         this.$text = this.$el.querySelector('#textInput');
-        const button = this.$el.querySelector('form');
-        button.addEventListener('submit', _ => this._send());
+        this.$form = this.$el.querySelector('form');
+        this.$submit = this.$el.querySelector('button[type="submit"]');
+        this.$form.addEventListener('submit', _ => this._send());
+        this.$text.addEventListener('input', e => this._onChange(e));
         Events.on("keydown", e => this._onKeyDown(e));
     }
 
@@ -958,9 +959,21 @@ class SendTextDialog extends Dialog {
             if (e.code === "Escape") {
                 this.hide();
             } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+                if (this._textInputEmpty()) return;
                 this._send();
-                this.hide();
             }
+        }
+    }
+
+    _textInputEmpty() {
+        return this.$text.innerText === "\n";
+    }
+
+    _onChange(e) {
+        if (this._textInputEmpty()) {
+            this.$submit.setAttribute('disabled', '');
+        } else {
+            this.$submit.removeAttribute('disabled');
         }
     }
 
@@ -983,17 +996,25 @@ class SendTextDialog extends Dialog {
             text: this.$text.innerText
         });
         this.$text.value = "";
+        this.hide();
     }
 }
 
 class ReceiveTextDialog extends Dialog {
     constructor() {
         super('receiveTextDialog');
-        Events.on('text-received', e => this._onText(e.detail))
+        Events.on('text-received', e => this._onText(e.detail.text, e.detail.peerId));
         this.$text = this.$el.querySelector('#text');
-        const copy = this.$el.querySelector('#copy');
-        copy.addEventListener('click', _ => this._onCopy());
-        Events.on("keydown", e => this._onKeyDown(e))
+        this.$copy = this.$el.querySelector('#copy');
+        this.$close = this.$el.querySelector('#close');
+
+        this.$copy.addEventListener('click', _ => this._onCopy());
+        this.$close.addEventListener('click', _ => this.hide());
+
+        Events.on("keydown", e => this._onKeyDown(e));
+
+        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receiveTextPeerDisplayName');
+        this._receiveTextQueue = [];
     }
 
     async _onKeyDown(e) {
@@ -1007,14 +1028,28 @@ class ReceiveTextDialog extends Dialog {
         }
     }
 
-    _onText(e) {
-        this.$text.innerHTML = '';
-        const text = e.text;
+    _onText(text, peerId) {
+        window.blop.play();
+        this._receiveTextQueue.push({text: text, peerId: peerId});
+        if (this.$el.attributes["show"]) return;
+        this._dequeueRequests();
+    }
+
+    _dequeueRequests() {
+        if (!this._receiveTextQueue.length) return;
+        let {text, peerId} = this._receiveTextQueue.shift();
+        this._showReceiveTextDialog(text, peerId);
+    }
+
+    _showReceiveTextDialog(text, peerId) {
+        this.$receiveTextPeerDisplayNameNode.innerText = $(peerId).ui._displayName();
+
         if (isURL(text)) {
             const $a = document.createElement('a');
             $a.href = text;
             $a.target = '_blank';
             $a.textContent = text;
+            this.$text.innerHTML = '';
             this.$text.appendChild($a);
         } else {
             this.$text.textContent = text;
@@ -1022,12 +1057,17 @@ class ReceiveTextDialog extends Dialog {
         document.title = 'PairDrop - Message Received';
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
-        window.blop.play();
     }
 
     async _onCopy() {
         await navigator.clipboard.writeText(this.$text.textContent);
         Events.fire('notify-user', 'Copied to clipboard');
+        this.hide();
+    }
+
+    hide() {
+        super.hide();
+        setTimeout(_ => this._dequeueRequests(), 500);
     }
 }
 
@@ -1123,7 +1163,7 @@ class Notifications {
             this.$button.removeAttribute('hidden');
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
-        Events.on('text-received', e => this._messageNotification(e.detail.text));
+        Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
     }
 
@@ -1133,23 +1173,23 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            this._notify('Notifications enabled.');
+            Events.fire('notify-user', 'Notifications enabled.');
             this.$button.setAttribute('hidden', 1);
         });
     }
 
-    _notify(message, body) {
+    _notify(title, body) {
         const config = {
             body: body,
             icon: '/images/logo_transparent_128x128.png',
         }
         let notification;
         try {
-            notification = new Notification(message, config);
+            notification = new Notification(title, config);
         } catch (e) {
             // Android doesn't support "new Notification" if service worker is installed
             if (!serviceWorker || !serviceWorker.showNotification) return;
-            notification = serviceWorker.showNotification(message, config);
+            notification = serviceWorker.showNotification(title, config);
         }
 
         // Notification is persistent on Android. We have to close it manually
@@ -1164,13 +1204,14 @@ class Notifications {
         return notification;
     }
 
-    _messageNotification(message) {
+    _messageNotification(message, peerId) {
         if (document.visibilityState !== 'visible') {
+            const peerDisplayName = $(peerId).ui._displayName();
             if (isURL(message)) {
-                const notification = this._notify(message, 'Click to open link');
+                const notification = this._notify(`Link received by ${peerDisplayName} - Click to open`, message);
                 this._bind(notification, _ => window.open(message, '_blank', null, true));
             } else {
-                const notification = this._notify(message, 'Click to copy text');
+                const notification = this._notify(`Message received by ${peerDisplayName} - Click to copy`, message);
                 this._bind(notification, _ => this._copyText(message, notification));
             }
         }

@@ -578,6 +578,7 @@ x-dialog .row-reverse {
     -moz-user-select: all;
     user-select: all;
     white-space: pre-wrap;
+    margin-top:36px;
 }
 
 #receiveTextDialog #text a {
@@ -592,6 +593,15 @@ x-dialog .row-reverse {
     /* Select the received text when double-clicking the dialog */
     user-select: none;
     pointer-events: none;
+}
+
+.row-separator {
+    border-bottom: solid 2.5px var(--border-color);
+    margin: auto -25px;
+}
+
+#receiveTextDescriptionContainer {
+    margin-bottom: 25px;
 }
 
 #base64ZipPasteBtn {
