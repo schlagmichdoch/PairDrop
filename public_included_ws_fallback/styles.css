@@ -1,0 +1,1060 @@
+/* Constants */
+
+:root {
+    --icon-size: 24px;
+    --primary-color: #4285f4;
+    --paired-device-color: #00a69c;
+    --peer-width: 120px;
+    --ws-peer-color: #ff6b6b;
+    color-scheme: light dark;
+}
+
+/* Layout */
+
+html {
+    height: 100%;
+}
+
+html,
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow-x: hidden;
+    overscroll-behavior-y: none;
+}
+
+body {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    overflow-y: hidden;
+}
+
+.row-reverse {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    align-items: center;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+
+/* Typography */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: -.01em;
+    line-height: 40px;
+    margin: 8px 0 0;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -.012em;
+    line-height: 32px;
+    color: var(--primary-color);}
+
+h3 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 16px 0;
+    color: var(--primary-color);
+}
+
+.font-subheading {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    word-break: normal;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.font-body1,
+body {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.font-body2 {
+    font-size: 12px;
+    line-height: 18px;
+}
+
+a {
+    text-decoration: none;
+    color: currentColor;
+    cursor: pointer;
+}
+
+hr {
+    color: white;
+}
+
+x-noscript {
+    background: var(--primary-color);
+    color: white;
+    z-index: 2;
+}
+
+
+/* Icons */
+
+.icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    fill: currentColor;
+}
+
+
+
+/* Shadows */
+
+[shadow="1"] {
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+        0 1px 8px 0 rgba(0, 0, 0, 0.12),
+        0 3px 3px -2px rgba(0, 0, 0, 0.4);
+}
+
+[shadow="2"] {
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14),
+        0 1px 10px 0 rgba(0, 0, 0, 0.12),
+        0 2px 4px -1px rgba(0, 0, 0, 0.4);
+}
+
+
+
+
+/* Animations */
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+}
+
+/* Main Header */
+
+body>header a {
+    margin-left: 8px;
+}
+
+/* Peers List */
+
+x-peers {
+    width: 100%;
+    overflow: hidden;
+    flex-flow: row wrap;
+    z-index: 2;
+    transition: color 300ms;
+}
+
+/* Empty Peers List */
+
+x-no-peers {
+    height: 114px;
+    padding: 8px;
+    text-align: center;
+    /* prevent flickering on load */
+    animation: fade-in 300ms;
+    animation-delay: 500ms;
+    animation-fill-mode: backwards;
+}
+
+x-no-peers h2,
+x-no-peers a {
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+x-peers:not(:empty)+x-no-peers {
+    display: none;
+}
+
+x-no-peers::before {
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -.012em;
+    line-height: 32px;
+}
+
+x-no-peers[drop-bg]::before {
+    content: "Release to select recipient";
+}
+
+x-no-peers[drop-bg] * {
+    display: none;
+}
+
+
+
+/* Peer */
+
+x-peer {
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+x-peer label {
+    width: var(--peer-width);
+    padding: 8px;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    position: relative;
+}
+
+x-peer .name {
+    width: var(--peer-width);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+input[type="file"] {
+    visibility: hidden;
+    position: absolute;
+}
+
+x-peer x-icon {
+    --icon-size: 40px;
+    width: var(--icon-size);
+    padding: 12px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    margin-bottom: 8px;
+    transition: transform 150ms;
+    will-change: transform;
+}
+
+x-peer:not(.type-ip) x-icon {
+    background: var(--paired-device-color);
+}
+
+x-peer.ws-peer x-icon {
+    border: solid 4px var(--ws-peer-color);
+}
+
+x-peer.ws-peer .progress {
+    margin-top: 4px;
+}
+
+x-peer:not([status]):hover x-icon,
+x-peer:not([status]):focus x-icon {
+    transform: scale(1.05);
+}
+
+x-peer[status] x-icon {
+    box-shadow: none;
+    opacity: 0.8;
+    transform: scale(1);
+}
+
+.status,
+.device-name {
+    height: 18px;
+    opacity: 0.7;
+}
+
+.device-name {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+x-peer[status=transfer] .status:before {
+    content: 'Transferring...';
+}
+
+x-peer[status=prepare] .status:before {
+    content: 'Preparing...';
+}
+
+x-peer[status=wait] .status:before {
+    content: 'Waiting...';
+}
+
+x-peer[status=process] .status:before {
+    content: 'Processing...';
+}
+
+x-peer:not([status]) .status,
+x-peer[status] .device-name {
+    display: none;
+}
+
+x-peer[status] {
+    pointer-events: none;
+}
+
+x-peer x-icon {
+    animation: pop 600ms ease-out 1;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0.7);
+    }
+
+    40% {
+        transform: scale(1.2);
+    }
+}
+
+x-peer[drop] x-icon {
+    transform: scale(1.1);
+}
+
+
+
+/* Footer */
+
+footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    align-items: center;
+    padding: 0 0 16px 0;
+    text-align: center;
+    transition: color 300ms;
+}
+
+footer .logo {
+    --icon-size: 80px;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+}
+
+footer .font-body2 {
+    color: var(--primary-color);
+    text-underline-position: under;
+    margin: auto 18px;
+}
+
+#on-this-network {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--primary-color);
+    text-decoration-thickness: 4px;
+}
+
+#paired-devices {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--paired-device-color);
+    text-decoration-thickness: 4px;
+}
+
+/* Dialog */
+
+x-dialog x-background {
+    background: rgba(0, 0, 0, 0.61);
+    z-index: 10;
+    transition: opacity 300ms;
+    will-change: opacity;
+    padding: 35px;
+}
+
+x-dialog x-paper {
+    z-index: 3;
+    background: white;
+    border-radius: 8px;
+    padding: 16px 24px;
+    width: 100%;
+    max-width: 400px;
+    box-sizing: border-box;
+    transition: transform 300ms;
+    will-change: transform;
+}
+
+x-dialog:not([show]) {
+    pointer-events: none;
+}
+
+x-dialog:not([show]) x-paper {
+    transform: scale(0.1);
+}
+
+x-dialog:not([show]) x-background {
+    opacity: 0;
+}
+
+x-dialog .row-reverse>.button {
+    margin-top: 0;
+    margin-bottom: -16px;
+    width: 50%;
+    height: 50px;
+}
+
+x-dialog a {
+    color: var(--primary-color);
+}
+
+x-dialog .font-subheading {
+    margin-bottom: 5px;
+}
+
+/* PairDevicesDialog */
+
+#keyInputContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#keyInputContainer>input {
+    width: 45px;
+    height: 45px;
+    font-size: 30px;
+    padding: 0;
+    text-align: center;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: -moz-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -webkit-justify-content: center;
+    -ms-justify-content: center;
+    justify-content: center;
+}
+
+#keyInputContainer>input + * {
+    margin-left: 6px;
+}
+
+#keyInputContainer>input:nth-of-type(4) {
+    margin-left: 18px;
+}
+
+#roomKey {
+    font-size: 50px;
+    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 23px);
+    display: inline-block;
+    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 23px)));
+    margin: 15px -15px;
+}
+
+#roomKeyQrCode {
+    padding: inherit;
+    margin: auto;
+    width: 80px;
+    height: 80px;
+}
+
+#pairDeviceDialog hr {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+#pairDeviceDialog x-background {
+    padding: 16px!important;
+}
+
+/* Receive Dialog */
+
+x-dialog .row {
+    margin-top: 24px;
+    margin-bottom: 8px;
+}
+
+x-dialog h2 {
+    margin-top: 1rem;
+}
+
+#receiveRequestDialog h2,
+#receiveFileDialog h2 {
+    margin-bottom: 0.5rem;
+}
+
+x-dialog .row-reverse {
+    margin: 40px -24px auto;
+    border-top: solid 2.5px var(--border-color);
+}
+
+.separator {
+    border: solid 1.25px var(--border-color);
+    margin-bottom: -16px;
+}
+
+.file-description {
+    word-break: break-word;
+    width: 80%;
+    margin: auto;
+}
+
+.file-description .row {
+    margin: 0
+}
+
+.file-description span {
+    display: inline;
+    word-break: normal;
+}
+
+#fileName {
+    font-style: italic;
+}
+
+#fileStem {
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    max-height: 20px;
+}
+
+.file-size{
+    margin-bottom: 30px;
+}
+
+/* Send Text Dialog */
+
+#textInput {
+    min-height: 120px;
+}
+
+/* Receive Text Dialog */
+
+#receiveTextDialog #text {
+    width: 100%;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-user-select: all;
+    -moz-user-select: all;
+    user-select: all;
+    white-space: pre-wrap;
+    margin-top:36px;
+}
+
+#receiveTextDialog #text a {
+    cursor: pointer;
+}
+
+#receiveTextDialog #text a:hover {
+    text-decoration: underline;
+}
+
+#receiveTextDialog h3 {
+    /* Select the received text when double-clicking the dialog */
+    user-select: none;
+    pointer-events: none;
+}
+
+.row-separator {
+    border-bottom: solid 2.5px var(--border-color);
+    margin: auto -25px;
+}
+
+#receiveTextDescriptionContainer {
+    margin-bottom: 25px;
+}
+
+#base64ZipPasteBtn {
+    width: 100%;
+    height: 40vh;
+    border: solid 12px #438cff;
+}
+
+#base64ZipDialog button {
+    margin: auto;
+    border-radius: 8px;
+}
+
+#base64ZipDialog button[close] {
+    margin-top: 20px;
+}
+#base64ZipDialog button[close]:before {
+    border-radius: 8px;
+}
+
+/* Button */
+
+.button {
+    padding: 2px 16px 0;
+    box-sizing: border-box;
+    min-height: 36px;
+    min-width: 100px;
+    font-size: 14px;
+    line-height: 24px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    background: inherit;
+    color: var(--primary-color);
+}
+
+.button[disabled] {
+    color: #5B5B66;
+}
+
+
+.button,
+.icon-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    touch-action: manipulation;
+    border: none;
+    outline: none;
+}
+
+.button:before,
+.icon-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+.button:not([disabled]):hover:before,
+.icon-button:hover:before {
+    opacity: 0.1;
+}
+
+#cancelPasteModeBtn {
+    z-index: 2;
+    margin-top: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    height: 56px;
+    border-bottom: solid 2.5px var(--border-color);
+}
+
+.button:focus:before,
+.icon-button:focus:before {
+    opacity: 0.2;
+}
+
+
+
+button::-moz-focus-inner {
+    border: 0;
+}
+
+
+/* Icon Button */
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+}
+
+.icon-button:before {
+    border-radius: 50%;
+}
+
+
+
+/* Text Input */
+
+.textarea {
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    padding: 16px 24px;
+    border-radius: 16px;
+    margin: 10px 0;
+    font-size: 14px;
+    font-family: inherit;
+    background: #f1f3f4;
+    display: block;
+    overflow: auto;
+    resize: none;
+    min-height: 40px;
+    line-height: 16px;
+    max-height: 300px;
+    white-space: pre;
+}
+
+
+/* Info Animation */
+
+#about {
+    color: white;
+    z-index: 11;
+    overflow: hidden;
+    pointer-events: none;
+    text-align: center;
+}
+
+#about .fade-in {
+    transition: opacity 300ms;
+    will-change: opacity;
+    transition-delay: 300ms;
+    z-index: 11;
+    pointer-events: all;
+}
+
+#about:not(:target) .fade-in {
+    opacity: 0;
+    pointer-events: none;
+    transition-delay: 0s;
+}
+
+#about .logo {
+    --icon-size: 96px;
+}
+
+#about x-background {
+    position: absolute;
+    top: calc(32px - 250px);
+    right: calc(32px - 250px);
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    transform: scale(0);
+    z-index: -1;
+}
+
+/* Hack such that initial scale(0) isn't animated */
+#about x-background {
+    will-change: transform;
+    transition: transform 800ms cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+#about:target x-background {
+    transform: scale(10);
+}
+
+#about .row a {
+    margin: 8px 8px -16px;
+}
+
+
+/* Loading Indicator */
+
+.progress {
+    width: 80px;
+    height: 80px;
+    position: absolute;
+    top: 0;
+    clip: rect(0px, 80px, 80px, 40px);
+    --progress: rotate(0deg);
+    transition: transform 200ms;
+}
+
+.circle {
+    width: 72px;
+    height: 72px;
+    border: 4px solid var(--primary-color);
+    border-radius: 40px;
+    position: absolute;
+    clip: rect(0px, 40px, 80px, 0px);
+    will-change: transform;
+    transform: var(--progress);
+}
+
+.over50 {
+    clip: rect(auto, auto, auto, auto);
+}
+
+.over50 .circle.right {
+    transform: rotate(180deg);
+}
+
+
+/* Generic placeholder */
+[placeholder]:empty:before {
+    content: attr(placeholder);
+}
+
+/* Toast */
+
+.toast-container {
+    padding: 0 8px 24px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+x-toast {
+    position: absolute;
+    min-height: 48px;
+    bottom: 24px;
+    width: 100%;
+    max-width: 344px;
+    background-color: #323232;
+    color: rgba(255, 255, 255, 0.95);
+    align-items: center;
+    box-sizing: border-box;
+    padding: 8px 24px;
+    z-index: 20;
+    transition: opacity 200ms, transform 300ms ease-out;
+    cursor: default;
+    line-height: 24px;
+    border-radius: 8px;
+    pointer-events: all;
+}
+
+x-toast:not([show]):not(:hover) {
+    opacity: 0;
+    transform: translateY(100px);
+}
+
+
+/* Instructions */
+
+x-instructions {
+    position: absolute;
+    top: 120px;
+    opacity: 0.5;
+    transition: opacity 300ms;
+    z-index: -1;
+    text-align: center;
+    width: 80%;
+}
+
+x-instructions:not([drop-peer]):not([drop-bg]):before {
+    content: attr(mobile);
+}
+
+x-instructions[drop-peer]:before {
+    content: "Release to send to peer";
+}
+
+x-instructions[drop-bg]:not([drop-peer]):before {
+    content: "Release to select recipient";
+}
+
+x-instructions p {
+    display: none;
+    margin: 0 auto auto;
+    max-width: 80%;
+}
+
+x-peers:empty~x-instructions {
+    opacity: 0;
+}
+
+.websocket-fallback {
+    text-decoration-line: underline;
+    text-decoration-style: solid;
+    text-decoration-color: var(--ws-peer-color);
+    text-decoration-thickness: 4px;
+}
+
+/* Responsive Styles */
+
+@media (min-height: 800px) {
+    footer {
+        margin-bottom: 16px;
+    }
+}
+
+@media screen and (min-height: 800px),
+screen and (min-width: 1100px) {
+    x-instructions:not([drop-peer]):not([drop-bg]):before {
+        content: attr(desktop);
+    }
+}
+
+@media (max-height: 420px) {
+    x-instructions {
+        top: 24px;
+    }
+
+    footer .logo {
+        --icon-size: 40px;
+    }
+}
+
+/*
+    iOS specific styles
+*/
+@supports (-webkit-overflow-scrolling: touch) {
+
+
+    html {
+        position: fixed;
+    }
+
+    x-instructions:before {
+        content: attr(mobile);
+    }
+}
+
+/*
+    Color Themes
+*/
+
+/* Default colors */
+body {
+    --text-color: #333;
+    --bg-color: #fff;
+    --bg-color-secondary: #f1f3f4;
+    --border-color: #e7e8e8;
+}
+
+/* Dark theme colors */
+body.dark-theme {
+    --text-color: #eee;
+    --bg-color: #121212;
+    --bg-color-secondary: #333;
+    --border-color: #252525;
+}
+
+/* Colored Elements */
+body {
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    transition: background-color 0.5s ease;
+}
+
+x-dialog x-paper {
+    background-color: var(--bg-color);
+}
+
+.textarea {
+    color: var(--text-color) !important;
+    background-color: var(--bg-color-secondary) !important;
+}
+
+.textarea * {
+    margin: 0 !important;
+    padding: 0 !important;
+    color: unset !important;
+    background: unset !important;
+    border: unset !important;
+    opacity: unset !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-style: unset !important;
+    font-weight: unset !important;
+}
+
+/* Image/Video/Audio Preview */
+.file-preview {
+    margin: 10px -24px 40px -24px;
+}
+
+.file-preview:empty {
+    display: none;
+}
+
+.element-preview {
+    max-width: 100%;
+    max-height: 40vh;
+    margin: auto;
+    display: block;
+}
+
+/* Styles for users who prefer dark mode at the OS level */
+@media (prefers-color-scheme: dark) {
+
+    /* defaults to dark theme */
+    body {
+        --text-color: #eee;
+        --bg-color: #121212;
+        --bg-color-secondary: #333;
+        --border-color: #252525;
+    }
+
+    /* Override dark mode with light mode styles if the user decides to swap */
+    body.light-theme {
+        --text-color: #333;
+        --bg-color: #fafafa;
+        --bg-color-secondary: #f1f3f4;
+        --border-color: #e7e8e8;
+   }
+}
+
+
+/*
+    Edge specific styles
+*/
+@supports (-ms-ime-align: auto) {
+
+    html,
+    body {
+        overflow: hidden;
+    }
+}
+
+/* webkit scrollbar style*/
+
+::-webkit-scrollbar{
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius: 4px;
+}

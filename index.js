@@ -68,7 +68,11 @@ if (process.argv.includes('--rate-limit')) {
     app.use(limiter);
 }
 
-app.use(express.static('public'));
+if (process.argv.includes('--include-ws-fallback')) {
+    app.use(express.static('public_included_ws_fallback'));
+} else {
+    app.use(express.static('public'));
+}
 
 app.use(function(req, res) {
     res.redirect('/');
@@ -152,20 +156,23 @@ class PairDropServer {
                 this._notifyPeers(sender);
                 break;
             case 'signal':
-                this._onSignal(sender, message);
+            default:
+                this._signalAndRelay(sender, message);
         }
     }
 
-    _onSignal(sender, message) {
+    _signalAndRelay(sender, message) {
         const room = message.roomType === 'ip' ? sender.ip : message.roomSecret;
 
         // relay message to recipient
         if (message.to && Peer.isValidUuid(message.to) && this._rooms[room]) {
-            const recipientId = message.to;
-            const recipient = this._rooms[room][recipientId];
+            const recipient = this._rooms[room][message.to];
             delete message.to;
-            // add sender id
-            message.sender = sender.id;
+            // add sender
+            message.sender = {
+                id: sender.id,
+                rtcSupported: sender.rtcSupported
+            };
             this._send(recipient, message);
         }
     }

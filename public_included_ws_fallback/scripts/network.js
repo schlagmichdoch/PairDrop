@@ -1,8 +1,6 @@
 window.URL = window.URL || window.webkitURL;
 window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
 
-if (!window.isRtcSupported) alert("WebRTC must be enabled for PairDrop to work");
-
 class ServerConnection {
 
     constructor() {
@@ -97,6 +95,18 @@ class ServerConnection {
                 break;
             case 'secret-room-deleted':
                 Events.fire('secret-room-deleted', msg.roomSecret);
+                break;
+            case 'request':
+            case 'header':
+            case 'partition':
+            case 'partition-received':
+            case 'progress':
+            case 'files-transfer-response':
+            case 'file-transfer-complete':
+            case 'message-transfer-complete':
+            case 'text':
+            case 'ws-chunk':
+                Events.fire('ws-relay', JSON.stringify(msg));
                 break;
             default:
                 console.error('WS: unknown message type', msg);
@@ -314,13 +324,13 @@ class Peer {
         this.sendJSON({ type: 'progress', progress: progress });
     }
 
-    _onMessage(message) {
+    _onMessage(message, logMessage = true) {
         if (typeof message !== 'string') {
             this._onChunkReceived(message);
             return;
         }
         message = JSON.parse(message);
-        console.log('RTC:', message);
+        if (logMessage) console.log('RTC:', message);
         switch (message.type) {
             case 'request':
                 this._onFilesTransferRequest(message);
@@ -625,6 +635,40 @@ class RTCPeer extends Peer {
     }
 }
 
+class WSPeer extends Peer {
+
+    constructor(serverConnection, peerId, roomType, roomSecret) {
+        super(serverConnection, peerId, roomType, roomSecret);
+        if (!peerId) return; // we will listen for a caller
+        this._sendSignal();
+    }
+
+    _send(chunk) {
+        this.sendJSON({
+            type: 'ws-chunk',
+            chunk: arrayBufferToBase64(chunk)
+        });
+    }
+
+    sendJSON(message) {
+        message.to = this._peerId;
+        message.roomType = this._roomType;
+        message.roomSecret = this._roomSecret;
+        this._server.send(message);
+    }
+
+    _sendSignal() {
+        this.sendJSON({type: 'signal'});
+    }
+
+    onServerMessage(message) {
+        Events.fire('peer-connected', message.sender.id)
+        if (this._peerId) return;
+        this._peerId = message.sender.id;
+        this._sendSignal();
+    }
+}
+
 class PeersManager {
 
     constructor(serverConnection) {
@@ -635,9 +679,11 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
+        Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('beforeunload', e => this._onBeforeUnload(e));
+        Events.on('ws-relay', e => this._onWsRelay(e.detail));
     }
 
     _onBeforeUnload(e) {
@@ -653,9 +699,19 @@ class PeersManager {
         // if different roomType -> abort
         if (this.peers[message.sender.id] && this.peers[message.sender.id]._roomType !== message.roomType) return;
         if (!this.peers[message.sender.id]) {
-            this.peers[message.sender.id] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
+            if (window.isRtcSupported && message.sender.rtcSupported) {
+                this.peers[message.sender.id] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
+            } else {
+                this.peers[message.sender.id] = new WSPeer(this._server, undefined, message.roomType, message.roomSecret);
+            }
         }
         this.peers[message.sender.id].onServerMessage(message);
+    }
+
+    _onWsRelay(message) {
+        const messageJSON = JSON.parse(message)
+        if (messageJSON.type === 'ws-chunk') message = base64ToArrayBuffer(messageJSON.chunk);
+        this.peers[messageJSON.sender.id]._onMessage(message, false)
     }
 
     _onPeers(msg) {
@@ -666,7 +722,11 @@ class PeersManager {
                 this.peers[peer.id].refresh();
                 return;
             }
-            this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
+            if (window.isRtcSupported && peer.rtcSupported) {
+                this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
+            } else {
+                this.peers[peer.id] = new WSPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
+            }
         })
     }
 
@@ -701,6 +761,13 @@ class PeersManager {
     _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
+    }
+
+    _onPeerLeft(peerId) {
+        if (!this.peers[peerId]?.rtcSupported) {
+            console.log('WSPeer left:', peerId)
+            Events.fire('peer-disconnected', peerId)
+        }
     }
 
     _onSecretRoomDeleted(roomSecret) {

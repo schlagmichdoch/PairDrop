@@ -76,18 +76,43 @@ npm start
 
 > By default, the node server listens on port 3000.
 
+<br>
+
 #### Automatic restart on error
 ```bash
 npm start -- --auto-restart 
 ```
-#### Rate limiting requests:
+> Restarts server automatically on error
+
+<br>
+
+#### Rate limiting requests
 ```bash
 npm start -- --rate-limit 
 ```
+> Limits clients to 100 requests per 5 min
+
+<br>
+
+#### Websocket Fallback (for VPN)
+```bash
+npm start -- --include-ws-fallback
+```
+> Provides PairDrop to clients with an included websocket fallback if the peer to peer WebRTC connection is not available to the client.
+>
+> This is not used on the official https://pairdrop.net, but you can activate it on your self-hosted instance using this option.
+> This is especially useful if you connect to your instance via a VPN as most VPN services block WebRTC completely in order to hide your real IP address ([read more](https://privacysavvy.com/security/safe-browsing/disable-webrtc-chrome-firefox-safari-opera-edge/)).
+> 
+> **Warning:** All traffic sent between devices using this fallback is routed through the server and therefor not peer to peer!
+> Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
+> Additionally, beware that all traffic using this fallback debits the servers data plan.
+> 
+
+<br>
 
 #### Production (autostart and rate-limit)
 ```bash
-npm start:prod
+npm run start:prod
 ```
 
 ## HTTP-Server
@@ -191,6 +216,8 @@ The easiest way to get PairDrop up and running is by using Docker.
 By default, docker listens on ports 8080 (http) and 8443 (https) (specified in `docker-compose.yml`).
 
 When running PairDrop via Docker, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
+
+To run PairDrop with [the options listed above](#public-run) you have to edit the `npm start` command in the `docker-compose.yml` accordingly.
 
 ### Installation
 [See Local Development > Install](#install)
