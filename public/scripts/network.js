@@ -85,7 +85,7 @@ class ServerConnection {
                 Events.fire('pair-device-initiated', msg);
                 break;
             case 'pair-device-joined':
-                Events.fire('pair-device-joined', msg.roomSecret);
+                Events.fire('pair-device-joined', msg);
                 break;
             case 'pair-device-join-key-invalid':
                 Events.fire('pair-device-join-key-invalid');
@@ -671,7 +671,7 @@ class PeersManager {
         msg.peers.forEach(peer => {
             if (this.peers[peer.id]) {
                 // if different roomType -> abort
-                if (this.peers[peer.id].roomType !== msg.roomType) return;
+                if (this.peers[peer.id].roomType !== msg.roomType || this.peers[peer.id].roomSecret !== msg.roomSecret) return;
                 this.peers[peer.id].refresh();
                 return;
             }

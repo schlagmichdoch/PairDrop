@@ -730,7 +730,7 @@ class PairDeviceDialog extends Dialog {
         Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._pairDeviceInitiated(e.detail));
-        Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail));
+        Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
         Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._pairDeviceCanceled(e.detail));
         Events.on('clear-room-secrets', e => this._onClearRoomSecrets(e.detail))
@@ -860,22 +860,25 @@ class PairDeviceDialog extends Dialog {
         }
     }
 
-    _pairDeviceJoined(roomSecret) {
+    _pairDeviceJoined(peerId, roomSecret) {
         this.hide();
         PersistentStorage.addRoomSecret(roomSecret).then(_ => {
-            Events.fire('notify-user', 'Devices paired successfully.')
+            Events.fire('notify-user', 'Devices paired successfully.');
+            const oldRoomSecret = $(peerId).ui.roomSecret;
+            if (oldRoomSecret) PersistentStorage.deleteRoomSecret(oldRoomSecret);
+            $(peerId).ui.roomSecret = roomSecret;
             this._evaluateNumberRoomSecrets();
         }).finally(_ => {
             this._cleanUp();
         })
         .catch(_ => {
-            Events.fire('notify-user', 'Paired devices are not persistent.')
-            PersistentStorage.logBrowserNotCapable()
+            Events.fire('notify-user', 'Paired devices are not persistent.');
+            PersistentStorage.logBrowserNotCapable();
         });
     }
 
     _pairDeviceJoinKeyInvalid() {
-        Events.fire('notify-user', 'Key not valid')
+        Events.fire('notify-user', 'Key not valid');
     }
 
     _pairDeviceCancel() {
@@ -885,7 +888,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     _pairDeviceCanceled(roomKey) {
-        Events.fire('notify-user', `Key ${roomKey} invalidated.`)
+        Events.fire('notify-user', `Key ${roomKey} invalidated.`);
     }
 
     _cleanUp() {

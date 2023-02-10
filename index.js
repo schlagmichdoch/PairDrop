@@ -263,10 +263,12 @@ class PairDropServer {
         this._send(sender, {
             type: 'pair-device-joined',
             roomSecret: roomSecret,
+            peerId: creator.id
         });
         this._send(creator, {
             type: 'pair-device-joined',
             roomSecret: roomSecret,
+            peerId: sender.id
         });
         this._joinRoom(sender, 'secret', roomSecret);
         this._removeRoomKey(sender.roomKey);
