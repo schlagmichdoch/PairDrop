@@ -145,7 +145,7 @@ a {
 }
 
 hr {
-    background-color: white;
+    color: white;
 }
 
 x-noscript {
@@ -731,6 +731,7 @@ button::-moz-focus-inner {
     min-height: 40px;
     line-height: 16px;
     max-height: 300px;
+    white-space: pre;
 }
 
 
@@ -971,7 +972,16 @@ x-dialog x-paper {
 }
 
 .textarea * {
-    all: unset !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    color: unset !important;
+    background: unset !important;
+    border: unset !important;
+    opacity: unset !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-style: unset !important;
+    font-weight: unset !important;
 }
 
 /* Image/Video/Audio Preview */
