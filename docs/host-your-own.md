@@ -45,7 +45,7 @@ When serving the node server behind a proxy, the `X-Forwarded-For` header has to
 ## Deployment with node
 
 ```bash
-git clone https://github.com/Bellisario/node-snapdrop.git && cd node-snapdrop
+git clone https://github.com/schlagmichdoch/PairDrop.git && cd PairDrop
 ```
 
 Install all dependencies with NPM:
@@ -94,6 +94,7 @@ npm start:prod
 You must use nginx or apache to set the x-forwarded-for header correctly. Otherwise, all clients will be mutually visible.
 
 ### Using nginx
+#### Allow http and https requests
 ```
 server {
     listen       80;
@@ -101,11 +102,6 @@ server {
     expires epoch;
 
     location / {
-        root   /var/www/pairdrop/public;
-        index  index.html index.htm;
-    }
-
-    location /server {
         proxy_connect_timeout 300;
         proxy_pass http://node:3000;
         proxy_set_header Connection "upgrade";
@@ -122,11 +118,34 @@ server {
     expires epoch;
 
     location / {
-        root   /var/www/pairdrop/public;
-        index  index.html;
+        proxy_connect_timeout 300;
+        proxy_pass http://node:3000;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header X-Forwarded-for $remote_addr;
     }
+}
+```
+#### Automatic http to https redirect:
+```
+server {
+    listen       80;
 
-    location /server {
+    expires epoch;
+
+    location / {
+        return 301 https://$host:8443$request_uri;
+    }
+}
+
+server {
+    listen       443 ssl http2;
+    ssl_certificate /etc/ssl/certs/pairdrop-dev.crt;
+    ssl_certificate_key /etc/ssl/certs/pairdrop-dev.key;
+
+    expires epoch;
+
+    location / {
         proxy_connect_timeout 300;
         proxy_pass http://node:3000;
         proxy_set_header Connection "upgrade";
@@ -136,28 +155,36 @@ server {
 }
 ```
 
+
+
 ### Using Apache
+#### Allow http and https requests
 ```
 <VirtualHost *:80>	
-	DocumentRoot "/var/www/pairdrop/public"
-	DirectoryIndex index.html	
-
 	RewriteEngine on
 	RewriteCond %{HTTP:Upgrade} websocket [NC]
 	RewriteCond %{HTTP:Connection} upgrade [NC]
 	RewriteRule ^/?(.*) "ws://127.0.0.1:3000/$1" [P,L]
 </VirtualHost>
 <VirtualHost *:443>	
-	DocumentRoot "/var/www/pairdrop/public"
-	DirectoryIndex index.html
-	
 	RewriteEngine on
 	RewriteCond %{HTTP:Upgrade} websocket [NC]
 	RewriteCond %{HTTP:Connection} upgrade [NC]
 	RewriteRule ^/?(.*) "wws://127.0.0.1:3000/$1" [P,L]
 </VirtualHost>
 ```
-
+#### Automatic http to https redirect:
+```
+<VirtualHost *:80>	
+   Redirect permanent / https://127.0.0.1:3000/
+</VirtualHost>
+<VirtualHost *:443>	
+	RewriteEngine on
+	RewriteCond %{HTTP:Upgrade} websocket [NC]
+	RewriteCond %{HTTP:Connection} upgrade [NC]
+	RewriteRule ^/?(.*) "wws://127.0.0.1:3000/$1" [P,L]
+</VirtualHost>
+```
 ## Deployment with Docker
 The easiest way to get PairDrop up and running is by using Docker.
 
@@ -171,7 +198,8 @@ When running PairDrop via Docker, the `X-Forwarded-For` header has to be set by 
 Use nginx or apache to set the header correctly:
 
 ### Using nginx
-(This differs from `/docker/nginx/production.conf`)
+(This differs from `/docker/nginx/*.conf`)
+#### Allow http and https requests
 ```
 server {
     listen       80;
@@ -179,11 +207,6 @@ server {
     expires epoch;
 
     location / {
-        proxy_connect_timeout 300;
-        proxy_pass http://127.0.0.1:8080;
-    }
-
-    location /server {
         proxy_connect_timeout 300;
         proxy_pass http://127.0.0.1:8080;
         proxy_set_header Connection "upgrade";
@@ -202,9 +225,32 @@ server {
     location / {
         proxy_connect_timeout 300;
         proxy_pass http://127.0.0.1:8443;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header X-Forwarded-for $remote_addr;
     }
+}
+```
+#### Automatic http to https redirect:
+```
+server {
+    listen       80;
 
-    location /server {
+    expires epoch;
+
+    location / {
+        return 301 https://$host:8443$request_uri;
+    }
+}
+
+server {
+    listen       443 ssl http2;
+    ssl_certificate /etc/ssl/certs/pairdrop-dev.crt;
+    ssl_certificate_key /etc/ssl/certs/pairdrop-dev.key;
+
+    expires epoch;
+
+    location / {
         proxy_connect_timeout 300;
         proxy_pass http://127.0.0.1:8443;
         proxy_set_header Connection "upgrade";
@@ -231,6 +277,7 @@ a2enmod proxy_wstunnel
 Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 
 **pairdrop.conf**
+#### Allow http and https requests
 ```
 <VirtualHost *:80>	
 	ProxyPass / http://127.0.0.1:8080/
@@ -238,6 +285,19 @@ Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 	RewriteCond %{HTTP:Upgrade} websocket [NC]
 	RewriteCond %{HTTP:Connection} upgrade [NC]
 	RewriteRule ^/?(.*) "ws://127.0.0.1:8080/$1" [P,L]
+</VirtualHost>
+<VirtualHost *:443>	
+	ProxyPass / https://127.0.0.1:8443/
+	RewriteEngine on
+	RewriteCond %{HTTP:Upgrade} websocket [NC]
+	RewriteCond %{HTTP:Connection} upgrade [NC]
+	RewriteRule ^/?(.*) "wws://127.0.0.1:8443/$1" [P,L]
+</VirtualHost>
+```
+#### Automatic http to https redirect:
+```
+<VirtualHost *:80>	
+   Redirect permanent / https://127.0.0.1:8443/
 </VirtualHost>
 <VirtualHost *:443>	
 	ProxyPass / https://127.0.0.1:8443/
