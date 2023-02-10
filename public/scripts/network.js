@@ -7,6 +7,7 @@ class ServerConnection {
 
     constructor() {
         this._connect();
+        Events.on('beforeunload', _ => this._disconnect());
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
@@ -516,11 +517,13 @@ class RTCPeer extends Peer {
     }
 
     _openChannel() {
+        if (!this._conn) return;
         const channel = this._conn.createDataChannel('data-channel', {
             ordered: true,
             reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
         });
         channel.onopen = e => this._onChannelOpened(e);
+        channel.onerror = e => this._onError(e);
         this._conn.createOffer().then(d => this._onDescription(d)).catch(e => this._onError(e));
     }
 
@@ -542,12 +545,15 @@ class RTCPeer extends Peer {
         if (message.sdp) {
             this._conn.setRemoteDescription(message.sdp)
                 .then( _ => {
-                    return this._conn.createAnswer()
-                        .then(d => this._onDescription(d));
+                    if (message.sdp.type === 'offer') {
+                        return this._conn.createAnswer()
+                            .then(d => this._onDescription(d));
+                    }
                 })
                 .catch(e => this._onError(e));
         } else if (message.ice) {
-            this._conn.addIceCandidate(new RTCIceCandidate(message.ice));
+            this._conn.addIceCandidate(new RTCIceCandidate(message.ice))
+                .catch(e => this._onError(e));
         }
     }
 
@@ -558,15 +564,27 @@ class RTCPeer extends Peer {
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
         channel.onclose = _ => this._onChannelClosed();
-        Events.on('pagehide', _ => this._conn.close());
+        Events.on('beforeunload', e => this._onBeforeUnload(e));
+        Events.on('pagehide', _ => this._closeChannel());
         this._channel = channel;
+    }
+
+    _onBeforeUnload(e) {
+        if (this._busy) {
+            e.preventDefault();
+            return "There are unfinished transfers. Are you sure you want to close?";
+        }
+    }
+
+    _closeChannel() {
+        if (this._channel) this._channel.onclose = null;
+        if (this._conn) this._conn.close();
+        this._conn = null;
     }
 
     _onChannelClosed() {
         console.log('RTC: channel closed', this._peerId);
         Events.fire('peer-disconnected', this._peerId);
-        if (this._channel) this._channel.onclose = null;
-        this._conn.close();
         if (!this._isCaller) return;
         this._connect(this._peerId, true); // reopen the channel
     }
@@ -637,16 +655,6 @@ class PeersManager {
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
-        Events.on('beforeunload', e => this._onBeforeUnload(e));
-    }
-
-    _onBeforeUnload(e) {
-        for (const peerId in this.peers) {
-            if (this.peers[peerId]._busy) {
-                e.preventDefault();
-                return "There are unfinished transfers. Are you sure you want to close?";
-            }
-        }
     }
 
     _onMessage(message) {
@@ -701,13 +709,17 @@ class PeersManager {
     _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
+        if (!peer || !peer._conn) return;
+        if (peer._channel) peer._channel.onclose = null;
+        peer._conn.close();
+        peer._busy = false;
     }
 
     _onSecretRoomDeleted(roomSecret) {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
             if (peer._roomSecret === roomSecret) {
-                this._onPeerLeft(peerId);
+                this._onPeerDisconnected(peerId);
             }
         }
     }

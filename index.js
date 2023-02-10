@@ -105,7 +105,6 @@ class PairDropServer {
         this._joinRoom(peer);
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
-        peer.socket.onclose = _ => this._onDisconnect(peer);
         this._keepAlive(peer);
 
         // send displayName
@@ -409,7 +408,7 @@ class PairDropServer {
 
     _keepAlive(peer) {
         this._cancelKeepAlive(peer);
-        let timeout = 30000;
+        let timeout = 500;
         if (!peer.lastBeat) {
             peer.lastBeat = Date.now();
         }
