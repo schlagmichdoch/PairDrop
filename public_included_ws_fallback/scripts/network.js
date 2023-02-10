@@ -68,7 +68,7 @@ class ServerConnection {
                 Events.fire('peer-joined', msg);
                 break;
             case 'peer-left':
-                Events.fire('peer-left', msg.peerId);
+                Events.fire('peer-left', msg);
                 break;
             case 'signal':
                 Events.fire('signal', msg);
@@ -766,6 +766,16 @@ class PeersManager {
         this.peers[message.to].sendText(message.text);
     }
 
+    _onPeerLeft(msg) {
+        if (this.peers[msg.peerId] && !this.peers[msg.peerId].rtcSupported) {
+            console.log('WSPeer left:', msg.peerId)
+            Events.fire('peer-disconnected', msg.peerId)
+        } else if (msg.disconnect === true) {
+            // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
+            Events.fire('peer-disconnected', msg.peerId);
+        }
+    }
+
     _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
@@ -773,13 +783,6 @@ class PeersManager {
         if (peer._channel) peer._channel.onclose = null;
         peer._conn.close();
         peer._busy = false;
-    }
-
-    _onPeerLeft(peerId) {
-        if (!this.peers[peerId]?.rtcSupported) {
-            console.log('WSPeer left:', peerId)
-            Events.fire('peer-disconnected', peerId)
-        }
     }
 
     _onSecretRoomDeleted(roomSecret) {

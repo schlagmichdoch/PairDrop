@@ -177,8 +177,8 @@ class PairDropServer {
     }
 
     _onDisconnect(sender) {
-        this._leaveRoom(sender);
-        this._leaveAllSecretRooms(sender);
+        this._leaveRoom(sender, 'ip', '', true);
+        this._leaveAllSecretRooms(sender, true);
         this._removeRoomKey(sender.roomKey);
         sender.roomKey = null;
     }
@@ -322,7 +322,7 @@ class PairDropServer {
         }
     }
 
-    _leaveRoom(peer, roomType = 'ip', roomSecret = '') {
+    _leaveRoom(peer, roomType = 'ip', roomSecret = '', disconnect = false) {
         const room = roomType === 'ip' ? peer.ip : roomSecret;
 
         if (!this._rooms[room] || !this._rooms[room][peer.id]) return;
@@ -346,7 +346,8 @@ class PairDropServer {
                     type: 'peer-left',
                     peerId: peer.id,
                     roomType: roomType,
-                    roomSecret: roomSecret
+                    roomSecret: roomSecret,
+                    disconnect: disconnect
                 });
             }
         }
@@ -393,9 +394,9 @@ class PairDropServer {
         }
     }
 
-    _leaveAllSecretRooms(peer) {
+    _leaveAllSecretRooms(peer, disconnect = false) {
         for (let i=0; i<peer.roomSecrets.length; i++) {
-            this._leaveRoom(peer, 'secret', peer.roomSecrets[i]);
+            this._leaveRoom(peer, 'secret', peer.roomSecrets[i], disconnect);
         }
     }
 

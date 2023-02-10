@@ -70,7 +70,7 @@ class ServerConnection {
                 Events.fire('peer-joined', msg);
                 break;
             case 'peer-left':
-                Events.fire('peer-left', msg.peerId);
+                Events.fire('peer-left', msg);
                 break;
             case 'signal':
                 Events.fire('signal', msg);
@@ -653,6 +653,7 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
+        Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
     }
@@ -704,6 +705,13 @@ class PeersManager {
 
     _onSendText(message) {
         this.peers[message.to].sendText(message.text);
+    }
+
+    _onPeerLeft(msg) {
+        if (msg.disconnect === true) {
+            // if user actively disconnected from PairDrop disconnect all peer to peer connections immediately
+            Events.fire('peer-disconnected', msg.peerId);
+        }
     }
 
     _onPeerDisconnected(peerId) {
