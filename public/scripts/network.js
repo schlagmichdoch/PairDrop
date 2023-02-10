@@ -10,7 +10,6 @@ class ServerConnection {
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
-        Events.on('reconnect', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
         Events.on('room-secret-deleted', e => this.send({ type: 'room-secret-deleted', roomSecret: e.detail}));
         Events.on('room-secrets-cleared', e => this.send({ type: 'room-secrets-cleared', roomSecrets: e.detail}));
@@ -498,7 +497,7 @@ class RTCPeer extends Peer {
     }
 
     _connect(peerId, isCaller) {
-        if (!this._conn) this._openConnection(peerId, isCaller);
+        if (!this._conn || this._conn.signalingState === "closed") this._openConnection(peerId, isCaller);
 
         if (isCaller) {
             this._openChannel();
@@ -517,7 +516,6 @@ class RTCPeer extends Peer {
     }
 
     _openChannel() {
-        if (this._conn.signalingState === "closed") return;
         const channel = this._conn.createDataChannel('data-channel', {
             ordered: true,
             reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
@@ -544,10 +542,8 @@ class RTCPeer extends Peer {
         if (message.sdp) {
             this._conn.setRemoteDescription(message.sdp)
                 .then( _ => {
-                    if (message.sdp.type === 'offer') {
-                        return this._conn.createAnswer()
-                            .then(d => this._onDescription(d));
-                    }
+                    return this._conn.createAnswer()
+                        .then(d => this._onDescription(d));
                 })
                 .catch(e => this._onError(e));
         } else if (message.ice) {
@@ -562,19 +558,15 @@ class RTCPeer extends Peer {
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
         channel.onclose = _ => this._onChannelClosed();
-        Events.on('pagehide', _ => this._closeChannel());
+        Events.on('pagehide', _ => this._conn.close());
         this._channel = channel;
-    }
-
-    _closeChannel() {
-        this._channel.onclose = null;
-        this._conn.close();
-        this._conn = null;
     }
 
     _onChannelClosed() {
         console.log('RTC: channel closed', this._peerId);
         Events.fire('peer-disconnected', this._peerId);
+        if (this._channel) this._channel.onclose = null;
+        this._conn.close();
         if (!this._isCaller) return;
         this._connect(this._peerId, true); // reopen the channel
     }
@@ -583,11 +575,10 @@ class RTCPeer extends Peer {
         console.log('RTC: state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
             case 'disconnected':
-                this._onChannelClosed();
+                this._onError('rtc connection disconnected');
                 break;
             case 'failed':
-                this._conn = null;
-                this._onChannelClosed();
+                this._onError('rtc connection failed');
                 break;
         }
     }
@@ -595,8 +586,7 @@ class RTCPeer extends Peer {
     _onIceConnectionStateChange() {
         switch (this._conn.iceConnectionState) {
             case 'failed':
-                console.error('ICE Gathering failed');
-                Events.fire('reconnect');
+                this._onError('ICE Gathering failed');
                 break;
             default:
                 console.log('ICE Gathering', this._conn.iceConnectionState);
@@ -605,7 +595,6 @@ class RTCPeer extends Peer {
 
     _onError(error) {
         console.error(error);
-        Events.fire('reconnect');
     }
 
     _send(message) {
@@ -646,7 +635,7 @@ class PeersManager {
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
-        Events.on('peer-disconnected', e => this._onPeerLeft(e.detail));
+        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('beforeunload', e => this._onBeforeUnload(e));
     }
@@ -709,12 +698,9 @@ class PeersManager {
         this.peers[message.to].sendText(message.text);
     }
 
-    _onPeerLeft(peerId) {
+    _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
-        if (!peer || !peer._conn) return;
-        if (peer._channel) peer._channel.onclose = null;
-        peer._conn.close();
     }
 
     _onSecretRoomDeleted(roomSecret) {
