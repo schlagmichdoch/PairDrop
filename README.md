@@ -56,6 +56,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 ### Other changes
 * [Paste Mode](https://github.com/RobinLinus/snapdrop/pull/534)
 * [Prevent devices from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
+* Warn user before PairDrop is closed on file transfer  
 * Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
 * [Video and Audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (Thanks [@victorwads](https://github.com/victorwads))
 * Node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
