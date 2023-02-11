@@ -7,7 +7,6 @@ class ServerConnection {
 
     constructor() {
         this._connect();
-        Events.on('beforeunload', _ => this._disconnect());
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
