@@ -380,22 +380,17 @@ footer .logo {
 
 footer .font-body2 {
     color: var(--primary-color);
-    text-underline-position: under;
     margin: auto 18px;
 }
 
 #on-this-network {
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--primary-color);
-    text-decoration-thickness: 4px;
+    border-bottom: solid 4px var(--primary-color);
+    padding-bottom: 1px;
 }
 
 #paired-devices {
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--paired-device-color);
-    text-decoration-thickness: 4px;
+    border-bottom: solid 4px var(--paired-device-color);
+    padding-bottom: 1px;
 }
 
 /* Dialog */

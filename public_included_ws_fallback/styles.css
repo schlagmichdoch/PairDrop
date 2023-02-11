@@ -904,10 +904,8 @@ x-peers:empty~x-instructions {
 }
 
 .websocket-fallback {
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--ws-peer-color);
-    text-decoration-thickness: 4px;
+    border-bottom: solid 4px var(--ws-peer-color);
+    padding-bottom: 1px;
 }
 
 /* Responsive Styles */
