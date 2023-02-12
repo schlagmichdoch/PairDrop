@@ -6,22 +6,7 @@ services:
     working_dir: /home/node/app
     volumes:
       - ./:/home/node/app
-    command: ash -c "npm i && npm start"
+    command: ash -c "npm i && npm run start:prod"
     restart: unless-stopped
-  nginx:
-    build:
-      context: ./docker/
-      dockerfile: nginx-with-openssl.Dockerfile
-    image: "nginx-with-openssl"
-    volumes:
-      - ./public:/usr/share/nginx/html
-      - ./docker/certs:/etc/ssl/certs
-      - ./docker/openssl:/mnt/openssl
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     ports:
-      - "8080:80"
-      - "8443:443"
-    env_file: ./docker/fqdn.env
-    entrypoint: /mnt/openssl/create.sh
-    command: ["nginx", "-g", "daemon off;"]
-    restart: unless-stopped
+      - "3000:3000"
