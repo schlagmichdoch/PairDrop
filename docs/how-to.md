@@ -37,3 +37,5 @@ The [Web Share Target API](https://developer.mozilla.org/en-US/docs/Web/Manifest
 When the PWA is installed, it should register itself to the share-menu of the device automatically.
 
 Please test this feature and create an issue if it does not work.
+
+[< Back](/README.md)

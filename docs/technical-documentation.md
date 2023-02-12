@@ -45,3 +45,6 @@ to each other analog to peers with the same ip-address are discoverable to each 
 What I really like about this approach, and the reason why I implemented it, is that devices on the same network are always
 visible regardless whether any devices are paired or not. The main user flow is never obstructed. Paired devices are simply
 shown additionally. This makes it in my idea better than the idea of using a room system as [discussed here](https://github.com/RobinLinus/snapdrop/pull/214).
+
+
+[< Back](/README.md)
