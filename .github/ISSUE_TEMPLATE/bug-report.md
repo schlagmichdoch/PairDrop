@@ -34,5 +34,12 @@ If applicable, add screenshots to help explain your problem.
  - Browser [e.g. stock browser, safari]
  - Version [e.g. 22]
 
+**Self-Hosted**
+No | Yes
+
+**Self-Hosted Setup**
+Proxy: Nginx | Apache2
+Deployment: docker run | docker-compose | npm run start:prod
+
 **Additional context**
 Add any other context about the problem here.
