@@ -15,15 +15,7 @@ npm install
 Start the server with:
 
 ```bash
-npm start
-```
-
-### Public Run
-
-If you want to run in your public "sharable" IP instead of locally, you can use this command:
-
-```bash
-node index.js public
+node index.js
 ```
 or
 ```bash
@@ -35,6 +27,29 @@ npm start
 > By default, the node server listens on port 3000.
 
 <br>
+
+### Environment variables
+#### Port
+On Unix based systems
+```bash
+PORT=3010 npm start
+```
+On Windows
+```bash
+$env:PORT=3010; npm start 
+```
+> Specify the port PairDrop is running on. (Default: 3000)
+
+### Options / Flags
+#### Local Run
+```bash
+npm start -- --localhost-only
+```
+> Only allow connections from localhost.
+> 
+> Use this when deploying PairDrop with node. 
+> This prevents connections to the node server from bypassing the proxy server, 
+> as you must use a server proxy to point to PairDrop (See [#HTTP-Server](#http-server)).
 
 #### Automatic restart on error
 ```bash
@@ -73,17 +88,14 @@ npm start -- --include-ws-fallback
 npm run start:prod
 ```
 
-#### Production (autostart, rate-limit and websocket fallback for VPN)
+#### Production (autostart, rate-limit, localhost-only and websocket fallback for VPN)
 ```bash
-npm run start:prod -- --include-ws-fallback
+npm run start:prod -- --localhost-only --include-ws-fallback
 ```
+> To prevent connections to the node server from bypassing the proxy server you should use "--localhost-only" on production.
 
 ## Deployment with Docker
 The easiest way to get PairDrop up and running is by using Docker.
-
-By default, docker listens on port 3000 for (http and https).
-
-By default, PairDrop is started with auto-start and rate-limit enabled. To run PairDrop with [the options listed above](#public-run) you have to edit the `CMD` command in the Dockerfile accordingly.
 
 ### Build the image
 ```bash
@@ -93,9 +105,14 @@ docker build . -f Dockerfile -t pairdrop
 
 ### Run the image
 ```bash
-docker run -p 3000:3000 -it pairdrop npm run start:prod
+docker run -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
 ```
-> To specify flags replace `npm run start:prod` according to [the documentation above.](#public-run)
+> By default, PairDrop is started with auto-start and rate-limit enabled.
+> By including "127.0.0.1" the docker container is only available on localhost (same as "--localhost-only" when deploying with node).
+> 
+> You must use a server proxy to point to PairDrop (See [#HTTP-Server](#http-server)). 
+>
+> To specify options replace `npm run start:prod` according to [the documentation above.](#options--flags)
 
 ## HTTP-Server
 When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.

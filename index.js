@@ -54,7 +54,6 @@ const RateLimit = require('express-rate-limit');
 const http = require('http');
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 if (process.argv.includes('--rate-limit')) {
     const limiter = RateLimit({
@@ -83,7 +82,13 @@ app.get('/', (req, res) => {
 });
 
 const server = http.createServer(app);
-server.listen(port);
+const port = process.env.PORT || 3000;
+
+if (process.argv.includes('--localhost-only')) {
+    server.listen(port, '127.0.0.1');
+} else {
+    server.listen(port);
+}
 
 const parser = require('ua-parser-js');
 const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
