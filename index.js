@@ -58,13 +58,16 @@ const app = express();
 if (process.argv.includes('--rate-limit')) {
     const limiter = RateLimit({
         windowMs: 5 * 60 * 1000, // 5 minutes
-        max: 1000, // Limit each IP to 100 requests per `window` (here, per 5 minutes)
+        max: 1000, // Limit each IP to 1000 requests per `window` (here, per 5 minutes)
         message: 'Too many requests from this IP Address, please try again after 5 minutes.',
         standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     })
 
     app.use(limiter);
+    // ensure correct client ip and not the ip of the reverse proxy is used for rate limiting on render.com
+    // see https://github.com/express-rate-limit/express-rate-limit#troubleshooting-proxy-issues
+    app.set('trust proxy', 5);
 }
 
 if (process.argv.includes('--include-ws-fallback')) {
