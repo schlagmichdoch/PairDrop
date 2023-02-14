@@ -73,6 +73,11 @@ npm start -- --include-ws-fallback
 npm run start:prod
 ```
 
+#### Production (autostart, rate-limit and websocket fallback for VPN)
+```bash
+npm run start:prod -- --include-ws-fallback
+```
+
 ## Deployment with Docker
 The easiest way to get PairDrop up and running is by using Docker.
 
@@ -88,8 +93,9 @@ docker build . -f Dockerfile -t pairdrop
 
 ### Run the image
 ```bash
-docker run -d pairdrop
+docker run -p 3000:3000 -it pairdrop npm run start:prod
 ```
+> To specify flags replace `npm run start:prod` according to [the documentation above.](#public-run)
 
 ## HTTP-Server
 When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
