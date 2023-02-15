@@ -258,7 +258,7 @@ class PeerUI {
         this.$el.id = this._peer.id;
         this.$el.ui = this;
         this.$el.classList.add(`type-${this._roomType}`);
-        if (!this._peer.rtcSupported) this.$el.classList.add('ws-peer')
+        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer')
         this.html();
 
         this._callbackInput = e => this._onFilesSelected(e)
