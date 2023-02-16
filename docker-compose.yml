@@ -7,6 +7,8 @@ services:
     volumes:
       - ./:/home/node/app
     command: ash -c "npm i && npm run start:prod"
+#    command: ash -c "npm i && npm run start:prod -- --include-ws-fallback"
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "8082:3000"
+#      - "3000:3000"
