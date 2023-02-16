@@ -357,8 +357,22 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
+/* NameHeader */
+myname {
+    position: absolute;
+    top: 5%;
+    left: 0;
+    right: 0;
+    align-items: center;
+    padding: 0 0 16px 0;
+    text-align: center;
+    transition: color 300ms;
+}
 
-
+myname .font-body3 {
+    color: var(--primary-color);
+    margin: auto 32px;
+}
 /* Footer */
 
 footer {

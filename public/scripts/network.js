@@ -831,6 +831,15 @@ RTCPeer.config = {
     'sdpSemantics': 'unified-plan',
     'iceServers': [
         {
+            urls: 'stun:stun.schuerz.at:5349'
+        },
+        {
+            urls: 'turn:turn.schuerz.at:5349',
+            username: 'local',
+            credential: 'thu2aewo1iv8uFavoP8aichaiwai7zeech7o',
+        },
+      /*
+        {
             urls: 'stun:stun.l.google.com:19302'
         },
         {
@@ -841,5 +850,6 @@ RTCPeer.config = {
             username: 'openrelayproject',
             credential: 'openrelayproject',
         },
+        */
     ]
 }
