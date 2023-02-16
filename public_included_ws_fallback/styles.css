@@ -313,13 +313,19 @@ x-peer[status] x-icon {
 }
 
 .status,
-.device-name {
+.device-name,
+.connection-hash {
     height: 18px;
     opacity: 0.7;
 }
 
 .device-name {
     font-size: 14px;
+    white-space: nowrap;
+}
+
+.connection-hash {
+    font-size: 12px;
     white-space: nowrap;
 }
 
@@ -389,22 +395,17 @@ footer .logo {
 
 footer .font-body2 {
     color: var(--primary-color);
-    text-underline-position: under;
     margin: auto 18px;
 }
 
 #on-this-network {
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--primary-color);
-    text-decoration-thickness: 4px;
+    border-bottom: solid 4px var(--primary-color);
+    padding-bottom: 1px;
 }
 
 #paired-devices {
-    text-decoration-line: underline;
-    text-decoration-style: solid;
-    text-decoration-color: var(--paired-device-color);
-    text-decoration-thickness: 4px;
+    border-bottom: solid 4px var(--paired-device-color);
+    padding-bottom: 1px;
 }
 
 /* Dialog */

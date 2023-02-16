@@ -304,13 +304,19 @@ x-peer[status] x-icon {
 }
 
 .status,
-.device-name {
+.device-name,
+.connection-hash {
     height: 18px;
     opacity: 0.7;
 }
 
 .device-name {
     font-size: 14px;
+    white-space: nowrap;
+}
+
+.connection-hash {
+    font-size: 12px;
     white-space: nowrap;
 }
 
