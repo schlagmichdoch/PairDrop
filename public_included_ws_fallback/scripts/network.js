@@ -571,7 +571,7 @@ class RTCPeer extends Peer {
 
     _onChannelOpened(event) {
         console.log('RTC: channel opened with', this._peerId);
-        Events.fire('peer-connected', this._peerId);
+        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
         const channel = event.channel || event.target;
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
@@ -579,6 +579,32 @@ class RTCPeer extends Peer {
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._closeChannel());
         this._channel = channel;
+    }
+
+    getConnectionHash() {
+        const localDescriptionLines = this._conn.localDescription.sdp.split("\r\n");
+        const remoteDescriptionLines = this._conn.remoteDescription.sdp.split("\r\n");
+        let localConnectionFingerprint, remoteConnectionFingerprint;
+        for (let i=0; i<localDescriptionLines.length; i++) {
+            if (localDescriptionLines[i].startsWith("a=fingerprint:")) {
+                localConnectionFingerprint = localDescriptionLines[i].substring(14);
+                break;
+            }
+        }
+        for (let i=0; i<remoteDescriptionLines.length; i++) {
+            if (remoteDescriptionLines[i].startsWith("a=fingerprint:")) {
+                remoteConnectionFingerprint = remoteDescriptionLines[i].substring(14);
+                break;
+            }
+        }
+        const combinedFingerprints = this._isCaller
+            ? localConnectionFingerprint + remoteConnectionFingerprint
+            : remoteConnectionFingerprint + localConnectionFingerprint;
+        let hash = cyrb53(combinedFingerprints).toString();
+        while (hash.length < 16) {
+            hash = "0" + hash;
+        }
+        return hash;
     }
 
     _onBeforeUnload(e) {
@@ -682,10 +708,15 @@ class WSPeer extends Peer {
     }
 
     onServerMessage(message) {
-        Events.fire('peer-connected', message.sender.id)
+        Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
         if (this._peerId) return;
         this._peerId = message.sender.id;
         this._sendSignal();
+    }
+
+    getConnectionHash() {
+        // Todo: implement SubtleCrypto asymmetric encryption and create connectionHash from public keys
+        return "";
     }
 }
 

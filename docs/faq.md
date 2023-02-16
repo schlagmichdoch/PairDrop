@@ -51,7 +51,7 @@ WebRTC encrypts the files on transit.
 If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
 
 ### What about security? Are my files encrypted while being sent between the computers?
-Yes. Your files are sent using WebRTC, which encrypts them on transit.
+Yes. Your files are sent using WebRTC, which encrypts them on transit. To ensure the connection is secure and there is no MITM, compare the security number shown under the device name on both devices. The security number is different for every connection.
 
 ### Transferring many files with paired devices takes too long
 Naturally, if traffic needs to be routed through the turn server transfer speed decreases.

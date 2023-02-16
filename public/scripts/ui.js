@@ -19,7 +19,7 @@ class PeersUI {
 
     constructor() {
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-connected', e => this._onPeerConnected(e.detail));
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('set-progress', e => this._onSetProgress(e.detail));
@@ -63,9 +63,9 @@ class PeersUI {
         this.peers[peer.id] = peer;
     }
 
-    _onPeerConnected(peerId) {
+    _onPeerConnected(peerId, connectionHash) {
         if(this.peers[peerId] && !$(peerId))
-            new PeerUI(this.peers[peerId]);
+            new PeerUI(this.peers[peerId], connectionHash);
     }
 
     _redrawPeer(peer) {
@@ -235,17 +235,21 @@ class PeerUI {
                 <div class="name font-subheading"></div>
                 <div class="device-name font-body2"></div>
                 <div class="status font-body2"></div>
+                <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
+        this.$el.querySelector('.connection-hash').textContent =
+            this._connectionHash.substring(0, 4) + " " + this._connectionHash.substring(4, 8) + " " + this._connectionHash.substring(8, 12) + " " + this._connectionHash.substring(12, 16);
     }
 
-    constructor(peer) {
+    constructor(peer, connectionHash) {
         this._peer = peer;
         this._roomType = peer.roomType;
         this._roomSecret = peer.roomSecret;
+        this._connectionHash = connectionHash;
         this._initDom();
         this._bindListeners();
         $$('x-peers').appendChild(this.$el);
