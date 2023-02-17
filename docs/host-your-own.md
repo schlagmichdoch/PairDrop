@@ -99,13 +99,11 @@ The easiest way to get PairDrop up and running is by using Docker.
 
 ### Build the image
 ```bash
-docker image pull node:lts-alpine
+docker build --pull . -f Dockerfile -t pairdrop
 ```
-> Prevents Docker from using an old `node:lts-alpine` image by pulling the latest
-```bash
-docker build . -f Dockerfile -t pairdrop
-```
-> A GitHub action is set up to do this step automatically
+> A GitHub action is set up to do this step automatically.
+> 
+> `--pull` ensures always the latest node image is used.
 
 ### Run the image
 ```bash
