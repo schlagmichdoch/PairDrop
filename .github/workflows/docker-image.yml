@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      run: docker build . -f Dockerfile -t pairdrop
+      run: docker build --pull . -f Dockerfile -t pairdrop
