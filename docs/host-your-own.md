@@ -1,4 +1,64 @@
 # Deployment Notes
+The easiest way to get PairDrop up and running is by using Docker.
+
+## Deployment with Docker from Docker Hub
+
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 lscr.io/linuxserver/pairdrop
+```
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
+
+### Options / Flags
+Set options by using the following flags in the `docker run` command:
+
+#### Port
+```
+-p 127.0.0.1:8080:3000
+```
+> Specify the port used by the docker image 
+> - 3000 -> `-p 127.0.0.1:3000:3000`
+> - 8080 -> `-p 127.0.0.1:8080:3000`
+#### Rate limiting requests
+```
+-e RATE_LIMIT=true
+```
+> Limits clients to 100 requests per 5 min
+
+#### Websocket Fallback (for VPN)
+```
+-e WS_FALLBACK=true
+```
+> Provides PairDrop to clients with an included websocket fallback if the peer to peer WebRTC connection is not available to the client.
+>
+> This is not used on the official https://pairdrop.net, but you can activate it on your self-hosted instance.
+> This is especially useful if you connect to your instance via a VPN as most VPN services block WebRTC completely in order to hide your real IP address ([read more](https://privacysavvy.com/security/safe-browsing/disable-webrtc-chrome-firefox-safari-opera-edge/)).
+>
+> **Warning:** All traffic sent between devices using this fallback is routed through the server and therefor not peer to peer!
+> Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
+> Additionally, beware that all traffic using this fallback debits the servers data plan.
+
+<br>
+
+## Deployment with Docker with self-built image
+### Build the image
+```bash
+docker build --pull . -f Dockerfile -t pairdrop
+```
+> A GitHub action is set up to do this step automatically.
+>
+> `--pull` ensures always the latest node image is used.
+
+### Run the image
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
+```
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
+>
+> To specify options replace `npm run start:prod` according to [the documentation above.](#options--flags)
 
 ## Deployment with node
 
@@ -47,9 +107,9 @@ npm start -- --localhost-only
 ```
 > Only allow connections from localhost.
 > 
-> Use this when deploying PairDrop with node. 
-> This prevents connections to the node server from bypassing the proxy server, 
-> as you must use a server proxy to point to PairDrop (See [#HTTP-Server](#http-server)).
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> Use this when deploying PairDrop with node to prevent bypassing the proxy and reach the docker container directly.
 
 #### Automatic restart on error
 ```bash
@@ -73,13 +133,12 @@ npm start -- --include-ws-fallback
 ```
 > Provides PairDrop to clients with an included websocket fallback if the peer to peer WebRTC connection is not available to the client.
 >
-> This is not used on the official https://pairdrop.net, but you can activate it on your self-hosted instance using this option.
+> This is not used on the official https://pairdrop.net, but you can activate it on your self-hosted instance.
 > This is especially useful if you connect to your instance via a VPN as most VPN services block WebRTC completely in order to hide your real IP address ([read more](https://privacysavvy.com/security/safe-browsing/disable-webrtc-chrome-firefox-safari-opera-edge/)).
 > 
 > **Warning:** All traffic sent between devices using this fallback is routed through the server and therefor not peer to peer!
 > Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
 > Additionally, beware that all traffic using this fallback debits the servers data plan.
-> 
 
 <br>
 
@@ -92,29 +151,7 @@ npm run start:prod
 ```bash
 npm run start:prod -- --localhost-only --include-ws-fallback
 ```
-> To prevent connections to the node server from bypassing the proxy server you should use "--localhost-only" on production.
-
-## Deployment with Docker
-The easiest way to get PairDrop up and running is by using Docker.
-
-### Build the image
-```bash
-docker build --pull . -f Dockerfile -t pairdrop
-```
-> A GitHub action is set up to do this step automatically.
-> 
-> `--pull` ensures always the latest node image is used.
-
-### Run the image
-```bash
-docker run -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
-```
-> By default, PairDrop is started with auto-start and rate-limit enabled.
-> By including "127.0.0.1" the docker container is only available on localhost (same as "--localhost-only" when deploying with node).
-> 
-> You must use a server proxy to point to PairDrop (See [#HTTP-Server](#http-server)). 
->
-> To specify options replace `npm run start:prod` according to [the documentation above.](#options--flags)
+> To prevent connections to the node server from bypassing the proxy server you should always use "--localhost-only" on production.
 
 ## HTTP-Server
 When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
