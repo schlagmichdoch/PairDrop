@@ -358,7 +358,7 @@ x-peer[drop] x-icon {
 }
 
 /* NameHeader */
-myname {
+devicename {
     position: absolute;
     top: 5%;
     left: 0;
@@ -369,7 +369,7 @@ myname {
     transition: color 300ms;
 }
 
-myname .font-body3 {
+devicename .font-body3 {
     color: var(--primary-color);
     margin: auto 32px;
 }
