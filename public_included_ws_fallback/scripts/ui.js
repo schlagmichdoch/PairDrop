@@ -143,7 +143,7 @@ class PeersUI {
                 descriptor = `${files[0].name} and ${files.length-1} other files`;
                 noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
             } else {
-                descriptor = "pasted text";
+                descriptor = "shared text";
                 noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
             }
 
@@ -1082,66 +1082,128 @@ class ReceiveTextDialog extends Dialog {
 class Base64ZipDialog extends Dialog {
 
     constructor() {
-        super('base64ZipDialog');
+        super('base64PasteDialog');
         const urlParams = new URL(window.location).searchParams;
-        const base64Zip = urlParams.get('base64zip');
         const base64Text = urlParams.get('base64text');
-        this.$pasteBtn = this.$el.querySelector('#base64ZipPasteBtn')
-        this.$pasteBtn.addEventListener('click', _ => this.processClipboard())
+        const base64Zip = urlParams.get('base64zip');
+        const base64Hash = window.location.hash.substring(1);
+
+        this.$pasteBtn = this.$el.querySelector('#base64PasteBtn');
 
         if (base64Text) {
-            this.processBase64Text(base64Text);
-        } else if (base64Zip) {
-            if (!navigator.clipboard.readText) {
-                setTimeout(_ => Events.fire('notify-user', 'This feature is not available on your device.'), 500);
-                this.clearBrowserHistory();
-                return;
-            }
             this.show();
+            if (base64Text === "paste") {
+                // ?base64text=paste
+                // base64 encoded string is ready to be pasted from clipboard
+                this.$pasteBtn.innerText = 'Tap here to paste text';
+                this.$pasteBtn.addEventListener('click', _ => this.processClipboard('text'));
+            } else if (base64Text === "hash") {
+                // ?base64text=hash#BASE64ENCODED
+                // base64 encoded string is url hash which is never sent to server and faster (recommended)
+                this.processBase64Text(base64Hash)
+                    .catch(_ => {
+                        Events.fire('notify-user', 'Text content is incorrect.');
+                    }).finally(_ => {
+                        this.hide();
+                    });
+            } else {
+                // ?base64text=BASE64ENCODED
+                // base64 encoded string was part of url param (not recommended)
+                this.processBase64Text(base64Text)
+                    .catch(_ => {
+                        Events.fire('notify-user', 'Text content is incorrect.');
+                    }).finally(_ => {
+                        this.hide();
+                    });
+            }
+        } else if (base64Zip) {
+            this.show();
+            if (base64Zip === "hash") {
+                // ?base64zip=hash#BASE64ENCODED
+                // base64 encoded zip file is url hash which is never sent to the server
+                this.processBase64Zip(base64Hash)
+                    .catch(_ => {
+                        Events.fire('notify-user', 'File content is incorrect.');
+                    }).finally(_ => {
+                        this.hide();
+                    });
+            } else {
+                // ?base64zip=paste || ?base64zip=true
+                this.$pasteBtn.innerText = 'Tap here to paste files';
+                this.$pasteBtn.addEventListener('click', _ => this.processClipboard('file'));
+            }
+        }
+    }
+
+    _setPasteBtnToProcessing() {
+        this.$pasteBtn.pointerEvents = "none";
+        this.$pasteBtn.innerText = "Processing...";
+    }
+
+    async processClipboard(type) {
+        if (!navigator.clipboard.readText) {
+            Events.fire('notify-user', 'This feature is not available on your device.');
+            this.hide();
+            return;
+        }
+
+        this._setPasteBtnToProcessing();
+
+        const base64 = await navigator.clipboard.readText();
+
+        if (!base64) return;
+
+        if (type === "text") {
+            this.processBase64Text(base64)
+                .catch(_ => {
+                    Events.fire('notify-user', 'Clipboard content is incorrect.');
+                }).finally(_ => {
+                    this.hide();
+                });
+        } else {
+            this.processBase64Zip(base64)
+                .catch(_ => {
+                    Events.fire('notify-user', 'Clipboard content is incorrect.');
+                }).finally(_ => {
+                    this.hide();
+                });
         }
     }
 
     processBase64Text(base64Text){
-        try {
+        return new Promise((resolve) => {
+            this._setPasteBtnToProcessing();
             let decodedText = decodeURIComponent(escape(window.atob(base64Text)));
             Events.fire('activate-paste-mode', {files: [], text: decodedText});
-        } catch (e) {
-            setTimeout(_ => Events.fire('notify-user', 'Content incorrect.'), 500);
-        } finally {
-            this.clearBrowserHistory();
-            this.hide();
-        }
+            resolve();
+        });
     }
 
-    async processClipboard() {
-        this.$pasteBtn.pointerEvents = "none";
-        this.$pasteBtn.innerText = "Processing...";
-        try {
-            const base64zip = await navigator.clipboard.readText();
-            let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
-            while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-            }
-
-            const zipBlob = new File([u8arr], 'archive.zip');
-
-            let files = [];
-            const zipEntries = await zipper.getEntries(zipBlob);
-            for (let i = 0; i < zipEntries.length; i++) {
-                let fileBlob = await zipper.getData(zipEntries[i]);
-                files.push(new File([fileBlob], zipEntries[i].filename));
-            }
-            Events.fire('activate-paste-mode', {files: files, text: ""})
-        } catch (e) {
-            Events.fire('notify-user', 'Clipboard content is incorrect.')
-        } finally {
-            this.clearBrowserHistory();
-            this.hide();
+    async processBase64Zip(base64zip) {
+        this._setPasteBtnToProcessing();
+        let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
+        while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
         }
+
+        const zipBlob = new File([u8arr], 'archive.zip');
+
+        let files = [];
+        const zipEntries = await zipper.getEntries(zipBlob);
+        for (let i = 0; i < zipEntries.length; i++) {
+            let fileBlob = await zipper.getData(zipEntries[i]);
+            files.push(new File([fileBlob], zipEntries[i].filename));
+        }
+        Events.fire('activate-paste-mode', {files: files, text: ""});
     }
 
     clearBrowserHistory() {
         window.history.replaceState({}, "Rewrite URL", '/');
+    }
+
+    hide() {
+        this.clearBrowserHistory();
+        super.hide();
     }
 }
 

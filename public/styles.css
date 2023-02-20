@@ -605,21 +605,21 @@ x-dialog .row-reverse {
     margin-bottom: 25px;
 }
 
-#base64ZipPasteBtn {
+#base64PasteBtn {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
 }
 
-#base64ZipDialog button {
+#base64PasteDialog button {
     margin: auto;
     border-radius: 8px;
 }
 
-#base64ZipDialog button[close] {
+#base64PasteDialog button[close] {
     margin-top: 20px;
 }
-#base64ZipDialog button[close]:before {
+#base64PasteDialog button[close]:before {
     border-radius: 8px;
 }
 
