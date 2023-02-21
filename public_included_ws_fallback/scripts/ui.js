@@ -1103,6 +1103,7 @@ class Base64ZipDialog extends Dialog {
                 this.processBase64Text(base64Hash)
                     .catch(_ => {
                         Events.fire('notify-user', 'Text content is incorrect.');
+                        console.log("Text content incorrect.")
                     }).finally(_ => {
                         this.hide();
                     });
@@ -1112,6 +1113,7 @@ class Base64ZipDialog extends Dialog {
                 this.processBase64Text(base64Text)
                     .catch(_ => {
                         Events.fire('notify-user', 'Text content is incorrect.');
+                        console.log("Text content incorrect.")
                     }).finally(_ => {
                         this.hide();
                     });
@@ -1124,6 +1126,7 @@ class Base64ZipDialog extends Dialog {
                 this.processBase64Zip(base64Hash)
                     .catch(_ => {
                         Events.fire('notify-user', 'File content is incorrect.');
+                        console.log("File content incorrect.")
                     }).finally(_ => {
                         this.hide();
                     });
@@ -1142,7 +1145,8 @@ class Base64ZipDialog extends Dialog {
 
     async processClipboard(type) {
         if (!navigator.clipboard.readText) {
-            Events.fire('notify-user', 'This feature is not available on your device.');
+            Events.fire('notify-user', 'This feature is not available on your browser.');
+            console.log("navigator.clipboard.readText() is not available on your browser.")
             this.hide();
             return;
         }
@@ -1157,6 +1161,7 @@ class Base64ZipDialog extends Dialog {
             this.processBase64Text(base64)
                 .catch(_ => {
                     Events.fire('notify-user', 'Clipboard content is incorrect.');
+                    console.log("Clipboard content is incorrect.")
                 }).finally(_ => {
                     this.hide();
                 });
@@ -1164,6 +1169,7 @@ class Base64ZipDialog extends Dialog {
             this.processBase64Zip(base64)
                 .catch(_ => {
                     Events.fire('notify-user', 'Clipboard content is incorrect.');
+                    console.log("Clipboard content is incorrect.")
                 }).finally(_ => {
                     this.hide();
                 });

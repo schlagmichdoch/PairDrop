@@ -1,0 +1,181 @@
+#!/bin/bash
+set -e
+
+############################################################
+# Help                                                     #
+############################################################
+help()
+{
+   # Display Help
+   echo "Send files or text with PairDrop via commandline."
+   echo "Current domain: ${DOMAIN}"
+   echo
+   echo "Usage:"
+   echo -e "Send files:\t\t$(basename "$0") file/directory"
+   echo -e "Send text:\t\t$(basename "$0") -t \"text\""
+   echo -e "Specify domain:\t$(basename "$0") -d \"https://pairdrop.net/\""
+}
+
+openPairDrop()
+{
+  url="$DOMAIN"
+  if [[ -n $params ]];then
+    url="${url}?${params}"
+  fi
+  if [[ -n $hash ]];then
+    url="${url}#${hash}"
+  fi
+
+  echo "PairDrop is opening at $DOMAIN"
+  if [[ $OS == "Windows" ]];then
+    start "$url"
+  elif [[ $OS == "Mac" ]];then
+    open "$url"
+  elif [[ $OS == "WSL" || $OS == "WSL2" ]];then
+    powershell.exe /c "Start-Process ${url}"
+  else
+    xdg-open "$url"
+  fi
+  exit
+}
+
+setOs()
+{
+  unameOut=$(uname -a)
+  case "${unameOut}" in
+      *Microsoft*)     OS="WSL";; #must be first since Windows subsystem for linux will have Linux in the name too
+      *microsoft*)     OS="WSL2";; #WARNING: My v2 uses ubuntu 20.4 at the moment slightly different name may not always work
+      Linux*)          OS="Linux";;
+      Darwin*)         OS="Mac";;
+      CYGWIN*)         OS="Cygwin";;
+      MINGW*)          OS="Windows";;
+      *Msys)           OS="Windows";;
+      *)               OS="UNKNOWN:${unameOut}"
+  esac
+}
+
+specifyDomain()
+{
+  [[ ! $1 = http* ]] || [[ ! $1 = */ ]] && echo "Incorrect format. Specify domain like https://pairdrop.net/" && exit
+  echo "DOMAIN=${1}" > "${SCRIPTPATH}/.pairdrop-cli-config"
+  echo -e "Domain is now set to:\n$1"
+}
+
+sendText()
+{
+    params="base64text=hash"
+    hash=$(echo -n "${OPTARG}" | base64)
+
+    if [[ $(echo -n "$hash" | wc -m) -gt 32600 ]];then
+      params="base64text=paste"
+      if [[ $OS == "Windows" || $OS == "WSL" || $OS == "WSL2" ]];then
+        echo -n "$hash" | clip.exe
+      elif [[ $OS == "Mac" ]];then
+        echo -n "$hash" | pbcopy
+      else
+        (echo -n "$hash" | xclip) || echo "You need to install xclip for sending bigger files from cli"
+      fi
+      hash=
+    fi
+
+    openPairDrop
+    exit
+}
+
+sendFiles()
+{
+  params="base64zip=hash"
+  if [[ $1 == */ ]]; then
+    path="${1::-1}"
+  else
+    path=$1
+  fi
+  zipPath="${path}_pairdrop.zip"
+  zipPath=${zipPath// /_}
+
+  [[ -a "$zipPath" ]] && echo "Cannot overwrite $zipPath. Please remove first." && exit
+
+  if [[ -d $path ]]; then
+    zipPathTemp="temp_${zipPath}"
+    [[ -a "$zipPathTemp" ]] && echo "Cannot overwrite $zipPathTemp. Please remove first." && exit
+    echo "Processing directory..."
+
+    # Create zip files temporarily to send directory
+    zip -q -b /tmp/ -r "$zipPath" "$path"
+    zip -q -b /tmp/ "$zipPathTemp" "$zipPath"
+
+    hash=$(base64 -w 0 "$zipPathTemp")
+
+    # remove temporary temp file
+    rm "$zipPathTemp"
+  else
+    echo "Processing file..."
+
+    # Create zip file temporarily to send file
+    zip -q -b /tmp/ "$zipPath" "$path"
+
+    hash=$(base64 -w 0 "$zipPath")
+  fi
+
+  # remove temporary temp file
+  rm "$zipPath"
+
+  if [[ $(echo -n "$hash" | wc -m) -gt 32600 ]];then
+    params="base64zip=paste"
+    if [[ $OS == "Windows" || $OS == "WSL" || $OS == "WSL2" ]];then
+      echo -n "$hash" | clip.exe
+    elif [[ $OS == "Mac" ]];then
+      echo -n "$hash" | pbcopy
+    else
+      (echo -n "$hash" | xclip) || echo "You need to install xclip for sending bigger files from cli"
+    fi
+    hash=
+  fi
+
+  openPairDrop
+  exit
+}
+
+############################################################
+############################################################
+# Main program                                             #
+############################################################
+############################################################
+SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+
+[ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] &&
+ specifyDomain "https://pairdrop.net/" &&
+ [ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] &&
+ echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this pairdrop bash file"
+
+[ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] || export "$(grep -v '^#' "${SCRIPTPATH}/.pairdrop-cli-config" | xargs)"
+
+setOs
+############################################################
+# Process the input options. Add options as needed.        #
+############################################################
+# Get the options
+# open PairDrop if no options are given
+[[ $# -eq 0 ]] && openPairDrop && exit
+#  display help and exit if first argument is "--help" or more than 2 arguments are given
+[ "$1" = "--help" ] | [[ $# -gt 2 ]] && help && exit
+
+while getopts "d:ht:*" option; do
+    case $option in
+      d) # specify domain
+        specifyDomain "$2"
+        exit;;
+      t) # Send text
+        sendText
+        exit;;
+      h | ?) # display help and exit
+        help
+        exit;;
+      esac
+done
+
+# Send file(s)
+# display help and exit if 2 arguments are given or if file does not exist
+[[ $# -eq 2 ]] || [[ ! -a $1 ]] && help && exit
+sendFiles "$1"
+exit
