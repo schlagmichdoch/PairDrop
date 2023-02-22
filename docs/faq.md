@@ -33,12 +33,16 @@ iOS Shortcuts to the win:
 I created a simple iOS shortcut that takes your photos and saves them to your gallery:
 https://routinehub.co/shortcut/13988/
 
-### Is it possible to share files directly from the context / share menu?
-Yes it finally is!
-* [Share files directly from context menu on Windows](/docs/how-to.md#share-files-directly-from-context-menu-on-windows)
-* [Share directly from share menu on iOS](/docs/how-to.md#share-directly-from-share-menu-on-ios)
-* [Share directly from share menu on Android](/docs/how-to.md#share-directly-from-share-menu-on-android)
+### Is it possible to send files or text directly from the context or share menu?
+Yes, it finally is!
+* [Send files directly from context menu on Windows](/docs/how-to.md#send-files-directly-from-context-menu-on-windows)
+* [Send directly from share menu on iOS](/docs/how-to.md#send-directly-from-share-menu-on-ios)
+* [Send directly from share menu on Android](/docs/how-to.md#send-directly-from-share-menu-on-android)
 
+### Is it possible to send files or text directly via CLI?
+Yes, it is!
+
+* [Send directly from command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
 ### What about the connection? Is it a P2P-connection directly from device to device or is there any third-party-server?
 It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a Signaling Server, but it is only used to establish a connection and is not involved in the file transfer.
 

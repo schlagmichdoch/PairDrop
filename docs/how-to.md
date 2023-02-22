@@ -1,5 +1,5 @@
 # How-To
-## Share files directly from context menu on Windows
+## Send files directly from context menu on Windows
 ### Registering to open files with PairDrop
 The [File Handling API](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/handle-files) is implemented
 
@@ -25,17 +25,58 @@ Outstandingly, it is also possible to send multiple files to PairDrop via the co
 
 [//]: # (Todo: add screenshots)
 
-## Share directly from share menu on iOS
+## Send directly from share menu on iOS
 I created an iOS shortcut to send images, files, folder, URLs or text directly from the share-menu 
 https://routinehub.co/shortcut/13990/
 
 [//]: # (Todo: add doku with screenshots)
 
 
-## Share directly from share menu on Android
+## Send directly from share menu on Android
 The [Web Share Target API](https://developer.mozilla.org/en-US/docs/Web/Manifest/share_target) is implemented but not yet tested.
 When the PWA is installed, it should register itself to the share-menu of the device automatically.
 
-Please test this feature and create an issue if it does not work.
+This feature is still under development. Please test this feature and create an issue if it does not work.
+
+## Send directly via command-line interface
+Send files or text with PairDrop via command-line interface.
+
+This opens PairDrop in the default browser where you can choose the receiver.
+
+### Usage
+```bash
+$ pairdrop -h
+Current domain: https://pairdrop.net/
+
+Usage:
+Open PairDrop:          pairdrop
+Send files:             pairdrop file/directory
+Send text:              pairdrop -t "text"
+Specify domain:         pairdrop -d "https://pairdrop.net/"
+Show this help text:    pairdrop (-h|--help)
+```
+
+On Windows Command Prompt you need to use bash: `bash pairdrop -h`
+
+
+### Setup
+Download the bash file: [pairdrop-cli/pairdrop](/pairdrop-cli/pairdrop).
+
+#### Linux
+1. Put file in a preferred folder e.g. `/usr/local/bin`
+2. Make sure the bash file is executable. Otherwise, use `chmod +x pairdrop`
+3. Add absolute path of the folder to PATH variable to make `pairdrop` available globally by executing
+   `export PATH=$PATH:/opt/pairdrop-cli`
+
+#### Mac
+1. add bash file to `/usr/local/bin`
+
+#### Windows
+1. Put file in a preferred folder e.g. `C:\Users\Public\pairdrop-cli`
+2. Search for and open `Edit environment variables for your account`
+3. Click `Environment Variables...`
+4. Under *System Variables* select `Path` and click *Edit...*
+5. Click *New*, insert the preferred folder (`C:\Users\Public\pairdrop-cli`), click *OK* until all windows are closed
+6. Reopen Command prompt window
 
 [< Back](/README.md)
