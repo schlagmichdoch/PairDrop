@@ -590,24 +590,32 @@ class ReceiveFileDialog extends ReceiveDialog {
 
         if (shareInsteadOfDownload) {
             this.$shareOrDownloadBtn.innerText = "Share";
-            this.continueCallback = async _ => {
-                navigator.share({
-                        files: files
-                    }).catch(err => console.error(err));
+            this.continue = _ => {
+                navigator.share({files: files})
+                    .catch(err => console.error(err));
             }
-            this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
+            this.continueCallback = _ => this.continue();
         } else {
-            this.$shareOrDownloadBtn.innerText = "Download";
-            this.$shareOrDownloadBtn.download = filenameDownload;
-            this.$shareOrDownloadBtn.href = url;
+            this.$shareOrDownloadBtn.innerText = "Download again";
+            this.continue = _ => {
+                let tmpBtn = document.createElement("a");
+                tmpBtn.download = filenameDownload;
+                tmpBtn.href = url;
+                tmpBtn.click();
+            };
+            this.continueCallback = _ => {
+                this.continue();
+                this.hide();
+            };
         }
+        this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
 
         this.createPreviewElement(files[0]).finally(_ => {
             document.title = `PairDrop - ${files.length} Files received`;
             document.changeFavicon("images/favicon-96x96-notification.png");
             this.show();
             Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
-            this.$shareOrDownloadBtn.click();
+            this.continue();
         }).catch(r => console.error(r));
     }
 
