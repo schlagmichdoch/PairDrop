@@ -41,6 +41,31 @@ Set options by using the following flags in the `docker run` command:
 
 <br>
 
+## Deployment with Docker Compose
+
+Here's an example docker-compose file:
+
+```yaml
+version: "2"
+services:
+    pairdrop:
+        image: lscr.io/linuxserver/pairdrop:latest
+        container_name: pairdrop
+        restart: unless-stopped
+        environment:
+            - PUID=1000 # UID to run the application as
+            - PGID=1000 # GID to run the application as
+            - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+            - RATE_LIMIT=false # Set to true to limit clients to 100 requests per 5 min.
+            - TZ=Etc/UTC # Time Zone
+        ports:
+            - 3000:3000 # Web UI
+```
+
+Run the compose file with `docker compose up -d`.
+
+<br>
+
 ## Deployment with Docker with self-built image
 ### Build the image
 ```bash
