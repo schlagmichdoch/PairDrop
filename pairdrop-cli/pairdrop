@@ -7,13 +7,15 @@ set -e
 help()
 {
    # Display Help
-   echo "Send files or text with PairDrop via commandline."
+   echo "Send files or text with PairDrop via command-line interface."
    echo "Current domain: ${DOMAIN}"
    echo
    echo "Usage:"
+   echo -e "Open PairDrop:\t\t$(basename "$0")"
    echo -e "Send files:\t\t$(basename "$0") file/directory"
    echo -e "Send text:\t\t$(basename "$0") -t \"text\""
-   echo -e "Specify domain:\t$(basename "$0") -d \"https://pairdrop.net/\""
+   echo -e "Specify domain:\t\t$(basename "$0") -d \"https://pairdrop.net/\""
+   echo -e "Show this help text:\t$(basename "$0") (-h|--help)"
 }
 
 openPairDrop()
@@ -57,8 +59,8 @@ setOs()
 specifyDomain()
 {
   [[ ! $1 = http* ]] || [[ ! $1 = */ ]] && echo "Incorrect format. Specify domain like https://pairdrop.net/" && exit
-  echo "DOMAIN=${1}" > "${SCRIPTPATH}/.pairdrop-cli-config"
-  echo -e "Domain is now set to:\n$1"
+  echo "DOMAIN=${1}" > "$CONFIGPATH"
+  echo -e "Domain is now set to:\n$1\n"
 }
 
 sendText()
@@ -143,12 +145,27 @@ sendFiles()
 ############################################################
 SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
-[ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] &&
- specifyDomain "https://pairdrop.net/" &&
- [ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] &&
- echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this pairdrop bash file"
+pushd . > '/dev/null';
+SCRIPTPATH="${BASH_SOURCE[0]:-$0}";
 
-[ ! -f "${SCRIPTPATH}/.pairdrop-cli-config" ] || export "$(grep -v '^#' "${SCRIPTPATH}/.pairdrop-cli-config" | xargs)"
+while [ -h "$SCRIPTPATH" ];
+do
+    cd "$( dirname -- "$SCRIPTPATH"; )";
+    SCRIPTPATH="$( readlink -f -- "$SCRIPTPATH"; )";
+done
+
+cd "$( dirname -- "$SCRIPTPATH"; )" > '/dev/null';
+SCRIPTPATH="$( pwd; )";
+popd  > '/dev/null';
+
+CONFIGPATH="${SCRIPTPATH}/.pairdrop-cli-config"
+
+[ ! -f "$CONFIGPATH" ] &&
+ specifyDomain "https://pairdrop.net/" &&
+ [ ! -f "$CONFIGPATH" ] &&
+ echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this 'pairdrop' bash file"
+
+[ ! -f "$CONFIGPATH" ] || export "$(grep -v '^#' "$CONFIGPATH" | xargs)"
 
 setOs
 ############################################################
@@ -157,8 +174,9 @@ setOs
 # Get the options
 # open PairDrop if no options are given
 [[ $# -eq 0 ]] && openPairDrop && exit
+
 #  display help and exit if first argument is "--help" or more than 2 arguments are given
-[ "$1" = "--help" ] | [[ $# -gt 2 ]] && help && exit
+[ "$1" == "--help" ] || [[ $# -gt 2 ]] && help && exit
 
 while getopts "d:ht:*" option; do
     case $option in
@@ -177,5 +195,5 @@ done
 # Send file(s)
 # display help and exit if 2 arguments are given or if file does not exist
 [[ $# -eq 2 ]] || [[ ! -a $1 ]] && help && exit
+
 sendFiles "$1"
-exit
