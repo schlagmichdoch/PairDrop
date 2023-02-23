@@ -6,6 +6,17 @@ The easiest way to get PairDrop up and running is by using Docker.
 ```bash
 docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 lscr.io/linuxserver/pairdrop
 ```
+
+## Deployment with Docker from GHCR
+
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ghcr.io/schlagmichdoch/pairdrop:v0.0.1
+```
+
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ghcr.io/schlagmichdoch/pairdrop:latest
+```
+
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
 > To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
