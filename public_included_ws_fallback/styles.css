@@ -432,6 +432,9 @@ x-dialog x-paper {
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
+}
+
+#pairDeviceDialog x-paper {
     position: absolute;
     top: max(50%, 350px);
     height: 650px;
