@@ -14,7 +14,7 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ls
 Set options by using the following flags in the `docker run` command:
 
 #### Port
-```
+```bash
 -p 127.0.0.1:8080:3000
 ```
 > Specify the port used by the docker image 
@@ -27,7 +27,7 @@ Set options by using the following flags in the `docker run` command:
 > Limits clients to 100 requests per 5 min
 
 #### Websocket Fallback (for VPN)
-```
+```bash
 -e WS_FALLBACK=true
 ```
 > Provides PairDrop to clients with an included websocket fallback if the peer to peer WebRTC connection is not available to the client.
@@ -38,6 +38,34 @@ Set options by using the following flags in the `docker run` command:
 > **Warning:** All traffic sent between devices using this fallback is routed through the server and therefor not peer to peer!
 > Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
 > Additionally, beware that all traffic using this fallback debits the servers data plan.
+
+#### Specify STUN/TURN Servers
+```bash
+-e RTC_CONFIG="rtc_config.json"
+```
+
+> Specify the STUN/TURN servers PairDrop clients use by setting `RTC_CONFIG` to a JSON file including the configuration.
+> You can use `pairdrop/rtc_config_example.json` as a starting point.
+>
+> Default configuration:
+> ```json
+> {
+>   "sdpSemantics": "unified-plan",
+>   "iceServers": [
+>     {
+>       "urls": "stun:stun.l.google.com:19302"
+>     },
+>     {
+>       "urls": "stun:openrelay.metered.ca:80"
+>     },
+>     {
+>       "urls": "turn:openrelay.metered.ca:443",
+>       "username": "openrelayproject",
+>       "credential": "openrelayproject"
+>     }
+>   ]
+> }
+> ```
 
 <br>
 
@@ -100,6 +128,38 @@ $env:PORT=3010; npm start
 ```
 > Specify the port PairDrop is running on. (Default: 3000)
 
+#### Specify STUN/TURN Server
+On Unix based systems
+```bash
+RTC_CONFIG="rtc_config.json" npm start
+```
+On Windows
+```bash
+$env:RTC_CONFIG="rtc_config.json"; npm start 
+```
+> Specify the STUN/TURN servers PairDrop clients use by setting `RTC_CONFIG` to a JSON file including the configuration.
+> You can use `pairdrop/rtc_config_example.json` as a starting point.
+>
+> Default configuration:
+> ```json
+> {
+>   "sdpSemantics": "unified-plan",
+>   "iceServers": [
+>     {
+>       "urls": "stun:stun.l.google.com:19302"
+>     },
+>     {
+>       "urls": "stun:openrelay.metered.ca:80"
+>     },
+>     {
+>       "urls": "turn:openrelay.metered.ca:443",
+>       "username": "openrelayproject",
+>       "credential": "openrelayproject"
+>     }
+>   ]
+> }
+> ```
+
 ### Options / Flags
 #### Local Run
 ```bash
@@ -158,7 +218,7 @@ When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Ot
 
 ### Using nginx
 #### Allow http and https requests
-```
+```nginx configuration
 server {
     listen       80;
 
@@ -191,7 +251,7 @@ server {
 ```
 
 #### Automatic http to https redirect:
-```
+```nginx configuration
 server {
     listen       80;
 
@@ -221,13 +281,13 @@ server {
 
 ### Using Apache
 install modules `proxy`, `proxy_http`, `mod_proxy_wstunnel`
-```shell
+```bash
 a2enmod proxy
 ```
-```shell
+```bash
 a2enmod proxy_http
 ```
-```shell
+```bash
 a2enmod proxy_wstunnel
 ```
 
@@ -237,7 +297,7 @@ Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 
 **pairdrop.conf**
 #### Allow http and https requests
-```
+```apacheconf
 <VirtualHost *:80>	
 	ProxyPass / http://127.0.0.1:3000/
 	RewriteEngine on
@@ -254,7 +314,7 @@ Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 </VirtualHost>
 ```
 #### Automatic http to https redirect:
-```
+```apacheconf
 <VirtualHost *:80>	
    Redirect permanent / https://127.0.0.1:3000/
 </VirtualHost>
@@ -267,10 +327,10 @@ Create a new configuration file under `/etc/apache2/sites-available` (on debian)
 </VirtualHost>
 ```
 Activate the new virtual host and reload apache:
-```shell
+```bash
 a2ensite pairdrop
 ```
-```shell
+```bash
 service apache2 reload
 ```
 
@@ -281,7 +341,7 @@ All files needed for developing are available on the branch `dev`.
 First, [Install docker with docker-compose.](https://docs.docker.com/compose/install/)
 
 Then, clone the repository and run docker-compose:
-```shell
+```bash
     git clone https://github.com/schlagmichdoch/PairDrop.git
 
     cd PairDrop
@@ -306,7 +366,7 @@ The nginx container creates a CA certificate and a website certificate for you. 
 
 If you want to test PWA features, you need to trust the CA of the certificate for your local deployment. For your convenience, you can download the crt file from `http://<Your FQDN>:8080/ca.crt`. Install that certificate to the trust store of your operating system.
 - On Windows, make sure to install it to the `Trusted Root Certification Authorities` store.
-- On MacOS, double click the installed CA certificate in `Keychain Access`, expand `Trust`, and select `Always Trust` for SSL.
+- On macOS, double-click the installed CA certificate in `Keychain Access`, expand `Trust`, and select `Always Trust` for SSL.
 - Firefox uses its own trust store. To install the CA, point Firefox at `http://<Your FQDN>:8080/ca.crt`. When prompted, select `Trust this CA to identify websites` and click OK.
 - When using Chrome, you need to restart Chrome so it reloads the trust store (`chrome://restart`). Additionally, after installing a new cert, you need to clear the Storage (DevTools -> Application -> Clear storage -> Clear site data).
 
