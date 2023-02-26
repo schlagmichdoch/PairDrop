@@ -1,14 +1,17 @@
 # Deployment Notes
 The easiest way to get PairDrop up and running is by using Docker.
 
-## Deployment with Docker from Docker Hub
+## Deployment with Docker
+
+### Docker Image from Docker Hub
 
 ```bash
 docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 lscr.io/linuxserver/pairdrop
 ```
+
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
 
 ### Options / Flags
 Set options by using the following flags in the `docker run` command:
@@ -41,6 +44,37 @@ Set options by using the following flags in the `docker run` command:
 
 <br>
 
+### Docker Image from GHCR
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ghcr.io/schlagmichdoch/pairdrop npm run start:prod 
+```
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
+>
+> To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
+
+### Docker Image self-built
+#### Build the image
+```bash
+docker build --pull . -f Dockerfile -t pairdrop
+```
+> A GitHub action is set up to do this step automatically.
+>
+> `--pull` ensures always the latest node image is used.
+
+#### Run the image
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
+```
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
+>
+> To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
+
+<br>
+
 ## Deployment with Docker Compose
 
 Here's an example docker-compose file:
@@ -59,31 +93,16 @@ services:
             - RATE_LIMIT=false # Set to true to limit clients to 100 requests per 5 min.
             - TZ=Etc/UTC # Time Zone
         ports:
-            - 3000:3000 # Web UI
+            - 127.0.0.1:3000:3000 # Web UI
 ```
 
 Run the compose file with `docker compose up -d`.
 
-<br>
-
-## Deployment with Docker with self-built image
-### Build the image
-```bash
-docker build --pull . -f Dockerfile -t pairdrop
-```
-> A GitHub action is set up to do this step automatically.
->
-> `--pull` ensures always the latest node image is used.
-
-### Run the image
-```bash
-docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
-```
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
->
-> To specify options replace `npm run start:prod` according to [the documentation above.](#options--flags)
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
+
+<br>
 
 ## Deployment with node
 
@@ -134,7 +153,7 @@ npm start -- --localhost-only
 > 
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> Use this when deploying PairDrop with node to prevent bypassing the proxy and reach the docker container directly.
+> Use this when deploying PairDrop with node to prevent bypassing the proxy by reaching the docker container directly.
 
 #### Automatic restart on error
 ```bash
