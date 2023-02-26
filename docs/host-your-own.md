@@ -13,23 +13,23 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ls
 >
 > To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
 
-### Options / Flags
+#### Options / Flags
 Set options by using the following flags in the `docker run` command:
 
-#### Port
+##### Port
 ```
 -p 127.0.0.1:8080:3000
 ```
 > Specify the port used by the docker image 
 > - 3000 -> `-p 127.0.0.1:3000:3000`
 > - 8080 -> `-p 127.0.0.1:8080:3000`
-#### Rate limiting requests
+##### Rate limiting requests
 ```
 -e RATE_LIMIT=true
 ```
-> Limits clients to 100 requests per 5 min
+> Limits clients to 1000 requests per 5 min
 
-#### Websocket Fallback (for VPN)
+##### Websocket Fallback (for VPN)
 ```
 -e WS_FALLBACK=true
 ```
@@ -41,8 +41,6 @@ Set options by using the following flags in the `docker run` command:
 > **Warning:** All traffic sent between devices using this fallback is routed through the server and therefor not peer to peer!
 > Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
 > Additionally, beware that all traffic using this fallback debits the servers data plan.
-
-<br>
 
 ### Docker Image from GHCR
 ```bash
@@ -76,7 +74,6 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -i
 <br>
 
 ## Deployment with Docker Compose
-
 Here's an example docker-compose file:
 
 ```yaml
@@ -90,7 +87,7 @@ services:
             - PUID=1000 # UID to run the application as
             - PGID=1000 # GID to run the application as
             - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
-            - RATE_LIMIT=false # Set to true to limit clients to 100 requests per 5 min.
+            - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
             - TZ=Etc/UTC # Time Zone
         ports:
             - 127.0.0.1:3000:3000 # Web UI
@@ -167,7 +164,7 @@ npm start -- --auto-restart
 ```bash
 npm start -- --rate-limit 
 ```
-> Limits clients to 100 requests per 5 min
+> Limits clients to 1000 requests per 5 min
 
 <br>
 
