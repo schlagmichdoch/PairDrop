@@ -12,7 +12,8 @@
 /* Layout */
 
 html {
-    height: 100%;
+    min-height: 100%;
+    height: -webkit-fill-available;
 }
 
 html,
@@ -26,6 +27,8 @@ body {
 }
 
 body {
+    min-height: 100%;
+    min-height: -webkit-fill-available;
     flex-grow: 1;
     align-items: center;
     justify-content: center;
@@ -416,6 +419,7 @@ x-dialog x-background {
     transition: opacity 300ms;
     will-change: opacity;
     padding: 35px;
+    overflow: overlay;
 }
 
 x-dialog x-paper {
@@ -428,6 +432,13 @@ x-dialog x-paper {
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
+}
+
+#pairDeviceDialog x-paper {
+    position: absolute;
+    top: max(50%, 350px);
+    height: 650px;
+    margin-top: -325px;
 }
 
 x-dialog:not([show]) {
@@ -500,8 +511,8 @@ x-dialog .font-subheading {
 #roomKeyQrCode {
     padding: inherit;
     margin: auto;
-    width: 80px;
-    height: 80px;
+    width: 150px;
+    height: 150px;
 }
 
 #pairDeviceDialog hr {
@@ -628,6 +639,7 @@ x-dialog .row-reverse {
 #base64PasteDialog button[close] {
     margin-top: 20px;
 }
+
 #base64PasteDialog button[close]:before {
     border-radius: 8px;
 }
@@ -944,7 +956,7 @@ screen and (min-width: 1100px) {
         position: fixed;
     }
 
-    x-instructions:before {
+    x-instructions:not([drop-peer]):not([drop-bg]):before {
         content: attr(mobile);
     }
 }

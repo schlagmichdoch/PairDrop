@@ -840,8 +840,8 @@ class PairDeviceDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getShareRoomURL(),
-            width: 80,
-            height: 80,
+            width: 150,
+            height: 150,
             padding: 0,
             background: "transparent",
             color: getComputedStyle(document.body).getPropertyValue('--text-color'),
