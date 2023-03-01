@@ -10,7 +10,7 @@ window.pasteMode.activated = false;
 // set display name
 Events.on('display-name', e => {
     const me = e.detail.message;
-    const $displayName = $('displayName')
+    const $displayName = $('display-name')
     $displayName.textContent = 'You are known as ' + me.displayName;
     $displayName.title = me.deviceName;
 });
@@ -497,10 +497,10 @@ class ReceiveDialog extends Dialog {
 class ReceiveFileDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveFileDialog');
+        super('receive-file-dialog');
 
-        this.$shareOrDownloadBtn = this.$el.querySelector('#shareOrDownload');
-        this.$receiveTitleNode = this.$el.querySelector('#receiveTitle')
+        this.$shareOrDownloadBtn = this.$el.querySelector('#share-or-download');
+        this.$receiveTitleNode = this.$el.querySelector('#receive-title')
 
         Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files, e.detail.request));
         this._filesQueue = [];
@@ -659,15 +659,15 @@ class ReceiveFileDialog extends ReceiveDialog {
 class ReceiveRequestDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveRequestDialog');
+        super('receive-request-dialog');
 
-        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requestingPeerDisplayName');
-        this.$fileStemNode = this.$el.querySelector('#fileStem');
-        this.$fileExtensionNode = this.$el.querySelector('#fileExtension');
-        this.$fileOtherNode = this.$el.querySelector('#fileOther');
+        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requesting-peer-display-name');
+        this.$fileStemNode = this.$el.querySelector('#file-stem');
+        this.$fileExtensionNode = this.$el.querySelector('#file-extension');
+        this.$fileOtherNode = this.$el.querySelector('#file-other');
 
-        this.$acceptRequestBtn = this.$el.querySelector('#acceptRequest');
-        this.$declineRequestBtn = this.$el.querySelector('#declineRequest');
+        this.$acceptRequestBtn = this.$el.querySelector('#accept-request');
+        this.$declineRequestBtn = this.$el.querySelector('#decline-request');
         this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
 
@@ -748,12 +748,12 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
 class PairDeviceDialog extends Dialog {
     constructor() {
-        super('pairDeviceDialog');
+        super('pair-device-dialog');
         $('pair-device').addEventListener('click', _ => this._pairDeviceInitiate());
-        this.$inputRoomKeyChars = this.$el.querySelectorAll('#keyInputContainer>input');
+        this.$inputRoomKeyChars = this.$el.querySelectorAll('#key-input-container>input');
         this.$submitBtn = this.$el.querySelector('button[type="submit"]');
-        this.$roomKey = this.$el.querySelector('#roomKey');
-        this.$qrCode = this.$el.querySelector('#roomKeyQrCode');
+        this.$roomKey = this.$el.querySelector('#room-key');
+        this.$qrCode = this.$el.querySelector('#room-key-qr-code');
         this.$clearSecretsBtn = $('clear-pair-devices');
         this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
         let createJoinForm = this.$el.querySelector('form');
@@ -827,7 +827,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     evaluateRoomKeyChars() {
-        if (this.$el.querySelectorAll('#keyInputContainer>input:placeholder-shown').length > 0) {
+        if (this.$el.querySelectorAll('#key-input-container>input:placeholder-shown').length > 0) {
             this.$submitBtn.setAttribute("disabled", "");
         } else {
             this.inputRoomKey = "";
@@ -970,7 +970,7 @@ class PairDeviceDialog extends Dialog {
 
 class ClearDevicesDialog extends Dialog {
     constructor() {
-        super('clearDevicesDialog');
+        super('clear-devices-dialog');
         $('clear-pair-devices').addEventListener('click', _ => this._onClearPairDevices());
         let clearDevicesForm = this.$el.querySelector('form');
         clearDevicesForm.addEventListener('submit', _ => this._onSubmit());
@@ -988,10 +988,10 @@ class ClearDevicesDialog extends Dialog {
 
 class SendTextDialog extends Dialog {
     constructor() {
-        super('sendTextDialog');
+        super('send-text-dialog');
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
-        this.$text = this.$el.querySelector('#textInput');
-        this.$peerDisplayName = this.$el.querySelector('#textSendPeerDisplayName');
+        this.$text = this.$el.querySelector('#text-input');
+        this.$peerDisplayName = this.$el.querySelector('#text-send-peer-display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', _ => this._send());
@@ -1048,7 +1048,7 @@ class SendTextDialog extends Dialog {
 
 class ReceiveTextDialog extends Dialog {
     constructor() {
-        super('receiveTextDialog');
+        super('receive-text-dialog');
         Events.on('text-received', e => this._onText(e.detail.text, e.detail.peerId));
         this.$text = this.$el.querySelector('#text');
         this.$copy = this.$el.querySelector('#copy');
@@ -1059,7 +1059,7 @@ class ReceiveTextDialog extends Dialog {
 
         Events.on("keydown", e => this._onKeyDown(e));
 
-        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receiveTextPeerDisplayName');
+        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receive-text-peer-display-name');
         this._receiveTextQueue = [];
     }
 
@@ -1120,13 +1120,13 @@ class ReceiveTextDialog extends Dialog {
 class Base64ZipDialog extends Dialog {
 
     constructor() {
-        super('base64PasteDialog');
+        super('base64-paste-dialog');
         const urlParams = new URL(window.location).searchParams;
         const base64Text = urlParams.get('base64text');
         const base64Zip = urlParams.get('base64zip');
         const base64Hash = window.location.hash.substring(1);
 
-        this.$pasteBtn = this.$el.querySelector('#base64PasteBtn');
+        this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
 
         if (base64Text) {
             this.show();
@@ -1353,7 +1353,7 @@ class Notifications {
     }
 
     _download(notification) {
-        $('shareOrDownload').click();
+        $('share-or-download').click();
         notification.close();
     }
 

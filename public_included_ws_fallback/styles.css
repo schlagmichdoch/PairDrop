@@ -606,7 +606,7 @@ x-dialog x-paper {
     will-change: transform;
 }
 
-#pairDeviceDialog x-paper {
+#pair-device-dialog x-paper {
     position: absolute;
     top: max(50%, 350px);
     height: 650px;
@@ -645,13 +645,13 @@ x-dialog .font-subheading {
 
 /* PairDevicesDialog */
 
-#keyInputContainer {
+#key-input-container {
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
-#keyInputContainer>input {
+#key-input-container>input {
     width: 45px;
     height: 45px;
     font-size: 30px;
@@ -667,15 +667,15 @@ x-dialog .font-subheading {
     justify-content: center;
 }
 
-#keyInputContainer>input + * {
+#key-input-container>input + * {
     margin-left: 6px;
 }
 
-#keyInputContainer>input:nth-of-type(4) {
+#key-input-container>input:nth-of-type(4) {
     margin-left: 18px;
 }
 
-#roomKey {
+#room-key {
     font-size: 50px;
     letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 23px);
     display: inline-block;
@@ -683,20 +683,20 @@ x-dialog .font-subheading {
     margin: 15px -15px;
 }
 
-#roomKeyQrCode {
+#room-key-qr-code {
     padding: inherit;
     margin: auto;
     width: 150px;
     height: 150px;
 }
 
-#pairDeviceDialog hr {
+#pair-device-dialog hr {
     margin-top: 40px;
     margin-bottom: 40px;
     width: 100%;
 }
 
-#pairDeviceDialog x-background {
+#pair-device-dialog x-background {
     padding: 16px!important;
 }
 
@@ -711,8 +711,8 @@ x-dialog h2 {
     margin-top: 1rem;
 }
 
-#receiveRequestDialog h2,
-#receiveFileDialog h2 {
+#receive-request-dialog h2,
+#receive-file-dialog h2 {
     margin-bottom: 0.5rem;
 }
 
@@ -741,11 +741,11 @@ x-dialog .row-reverse {
     word-break: normal;
 }
 
-#fileName {
+#file-name {
     font-style: italic;
 }
 
-#fileStem {
+#file-stem {
     max-width: 80%;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -759,13 +759,13 @@ x-dialog .row-reverse {
 
 /* Send Text Dialog */
 
-#textInput {
+#text-input {
     min-height: 120px;
 }
 
 /* Receive Text Dialog */
 
-#receiveTextDialog #text {
+#receive-text-dialog #text {
     width: 100%;
     word-break: break-all;
     max-height: 300px;
@@ -778,15 +778,15 @@ x-dialog .row-reverse {
     margin-top:36px;
 }
 
-#receiveTextDialog #text a {
+#receive-text-dialog #text a {
     cursor: pointer;
 }
 
-#receiveTextDialog #text a:hover {
+#receive-text-dialog #text a:hover {
     text-decoration: underline;
 }
 
-#receiveTextDialog h3 {
+#receive-text-dialog h3 {
     /* Select the received text when double-clicking the dialog */
     user-select: none;
     pointer-events: none;
@@ -797,26 +797,26 @@ x-dialog .row-reverse {
     margin: auto -25px;
 }
 
-#receiveTextDescriptionContainer {
+#receive-text-description-container {
     margin-bottom: 25px;
 }
 
-#base64PasteBtn {
+#base64-paste-btn {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
 }
 
-#base64PasteDialog button {
+#base64-paste-dialog button {
     margin: auto;
     border-radius: 8px;
 }
 
-#base64PasteDialog button[close] {
+#base64-paste-dialog button[close] {
     margin-top: 20px;
 }
 
-#base64PasteDialog button[close]:before {
+#base64-paste-dialog button[close]:before {
     border-radius: 8px;
 }
 
