@@ -6,6 +6,7 @@ class ServerConnection {
     constructor() {
         this._connect();
         Events.on('pagehide', _ => this._disconnect());
+        Events.on('beforeunload', _ => this._onBeforeUnload());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
@@ -19,10 +20,10 @@ class ServerConnection {
         Events.on('online', _ => this._connect());
     }
 
-    async _connect() {
+    _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
-        const ws = new WebSocket(await this._endpoint());
+        const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
         ws.onopen = _ => this._onOpen();
         ws.onmessage = e => this._onMessage(e.data);
@@ -105,6 +106,7 @@ class ServerConnection {
             case 'file-transfer-complete':
             case 'message-transfer-complete':
             case 'text':
+            case 'display-name-changed':
             case 'ws-chunk':
                 Events.fire('ws-relay', JSON.stringify(msg));
                 break;
@@ -119,43 +121,27 @@ class ServerConnection {
     }
 
     _onDisplayName(msg) {
-        sessionStorage.setItem("peerId", msg.message.peerId);
-        PersistentStorage.get('peerId').then(peerId => {
-            if (!peerId) {
-                // save peerId to indexedDB to retrieve after PWA is installed
-                PersistentStorage.set('peerId', msg.message.peerId).then(peerId => {
-                    console.log(`peerId saved to indexedDB: ${peerId}`);
-                });
-            }
-        }).catch(_ => _ => PersistentStorage.logBrowserNotCapable())
         Events.fire('display-name', msg);
     }
 
-    async _endpoint() {
+    _endpoint() {
         // hack to detect if deployment or development environment
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
         let ws_url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
-        const peerId = await this._peerId();
-        if (peerId) ws_url.searchParams.append('peer_id', peerId)
         return ws_url.toString();
     }
 
-    async _peerId() {
-        // make peerId persistent when pwa is installed
-        return window.matchMedia('(display-mode: minimal-ui)').matches
-            ? await PersistentStorage.get('peerId')
-            : sessionStorage.getItem("peerId");
-    }
-
-    _disconnect() {
-        this.send({ type: 'disconnect' });
+    _onBeforeUnload() {
         if (this._socket) {
             this._socket.onclose = null;
             this._socket.close();
             this._socket = null;
-            Events.fire('ws-disconnected');
         }
+    }
+
+    _disconnect() {
+        this.send({ type: 'disconnect' });
     }
 
     _onDisconnect() {
@@ -324,13 +310,12 @@ class Peer {
         this.sendJSON({ type: 'progress', progress: progress });
     }
 
-    _onMessage(message, logMessage = true) {
+    _onMessage(message) {
         if (typeof message !== 'string') {
             this._onChunkReceived(message);
             return;
         }
         message = JSON.parse(message);
-        if (logMessage) console.log('RTC:', message);
         switch (message.type) {
             case 'request':
                 this._onFilesTransferRequest(message);
@@ -358,6 +343,9 @@ class Peer {
                 break;
             case 'text':
                 this._onTextReceived(message);
+                break;
+            case 'display-name-changed':
+                this._onDisplayNameChanged(message);
                 break;
         }
     }
@@ -496,6 +484,11 @@ class Peer {
         Events.fire('text-received', { text: escaped, peerId: this._peerId });
         this.sendJSON({ type: 'message-transfer-complete' });
     }
+
+    _onDisplayNameChanged(message) {
+        if (!message.displayName) return;
+        Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
+    }
 }
 
 class RTCPeer extends Peer {
@@ -504,6 +497,13 @@ class RTCPeer extends Peer {
         super(serverConnection, peerId, roomType, roomSecret);
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
+    }
+
+    _onMessage(message) {
+        if (typeof message !== 'string') {
+            console.log('RTC:', JSON.parse(message));
+        }
+        super._onMessage(message);
     }
 
     _connect(peerId, isCaller) {
@@ -568,14 +568,14 @@ class RTCPeer extends Peer {
 
     _onChannelOpened(event) {
         console.log('RTC: channel opened with', this._peerId);
-        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
         const channel = event.channel || event.target;
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
-        channel.onclose = _ => this._onChannelClosed();
-        Events.on('beforeunload', e => this._onBeforeUnload(e));
-        Events.on('pagehide', _ => this._closeChannel());
+        channel.onclose = e => this._onChannelClosed(e);
         this._channel = channel;
+        Events.on('beforeunload', e => this._onBeforeUnload(e));
+        Events.on('pagehide', _ => this._onPageHide());
+        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
     }
 
     getConnectionHash() {
@@ -608,13 +608,21 @@ class RTCPeer extends Peer {
         if (this._busy) {
             e.preventDefault();
             return "There are unfinished transfers. Are you sure you want to close?";
+        } else {
+            this._disconnect();
         }
     }
 
-    _closeChannel() {
-        if (this._channel) this._channel.onclose = null;
-        if (this._conn) this._conn.close();
-        this._conn = null;
+    _onPageHide() {
+        this._disconnect();
+    }
+
+    _disconnect() {
+        if (this._conn && this._channel) {
+            this._channel.onclose = null;
+            this._channel.close();
+        }
+        Events.fire('peer-disconnected', this._peerId);
     }
 
     _onChannelClosed() {
@@ -628,9 +636,11 @@ class RTCPeer extends Peer {
         console.log('RTC: state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
             case 'disconnected':
+                Events.fire('peer-disconnected', this._peerId);
                 this._onError('rtc connection disconnected');
                 break;
             case 'failed':
+                Events.fire('peer-disconnected', this._peerId);
                 this._onError('rtc connection failed');
                 break;
         }
@@ -683,6 +693,7 @@ class WSPeer extends Peer {
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
         if (!peerId) return; // we will listen for a caller
+        this._isCaller = true;
         this._sendSignal();
     }
 
@@ -694,6 +705,7 @@ class WSPeer extends Peer {
     }
 
     sendJSON(message) {
+        console.debug(message)
         message.to = this._peerId;
         message.roomType = this._roomType;
         message.roomSecret = this._roomSecret;
@@ -705,9 +717,9 @@ class WSPeer extends Peer {
     }
 
     onServerMessage(message) {
-        Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
-        if (this._peerId) return;
         this._peerId = message.sender.id;
+        Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
+        if (this._isCaller) return;
         this._sendSignal();
     }
 
@@ -728,8 +740,11 @@ class PeersManager {
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
+        Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
         Events.on('ws-relay', e => this._onWsRelay(e.detail));
     }
 
@@ -768,10 +783,6 @@ class PeersManager {
         })
     }
 
-    sendTo(peerId, message) {
-        this.peers[peerId].send(message);
-    }
-
     _onRespondToFileTransferRequest(detail) {
         this.peers[detail.to]._respondToFileTransferRequest(detail.accepted);
     }
@@ -806,6 +817,10 @@ class PeersManager {
         }
     }
 
+    _onPeerConnected(peerId) {
+        this._notifyPeerDisplayNameChanged(peerId);
+    }
+
     _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
@@ -822,6 +837,23 @@ class PeersManager {
                 this._onPeerDisconnected(peerId);
             }
         }
+    }
+
+    _notifyPeersDisplayNameChanged(newDisplayName) {
+        this._displayName = newDisplayName ? newDisplayName : this._originalDisplayName;
+        for (const peerId in this.peers) {
+            this._notifyPeerDisplayNameChanged(peerId);
+        }
+    }
+
+    _notifyPeerDisplayNameChanged(peerId) {
+        const peer = this.peers[peerId];
+        if (!peer || (peer._conn && (peer._conn.signalingState !== "stable" || !peer._channel || peer._channel.readyState !== "open"))) return;
+        this.peers[peerId].sendJSON({type: 'display-name-changed', displayName: this._displayName});
+    }
+
+    _onDisplayName(displayName) {
+        this._originalDisplayName = displayName;
     }
 }
 
