@@ -1792,9 +1792,3 @@ Notifications permission has been blocked
 as the user has dismissed the permission prompt several times.
 This can be reset in Page Info
 which can be accessed by clicking the lock icon next to the URL.`;
-
-document.body.onclick = _ => { // safari hack to fix audio
-    document.body.onclick = null;
-    if (!(/.*Version.*Safari.*/.test(navigator.userAgent))) return;
-    blop.play();
-}
