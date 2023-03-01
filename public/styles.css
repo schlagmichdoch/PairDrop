@@ -10,28 +10,25 @@
 
 /* Layout */
 
-html {
-    min-height: 100%;
-    height: -webkit-fill-available;
-}
-
 html,
 body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    width: 100%;
+    width: 100vw;
     overflow-x: hidden;
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
+    overflow-y: hidden;
 }
 
 body {
-    min-height: 100%;
+    min-height: 100vh;
+    /* mobile viewport bug fix */
     min-height: -webkit-fill-available;
-    flex-grow: 1;
-    align-items: center;
-    justify-content: center;
-    overflow-y: hidden;
+}
+
+html {
+    height: -webkit-fill-available;
 }
 
 .row-reverse {
@@ -73,10 +70,7 @@ body {
 }
 
 header {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
+    position: relative;
     height: 56px;
     align-items: center;
     padding: 16px;
@@ -119,9 +113,9 @@ h3 {
 }
 
 .font-subheading {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 400;
-    line-height: 24px;
+    line-height: 18px;
     word-break: normal;
 }
 
@@ -199,20 +193,151 @@ body>header a {
     margin-left: 8px;
 }
 
+#center {
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse;
+    flex-grow: 1;
+    --footer-height: 132px;
+    max-height: calc(100vh - 56px - var(--footer-height));
+    justify-content: space-around;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior-x: none;
+}
+
+@media screen and (max-width: 425px) {
+    header:has(#clear-pair-devices:not([hidden]))~#center {
+        --footer-height: 150px;
+    }
+}
+
 /* Peers List */
 
+#x-peers-filler {
+    display: flex;
+    flex-grow: 1;
+}
+
 x-peers {
-    width: 100%;
-    overflow: hidden;
+    position: relative;
+    display: flex;
     flex-flow: row wrap;
+    flex-grow: 1;
+    align-items: start !important;
+    justify-content: center;
+
     z-index: 2;
-    transition: color 300ms;
+    transition: --bg-color 0.5s ease;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    scrollbar-width: none;
+
+    --peers-per-row: 6; /* default if browser does not support :has selector */
+    --x-peers-width: min(100vw, calc(var(--peers-per-row) * (var(--peer-width) + 25px) - 16px));
+    width: var(--x-peers-width);
+    margin-right: 20px;
+    margin-left: 20px;
+}
+
+x-peers.overflowing {
+    background: /* Shadow covers */ linear-gradient(rgb(var(--bg-color)) 30%, rgba(var(--bg-color), 0)),
+    linear-gradient(rgba(var(--bg-color), 0), rgb(var(--bg-color)) 70%) 0 100%,
+        /* Shadows */ radial-gradient(farthest-side at 50% 0, rgba(var(--text-color), .2), rgba(var(--text-color), 0)),
+    radial-gradient(farthest-side at 50% 100%, rgba(var(--text-color), .2), rgba(var(--text-color), 0)) 0 100%;
+
+    background-repeat: no-repeat;
+    background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+
+    /* Opera doesn't support this in the shorthand */
+    background-attachment: local, local, scroll, scroll;
+}
+
+x-peers:has(> x-peer) {
+    --peers-per-row: 10;
+}
+
+@media screen and (min-height: 505px) and (max-height: 649px) and (max-width: 426px),
+screen and (min-height: 486px) and (max-height: 631px) and (min-width: 426px) {
+    x-peers:has(> x-peer) {
+        --peers-per-row: 3;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(7)) {
+        --peers-per-row: 4;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(10)) {
+        --peers-per-row: 5;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(13)) {
+        --peers-per-row: 6;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(16)) {
+        --peers-per-row: 7;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(19)) {
+        --peers-per-row: 8;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(22)) {
+        --peers-per-row: 9;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(25)) {
+        --peers-per-row: 10;
+    }
+}
+
+@media screen and (min-height: 649px) and (max-width: 425px),
+screen and (min-height: 631px) and (min-width: 426px) {
+    x-peers:has(> x-peer) {
+        --peers-per-row: 3;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(10)) {
+        --peers-per-row: 4;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(13)) {
+        --peers-per-row: 5;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(16)) {
+        --peers-per-row: 6;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(19)) {
+        --peers-per-row: 7;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(22)) {
+        --peers-per-row: 8;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(25)) {
+        --peers-per-row: 9;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(28)) {
+        --peers-per-row: 10;
+    }
+}
+
+::-webkit-scrollbar {
+    display: none;
 }
 
 /* Empty Peers List */
 
 x-no-peers {
-    height: 114px;
+    display: flex;
+    flex-direction: column;
     padding: 8px;
     text-align: center;
     /* prevent flickering on load */
@@ -254,23 +379,17 @@ x-no-peers[drop-bg] * {
 x-peer {
     -webkit-user-select: none;
     user-select: none;
+    padding: 8px;
+    align-content: start;
+    flex-wrap: wrap;
 }
 
 x-peer label {
     width: var(--peer-width);
-    padding: 8px;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     position: relative;
-}
-
-x-peer .name {
-    width: var(--peer-width);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    text-align: center;
 }
 
 input[type="file"] {
@@ -280,19 +399,43 @@ input[type="file"] {
 
 x-peer x-icon {
     --icon-size: 40px;
+    margin-bottom: 4px;
+    transition: transform 150ms;
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+}
+
+x-peer .icon-wrapper {
     width: var(--icon-size);
     padding: 12px;
     border-radius: 50%;
     background: var(--primary-color);
     color: white;
     display: flex;
-    margin-bottom: 8px;
-    transition: transform 150ms;
-    will-change: transform;
 }
 
-x-peer:not(.type-ip) x-icon {
+x-peer:not(.type-ip).type-secret .icon-wrapper {
     background: var(--paired-device-color);
+}
+
+x-peer x-icon > .highlight-wrapper {
+    align-self: center;
+    align-items: center;
+    margin: 7px auto 0;
+    height: 6px;
+}
+
+x-peer x-icon > .highlight-wrapper > .highlight {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: none;
+}
+
+x-peer.type-secret x-icon > .highlight-wrapper > .highlight {
+    background-color: var(--paired-device-color);
+    display: inline;
 }
 
 x-peer:not([status]):hover x-icon,
@@ -304,6 +447,18 @@ x-peer[status] x-icon {
     box-shadow: none;
     opacity: 0.8;
     transform: scale(1);
+}
+
+.device-descriptor {
+    text-align: center;
+}
+
+.name {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
 }
 
 .status,
@@ -371,10 +526,9 @@ x-peer[drop] x-icon {
 /* Footer */
 
 footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    position: relative;
+    margin-top: auto;
+    z-index: 2;
     align-items: center;
     padding: 0 0 16px 0;
     text-align: center;
@@ -385,6 +539,7 @@ footer .logo {
     --icon-size: 80px;
     margin-bottom: 8px;
     color: var(--primary-color);
+    margin-top: -10px;
 }
 
 footer .font-body2 {
@@ -430,6 +585,9 @@ x-dialog x-paper {
     top: max(50%, 350px);
     height: 650px;
     margin-top: -325px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 x-dialog:not([show]) {
@@ -509,6 +667,7 @@ x-dialog .font-subheading {
 #pairDeviceDialog hr {
     margin-top: 40px;
     margin-bottom: 40px;
+    width: 100%;
 }
 
 #pairDeviceDialog x-background {
@@ -532,7 +691,7 @@ x-dialog h2 {
 }
 
 x-dialog .row-reverse {
-    margin: 40px -24px auto;
+    margin: 40px -24px 0;
     border-top: solid 2.5px var(--border-color);
 }
 
@@ -689,16 +848,18 @@ x-dialog .row-reverse {
     opacity: 0.1;
 }
 
-#cancelPasteModeBtn {
+#cancel-paste-mode-btn {
     z-index: 2;
-    margin-top: 0;
+    margin: 0;
+    padding: 0;
     position: absolute;
     top: 0;
     right: 0;
     left: 0;
-    width: 100%;
+    width: 100vw;
     height: 56px;
-    border-bottom: solid 2.5px var(--border-color);
+    background-color: var(--primary-color);
+    color: rgb(238, 238, 238);
 }
 
 .button:focus:before,
@@ -809,7 +970,7 @@ button::-moz-focus-inner {
     width: 80px;
     height: 80px;
     position: absolute;
-    top: 0;
+    top: -8px;
     clip: rect(0px, 80px, 80px, 40px);
     --progress: rotate(0deg);
     transition: transform 200ms;
@@ -876,13 +1037,16 @@ x-toast:not([show]):not(:hover) {
 /* Instructions */
 
 x-instructions {
-    position: absolute;
-    top: 120px;
+    position: relative;
     opacity: 0.5;
     transition: opacity 300ms;
-    z-index: -1;
     text-align: center;
-    width: 80%;
+    margin-left: 10px;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: center;
 }
 
 x-instructions:not([drop-peer]):not([drop-bg]):before {
@@ -899,52 +1063,47 @@ x-instructions[drop-bg]:not([drop-peer]):before {
 
 x-instructions p {
     display: none;
-    margin: 0 auto auto;
-    max-width: 80%;
 }
 
 x-peers:empty~x-instructions {
     opacity: 0;
 }
 
+@media (hover: none) and (pointer: coarse) {
+    x-peer {
+        transform: scale(0.95);
+        padding: 4px 0;
+    }
+}
+
+#websocket-fallback {
+    margin-left: 5px;
+    margin-right: 5px;
+    padding: 5px;
+    text-align: center;
+    opacity: 0.5;
+    transition: opacity 300ms;
+}
+
+#websocket-fallback>span {
+    margin: 2px;
+}
+
+#websocket-fallback > span > span {
+    border-bottom: solid 4px var(--ws-peer-color);
+}
 
 /* Responsive Styles */
 
-@media (min-height: 800px) {
+@media screen and (min-height: 800px) {
     footer {
         margin-bottom: 16px;
     }
 }
 
-@media screen and (min-height: 800px),
-screen and (min-width: 1100px) {
+@media (hover: hover) and (pointer: fine) {
     x-instructions:not([drop-peer]):not([drop-bg]):before {
         content: attr(desktop);
-    }
-}
-
-@media (max-height: 420px) {
-    x-instructions {
-        top: 24px;
-    }
-
-    footer .logo {
-        --icon-size: 40px;
-    }
-}
-
-/*
-    iOS specific styles
-*/
-@supports (-webkit-overflow-scrolling: touch) {
-
-
-    html {
-        position: fixed;
-    }
-
-    x-instructions:not([drop-peer]):not([drop-bg]):before {
-        content: attr(mobile);
     }
 }
 
@@ -954,33 +1113,34 @@ screen and (min-width: 1100px) {
 
 /* Default colors */
 body {
-    --text-color: #333;
-    --bg-color: #fff;
+    --text-color: 51,51,51;
+    --bg-color: 250,250,250; /*rgb code*/
+    --bg-color-test: 18,18,18;
     --bg-color-secondary: #f1f3f4;
     --border-color: #e7e8e8;
 }
 
 /* Dark theme colors */
 body.dark-theme {
-    --text-color: #eee;
-    --bg-color: #121212;
+    --text-color: 238,238,238;
+    --bg-color: 18,18,18; /*rgb code*/
     --bg-color-secondary: #333;
     --border-color: #252525;
 }
 
 /* Colored Elements */
 body {
-    color: var(--text-color);
-    background-color: var(--bg-color);
+    color: rgb(var(--text-color));
+    background-color: rgb(var(--bg-color));
     transition: background-color 0.5s ease;
 }
 
 x-dialog x-paper {
-    background-color: var(--bg-color);
+    background-color: rgb(var(--bg-color));
 }
 
 .textarea {
-    color: var(--text-color) !important;
+    color: rgb(var(--text-color)) !important;
     background-color: var(--bg-color-secondary) !important;
 }
 
@@ -1018,16 +1178,16 @@ x-dialog x-paper {
 
     /* defaults to dark theme */
     body {
-        --text-color: #eee;
-        --bg-color: #121212;
+        --text-color: 238,238,238;
+        --bg-color: 18,18,18; /*rgb code*/
         --bg-color-secondary: #333;
         --border-color: #252525;
     }
 
     /* Override dark mode with light mode styles if the user decides to swap */
     body.light-theme {
-        --text-color: #333;
-        --bg-color: #fafafa;
+        --text-color: 51,51,51;
+        --bg-color: 250,250,250; /*rgb code*/
         --bg-color-secondary: #f1f3f4;
         --border-color: #e7e8e8;
    }
@@ -1042,6 +1202,15 @@ x-dialog x-paper {
     html,
     body {
         overflow: hidden;
+    }
+}
+
+/*
+    iOS specific styles
+*/
+@supports (-webkit-overflow-scrolling: touch) {
+    html {
+        min-height: -webkit-fill-available;
     }
 }
 

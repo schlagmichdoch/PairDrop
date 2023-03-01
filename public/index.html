@@ -69,17 +69,21 @@
                 <use xlink:href="#clear-pair-devices-icon" />
             </svg>
         </a>
+        <a id="cancel-paste-mode-btn" class="button" close hidden>Done</a>
     </header>
-    <a id="cancelPasteModeBtn" class="button" close hidden>Done</a>
-    <!-- Peers -->
-    <x-peers class="center"></x-peers>
-    <x-no-peers>
-        <h2>Open PairDrop on other devices to send files</h2>
-        <div>Pair devices to be discoverable on other networks</div>
-    </x-no-peers>
-    <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
-        <p id="pasteFilename"></p>
-    </x-instructions>
+    <!-- Center -->
+    <div id="center">
+        <!-- Peers -->
+        <div class="x-peers-filler"></div>
+        <x-peers class="center"></x-peers>
+        <x-no-peers>
+            <h2>Open PairDrop on other devices to send files</h2>
+            <div>Pair devices to be discoverable on other networks</div>
+        </x-no-peers>
+        <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
+            <p id="pasteFilename"></p>
+        </x-instructions>
+    </div>
     <!-- Footer -->
     <footer class="column">
         <svg class="icon logo">
@@ -183,8 +187,12 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2>PairDrop - Send a Message</h2>
-                    <div id="textInput" class="textarea" role="textbox" placeholder="Send a message" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
+                    <h2 class="text-center">PairDrop</h2>
+                    <div class="text-center">
+                        <span>Send a Message to</span>
+                        <span id="textSendPeerDisplayName"></span>
+                    </div>
+                    <div id="textInput" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="row-reverse">
                         <button class="button" type="submit" title="STR + ENTER" disabled close>Send</button>
                         <div class="separator"></div>

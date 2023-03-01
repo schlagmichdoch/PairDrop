@@ -69,20 +69,21 @@
                 <use xlink:href="#clear-pair-devices-icon" />
             </svg>
         </a>
+        <a id="cancel-paste-mode-btn" class="button" close hidden>Done</a>
     </header>
-    <a id="cancelPasteModeBtn" class="button" close hidden>Done</a>
-    <!-- Peers -->
-    <x-peers class="center"></x-peers>
-    <x-no-peers>
-        <h2>Open PairDrop on other devices to send files</h2>
-        <div>Pair devices to be discoverable on other networks</div>
-        <br>
-        <div>A <span class="websocket-fallback">websocket fallback</span> is implemented on this instance. Use only if you trust the server!</div>
-    </x-no-peers>
-    <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
-        <div>A <span class="websocket-fallback">websocket fallback</span> is implemented on this instance. Use only if you trust the server!</div>
-        <p id="pasteFilename"></p>
-    </x-instructions>
+    <!-- Center -->
+    <div id="center">
+        <!-- Peers -->
+        <div class="x-peers-filler"></div>
+        <x-peers class="center"></x-peers>
+        <x-no-peers>
+            <h2>Open PairDrop on other devices to send files</h2>
+            <div>Pair devices to be discoverable on other networks</div>
+        </x-no-peers>
+        <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
+            <p id="pasteFilename"></p>
+        </x-instructions>
+    </div>
     <!-- Footer -->
     <footer class="column">
         <svg class="icon logo">
@@ -92,6 +93,9 @@
         <div class="font-body2">
             You can be discovered by everyone <span id="on-this-network">on&nbsp;this&nbsp;network</span>
             <span id="and-by-paired-devices" hidden> and&nbsp;by&nbsp;<span id="paired-devices">paired&nbsp;devices</span></span>
+        </div>
+        <div id="websocket-fallback">
+            <span>Traffic is <span>routed through the server</span> if WebRTC is not available.</span>
         </div>
     </footer>
     <!-- Pair Device Dialog -->
@@ -186,8 +190,12 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2>PairDrop - Send a Message</h2>
-                    <div id="textInput" class="textarea" role="textbox" placeholder="Send a message" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
+                    <h2 class="text-center">PairDrop</h2>
+                    <div class="text-center">
+                        <span>Send a Message to</span>
+                        <span id="textSendPeerDisplayName"></span>
+                    </div>
+                    <div id="textInput" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="row-reverse">
                         <button class="button" type="submit" title="STR + ENTER" disabled close>Send</button>
                         <div class="separator"></div>

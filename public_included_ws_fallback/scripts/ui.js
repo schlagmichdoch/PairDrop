@@ -28,7 +28,7 @@ class PeersUI {
         Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
-        this.$cancelPasteModeBtn = $('cancelPasteModeBtn');
+        this.$cancelPasteModeBtn = $('cancel-paste-mode-btn');
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
         Events.on('dragover', e => this._onDragOver(e));
@@ -38,8 +38,12 @@ class PeersUI {
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
 
+        this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
+
+        Events.on('peer-added', _ => this.evaluateOverflowing());
+        Events.on('bg-resize', _ => this.evaluateOverflowing());
     }
 
     _onKeyDown(e) {
@@ -53,11 +57,11 @@ class PeersUI {
     }
 
     _joinPeer(peer, roomType, roomSecret) {
-        peer.roomType = roomType;
+        peer.roomTypes = [roomType];
         peer.roomSecret = roomSecret;
         if (this.peers[peer.id]) {
-            this.peers[peer.id].roomType = peer.roomType;
-            this._redrawPeer(peer);
+            if (!this.peers[peer.id].roomTypes.includes(roomType)) this.peers[peer.id].roomTypes.push(roomType);
+            this._redrawPeer(this.peers[peer.id]);
             return; // peer already exists
         }
         this.peers[peer.id] = peer;
@@ -72,7 +76,15 @@ class PeersUI {
         const peerNode = $(peer.id);
         if (!peerNode) return;
         peerNode.classList.remove('type-ip', 'type-secret');
-        peerNode.classList.add(`type-${peer.roomType}`)
+        peer.roomTypes.forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+    }
+
+    evaluateOverflowing() {
+        if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
+            this.$xPeers.classList.add('overflowing');
+        } else {
+            this.$xPeers.classList.remove('overflowing');
+        }
     }
 
     _onPeers(msg) {
@@ -83,6 +95,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+        this.evaluateOverflowing();
         if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
     }
 
@@ -213,6 +226,18 @@ class PeersUI {
 
 class PeerUI {
 
+    constructor(peer, connectionHash) {
+        this._peer = peer;
+        this._connectionHash = connectionHash;
+        this._initDom();
+        this._bindListeners();
+
+        $$('x-peers').appendChild(this.$el)
+        Events.fire('peer-added');
+        this.$xInstructions = $$('x-instructions');
+        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
+    }
+
     html() {
         let title;
         let input = '';
@@ -225,17 +250,24 @@ class PeerUI {
         this.$el.innerHTML = `
             <label class="column center" title="${title}">
                 ${input}
-                <x-icon shadow="1">
-                    <svg class="icon"><use xlink:href="#"/></svg>
+                <x-icon>
+                    <div class="icon-wrapper" shadow="1">
+                        <svg class="icon"><use xlink:href="#"/></svg>
+                    </div>
+                    <div class="highlight-wrapper center">
+                        <div class="highlight" shadow="1"></div>
+                    </div>
                 </x-icon>
                 <div class="progress">
                   <div class="circle"></div>
                   <div class="circle right"></div>
                 </div>
-                <div class="name font-subheading"></div>
-                <div class="device-name font-body2"></div>
-                <div class="status font-body2"></div>
-                <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
+                <div class="device-descriptor">
+                    <div class="name font-subheading"></div>
+                    <div class="device-name font-body2"></div>
+                    <div class="status font-body2"></div>
+                    <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
+                </div>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
@@ -245,23 +277,12 @@ class PeerUI {
             this._connectionHash.substring(0, 4) + " " + this._connectionHash.substring(4, 8) + " " + this._connectionHash.substring(8, 12) + " " + this._connectionHash.substring(12, 16);
     }
 
-    constructor(peer, connectionHash) {
-        this._peer = peer;
-        this._roomType = peer.roomType;
-        this._roomSecret = peer.roomSecret;
-        this._connectionHash = connectionHash;
-        this._initDom();
-        this._bindListeners();
-        $$('x-peers').appendChild(this.$el);
-        this.$xInstructions = $$('x-instructions');
-        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
-    }
-
     _initDom() {
         this.$el = document.createElement('x-peer');
         this.$el.id = this._peer.id;
         this.$el.ui = this;
-        this.$el.classList.add(`type-${this._roomType}`);
+        this._peer.roomTypes.forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+        this.$el.classList.add('center');
         if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer')
         this.html();
 
@@ -273,7 +294,7 @@ class PeerUI {
         this._callbackDragLeave = e => this._onDragEnd(e)
         this._callbackDragOver = e => this._onDragOver(e)
         this._callbackContextMenu = e => this._onRightClick(e)
-        this._callbackTouchStart = _ => this._onTouchStart()
+        this._callbackTouchStart = e => this._onTouchStart(e)
         this._callbackTouchEnd = e => this._onTouchEnd(e)
         this._callbackPointerDown = e => this._onPointerDown(e)
         // PasteMode
@@ -394,21 +415,28 @@ class PeerUI {
 
     _onRightClick(e) {
         e.preventDefault();
-        Events.fire('text-recipient', this._peer.id);
+        Events.fire('text-recipient', {
+            peerId: this._peer.id,
+            deviceName: e.target.closest('x-peer').querySelector('.name').innerText
+        });
     }
 
-    _onTouchStart() {
+    _onTouchStart(e) {
         this._touchStart = Date.now();
-        this._touchTimer = setTimeout(_ => this._onTouchEnd(), 610);
+        this._touchTimer = setTimeout(_ => this._onTouchEnd(e), 610);
     }
 
     _onTouchEnd(e) {
         if (Date.now() - this._touchStart < 500) {
             clearTimeout(this._touchTimer);
-        } else { // this was a long tap
-            if (e) e.preventDefault();
-            Events.fire('text-recipient', this._peer.id);
+        } else if (this._touchTimer) { // this was a long tap
+            e.preventDefault();
+            Events.fire('text-recipient', {
+                peerId: this._peer.id,
+                deviceName: e.target.closest('x-peer').querySelector('.name').innerText
+            });
         }
+        this._touchTimer = null;
     }
 }
 
@@ -844,7 +872,7 @@ class PairDeviceDialog extends Dialog {
             height: 150,
             padding: 0,
             background: "transparent",
-            color: getComputedStyle(document.body).getPropertyValue('--text-color'),
+            color: `rgb(var(--text-color))`,
             ecl: "L",
             join: true
         });
@@ -936,6 +964,7 @@ class PairDeviceDialog extends Dialog {
                 this.$clearSecretsBtn.setAttribute('hidden', '');
                 this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
             }
+            Events.fire('bg-resize');
         }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 }
@@ -961,8 +990,9 @@ class ClearDevicesDialog extends Dialog {
 class SendTextDialog extends Dialog {
     constructor() {
         super('sendTextDialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail));
+        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         this.$text = this.$el.querySelector('#textInput');
+        this.$peerDisplayName = this.$el.querySelector('#textSendPeerDisplayName');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', _ => this._send());
@@ -993,8 +1023,9 @@ class SendTextDialog extends Dialog {
         }
     }
 
-    _onRecipient(peerId) {
+    _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
+        this.$peerDisplayName.innerText = deviceName;
         this.show();
 
         const range = document.createRange();
@@ -1247,6 +1278,7 @@ class Notifications {
             this.$button.removeAttribute('hidden');
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
+        // Todo: fix Notifications
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
     }
@@ -1715,19 +1747,14 @@ Events.on('load', () => {
         h = window.innerHeight;
         c.width = w;
         c.height = h;
-        offset = h > 800
-            ? 116
-            : h > 380
-                ? 100
-                : 65;
-
-        if (w < 420) offset += 20;
+        offset = $$('footer').offsetHeight - 32;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
         drawCircles();
     }
-    window.onresize = init;
+    Events.on('bg-resize', _ => init());
+    window.onresize = _ => Events.fire('bg-resize');
 
     function drawCircle(radius) {
         ctx.beginPath();
