@@ -1,32 +1,35 @@
 # Deployment Notes
 The easiest way to get PairDrop up and running is by using Docker.
 
-## Deployment with Docker from Docker Hub
+## Deployment with Docker
+
+### Docker Image from Docker Hub
 
 ```bash
 docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 lscr.io/linuxserver/pairdrop
 ```
+
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
 
-### Options / Flags
+#### Options / Flags
 Set options by using the following flags in the `docker run` command:
 
-#### Port
+##### Port
 ```bash
 -p 127.0.0.1:8080:3000
 ```
 > Specify the port used by the docker image 
 > - 3000 -> `-p 127.0.0.1:3000:3000`
 > - 8080 -> `-p 127.0.0.1:8080:3000`
-#### Rate limiting requests
+##### Rate limiting requests
 ```
 -e RATE_LIMIT=true
 ```
-> Limits clients to 100 requests per 5 min
+> Limits clients to 1000 requests per 5 min
 
-#### Websocket Fallback (for VPN)
+##### Websocket Fallback (for VPN)
 ```bash
 -e WS_FALLBACK=true
 ```
@@ -69,8 +72,18 @@ Set options by using the following flags in the `docker run` command:
 
 <br>
 
-## Deployment with Docker with self-built image
-### Build the image
+### Docker Image from GHCR
+```bash
+docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 ghcr.io/schlagmichdoch/pairdrop npm run start:prod 
+```
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
+>
+> To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
+
+### Docker Image self-built
+#### Build the image
 ```bash
 docker build --pull . -f Dockerfile -t pairdrop
 ```
@@ -78,15 +91,45 @@ docker build --pull . -f Dockerfile -t pairdrop
 >
 > `--pull` ensures always the latest node image is used.
 
-### Run the image
+#### Run the image
 ```bash
 docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -it pairdrop npm run start:prod
 ```
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> To prevent bypassing the proxy and reach the docker container directly, `127.0.0.1` is specified in the run command.
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
 >
-> To specify options replace `npm run start:prod` according to [the documentation above.](#options--flags)
+> To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
+
+<br>
+
+## Deployment with Docker Compose
+Here's an example docker-compose file:
+
+```yaml
+version: "2"
+services:
+    pairdrop:
+        image: lscr.io/linuxserver/pairdrop:latest
+        container_name: pairdrop
+        restart: unless-stopped
+        environment:
+            - PUID=1000 # UID to run the application as
+            - PGID=1000 # GID to run the application as
+            - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+            - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
+            - TZ=Etc/UTC # Time Zone
+        ports:
+            - 127.0.0.1:3000:3000 # Web UI
+```
+
+Run the compose file with `docker compose up -d`.
+
+> You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
+>
+> To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
+
+<br>
 
 ## Deployment with node
 
@@ -169,7 +212,7 @@ npm start -- --localhost-only
 > 
 > You must use a server proxy to set the X-Forwarded-For to prevent all clients from discovering each other (See [#HTTP-Server](#http-server)).
 >
-> Use this when deploying PairDrop with node to prevent bypassing the proxy and reach the docker container directly.
+> Use this when deploying PairDrop with node to prevent bypassing the proxy by reaching the docker container directly.
 
 #### Automatic restart on error
 ```bash
@@ -183,7 +226,7 @@ npm start -- --auto-restart
 ```bash
 npm start -- --rate-limit 
 ```
-> Limits clients to 100 requests per 5 min
+> Limits clients to 1000 requests per 5 min
 
 <br>
 
@@ -218,7 +261,7 @@ When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Ot
 
 ### Using nginx
 #### Allow http and https requests
-```nginx configuration
+```
 server {
     listen       80;
 
@@ -251,7 +294,7 @@ server {
 ```
 
 #### Automatic http to https redirect:
-```nginx configuration
+```
 server {
     listen       80;
 

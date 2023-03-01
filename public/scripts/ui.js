@@ -10,7 +10,7 @@ window.pasteMode.activated = false;
 // set display name
 Events.on('display-name', e => {
     const me = e.detail.message;
-    const $displayName = $('displayName')
+    const $displayName = $('display-name')
     $displayName.textContent = 'You are known as ' + me.displayName;
     $displayName.title = me.deviceName;
 });
@@ -28,7 +28,7 @@ class PeersUI {
         Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
-        this.$cancelPasteModeBtn = $('cancelPasteModeBtn');
+        this.$cancelPasteModeBtn = $('cancel-paste-mode-btn');
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
         Events.on('dragover', e => this._onDragOver(e));
@@ -38,8 +38,12 @@ class PeersUI {
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
 
+        this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
+
+        Events.on('peer-added', _ => this.evaluateOverflowing());
+        Events.on('bg-resize', _ => this.evaluateOverflowing());
     }
 
     _onKeyDown(e) {
@@ -53,11 +57,11 @@ class PeersUI {
     }
 
     _joinPeer(peer, roomType, roomSecret) {
-        peer.roomType = roomType;
+        peer.roomTypes = [roomType];
         peer.roomSecret = roomSecret;
         if (this.peers[peer.id]) {
-            this.peers[peer.id].roomType = peer.roomType;
-            this._redrawPeer(peer);
+            if (!this.peers[peer.id].roomTypes.includes(roomType)) this.peers[peer.id].roomTypes.push(roomType);
+            this._redrawPeer(this.peers[peer.id]);
             return; // peer already exists
         }
         this.peers[peer.id] = peer;
@@ -72,7 +76,15 @@ class PeersUI {
         const peerNode = $(peer.id);
         if (!peerNode) return;
         peerNode.classList.remove('type-ip', 'type-secret');
-        peerNode.classList.add(`type-${peer.roomType}`)
+        peer.roomTypes.forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+    }
+
+    evaluateOverflowing() {
+        if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
+            this.$xPeers.classList.add('overflowing');
+        } else {
+            this.$xPeers.classList.remove('overflowing');
+        }
     }
 
     _onPeers(msg) {
@@ -83,6 +95,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
+        this.evaluateOverflowing();
         if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
     }
 
@@ -213,6 +226,18 @@ class PeersUI {
 
 class PeerUI {
 
+    constructor(peer, connectionHash) {
+        this._peer = peer;
+        this._connectionHash = connectionHash;
+        this._initDom();
+        this._bindListeners();
+
+        $$('x-peers').appendChild(this.$el)
+        Events.fire('peer-added');
+        this.$xInstructions = $$('x-instructions');
+        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
+    }
+
     html() {
         let title;
         let input = '';
@@ -225,17 +250,24 @@ class PeerUI {
         this.$el.innerHTML = `
             <label class="column center" title="${title}">
                 ${input}
-                <x-icon shadow="1">
-                    <svg class="icon"><use xlink:href="#"/></svg>
+                <x-icon>
+                    <div class="icon-wrapper" shadow="1">
+                        <svg class="icon"><use xlink:href="#"/></svg>
+                    </div>
+                    <div class="highlight-wrapper center">
+                        <div class="highlight" shadow="1"></div>
+                    </div>
                 </x-icon>
                 <div class="progress">
                   <div class="circle"></div>
                   <div class="circle right"></div>
                 </div>
-                <div class="name font-subheading"></div>
-                <div class="device-name font-body2"></div>
-                <div class="status font-body2"></div>
-                <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
+                <div class="device-descriptor">
+                    <div class="name font-subheading"></div>
+                    <div class="device-name font-body2"></div>
+                    <div class="status font-body2"></div>
+                    <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
+                </div>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
@@ -245,23 +277,12 @@ class PeerUI {
             this._connectionHash.substring(0, 4) + " " + this._connectionHash.substring(4, 8) + " " + this._connectionHash.substring(8, 12) + " " + this._connectionHash.substring(12, 16);
     }
 
-    constructor(peer, connectionHash) {
-        this._peer = peer;
-        this._roomType = peer.roomType;
-        this._roomSecret = peer.roomSecret;
-        this._connectionHash = connectionHash;
-        this._initDom();
-        this._bindListeners();
-        $$('x-peers').appendChild(this.$el);
-        this.$xInstructions = $$('x-instructions');
-        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
-    }
-
     _initDom() {
         this.$el = document.createElement('x-peer');
         this.$el.id = this._peer.id;
         this.$el.ui = this;
-        this.$el.classList.add(`type-${this._roomType}`);
+        this._peer.roomTypes.forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+        this.$el.classList.add('center');
         this.html();
 
         this._callbackInput = e => this._onFilesSelected(e)
@@ -272,7 +293,7 @@ class PeerUI {
         this._callbackDragLeave = e => this._onDragEnd(e)
         this._callbackDragOver = e => this._onDragOver(e)
         this._callbackContextMenu = e => this._onRightClick(e)
-        this._callbackTouchStart = _ => this._onTouchStart()
+        this._callbackTouchStart = e => this._onTouchStart(e)
         this._callbackTouchEnd = e => this._onTouchEnd(e)
         this._callbackPointerDown = e => this._onPointerDown(e)
         // PasteMode
@@ -393,21 +414,28 @@ class PeerUI {
 
     _onRightClick(e) {
         e.preventDefault();
-        Events.fire('text-recipient', this._peer.id);
+        Events.fire('text-recipient', {
+            peerId: this._peer.id,
+            deviceName: e.target.closest('x-peer').querySelector('.name').innerText
+        });
     }
 
-    _onTouchStart() {
+    _onTouchStart(e) {
         this._touchStart = Date.now();
-        this._touchTimer = setTimeout(_ => this._onTouchEnd(), 610);
+        this._touchTimer = setTimeout(_ => this._onTouchEnd(e), 610);
     }
 
     _onTouchEnd(e) {
         if (Date.now() - this._touchStart < 500) {
             clearTimeout(this._touchTimer);
-        } else { // this was a long tap
-            if (e) e.preventDefault();
-            Events.fire('text-recipient', this._peer.id);
+        } else if (this._touchTimer) { // this was a long tap
+            e.preventDefault();
+            Events.fire('text-recipient', {
+                peerId: this._peer.id,
+                deviceName: e.target.closest('x-peer').querySelector('.name').innerText
+            });
         }
+        this._touchTimer = null;
     }
 }
 
@@ -469,10 +497,10 @@ class ReceiveDialog extends Dialog {
 class ReceiveFileDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveFileDialog');
+        super('receive-file-dialog');
 
-        this.$shareOrDownloadBtn = this.$el.querySelector('#shareOrDownload');
-        this.$receiveTitleNode = this.$el.querySelector('#receiveTitle')
+        this.$shareOrDownloadBtn = this.$el.querySelector('#share-or-download');
+        this.$receiveTitleNode = this.$el.querySelector('#receive-title')
 
         Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files, e.detail.request));
         this._filesQueue = [];
@@ -631,15 +659,15 @@ class ReceiveFileDialog extends ReceiveDialog {
 class ReceiveRequestDialog extends ReceiveDialog {
 
     constructor() {
-        super('receiveRequestDialog');
+        super('receive-request-dialog');
 
-        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requestingPeerDisplayName');
-        this.$fileStemNode = this.$el.querySelector('#fileStem');
-        this.$fileExtensionNode = this.$el.querySelector('#fileExtension');
-        this.$fileOtherNode = this.$el.querySelector('#fileOther');
+        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requesting-peer-display-name');
+        this.$fileStemNode = this.$el.querySelector('#file-stem');
+        this.$fileExtensionNode = this.$el.querySelector('#file-extension');
+        this.$fileOtherNode = this.$el.querySelector('#file-other');
 
-        this.$acceptRequestBtn = this.$el.querySelector('#acceptRequest');
-        this.$declineRequestBtn = this.$el.querySelector('#declineRequest');
+        this.$acceptRequestBtn = this.$el.querySelector('#accept-request');
+        this.$declineRequestBtn = this.$el.querySelector('#decline-request');
         this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
 
@@ -720,12 +748,12 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
 class PairDeviceDialog extends Dialog {
     constructor() {
-        super('pairDeviceDialog');
+        super('pair-device-dialog');
         $('pair-device').addEventListener('click', _ => this._pairDeviceInitiate());
-        this.$inputRoomKeyChars = this.$el.querySelectorAll('#keyInputContainer>input');
+        this.$inputRoomKeyChars = this.$el.querySelectorAll('#key-input-container>input');
         this.$submitBtn = this.$el.querySelector('button[type="submit"]');
-        this.$roomKey = this.$el.querySelector('#roomKey');
-        this.$qrCode = this.$el.querySelector('#roomKeyQrCode');
+        this.$roomKey = this.$el.querySelector('#room-key');
+        this.$qrCode = this.$el.querySelector('#room-key-qr-code');
         this.$clearSecretsBtn = $('clear-pair-devices');
         this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
         let createJoinForm = this.$el.querySelector('form');
@@ -799,7 +827,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     evaluateRoomKeyChars() {
-        if (this.$el.querySelectorAll('#keyInputContainer>input:placeholder-shown').length > 0) {
+        if (this.$el.querySelectorAll('#key-input-container>input:placeholder-shown').length > 0) {
             this.$submitBtn.setAttribute("disabled", "");
         } else {
             this.inputRoomKey = "";
@@ -843,7 +871,7 @@ class PairDeviceDialog extends Dialog {
             height: 150,
             padding: 0,
             background: "transparent",
-            color: getComputedStyle(document.body).getPropertyValue('--text-color'),
+            color: `rgb(var(--text-color))`,
             ecl: "L",
             join: true
         });
@@ -935,13 +963,14 @@ class PairDeviceDialog extends Dialog {
                 this.$clearSecretsBtn.setAttribute('hidden', '');
                 this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
             }
+            Events.fire('bg-resize');
         }).catch(_ => PersistentStorage.logBrowserNotCapable());
     }
 }
 
 class ClearDevicesDialog extends Dialog {
     constructor() {
-        super('clearDevicesDialog');
+        super('clear-devices-dialog');
         $('clear-pair-devices').addEventListener('click', _ => this._onClearPairDevices());
         let clearDevicesForm = this.$el.querySelector('form');
         clearDevicesForm.addEventListener('submit', _ => this._onSubmit());
@@ -959,9 +988,10 @@ class ClearDevicesDialog extends Dialog {
 
 class SendTextDialog extends Dialog {
     constructor() {
-        super('sendTextDialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail));
-        this.$text = this.$el.querySelector('#textInput');
+        super('send-text-dialog');
+        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
+        this.$text = this.$el.querySelector('#text-input');
+        this.$peerDisplayName = this.$el.querySelector('#text-send-peer-display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', _ => this._send());
@@ -992,8 +1022,9 @@ class SendTextDialog extends Dialog {
         }
     }
 
-    _onRecipient(peerId) {
+    _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
+        this.$peerDisplayName.innerText = deviceName;
         this.show();
 
         const range = document.createRange();
@@ -1017,7 +1048,7 @@ class SendTextDialog extends Dialog {
 
 class ReceiveTextDialog extends Dialog {
     constructor() {
-        super('receiveTextDialog');
+        super('receive-text-dialog');
         Events.on('text-received', e => this._onText(e.detail.text, e.detail.peerId));
         this.$text = this.$el.querySelector('#text');
         this.$copy = this.$el.querySelector('#copy');
@@ -1028,7 +1059,7 @@ class ReceiveTextDialog extends Dialog {
 
         Events.on("keydown", e => this._onKeyDown(e));
 
-        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receiveTextPeerDisplayName');
+        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receive-text-peer-display-name');
         this._receiveTextQueue = [];
     }
 
@@ -1089,13 +1120,13 @@ class ReceiveTextDialog extends Dialog {
 class Base64ZipDialog extends Dialog {
 
     constructor() {
-        super('base64PasteDialog');
+        super('base64-paste-dialog');
         const urlParams = new URL(window.location).searchParams;
         const base64Text = urlParams.get('base64text');
         const base64Zip = urlParams.get('base64zip');
         const base64Hash = window.location.hash.substring(1);
 
-        this.$pasteBtn = this.$el.querySelector('#base64PasteBtn');
+        this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
 
         if (base64Text) {
             this.show();
@@ -1246,6 +1277,7 @@ class Notifications {
             this.$button.removeAttribute('hidden');
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
+        // Todo: fix Notifications
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
     }
@@ -1321,7 +1353,7 @@ class Notifications {
     }
 
     _download(notification) {
-        $('shareOrDownload').click();
+        $('share-or-download').click();
         notification.close();
     }
 
@@ -1714,19 +1746,15 @@ Events.on('load', () => {
         h = window.innerHeight;
         c.width = w;
         c.height = h;
-        offset = h > 800
-            ? 116
-            : h > 380
-                ? 100
-                : 65;
-
-        if (w < 420) offset += 20;
+        offset = $$('footer').offsetHeight - 32;
+        if (h > 800) offset += 16;
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.max(w, h, 1000) / 13;
         drawCircles();
     }
-    window.onresize = init;
+    Events.on('bg-resize', _ => init());
+    window.onresize = _ => Events.fire('bg-resize');
 
     function drawCircle(radius) {
         ctx.beginPath();
@@ -1791,9 +1819,3 @@ Notifications permission has been blocked
 as the user has dismissed the permission prompt several times.
 This can be reset in Page Info
 which can be accessed by clicking the lock icon next to the URL.`;
-
-document.body.onclick = _ => { // safari hack to fix audio
-    document.body.onclick = null;
-    if (!(/.*Version.*Safari.*/.test(navigator.userAgent))) return;
-    blop.play();
-}
