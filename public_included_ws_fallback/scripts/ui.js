@@ -54,8 +54,8 @@ class PeersUI {
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
         Events.on('peer-display-name-changed', e => this._changePeerDisplayName(e.detail.peerId, e.detail.displayName));
 
-        // Load saved display name
-        PersistentStorage.get('editedDisplayName').then(displayName => {
+        // Load saved display name on page load
+        this._getSavedDisplayName().then(displayName => {
             console.log("Retrieved edited display name:", displayName)
             if (displayName) Events.fire('self-display-name-changed', displayName);
         });
@@ -73,26 +73,46 @@ class PeersUI {
     }
 
     _onKeyUpDisplayName(e) {
-        if (/(\n|\r|\r\n)/.test(e.target.innerText)) e.target.innerText = e.target.innerText.replace(/(\n|\r|\r\n)/, '');
+        // fix for Firefox inserting a linebreak into div on edit which prevents the placeholder from showing automatically when it is empty
+        if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) e.target.innerText = '';
     }
 
     async _saveDisplayName(newDisplayName) {
-        const savedDisplayName = await PersistentStorage.get('editedDisplayName') ?? "";
+        newDisplayName = newDisplayName.replace(/(\n|\r|\r\n)/, '')
+        console.debug(newDisplayName)
+        const savedDisplayName = await this._getSavedDisplayName();
         if (newDisplayName === savedDisplayName) return;
 
         if (newDisplayName) {
             PersistentStorage.set('editedDisplayName', newDisplayName).then(_ => {
-                Events.fire('notify-user', `Display name is set permanently.`);
+                Events.fire('notify-user', 'Display name is changed permanently.');
+            }).catch(_ => {
+                console.log("This browser does not support IndexedDB. Use localStorage instead.");
+                localStorage.setItem('editedDisplayName', newDisplayName);
+                Events.fire('notify-user', 'Display name is changed only for this session.');
+            }).finally(_ => {
                 Events.fire('self-display-name-changed', newDisplayName);
                 Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
             });
         } else {
-            PersistentStorage.delete('editedDisplayName').then(_ => {
+            PersistentStorage.delete('editedDisplayName').catch(_ => {
+                console.log("This browser does not support IndexedDB. Use localStorage instead.")
+                localStorage.removeItem('editedDisplayName');
+                Events.fire('notify-user', 'Random Display name is used again.');
+            }).finally(_ => {
                 Events.fire('notify-user', 'Display name is randomly generated again.');
                 Events.fire('self-display-name-changed', '');
                 Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
             });
         }
+    }
+
+    _getSavedDisplayName() {
+        return new Promise((resolve) => {
+            PersistentStorage.get('editedDisplayName')
+                .then(displayName => resolve(displayName ?? ""))
+                .catch(_ => resolve(localStorage.getItem('editedDisplayName') ?? ""))
+        });
     }
 
     _changePeerDisplayName(peerId, displayName) {
@@ -576,7 +596,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     _dequeueFile() {
-        // Todo: change change count in document.title and move '- PairDrop' to back
+        // Todo: change count in document.title and move '- PairDrop' to back
         if (!this._filesQueue.length) { // nothing to do
             this._busy = false;
             return;
