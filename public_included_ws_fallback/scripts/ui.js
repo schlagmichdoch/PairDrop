@@ -760,7 +760,7 @@ class PairDeviceDialog extends Dialog {
         this.$clearSecretsBtn = $('clear-pair-devices');
         this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
         let createJoinForm = this.$el.querySelector('form');
-        createJoinForm.addEventListener('submit', _ => this._onSubmit());
+        createJoinForm.addEventListener('submit', e => this._onSubmit(e));
 
         this.$el.querySelector('[close]').addEventListener('click', _ => this._pairDeviceCancel())
         this.$inputRoomKeyChars.forEach(el => el.addEventListener('input', e => this._onCharsInput(e)));
@@ -839,7 +839,7 @@ class PairDeviceDialog extends Dialog {
             })
             this.$submitBtn.removeAttribute("disabled");
             if (document.activeElement === this.$inputRoomKeyChars[5]) {
-                this._onSubmit();
+                this._pairDeviceJoin(this.inputRoomKey);
             }
         }
     }
@@ -889,7 +889,8 @@ class PairDeviceDialog extends Dialog {
         return url.href;
     }
 
-    _onSubmit() {
+    _onSubmit(e) {
+        e.preventDefault();
         this._pairDeviceJoin(this.inputRoomKey);
     }
 
@@ -976,14 +977,19 @@ class ClearDevicesDialog extends Dialog {
         super('clear-devices-dialog');
         $('clear-pair-devices').addEventListener('click', _ => this._onClearPairDevices());
         let clearDevicesForm = this.$el.querySelector('form');
-        clearDevicesForm.addEventListener('submit', _ => this._onSubmit());
+        clearDevicesForm.addEventListener('submit', e => this._onSubmit(e));
     }
 
     _onClearPairDevices() {
         this.show();
     }
 
-    _onSubmit() {
+    _onSubmit(e) {
+        e.preventDefault();
+        this._clearRoomSecrets();
+    }
+
+    _clearRoomSecrets() {
         Events.fire('clear-room-secrets');
         this.hide();
     }
@@ -997,7 +1003,7 @@ class SendTextDialog extends Dialog {
         this.$peerDisplayName = this.$el.querySelector('#text-send-peer-display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
-        this.$form.addEventListener('submit', _ => this._send());
+        this.$form.addEventListener('submit', e => this._onSubmit(e));
         this.$text.addEventListener('input', e => this._onChange(e));
         Events.on("keydown", e => this._onKeyDown(e));
     }
@@ -1037,6 +1043,11 @@ class SendTextDialog extends Dialog {
         range.selectNodeContents(this.$text);
         sel.removeAllRanges();
         sel.addRange(range);
+    }
+
+    _onSubmit(e) {
+        e.preventDefault();
+        this._send();
     }
 
     _send() {
