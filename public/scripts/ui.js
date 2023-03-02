@@ -639,7 +639,9 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
 
         this.createPreviewElement(files[0]).finally(_ => {
-            document.title = `PairDrop - ${files.length} Files received`;
+            document.title = files.length === 1
+                ? 'File received - PairDrop'
+                : `(${files.length}) Files received - PairDrop`;
             document.changeFavicon("images/favicon-96x96-notification.png");
             this.show();
             Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
@@ -722,7 +724,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
             this.$previewBox.appendChild(element)
         }
 
-        document.title = 'PairDrop - File Transfer Requested';
+        document.title = 'File Transfer Requested - PairDrop';
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
@@ -1077,6 +1079,7 @@ class ReceiveTextDialog extends Dialog {
     _onText(text, peerId) {
         window.blop.play();
         this._receiveTextQueue.push({text: text, peerId: peerId});
+        this._setDocumentTitleMessages();
         if (this.$el.attributes["show"]) return;
         this._dequeueRequests();
     }
@@ -1100,9 +1103,16 @@ class ReceiveTextDialog extends Dialog {
         } else {
             this.$text.textContent = text;
         }
-        document.title = 'PairDrop - Message Received';
+        this._setDocumentTitleMessages();
+
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
+    }
+
+    _setDocumentTitleMessages() {
+        document.title = !this._receiveTextQueue.length
+            ? 'Message Received - PairDrop'
+            : `(${this._receiveTextQueue.length + 1}) Messages Received - PairDrop`;
     }
 
     async _onCopy() {
