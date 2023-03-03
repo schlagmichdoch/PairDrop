@@ -28,7 +28,7 @@ class PeersUI {
         Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
-        this.$cancelPasteModeBtn = $('cancel-paste-mode-btn');
+        this.$cancelPasteModeBtn = $('cancel-paste-mode');
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
         Events.on('dragover', e => this._onDragOver(e));
@@ -474,10 +474,14 @@ class Dialog {
 class ReceiveDialog extends Dialog {
     constructor(id) {
         super(id);
-
-        this.$fileDescriptionNode = this.$el.querySelector('.file-description');
-        this.$fileSizeNode = this.$el.querySelector('.file-size');
-        this.$previewBox = this.$el.querySelector('.file-preview')
+        this.$fileDescription = this.$el.querySelector('.file-description');
+        this.$displayName = this.$el.querySelector('.display-name');
+        this.$fileStem = this.$el.querySelector('.file-stem');
+        this.$fileExtension = this.$el.querySelector('.file-extension');
+        this.$fileOther = this.$el.querySelector('.file-other');
+        this.$fileSize = this.$el.querySelector('.file-size');
+        this.$previewBox = this.$el.querySelector('.file-preview');
+        this.$receiveTitle = this.$el.querySelector('h2:first-of-type');
     }
 
     _formatFileSize(bytes) {
@@ -493,6 +497,26 @@ class ReceiveDialog extends Dialog {
             return bytes + ' Bytes';
         }
     }
+
+    _parseFileData(displayName, files, imagesOnly, totalSize) {
+        if (files.length > 1) {
+            let fileOtherText = ` and ${files.length - 1} other `;
+            if (files.length === 2) {
+                fileOtherText += imagesOnly ? 'image' : 'file';
+            } else {
+                fileOtherText += imagesOnly ? 'images' : 'files';
+            }
+            this.$fileOther.innerText = fileOtherText;
+        }
+
+        const fileName = files[0].name;
+        const fileNameSplit = fileName.split('.');
+        const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
+        this.$fileStem.innerText = fileName.substring(0, fileName.length - fileExtension.length);
+        this.$fileExtension.innerText = fileExtension;
+        this.$displayName.innerText = displayName;
+        this.$fileSize.innerText = this._formatFileSize(totalSize);
+    }
 }
 
 class ReceiveFileDialog extends ReceiveDialog {
@@ -500,24 +524,25 @@ class ReceiveFileDialog extends ReceiveDialog {
     constructor() {
         super('receive-file-dialog');
 
-        this.$shareOrDownloadBtn = this.$el.querySelector('#share-or-download');
-        this.$receiveTitleNode = this.$el.querySelector('#receive-title')
+        this.$downloadBtn = this.$el.querySelector('#download-btn');
+        this.$shareBtn = this.$el.querySelector('#share-btn');
 
-        Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files, e.detail.request));
+        Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files, e.detail.imagesOnly, e.detail.totalSize));
         this._filesQueue = [];
     }
 
-    _onFilesReceived(sender, files, request) {
-        this._nextFiles(sender, files, request);
+    _onFilesReceived(sender, files, imagesOnly, totalSize) {
+        const displayName = $(sender).ui._displayName()
+        this._filesQueue.push({peer: sender, displayName: displayName, files: files, imagesOnly: imagesOnly, totalSize: totalSize});
+        this._nextFiles();
         window.blop.play();
     }
 
-    _nextFiles(sender, nextFiles, nextRequest) {
-        if (nextFiles) this._filesQueue.push({peerId: sender, files: nextFiles, request: nextRequest});
+    _nextFiles() {
         if (this._busy) return;
         this._busy = true;
-        const {peerId, files, request} = this._filesQueue.shift();
-        this._displayFiles(peerId, files, request);
+        const {peer, displayName, files, imagesOnly, totalSize} = this._filesQueue.shift();
+        this._displayFiles(peer, displayName, files, imagesOnly, totalSize);
     }
 
     _dequeueFile() {
@@ -548,7 +573,6 @@ class ReceiveFileDialog extends ReceiveDialog {
                 let element = document.createElement(previewElement[mime]);
                 element.src = URL.createObjectURL(file);
                 element.controls = true;
-                element.classList.add('element-preview');
                 element.onload = _ => {
                     this.$previewBox.appendChild(element);
                     resolve(true)
@@ -559,30 +583,32 @@ class ReceiveFileDialog extends ReceiveDialog {
         });
     }
 
-    async _displayFiles(peerId, files, request) {
-        if (this.continueCallback) this.$shareOrDownloadBtn.removeEventListener("click", this.continueCallback);
+    async _displayFiles(peerId, displayName, files, imagesOnly, totalSize) {
+        this._parseFileData(displayName, files, imagesOnly, totalSize);
 
-        let url;
-        let title;
-        let filenameDownload;
-
-        let descriptor = request.imagesOnly ? "Image" : "File";
-
-        let size = this._formatFileSize(request.totalSize);
-        let description = files[0].name;
-
-        let shareInsteadOfDownload = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files});
-
+        let descriptor, url, filenameDownload;
         if (files.length === 1) {
-            url = URL.createObjectURL(files[0])
-            title = `PairDrop - ${descriptor} Received`
-            filenameDownload = files[0].name;
+            descriptor = imagesOnly ? 'Image' : 'File';
         } else {
-            title = `PairDrop - ${files.length} ${descriptor}s Received`
-            description += ` and ${files.length-1} other ${descriptor.toLowerCase()}`;
-            if(files.length>2) description += "s";
+            descriptor = imagesOnly ? 'Images' : 'Files';
+        }
+        this.$receiveTitle.innerText = `${descriptor} Received`;
 
-            if(!shareInsteadOfDownload) {
+        const canShare = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files});
+        if (canShare) {
+            this.$shareBtn.removeAttribute('hidden');
+            this.$shareBtn.onclick = _ => {
+                navigator.share({files: files})
+                    .catch(err => {
+                        console.error(err);
+                    });
+            }
+        }
+
+        let downloadZipped = false;
+        if (files.length > 1) {
+            downloadZipped = true;
+            try {
                 let bytesCompleted = 0;
                 zipper.createNewZipWriter();
                 for (let i=0; i<files.length; i++) {
@@ -590,7 +616,7 @@ class ReceiveFileDialog extends ReceiveDialog {
                         onprogress: (progress) => {
                             Events.fire('set-progress', {
                                 peerId: peerId,
-                                progress: (bytesCompleted + progress) / request.totalSize,
+                                progress: (bytesCompleted + progress) / totalSize,
                                 status: 'process'
                             })
                         }
@@ -610,49 +636,58 @@ class ReceiveFileDialog extends ReceiveDialog {
                 let minutes = now.getMinutes().toString();
                 minutes = minutes.length < 2 ? "0" + minutes : minutes;
                 filenameDownload = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
+            } catch (e) {
+                console.error(e);
+                downloadZipped = false;
             }
         }
 
-        this.$receiveTitleNode.textContent = title;
-        this.$fileDescriptionNode.textContent = description;
-        this.$fileSizeNode.textContent = size;
-
-        if (shareInsteadOfDownload) {
-            this.$shareOrDownloadBtn.innerText = "Share";
-            this.continue = _ => {
-                navigator.share({files: files})
-                    .catch(err => console.error(err));
+        this.$downloadBtn.innerText = "Download";
+        this.$downloadBtn.onclick = _ => {
+            if (downloadZipped) {
+                let tmpZipBtn = document.createElement("a");
+                tmpZipBtn.download = filenameDownload;
+                tmpZipBtn.href = url;
+                tmpZipBtn.click();
+            } else {
+                this._downloadFilesIndividually(files);
             }
-            this.continueCallback = _ => this.continue();
-        } else {
-            this.$shareOrDownloadBtn.innerText = "Download again";
-            this.continue = _ => {
-                let tmpBtn = document.createElement("a");
-                tmpBtn.download = filenameDownload;
-                tmpBtn.href = url;
-                tmpBtn.click();
-            };
-            this.continueCallback = _ => {
-                this.continue();
-                this.hide();
-            };
-        }
-        this.$shareOrDownloadBtn.addEventListener("click", this.continueCallback);
+
+            if (!canShare) {
+                this.$downloadBtn.innerText = "Download again";
+            }
+            Events.fire('notify-user', `${descriptor} downloaded successfully`);
+            this.$downloadBtn.style.pointerEvents = "none";
+            setTimeout(_ => this.$downloadBtn.style.pointerEvents = "unset", 2000);
+        };
 
         this.createPreviewElement(files[0]).finally(_ => {
             document.title = files.length === 1
                 ? 'File received - PairDrop'
                 : `(${files.length}) Files received - PairDrop`;
             document.changeFavicon("images/favicon-96x96-notification.png");
-            this.show();
             Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
-            this.continue();
+            this.show();
+
+            if (canShare) {
+                this.$shareBtn.click();
+            } else {
+                this.$downloadBtn.click();
+            }
         }).catch(r => console.error(r));
     }
 
+    _downloadFilesIndividually(files) {
+        let tmpBtn = document.createElement("a");
+        for (let i=0; i<files.length; i++) {
+            tmpBtn.download = files[i].name;
+            tmpBtn.href = URL.createObjectURL(files[i]);
+            tmpBtn.click();
+        }
+    }
+
     hide() {
-        this.$shareOrDownloadBtn.removeAttribute('href');
-        this.$shareOrDownloadBtn.removeAttribute('download');
+        this.$shareBtn.setAttribute('hidden', '');
         this.$previewBox.innerHTML = '';
         super.hide();
         this._dequeueFile();
@@ -663,11 +698,6 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     constructor() {
         super('receive-request-dialog');
-
-        this.$requestingPeerDisplayNameNode = this.$el.querySelector('#requesting-peer-display-name');
-        this.$fileStemNode = this.$el.querySelector('#file-stem');
-        this.$fileExtensionNode = this.$el.querySelector('#file-extension');
-        this.$fileOtherNode = this.$el.querySelector('#file-other');
 
         this.$acceptRequestBtn = this.$el.querySelector('#accept-request');
         this.$declineRequestBtn = this.$el.querySelector('#decline-request');
@@ -700,32 +730,18 @@ class ReceiveRequestDialog extends ReceiveDialog {
     _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
 
-        this.$requestingPeerDisplayNameNode.innerText = $(peerId).ui._displayName();
-
-        const fileName = request.header[0].name;
-        const fileNameSplit = fileName.split('.');
-        const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
-        this.$fileStemNode.innerText = fileName.substring(0, fileName.length - fileExtension.length);
-        this.$fileExtensionNode.innerText = fileExtension
-
-        if (request.header.length >= 2) {
-            let fileOtherText = ` and ${request.header.length - 1} other `;
-            fileOtherText += request.imagesOnly ? 'image' : 'file';
-            if (request.header.length > 2) fileOtherText += "s";
-            this.$fileOtherNode.innerText = fileOtherText;
-        }
-
-        this.$fileSizeNode.innerText = this._formatFileSize(request.totalSize);
+        const displayName = $(peerId).ui._displayName();
+        this._parseFileData(displayName, request.header, request.imagesOnly, request.totalSize);
 
         if (request.thumbnailDataUrl?.substring(0, 22) === "data:image/jpeg;base64") {
             let element = document.createElement('img');
             element.src = request.thumbnailDataUrl;
-            element.classList.add('element-preview');
-
             this.$previewBox.appendChild(element)
         }
 
-        document.title = 'File Transfer Requested - PairDrop';
+        this.$receiveTitle.innerText = `${request.imagesOnly ? 'Image' : 'File'} Transfer Request`
+
+        document.title = `${request.imagesOnly ? 'Image' : 'File'} Transfer Requested - PairDrop`;
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
@@ -1000,7 +1016,7 @@ class SendTextDialog extends Dialog {
         super('send-text-dialog');
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         this.$text = this.$el.querySelector('#text-input');
-        this.$peerDisplayName = this.$el.querySelector('#text-send-peer-display-name');
+        this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
@@ -1073,7 +1089,7 @@ class ReceiveTextDialog extends Dialog {
 
         Events.on("keydown", e => this._onKeyDown(e));
 
-        this.$receiveTextPeerDisplayNameNode = this.$el.querySelector('#receive-text-peer-display-name');
+        this.$displayNameNode = this.$el.querySelector('.display-name');
         this._receiveTextQueue = [];
     }
 
@@ -1103,7 +1119,7 @@ class ReceiveTextDialog extends Dialog {
     }
 
     _showReceiveTextDialog(text, peerId) {
-        this.$receiveTextPeerDisplayNameNode.innerText = $(peerId).ui._displayName();
+        this.$displayNameNode.innerText = $(peerId).ui._displayName();
 
         if (isURL(text)) {
             const $a = document.createElement('a');
@@ -1199,7 +1215,7 @@ class Base64ZipDialog extends Dialog {
     }
 
     _setPasteBtnToProcessing() {
-        this.$pasteBtn.pointerEvents = "none";
+        this.$pasteBtn.style.pointerEvents = "none";
         this.$pasteBtn.innerText = "Processing...";
     }
 

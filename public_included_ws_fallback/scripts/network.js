@@ -451,7 +451,7 @@ class Peer {
         if (!this._requestAccepted.header.length) {
             this._busy = false;
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
-            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, request: this._requestAccepted});
+            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
             this._filesReceived = [];
             this._requestAccepted = null;
         }
