@@ -1,6 +1,5 @@
 const $ = query => document.getElementById(query);
 const $$ = query => document.body.querySelector(query);
-const isURL = text => /^(https?:\/\/|www)[^\s]+$/g.test(text.toLowerCase());
 window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.android = /android/i.test(navigator.userAgent);
@@ -1120,16 +1119,21 @@ class ReceiveTextDialog extends Dialog {
     _showReceiveTextDialog(text, peerId) {
         this.$displayNameNode.innerText = $(peerId).ui._displayName();
 
-        if (isURL(text)) {
-            const $a = document.createElement('a');
-            $a.href = text;
-            $a.target = '_blank';
-            $a.textContent = text;
-            this.$text.innerHTML = '';
-            this.$text.appendChild($a);
-        } else {
-            this.$text.textContent = text;
+        this.$text.innerText = text;
+        this.$text.classList.remove('text-center');
+
+        // Beautify text if text is short
+        if (text.length < 2000) {
+            // replace urls with actual links
+            this.$text.innerHTML = this.$text.innerHTML.replace(/((https?:\/\/|www)[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)/g, url => {
+                return `<a href="${url}" target="_blank">${url}</a>`;
+            });
+
+            if (!/\s/.test(text)) {
+                this.$text.classList.add('text-center');
+            }
         }
+
         this._setDocumentTitleMessages();
 
         document.changeFavicon("images/favicon-96x96-notification.png");
@@ -1359,7 +1363,7 @@ class Notifications {
     _messageNotification(message, peerId) {
         if (document.visibilityState !== 'visible') {
             const peerDisplayName = $(peerId).ui._displayName();
-            if (isURL(message)) {
+            if (/^((https?:\/\/|www)[abcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)$/.test(message.toLowerCase())) {
                 const notification = this._notify(`Link received by ${peerDisplayName} - Click to open`, message);
                 this._bind(notification, _ => window.open(message, '_blank', null, true));
             } else {
