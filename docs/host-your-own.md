@@ -42,7 +42,7 @@ Set options by using the following flags in the `docker run` command:
 > Beware that the traffic routed via this fallback is readable by the server. Only ever use this on instances you can trust.
 > Additionally, beware that all traffic using this fallback debits the servers data plan.
 
-#### Specify STUN/TURN Servers
+##### Specify STUN/TURN Servers
 ```bash
 -e RTC_CONFIG="rtc_config.json"
 ```
