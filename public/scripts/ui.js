@@ -1779,8 +1779,8 @@ Events.on('load', () => {
     let x0, y0, w, h, dw, offset;
 
     function init() {
-        w = window.innerWidth;
-        h = window.innerHeight;
+        w = document.documentElement.clientWidth;
+        h = document.documentElement.clientHeight;
         c.width = w;
         c.height = h;
         offset = $$('footer').offsetHeight - 32;
