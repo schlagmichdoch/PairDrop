@@ -36,6 +36,7 @@ class ServerConnection {
     _onOpen() {
         console.log('WS: server connected');
         Events.fire('ws-connected');
+        if (this._isReconnect) Events.fire('notify-user', 'Connected.');
     }
 
     _sendRoomSecrets(roomSecrets) {
@@ -145,15 +146,17 @@ class ServerConnection {
             this._socket.close();
             this._socket = null;
             Events.fire('ws-disconnected');
+            this._isReconnect = true;
         }
     }
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'No server connection. Retry in 5s...');
+        Events.fire('notify-user', 'Connecting..');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
         Events.fire('ws-disconnected');
+        this._isReconnect = true;
     }
 
     _onVisibilityChange() {

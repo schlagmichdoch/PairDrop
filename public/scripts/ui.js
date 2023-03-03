@@ -662,7 +662,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.createPreviewElement(files[0]).finally(_ => {
             document.title = files.length === 1
                 ? 'File received - PairDrop'
-                : `(${files.length}) Files received - PairDrop`;
+                : `${files.length} Files received - PairDrop`;
             document.changeFavicon("images/favicon-96x96-notification.png");
             Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
             this.show();
@@ -1143,7 +1143,7 @@ class ReceiveTextDialog extends Dialog {
     _setDocumentTitleMessages() {
         document.title = !this._receiveTextQueue.length
             ? 'Message Received - PairDrop'
-            : `(${this._receiveTextQueue.length + 1}) Messages Received - PairDrop`;
+            : `${this._receiveTextQueue.length + 1} Messages Received - PairDrop`;
     }
 
     async _onCopy() {
@@ -1424,7 +1424,7 @@ class NetworkStatusUI {
     constructor() {
         Events.on('offline', _ => this._showOfflineMessage());
         Events.on('online', _ => this._showOnlineMessage());
-        Events.on('ws-connected', _ => this._showOnlineMessage());
+        Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('ws-disconnected', _ => this._onWsDisconnected());
         if (!navigator.onLine) this._showOfflineMessage();
     }
@@ -1435,17 +1435,16 @@ class NetworkStatusUI {
     }
 
     _showOnlineMessage() {
-        window.animateBackground(true);
-        if (!this.firstConnect) {
-            this.firstConnect = true;
-            return;
-        }
         Events.fire('notify-user', 'You are back online');
+        window.animateBackground(true);
+    }
+
+    _onWsConnected() {
+        window.animateBackground(true);
     }
 
     _onWsDisconnected() {
         window.animateBackground(false);
-        if (!this.firstConnect) this.firstConnect = true;
     }
 }
 
