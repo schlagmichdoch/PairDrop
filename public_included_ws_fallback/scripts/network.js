@@ -707,15 +707,15 @@ class WSPeer extends Peer {
         this._server.send(message);
     }
 
-    _sendSignal() {
-        this.sendJSON({type: 'signal'});
+    _sendSignal(connected = false) {
+        this.sendJSON({type: 'signal', connected: connected});
     }
 
     onServerMessage(message) {
         Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
-        if (this._peerId) return;
+        if (message.connected) return;
         this._peerId = message.sender.id;
-        this._sendSignal();
+        this._sendSignal(true);
     }
 
     getConnectionHash() {
