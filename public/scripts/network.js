@@ -37,6 +37,7 @@ class ServerConnection {
     _onOpen() {
         console.log('WS: server connected');
         Events.fire('ws-connected');
+        if (this._isReconnect) Events.fire('notify-user', 'Connected.');
     }
 
     _sendRoomSecrets(roomSecrets) {
@@ -126,6 +127,8 @@ class ServerConnection {
             this._socket.onclose = null;
             this._socket.close();
             this._socket = null;
+            Events.fire('ws-disconnected');
+            this._isReconnect = true;
         }
     }
 
@@ -135,10 +138,11 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'No server connection. Retry in 5s...');
+        Events.fire('notify-user', 'Connecting..');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
         Events.fire('ws-disconnected');
+        this._isReconnect = true;
     }
 
     _onVisibilityChange() {
@@ -304,25 +308,25 @@ class Peer {
             this._onChunkReceived(message);
             return;
         }
-        message = JSON.parse(message);
-        switch (message.type) {
+        const messageJSON = JSON.parse(message);
+        switch (messageJSON.type) {
             case 'request':
-                this._onFilesTransferRequest(message);
+                this._onFilesTransferRequest(messageJSON);
                 break;
             case 'header':
-                this._onFilesHeader(message);
+                this._onFilesHeader(messageJSON);
                 break;
             case 'partition':
-                this._onReceivedPartitionEnd(message);
+                this._onReceivedPartitionEnd(messageJSON);
                 break;
             case 'partition-received':
                 this._sendNextPartition();
                 break;
             case 'progress':
-                this._onDownloadProgress(message.progress);
+                this._onDownloadProgress(messageJSON.progress);
                 break;
             case 'files-transfer-response':
-                this._onFileTransferRequestResponded(message);
+                this._onFileTransferRequestResponded(messageJSON);
                 break;
             case 'file-transfer-complete':
                 this._onFileTransferCompleted();
@@ -331,10 +335,10 @@ class Peer {
                 this._onMessageTransferCompleted();
                 break;
             case 'text':
-                this._onTextReceived(message);
+                this._onTextReceived(messageJSON);
                 break;
             case 'display-name-changed':
-                this._onDisplayNameChanged(message);
+                this._onDisplayNameChanged(messageJSON);
                 break;
         }
     }
@@ -428,7 +432,7 @@ class Peer {
         if (!this._requestAccepted.header.length) {
             this._busy = false;
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
-            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, request: this._requestAccepted});
+            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
             this._filesReceived = [];
             this._requestAccepted = null;
         }
@@ -476,6 +480,7 @@ class Peer {
 
     _onDisplayNameChanged(message) {
         if (!message.displayName) return;
+        console.debug(message)
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
     }
 }
@@ -484,15 +489,9 @@ class RTCPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = true;
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
-    }
-
-    _onMessage(message) {
-        if (typeof message !== 'string') {
-            console.log('RTC:', JSON.parse(message));
-        }
-        super._onMessage(message);
     }
 
     _connect(peerId, isCaller) {
@@ -565,6 +564,13 @@ class RTCPeer extends Peer {
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._onPageHide());
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+    }
+
+    _onMessage(message) {
+        if (typeof message === 'string') {
+            console.log('RTC:', JSON.parse(message));
+        }
+        super._onMessage(message);
     }
 
     getConnectionHash() {

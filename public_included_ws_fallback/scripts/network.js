@@ -35,6 +35,7 @@ class ServerConnection {
     _onOpen() {
         console.log('WS: server connected');
         Events.fire('ws-connected');
+        if (this._isReconnect) Events.fire('notify-user', 'Connected.');
     }
 
     _sendRoomSecrets(roomSecrets) {
@@ -137,6 +138,8 @@ class ServerConnection {
             this._socket.onclose = null;
             this._socket.close();
             this._socket = null;
+            Events.fire('ws-disconnected');
+            this._isReconnect = true;
         }
     }
 
@@ -146,10 +149,11 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'No server connection. Retry in 5s...');
+        Events.fire('notify-user', 'Connecting..');
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
         Events.fire('ws-disconnected');
+        this._isReconnect = true;
     }
 
     _onVisibilityChange() {
@@ -315,25 +319,25 @@ class Peer {
             this._onChunkReceived(message);
             return;
         }
-        message = JSON.parse(message);
-        switch (message.type) {
+        const messageJSON = JSON.parse(message);
+        switch (messageJSON.type) {
             case 'request':
-                this._onFilesTransferRequest(message);
+                this._onFilesTransferRequest(messageJSON);
                 break;
             case 'header':
-                this._onFilesHeader(message);
+                this._onFilesHeader(messageJSON);
                 break;
             case 'partition':
-                this._onReceivedPartitionEnd(message);
+                this._onReceivedPartitionEnd(messageJSON);
                 break;
             case 'partition-received':
                 this._sendNextPartition();
                 break;
             case 'progress':
-                this._onDownloadProgress(message.progress);
+                this._onDownloadProgress(messageJSON.progress);
                 break;
             case 'files-transfer-response':
-                this._onFileTransferRequestResponded(message);
+                this._onFileTransferRequestResponded(messageJSON);
                 break;
             case 'file-transfer-complete':
                 this._onFileTransferCompleted();
@@ -342,10 +346,10 @@ class Peer {
                 this._onMessageTransferCompleted();
                 break;
             case 'text':
-                this._onTextReceived(message);
+                this._onTextReceived(messageJSON);
                 break;
             case 'display-name-changed':
-                this._onDisplayNameChanged(message);
+                this._onDisplayNameChanged(messageJSON);
                 break;
         }
     }
@@ -439,7 +443,7 @@ class Peer {
         if (!this._requestAccepted.header.length) {
             this._busy = false;
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
-            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, request: this._requestAccepted});
+            Events.fire('files-received', {sender: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
             this._filesReceived = [];
             this._requestAccepted = null;
         }
@@ -495,15 +499,9 @@ class RTCPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = true;
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
-    }
-
-    _onMessage(message) {
-        if (typeof message !== 'string') {
-            console.log('RTC:', JSON.parse(message));
-        }
-        super._onMessage(message);
     }
 
     _connect(peerId, isCaller) {
@@ -576,6 +574,13 @@ class RTCPeer extends Peer {
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._onPageHide());
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+    }
+
+    _onMessage(message) {
+        if (typeof message === 'string') {
+            console.log('RTC:', JSON.parse(message));
+        }
+        super._onMessage(message);
     }
 
     getConnectionHash() {
@@ -692,6 +697,7 @@ class WSPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = false;
         if (!peerId) return; // we will listen for a caller
         this._isCaller = true;
         this._sendSignal();
@@ -712,15 +718,15 @@ class WSPeer extends Peer {
         this._server.send(message);
     }
 
-    _sendSignal() {
-        this.sendJSON({type: 'signal'});
+    _sendSignal(connected = false) {
+        this.sendJSON({type: 'signal', connected: connected});
     }
 
     onServerMessage(message) {
         this._peerId = message.sender.id;
         Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
-        if (this._isCaller) return;
-        this._sendSignal();
+        if (message.connected) return;
+        this._sendSignal(true);
     }
 
     getConnectionHash() {
@@ -745,6 +751,7 @@ class PeersManager {
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
+        Events.on('ws-disconnected', _ => this._onWsDisconnected());
         Events.on('ws-relay', e => this._onWsRelay(e.detail));
     }
 
@@ -764,7 +771,7 @@ class PeersManager {
     _onWsRelay(message) {
         const messageJSON = JSON.parse(message)
         if (messageJSON.type === 'ws-chunk') message = base64ToArrayBuffer(messageJSON.chunk);
-        this.peers[messageJSON.sender.id]._onMessage(message, false)
+        this.peers[messageJSON.sender.id]._onMessage(message)
     }
 
     _onPeers(msg) {
@@ -808,9 +815,9 @@ class PeersManager {
     }
 
     _onPeerLeft(msg) {
-        if (this.peers[msg.peerId] && !this.peers[msg.peerId].rtcSupported) {
-            console.log('WSPeer left:', msg.peerId)
-            Events.fire('peer-disconnected', msg.peerId)
+        if (this.peers[msg.peerId] && (!this.peers[msg.peerId].rtcSupported || !window.isRtcSupported)) {
+            console.log('WSPeer left:', msg.peerId);
+            Events.fire('peer-disconnected', msg.peerId);
         } else if (msg.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
             Events.fire('peer-disconnected', msg.peerId);
@@ -819,6 +826,15 @@ class PeersManager {
 
     _onPeerConnected(peerId) {
         this._notifyPeerDisplayNameChanged(peerId);
+    }
+
+    _onWsDisconnected() {
+        for (const peerId in this.peers) {
+            console.debug(this.peers[peerId].rtcSupported);
+            if (this.peers[peerId] && (!this.peers[peerId].rtcSupported || !window.isRtcSupported)) {
+                Events.fire('peer-disconnected', peerId);
+            }
+        }
     }
 
     _onPeerDisconnected(peerId) {

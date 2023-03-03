@@ -1,6 +1,7 @@
 const process = require('process')
 const crypto = require('crypto')
 const {spawn} = require('child_process')
+const WebSocket = require('ws');
 
 // Handle SIGINT
 process.on('SIGINT', () => {
@@ -99,7 +100,6 @@ const { uniqueNamesGenerator, animals, colors } = require('unique-names-generato
 class PairDropServer {
 
     constructor() {
-        const WebSocket = require('ws');
         this._wss = new WebSocket.Server({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
 
@@ -110,10 +110,10 @@ class PairDropServer {
     }
 
     _onConnection(peer) {
-        this._joinRoom(peer);
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
         this._keepAlive(peer);
+        this._joinRoom(peer);
 
         // send displayName
         this._send(peer, {
@@ -317,6 +317,10 @@ class PairDropServer {
     _joinRoom(peer, roomType = 'ip', roomSecret = '') {
         const room = roomType === 'ip' ? peer.ip : roomSecret;
 
+        if (this._rooms[room] && this._rooms[room][peer.id]) {
+            this._leaveRoom(peer, roomType, roomSecret);
+        }
+
         // if room doesn't exist, create it
         if (!this._rooms[room]) {
             this._rooms[room] = {};
@@ -340,10 +344,6 @@ class PairDropServer {
 
         // delete the peer
         delete this._rooms[room][peer.id];
-
-        if (roomType === 'ip') {
-            peer.socket.terminate();
-        }
 
         //if room is empty, delete the room
         if (!Object.keys(this._rooms[room]).length) {
