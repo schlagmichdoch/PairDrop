@@ -534,6 +534,7 @@ footer {
     padding: 0 0 16px 0;
     text-align: center;
     transition: color 300ms;
+    cursor: default;
 }
 
 footer .logo {
@@ -569,6 +570,7 @@ footer .font-body2 {
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-bottom: -5px;
+    cursor: text;
 }
 
 #edit-pen {
