@@ -501,6 +501,7 @@ class RTCPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = true;
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
     }
@@ -689,6 +690,7 @@ class WSPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = false;
         if (!peerId) return; // we will listen for a caller
         this._sendSignal();
     }
@@ -737,6 +739,7 @@ class PeersManager {
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('ws-disconnected', _ => this._onWsDisconnected());
         Events.on('ws-relay', e => this._onWsRelay(e.detail));
     }
 
@@ -804,12 +807,21 @@ class PeersManager {
     }
 
     _onPeerLeft(msg) {
-        if (this.peers[msg.peerId] && !this.peers[msg.peerId].rtcSupported) {
-            console.log('WSPeer left:', msg.peerId)
-            Events.fire('peer-disconnected', msg.peerId)
+        if (this.peers[msg.peerId] && (!this.peers[msg.peerId].rtcSupported || !window.isRtcSupported)) {
+            console.log('WSPeer left:', msg.peerId);
+            Events.fire('peer-disconnected', msg.peerId);
         } else if (msg.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
             Events.fire('peer-disconnected', msg.peerId);
+        }
+    }
+
+    _onWsDisconnected() {
+        for (const peerId in this.peers) {
+            console.debug(this.peers[peerId].rtcSupported);
+            if (this.peers[peerId] && (!this.peers[peerId].rtcSupported || !window.isRtcSupported)) {
+                Events.fire('peer-disconnected', peerId);
+            }
         }
     }
 

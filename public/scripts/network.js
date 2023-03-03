@@ -491,6 +491,7 @@ class RTCPeer extends Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
+        this.rtcSupported = true;
         if (!peerId) return; // we will listen for a caller
         this._connect(peerId, true);
     }
