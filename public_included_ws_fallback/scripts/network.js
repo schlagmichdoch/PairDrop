@@ -329,25 +329,25 @@ class Peer {
             this._onChunkReceived(message);
             return;
         }
-        message = JSON.parse(message);
-        switch (message.type) {
+        const messageJSON = JSON.parse(message);
+        switch (messageJSON.type) {
             case 'request':
-                this._onFilesTransferRequest(message);
+                this._onFilesTransferRequest(messageJSON);
                 break;
             case 'header':
-                this._onFilesHeader(message);
+                this._onFilesHeader(messageJSON);
                 break;
             case 'partition':
-                this._onReceivedPartitionEnd(message);
+                this._onReceivedPartitionEnd(messageJSON);
                 break;
             case 'partition-received':
                 this._sendNextPartition();
                 break;
             case 'progress':
-                this._onDownloadProgress(message.progress);
+                this._onDownloadProgress(messageJSON.progress);
                 break;
             case 'files-transfer-response':
-                this._onFileTransferRequestResponded(message);
+                this._onFileTransferRequestResponded(messageJSON);
                 break;
             case 'file-transfer-complete':
                 this._onFileTransferCompleted();
@@ -356,7 +356,7 @@ class Peer {
                 this._onMessageTransferCompleted();
                 break;
             case 'text':
-                this._onTextReceived(message);
+                this._onTextReceived(messageJSON);
                 break;
         }
     }
@@ -580,8 +580,7 @@ class RTCPeer extends Peer {
 
     _onMessage(message) {
         if (typeof message === 'string') {
-            message = JSON.parse(message);
-            console.log('RTC:', message);
+            console.log('RTC:', JSON.parse(message));
         }
         super._onMessage(message);
     }
