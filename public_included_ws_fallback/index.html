@@ -69,7 +69,7 @@
                 <use xlink:href="#clear-pair-devices-icon" />
             </svg>
         </a>
-        <a id="cancel-paste-mode-btn" class="button" close hidden>Done</a>
+        <a id="cancel-paste-mode" class="button" hidden>Done</a>
     </header>
     <!-- Center -->
     <div id="center">
@@ -109,18 +109,17 @@
                     <div id="pair-instructions" class="font-subheading center text-center">Input this key on another device<br>or scan the QR-Code.</div>
                     <hr>
                     <div id="key-input-container">
-                        <input id="char0" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
-                        <input id="char1" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input id="char2" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input id="char3" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input id="char4" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input id="char5" type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
                     </div>
                     <div class="font-subheading center text-center">Enter key from another device to continue.</div>
-                    <div class="row-reverse space-between">
+                    <div class="center row-reverse">
                         <button class="button" type="submit" disabled>Pair</button>
-                        <div class="separator"></div>
-                        <a class="button" close>Cancel</a>
+                        <button class="button" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -133,9 +132,9 @@
                 <x-paper shadow="2">
                     <h2 class="center">Unpair Devices</h2>
                     <div class="font-subheading center text-center">Are you sure to unpair all devices?</div>
-                    <div class="row-reverse space-between">
+                    <div class="center row-reverse">
                         <button class="button" type="submit">Unpair Devices</button>
-                        <a class="button" close>Cancel</a>
+                        <button class="button" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -145,25 +144,23 @@
     <x-dialog id="receive-request-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 class="center">PairDrop</h2>
-                <div class="text-center file-description">
+                <h2 class="center"></h2>
+                <div class="center column file-description">
                     <div>
-                        <span id="requesting-peer-display-name"></span>
+                        <span class="display-name"></span>
                         <span>would like to share</span>
                     </div>
-                    <div id="file-name" class="row" >
-                        <span id="file-stem"></span>
-                        <span id="file-extension"></span>
+                    <div class="row file-name" >
+                        <span class="file-stem"></span>
+                        <span class="file-extension"></span>
                     </div>
-                    <div class="row">
-                        <span id="file-other"></span>
+                    <div class="row file-other">
                     </div>
+                    <div class="row font-body2 file-size"></div>
                 </div>
-                <div class="font-body2 text-center file-size"></div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse space-between">
+                <div class="center row-reverse">
                     <button id="accept-request" class="button" title="ENTER" autofocus>Accept</button>
-                    <div class="separator"></div>
                     <button id="decline-request" class="button" title="ESCAPE">Decline</button>
                 </div>
             </x-paper>
@@ -173,13 +170,23 @@
     <x-dialog id="receive-file-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 id="receive-title" class="center"></h2>
-                <div class="text-center file-description"></div>
-                <div class="font-body2 text-center file-size"></div>
+                <h2 class="center"></h2>
+                <div class="center column file-description">
+                    <div>
+                        <span class="display-name"></span>
+                        <span>has sent</span>
+                    </div>
+                    <div class="row file-name" >
+                        <span class="file-stem"></span>
+                        <span class="file-extension"></span>
+                    </div>
+                    <div class="row file-other"></div>
+                    <div class="row font-body2 file-size"></div>
+                </div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse space-between">
-                    <a id="share-or-download" class="button" autofocus></a>
-                    <div class="separator"></div>
+                <div class="center row-reverse">
+                    <button id="share-btn" class="button" autofocus hidden>Share</button>
+                    <button id="download-btn" class="button" autofocus>Download</button>
                     <button class="button" close>Close</button>
                 </div>
             </x-paper>
@@ -190,16 +197,16 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2 class="text-center">PairDrop</h2>
-                    <div class="text-center">
+                    <h2 class="text-center">Send Message</h2>
+                    <div class="dialog-subheader text-center">
                         <span>Send a Message to</span>
-                        <span id="text-send-peer-display-name"></span>
+                        <span class="display-name"></span>
                     </div>
+                    <div class="row-separator"></div>
                     <div id="text-input" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
-                    <div class="row-reverse">
+                    <div class="center row-reverse">
                         <button class="button" type="submit" title="STR + ENTER" disabled close>Send</button>
-                        <div class="separator"></div>
-                        <a class="button" title="ESCAPE" close>Cancel</a>
+                        <button class="button" title="ESCAPE" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -209,16 +216,15 @@
     <x-dialog id="receive-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2>PairDrop - Message Received</h2>
-                <div id="receive-text-description-container">
-                    <span id="receive-text-peer-display-name"></span>
-                    <span>sent the following message:</span>
+                <h2 class="text-center">Message Received</h2>
+                <div class="text-center dialog-subheader">
+                    <span class="display-name"></span>
+                    <span>has sent:</span>
                 </div>
                 <div class="row-separator"></div>
                 <div id="text"></div>
-                <div class="row-reverse">
+                <div class="center row-reverse">
                     <button id="copy" class="button" title="CTRL/⌘ + C">Copy</button>
-                    <div class="separator"></div>
                     <button id="close" class="button" title="ESCAPE">Close</button>
                 </div>
             </x-paper>

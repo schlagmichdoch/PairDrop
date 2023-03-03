@@ -564,7 +564,7 @@ x-dialog x-background {
     z-index: 10;
     transition: opacity 300ms;
     will-change: opacity;
-    padding: 35px;
+    padding: 15px;
     overflow: overlay;
 }
 
@@ -575,19 +575,20 @@ x-dialog x-paper {
     padding: 16px 24px;
     width: 100%;
     max-width: 400px;
+    overflow: hidden;
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
 }
 
 #pair-device-dialog x-paper {
-    position: absolute;
-    top: max(50%, 350px);
-    height: 650px;
-    margin-top: -325px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    position: absolute;
+    top: max(50%, 350px);
+    margin-top: -328.5px;
+    width: calc(100vw - 20px);
+    height: 625px;
 }
 
 x-dialog:not([show]) {
@@ -602,12 +603,6 @@ x-dialog:not([show]) x-background {
     opacity: 0;
 }
 
-x-dialog .row-reverse>.button {
-    margin-top: 0;
-    margin-bottom: -16px;
-    width: 50%;
-    height: 50px;
-}
 
 x-dialog a {
     color: var(--primary-color);
@@ -646,7 +641,7 @@ x-dialog .font-subheading {
 }
 
 #key-input-container>input:nth-of-type(4) {
-    margin-left: 18px;
+    margin-left: 5%;
 }
 
 #room-key {
@@ -658,16 +653,11 @@ x-dialog .font-subheading {
 }
 
 #room-key-qr-code {
-    padding: inherit;
-    margin: auto;
-    width: 150px;
-    height: 150px;
+    margin: 16px;
 }
 
 #pair-device-dialog hr {
-    margin-top: 40px;
-    margin-bottom: 40px;
-    width: 100%;
+    margin: 40px -24px;
 }
 
 #pair-device-dialog x-background {
@@ -681,29 +671,24 @@ x-dialog .row {
     margin-bottom: 8px;
 }
 
-x-dialog h2 {
-    margin-top: 1rem;
-}
-
-#receive-request-dialog h2,
-#receive-file-dialog h2 {
-    margin-bottom: 0.5rem;
-}
-
-x-dialog .row-reverse {
-    margin: 40px -24px 0;
+/* button row*/
+x-paper > div:last-child {
+    margin: auto -24px -15px;
     border-top: solid 2.5px var(--border-color);
+    height: 50px;
 }
 
-.separator {
-    border: solid 1.25px var(--border-color);
-    margin-bottom: -16px;
+x-paper > div:last-child > .button {
+    height: 100%;
+    width: 50%;
+}
+
+x-paper > div:last-child > .button:not(:last-child) {
+    border-left: solid 2.5px var(--border-color);
 }
 
 .file-description {
-    word-break: break-word;
-    width: 80%;
-    margin: auto;
+    margin-bottom: 25px;
 }
 
 .file-description .row {
@@ -715,26 +700,26 @@ x-dialog .row-reverse {
     word-break: normal;
 }
 
-#file-name {
+.file-name {
     font-style: italic;
+    max-width: 100%;
 }
 
-#file-stem {
-    max-width: 80%;
+.file-stem {
     overflow: hidden;
     text-overflow: ellipsis;
-    word-break: break-all;
-    max-height: 20px;
-}
-
-.file-size{
-    margin-bottom: 30px;
+    white-space: nowrap;
 }
 
 /* Send Text Dialog */
 
+x-dialog .dialog-subheader {
+    margin-bottom: 25px;
+}
+
 #text-input {
-    min-height: 120px;
+    min-height: 200px;
+    margin: 14px auto;
 }
 
 /* Receive Text Dialog */
@@ -742,14 +727,14 @@ x-dialog .row-reverse {
 #receive-text-dialog #text {
     width: 100%;
     word-break: break-all;
-    max-height: 300px;
+    max-height: calc(100vh - 393px);
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-user-select: all;
     -moz-user-select: all;
     user-select: all;
     white-space: pre-wrap;
-    margin-top:36px;
+    padding: 15px 0;
 }
 
 #receive-text-dialog #text a {
@@ -768,11 +753,7 @@ x-dialog .row-reverse {
 
 .row-separator {
     border-bottom: solid 2.5px var(--border-color);
-    margin: auto -25px;
-}
-
-#receive-text-description-container {
-    margin-bottom: 25px;
+    margin: auto -24px;
 }
 
 #base64-paste-btn {
@@ -800,7 +781,6 @@ x-dialog .row-reverse {
     padding: 2px 16px 0;
     box-sizing: border-box;
     min-height: 36px;
-    min-width: 100px;
     font-size: 14px;
     line-height: 24px;
     font-weight: 700;
@@ -811,6 +791,7 @@ x-dialog .row-reverse {
     user-select: none;
     background: inherit;
     color: var(--primary-color);
+    overflow: hidden;
 }
 
 .button[disabled] {
@@ -848,7 +829,7 @@ x-dialog .row-reverse {
     opacity: 0.1;
 }
 
-#cancel-paste-mode-btn {
+#cancel-paste-mode {
     z-index: 2;
     margin: 0;
     padding: 0;
@@ -875,7 +856,6 @@ button::-moz-focus-inner {
 
 
 /* Icon Button */
-
 .icon-button {
     width: 40px;
     height: 40px;
@@ -885,10 +865,7 @@ button::-moz-focus-inner {
     border-radius: 50%;
 }
 
-
-
 /* Text Input */
-
 .textarea {
     box-sizing: border-box;
     border: none;
@@ -902,9 +879,8 @@ button::-moz-focus-inner {
     display: block;
     overflow: auto;
     resize: none;
-    min-height: 40px;
     line-height: 16px;
-    max-height: 300px;
+    max-height: calc(100vh - 254px);
     white-space: pre;
 }
 
@@ -1094,6 +1070,14 @@ x-peers:empty~x-instructions {
 }
 
 /* Responsive Styles */
+@media screen and (max-width: 360px) {
+    x-dialog x-paper {
+        padding: 15px;
+    }
+    x-paper > div:last-child {
+        margin: auto -15px -15px;
+    }
+}
 
 @media screen and (min-height: 800px) {
     footer {
@@ -1166,7 +1150,9 @@ x-dialog x-paper {
     display: none;
 }
 
-.element-preview {
+.file-preview > img,
+.file-preview > audio,
+.file-preview > video {
     max-width: 100%;
     max-height: 40vh;
     margin: auto;
