@@ -324,13 +324,12 @@ class Peer {
         this.sendJSON({ type: 'progress', progress: progress });
     }
 
-    _onMessage(message, logMessage = true) {
+    _onMessage(message) {
         if (typeof message !== 'string') {
             this._onChunkReceived(message);
             return;
         }
         message = JSON.parse(message);
-        if (logMessage) console.log('RTC:', message);
         switch (message.type) {
             case 'request':
                 this._onFilesTransferRequest(message);
@@ -578,6 +577,14 @@ class RTCPeer extends Peer {
         this._channel = channel;
     }
 
+    _onMessage(message) {
+        if (typeof message === 'string') {
+            message = JSON.parse(message);
+            console.log('RTC:', message);
+        }
+        super._onMessage(message);
+    }
+
     getConnectionHash() {
         const localDescriptionLines = this._conn.localDescription.sdp.split("\r\n");
         const remoteDescriptionLines = this._conn.remoteDescription.sdp.split("\r\n");
@@ -749,7 +756,7 @@ class PeersManager {
     _onWsRelay(message) {
         const messageJSON = JSON.parse(message)
         if (messageJSON.type === 'ws-chunk') message = base64ToArrayBuffer(messageJSON.chunk);
-        this.peers[messageJSON.sender.id]._onMessage(message, false)
+        this.peers[messageJSON.sender.id]._onMessage(message)
     }
 
     _onPeers(msg) {

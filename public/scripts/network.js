@@ -320,7 +320,6 @@ class Peer {
             return;
         }
         message = JSON.parse(message);
-        console.log('RTC:', message);
         switch (message.type) {
             case 'request':
                 this._onFilesTransferRequest(message);
@@ -566,6 +565,14 @@ class RTCPeer extends Peer {
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._closeChannel());
         this._channel = channel;
+    }
+
+    _onMessage(message) {
+        if (typeof message === 'string') {
+            message = JSON.parse(message);
+            console.log('RTC:', message);
+        }
+        super._onMessage(message);
     }
 
     getConnectionHash() {
