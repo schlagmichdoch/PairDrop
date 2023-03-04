@@ -595,7 +595,7 @@ footer .font-body2 {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-bottom: -5px;
+    margin-bottom: -4px;
     cursor: text;
 }
 
