@@ -562,15 +562,21 @@ footer .font-body2 {
 #display-name {
     display: inline-block;
     text-align: left;
-    padding-right: 1rem;
     border: none;
     outline: none;
     max-width: 18em;
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-bottom: -4px;
     cursor: text;
+    margin-bottom: -4px;
+    margin-left: -1rem;
+    padding-right: 0.3rem;
+    padding-left: 0.3em;
+    border-radius: 1.3rem/30%;
+    border-right: solid 1rem transparent;
+    border-left: solid 1rem transparent;
+    background-clip: padding-box;
+    background-color: rgba(var(--text-color), 28%);
 }
 
 #edit-pen {
