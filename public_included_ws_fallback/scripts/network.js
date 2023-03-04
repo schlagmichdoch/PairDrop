@@ -51,7 +51,7 @@ class ServerConnection {
 
     _onPairDeviceJoin(roomKey) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onPairDeviceJoin(roomKey), 5000);
+            setTimeout(_ => this._onPairDeviceJoin(roomKey), 1000);
             return;
         }
         this.send({ type: 'pair-device-join', roomKey: roomKey })
@@ -171,7 +171,7 @@ class ServerConnection {
         console.log('WS: server disconnected');
         Events.fire('notify-user', 'Connecting..');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         Events.fire('ws-disconnected');
         this._isReconnect = true;
     }
