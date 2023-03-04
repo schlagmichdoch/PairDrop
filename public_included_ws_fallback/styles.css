@@ -602,7 +602,10 @@ footer .font-body2 {
     border-right: solid 1rem transparent;
     border-left: solid 1rem transparent;
     background-clip: padding-box;
-    background-color: rgba(var(--text-color), 28%);
+    background-color: rgba(var(--text-color), 32%);
+    color: white;
+    transition: background-color 0.5s ease;
+    overflow: hidden;
 }
 
 #edit-pen {

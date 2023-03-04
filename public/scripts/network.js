@@ -487,7 +487,6 @@ class Peer {
 
     _onDisplayNameChanged(message) {
         if (!message.displayName) return;
-        console.debug(message)
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
     }
 }

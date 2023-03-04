@@ -59,7 +59,7 @@
                 <use xlink:href="#homescreen" />
             </svg>
         </a>
-        <a id="pair-device" class="icon-button" title="Pair Device" >
+        <a id="pair-device" class="icon-button" title="Pair Device" hidden>
             <svg class="icon">
                 <use xlink:href="#pair-device-icon" />
             </svg>
@@ -91,8 +91,10 @@
         </svg>
         <div>
             <span>You are known as:</span>
-            <div id="display-name" placeholder="Loading..." autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
-            <svg id="edit-pen" class="icon"><use xlink:href="#edit-pen-icon" /></svg>
+            <div id="display-name" placeholder="Loading..." title="Edit your device name permanently" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
+            <svg id="edit-pen" class="icon">
+                <use xlink:href="#edit-pen-icon" />
+            </svg>
         </div>
         <div class="font-body2">
             You can be discovered by everyone <span id="on-this-network">on&nbsp;this&nbsp;network</span>

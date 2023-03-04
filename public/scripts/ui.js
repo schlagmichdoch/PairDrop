@@ -11,7 +11,6 @@ Events.on('display-name', e => {
     const me = e.detail.message;
     const $displayName = $('display-name');
     $displayName.setAttribute('placeholder', me.displayName);
-    $displayName.title = me.deviceName;
 });
 
 class PeersUI {
@@ -83,11 +82,11 @@ class PeersUI {
 
         if (newDisplayName) {
             PersistentStorage.set('editedDisplayName', newDisplayName).then(_ => {
-                Events.fire('notify-user', 'Display name is changed permanently.');
+                Events.fire('notify-user', 'Device name is changed permanently.');
             }).catch(_ => {
                 console.log("This browser does not support IndexedDB. Use localStorage instead.");
                 localStorage.setItem('editedDisplayName', newDisplayName);
-                Events.fire('notify-user', 'Display name is changed only for this session.');
+                Events.fire('notify-user', 'Device name is changed only for this session.');
             }).finally(_ => {
                 Events.fire('self-display-name-changed', newDisplayName);
                 Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
@@ -98,7 +97,7 @@ class PeersUI {
                 localStorage.removeItem('editedDisplayName');
                 Events.fire('notify-user', 'Random Display name is used again.');
             }).finally(_ => {
-                Events.fire('notify-user', 'Display name is randomly generated again.');
+                Events.fire('notify-user', 'Device name is randomly generated again.');
                 Events.fire('self-display-name-changed', '');
                 Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
             });
@@ -116,8 +115,6 @@ class PeersUI {
     _changePeerDisplayName(peerId, displayName) {
         this.peers[peerId].name.displayName = displayName;
         const peerIdNode = $(peerId);
-        console.debug(peerIdNode)
-        console.debug(displayName)
         if (peerIdNode && displayName) peerIdNode.querySelector('.name').textContent = displayName;
     }
 
@@ -843,15 +840,17 @@ class ReceiveRequestDialog extends ReceiveDialog {
 class PairDeviceDialog extends Dialog {
     constructor() {
         super('pair-device-dialog');
-        $('pair-device').addEventListener('click', _ => this._pairDeviceInitiate());
         this.$inputRoomKeyChars = this.$el.querySelectorAll('#key-input-container>input');
         this.$submitBtn = this.$el.querySelector('button[type="submit"]');
         this.$roomKey = this.$el.querySelector('#room-key');
         this.$qrCode = this.$el.querySelector('#room-key-qr-code');
+        this.$pairDeviceBtn = $('pair-device');
         this.$clearSecretsBtn = $('clear-pair-devices');
         this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
-        let createJoinForm = this.$el.querySelector('form');
-        createJoinForm.addEventListener('submit', e => this._onSubmit(e));
+        this.$createJoinForm = this.$el.querySelector('form');
+
+        this.$createJoinForm.addEventListener('submit', e => this._onSubmit(e));
+        this.$pairDeviceBtn.addEventListener('click', _ => this._pairDeviceInitiate());
 
         this.$el.querySelector('[close]').addEventListener('click', _ => this._pairDeviceCancel())
         this.$inputRoomKeyChars.forEach(el => el.addEventListener('input', e => this._onCharsInput(e)));
@@ -944,6 +943,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onWsConnected() {
+        this.$pairDeviceBtn.removeAttribute('hidden');
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             Events.fire('room-secrets', roomSecrets);
             this._evaluateNumberRoomSecrets();
