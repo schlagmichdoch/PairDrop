@@ -106,7 +106,11 @@ sendFiles()
     zip -q -b /tmp/ -r "$zipPath" "$path"
     zip -q -b /tmp/ "$zipPathTemp" "$zipPath"
 
-    hash=$(base64 -w 0 "$zipPathTemp")
+    if [[ $OS == "Mac" ]];then
+      hash=$(base64 -i "$zipPathTemp")
+    else
+      hash=$(base64 -w 0 "$zipPathTemp")
+    fi
 
     # remove temporary temp file
     rm "$zipPathTemp"
@@ -116,7 +120,11 @@ sendFiles()
     # Create zip file temporarily to send file
     zip -q -b /tmp/ "$zipPath" "$path"
 
-    hash=$(base64 -w 0 "$zipPath")
+    if [[ $OS == "Mac" ]];then
+      hash=$(base64 -i "$zipPath")
+    else
+      hash=$(base64 -w 0 "$zipPath")
+    fi
   fi
 
   # remove temporary temp file
