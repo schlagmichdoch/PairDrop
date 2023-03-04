@@ -9,8 +9,8 @@ window.pasteMode.activated = false;
 // set display name
 Events.on('display-name', e => {
     const me = e.detail.message;
-    const $displayName = $('display-name')
-    $displayName.textContent = 'You are known as ' + me.displayName;
+    const $displayName = $('display-name');
+    $displayName.setAttribute('placeholder', me.displayName);
     $displayName.title = me.deviceName;
 });
 
@@ -43,6 +43,82 @@ class PeersUI {
 
         Events.on('peer-added', _ => this.evaluateOverflowing());
         Events.on('bg-resize', _ => this.evaluateOverflowing());
+
+        this.$displayName = $('display-name');
+
+        this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
+        this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
+        this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
+
+        Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
+        Events.on('peer-display-name-changed', e => this._changePeerDisplayName(e.detail.peerId, e.detail.displayName));
+
+        // Load saved display name on page load
+        this._getSavedDisplayName().then(displayName => {
+            console.log("Retrieved edited display name:", displayName)
+            if (displayName) Events.fire('self-display-name-changed', displayName);
+        });
+    }
+
+    _insertDisplayName(displayName) {
+        this.$displayName.textContent = displayName;
+    }
+
+    _onKeyDownDisplayName(e) {
+        if (e.key === "Enter" || e.key === "Escape") {
+            e.preventDefault();
+            e.target.blur();
+        }
+    }
+
+    _onKeyUpDisplayName(e) {
+        // fix for Firefox inserting a linebreak into div on edit which prevents the placeholder from showing automatically when it is empty
+        if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) e.target.innerText = '';
+    }
+
+    async _saveDisplayName(newDisplayName) {
+        newDisplayName = newDisplayName.replace(/(\n|\r|\r\n)/, '')
+        const savedDisplayName = await this._getSavedDisplayName();
+        if (newDisplayName === savedDisplayName) return;
+
+        if (newDisplayName) {
+            PersistentStorage.set('editedDisplayName', newDisplayName).then(_ => {
+                Events.fire('notify-user', 'Display name is changed permanently.');
+            }).catch(_ => {
+                console.log("This browser does not support IndexedDB. Use localStorage instead.");
+                localStorage.setItem('editedDisplayName', newDisplayName);
+                Events.fire('notify-user', 'Display name is changed only for this session.');
+            }).finally(_ => {
+                Events.fire('self-display-name-changed', newDisplayName);
+                Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
+            });
+        } else {
+            PersistentStorage.delete('editedDisplayName').catch(_ => {
+                console.log("This browser does not support IndexedDB. Use localStorage instead.")
+                localStorage.removeItem('editedDisplayName');
+                Events.fire('notify-user', 'Random Display name is used again.');
+            }).finally(_ => {
+                Events.fire('notify-user', 'Display name is randomly generated again.');
+                Events.fire('self-display-name-changed', '');
+                Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
+            });
+        }
+    }
+
+    _getSavedDisplayName() {
+        return new Promise((resolve) => {
+            PersistentStorage.get('editedDisplayName')
+                .then(displayName => resolve(displayName ?? ""))
+                .catch(_ => resolve(localStorage.getItem('editedDisplayName') ?? ""))
+        });
+    }
+
+    _changePeerDisplayName(peerId, displayName) {
+        this.peers[peerId].name.displayName = displayName;
+        const peerIdNode = $(peerId);
+        console.debug(peerIdNode)
+        console.debug(displayName)
+        if (peerIdNode && displayName) peerIdNode.querySelector('.name').textContent = displayName;
     }
 
     _onKeyDown(e) {
@@ -544,6 +620,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     _dequeueFile() {
+        // Todo: change count in document.title and move '- PairDrop' to back
         if (!this._filesQueue.length) { // nothing to do
             this._busy = false;
             return;
@@ -1723,6 +1800,23 @@ class PersistentStorage {
     }
 }
 
+class Broadcast {
+    constructor() {
+        this.bc = new BroadcastChannel('pairdrop');
+        this.bc.addEventListener('message', e => this._onMessage(e));
+        Events.on('broadcast-send', e => this._broadcastMessage(e.detail));
+    }
+
+    _broadcastMessage(message) {
+        this.bc.postMessage(message);
+    }
+
+    _onMessage(e) {
+        console.log('Broadcast message received:', e.data)
+        Events.fire(e.data.type, e.data.detail);
+    }
+}
+
 class PairDrop {
     constructor() {
         Events.on('load', _ => {
@@ -1742,6 +1836,7 @@ class PairDrop {
             const webShareTargetUI = new WebShareTargetUI();
             const webFileHandlersUI = new WebFileHandlersUI();
             const noSleepUI = new NoSleepUI();
+            const broadCast = new Broadcast();
         });
     }
 }

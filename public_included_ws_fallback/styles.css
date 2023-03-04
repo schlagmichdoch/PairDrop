@@ -477,6 +477,7 @@ x-peer.ws-peer .highlight-wrapper {
 }
 
 .device-descriptor {
+    width: 100%;
     text-align: center;
 }
 
@@ -559,6 +560,7 @@ footer {
     align-items: center;
     text-align: center;
     transition: color 300ms;
+    cursor: default;
 }
 
 footer .logo {
@@ -581,6 +583,35 @@ footer .font-body2 {
 #paired-devices {
     border-bottom: solid 4px var(--paired-device-color);
     padding-bottom: 1px;
+}
+
+#display-name {
+    display: inline-block;
+    text-align: left;
+    border: none;
+    outline: none;
+    max-width: 18em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: text;
+    margin-bottom: -4px;
+    margin-left: -1rem;
+    padding-right: 0.3rem;
+    padding-left: 0.3em;
+    border-radius: 1.3rem/30%;
+    border-right: solid 1rem transparent;
+    border-left: solid 1rem transparent;
+    background-clip: padding-box;
+    background-color: rgba(var(--text-color), 28%);
+}
+
+#edit-pen {
+    width: 1rem;
+    height: 1rem;
+    margin-left: -1rem;
+    margin-bottom: -2px;
+    position: relative;
+    z-index: -1;
 }
 
 /* Dialog */
@@ -1021,11 +1052,11 @@ button::-moz-focus-inner {
 x-toast {
     position: absolute;
     min-height: 48px;
-    bottom: 24px;
+    top: 50px;
     width: 100%;
     max-width: 344px;
-    background-color: #323232;
-    color: rgba(255, 255, 255, 0.95);
+    background-color: rgb(var(--text-color));
+    color: rgb(var(--bg-color));
     align-items: center;
     box-sizing: border-box;
     padding: 8px 24px;
@@ -1039,7 +1070,7 @@ x-toast {
 
 x-toast:not([show]):not(:hover) {
     opacity: 0;
-    transform: translateY(100px);
+    transform: translateY(-100px);
 }
 
 

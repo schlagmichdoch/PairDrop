@@ -477,7 +477,7 @@ class Peer {
         this._setIP(request);
 
         // set peer id
-        this._setPeerId(request)
+        this.id = crypto.randomUUID();
 
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
@@ -547,15 +547,6 @@ class Peer {
 
         // Any other IP address is not Unique Local Address (ULA)
         return false;
-    }
-
-    _setPeerId(request) {
-        let peer_id = new URL(request.url, "http://server").searchParams.get("peer_id");
-        if (peer_id && Peer.isValidUuid(peer_id)) {
-            this.id = peer_id;
-        } else {
-            this.id = crypto.randomUUID();
-        }
     }
 
     toString() {

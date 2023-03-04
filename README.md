@@ -42,9 +42,9 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Paired devices outside your local network that are behind a NAT are connected automatically via [Open Relay: Free WebRTC TURN Server](https://www.metered.ca/tools/openrelay/)
 
 ### [Improved UI for sending/receiving files](https://github.com/RobinLinus/snapdrop/issues/560)
-* Files are transferred only after a request is accepted first. On transfer completion they are downloaded automatically if possible.
-* Multiple files are downloaded as ZIP file
-* On iOS and Android the devices share menu is opened instead of downloading the files
+* Files are transferred only after a request is accepted first. On transfer completion files are downloaded automatically if possible.
+* Multiple files are downloaded as a ZIP file
+* On iOS and Android, in addition to downloading, files can be shared or saved to the gallery via the Share menu.
 * Multiple files are transferred at once with an overall progress indicator
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
@@ -54,7 +54,8 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [Send directly via command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
 
 ### Other changes
-* [Paste Mode](https://github.com/RobinLinus/snapdrop/pull/534)
+* Change your display name permanently to easily differentiate your devices
+* [Paste files/text and choose the recipient afterwords ](https://github.com/RobinLinus/snapdrop/pull/534)
 * [Prevent devices from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
 * Warn user before PairDrop is closed on file transfer  
 * Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
