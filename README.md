@@ -64,6 +64,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Automatic restart on error (Thanks [@KaKi87](https://github.com/KaKi87))
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
+* When hosting PairDrop yourself you can [set your own STUN/TURN servers](/docs/host-your-own.md#specify-stunturn-servers)
 
 ## Screenshots
 <div align="center">

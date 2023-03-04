@@ -996,6 +996,13 @@ button::-moz-focus-inner {
     margin: 8px 8px -16px;
 }
 
+#about section {
+    flex-grow: 1;
+}
+
+#about header {
+    align-self: end;
+}
 
 /* Loading Indicator */
 

@@ -54,16 +54,23 @@ class ServerConnection {
 
     _onPairDeviceJoin(roomKey) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onPairDeviceJoin(roomKey), 5000);
+            setTimeout(_ => this._onPairDeviceJoin(roomKey), 1000);
             return;
         }
         this.send({ type: 'pair-device-join', roomKey: roomKey })
+    }
+
+    _setRtcConfig(config) {
+        window.rtcConfig = config;
     }
 
     _onMessage(msg) {
         msg = JSON.parse(msg);
         if (msg.type !== 'ping') console.log('WS:', msg);
         switch (msg.type) {
+            case 'rtc-config':
+                this._setRtcConfig(msg.config);
+                break;
             case 'peers':
                 Events.fire('peers', msg);
                 break;
@@ -140,7 +147,7 @@ class ServerConnection {
         console.log('WS: server disconnected');
         Events.fire('notify-user', 'Connecting..');
         clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 5000);
+        this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         Events.fire('ws-disconnected');
         this._isReconnect = true;
     }
@@ -507,7 +514,7 @@ class RTCPeer extends Peer {
     _openConnection(peerId, isCaller) {
         this._isCaller = isCaller;
         this._peerId = peerId;
-        this._conn = new RTCPeerConnection(RTCPeer.config);
+        this._conn = new RTCPeerConnection(window.rtcConfig);
         this._conn.onicecandidate = e => this._onIceCandidate(e);
         this._conn.onconnectionstatechange = _ => this._onConnectionStateChange();
         this._conn.oniceconnectionstatechange = e => this._onIceConnectionStateChange(e);
@@ -886,21 +893,4 @@ class Events {
     static off(type, callback) {
         return window.removeEventListener(type, callback, false);
     }
-}
-
-RTCPeer.config = {
-    'sdpSemantics': 'unified-plan',
-    'iceServers': [
-        {
-            urls: 'stun:stun.l.google.com:19302'
-        },
-        {
-            urls: 'stun:openrelay.metered.ca:80'
-        },
-        {
-            urls: 'turn:openrelay.metered.ca:443',
-            username: 'openrelayproject',
-            credential: 'openrelayproject',
-        },
-    ]
 }

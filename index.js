@@ -2,6 +2,7 @@ const process = require('process')
 const crypto = require('crypto')
 const {spawn} = require('child_process')
 const WebSocket = require('ws');
+const fs = require('fs');
 
 // Handle SIGINT
 process.on('SIGINT', () => {
@@ -49,6 +50,25 @@ if (process.argv.includes('--auto-restart')) {
         }
     );
 }
+
+const rtcConfig = process.env.RTC_CONFIG
+    ? fs.readFileSync(process.env.RTC_CONFIG, 'utf8')
+    : {
+        "sdpSemantics": "unified-plan",
+        "iceServers": [
+            {
+                "urls": "stun:stun.l.google.com:19302"
+            },
+            {
+                "urls": "stun:openrelay.metered.ca:80"
+            },
+            {
+                "urls": "turn:openrelay.metered.ca:443",
+                "username": "openrelayproject",
+                "credential": "openrelayproject"
+            }
+        ]
+    };
 
 const express = require('express');
 const RateLimit = require('express-rate-limit');
@@ -113,6 +133,10 @@ class PairDropServer {
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
         this._keepAlive(peer);
+        this._send(peer, {
+            type: 'rtc-config',
+            config: rtcConfig
+        });
         this._joinRoom(peer);
 
         // send displayName
