@@ -57,7 +57,7 @@ if (process.argv.includes('--auto-restart')) {
 }
 
 const rtcConfig = process.env.RTC_CONFIG
-    ? fs.readFileSync(process.env.RTC_CONFIG, 'utf8')
+    ? JSON.parse(fs.readFileSync(process.env.RTC_CONFIG, 'utf8'))
     : {
         "sdpSemantics": "unified-plan",
         "iceServers": [
