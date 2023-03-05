@@ -118,6 +118,8 @@ class ServerConnection {
     }
 
     _onDisplayName(msg) {
+        sessionStorage.setItem("peerId", msg.message.peerId);
+        sessionStorage.setItem("peerIdHash", msg.message.peerIdHash);
         Events.fire('display-name', msg);
     }
 
@@ -126,6 +128,12 @@ class ServerConnection {
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         const webrtc = window.isRtcSupported ? '/webrtc' : '/fallback';
         let ws_url = new URL(protocol + '://' + location.host + location.pathname + 'server' + webrtc);
+        const peerId = sessionStorage.getItem("peerId");
+        const peerIdHash = sessionStorage.getItem("peerIdHash");
+        if (peerId && peerIdHash) {
+            ws_url.searchParams.append('peer_id', peerId);
+            ws_url.searchParams.append('peer_id_hash', peerIdHash);
+        }
         return ws_url.toString();
     }
 

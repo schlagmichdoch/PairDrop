@@ -3,6 +3,11 @@ const crypto = require('crypto')
 const {spawn} = require('child_process')
 const WebSocket = require('ws');
 const fs = require('fs');
+const parser = require('ua-parser-js');
+const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
+const express = require('express');
+const RateLimit = require('express-rate-limit');
+const http = require('http');
 
 // Handle SIGINT
 process.on('SIGINT', () => {
@@ -70,10 +75,6 @@ const rtcConfig = process.env.RTC_CONFIG
         ]
     };
 
-const express = require('express');
-const RateLimit = require('express-rate-limit');
-const http = require('http');
-
 const app = express();
 
 if (process.argv.includes('--rate-limit')) {
@@ -114,9 +115,6 @@ if (process.argv.includes('--localhost-only')) {
     server.listen(port);
 }
 
-const parser = require('ua-parser-js');
-const { uniqueNamesGenerator, animals, colors } = require('unique-names-generator');
-
 class PairDropServer {
 
     constructor() {
@@ -145,7 +143,8 @@ class PairDropServer {
             message: {
                 displayName: peer.name.displayName,
                 deviceName: peer.name.deviceName,
-                peerId: peer.id
+                peerId: peer.id,
+                peerIdHash: peer.id.hashCode128BitSalted()
             }
         });
     }
@@ -477,7 +476,7 @@ class Peer {
         this._setIP(request);
 
         // set peer id
-        this.id = crypto.randomUUID();
+        this._setPeerId(request)
 
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
@@ -549,6 +548,17 @@ class Peer {
         return false;
     }
 
+    _setPeerId(request) {
+        const searchParams = new URL(request.url, "http://server").searchParams;
+        let peerId = searchParams.get("peer_id");
+        let peerIdHash = searchParams.get("peer_id_hash");
+        if (peerId && Peer.isValidUuid(peerId) && this.isPeerIdHashValid(peerId, peerIdHash)) {
+            this.id = peerId;
+        } else {
+            this.id = crypto.randomUUID();
+        }
+    }
+
     toString() {
         return `<Peer id=${this.id} ip=${this.ip} rtcSupported=${this.rtcSupported}>`
     }
@@ -602,6 +612,10 @@ class Peer {
         return /^([0-9]|[a-f]){8}-(([0-9]|[a-f]){4}-){3}([0-9]|[a-f]){12}$/.test(uuid);
     }
 
+    isPeerIdHashValid(peerId, peerIdHash) {
+        return peerIdHash === peerId.hashCode128BitSalted();
+    }
+
     addRoomSecret(roomSecret) {
         if (!(roomSecret in this.roomSecrets)) {
             this.roomSecrets.push(roomSecret);
@@ -617,14 +631,55 @@ class Peer {
 
 Object.defineProperty(String.prototype, 'hashCode', {
     value: function() {
-        var hash = 0, i, chr;
-        for (i = 0; i < this.length; i++) {
-            chr   = this.charCodeAt(i);
-            hash  = ((hash << 5) - hash) + chr;
-            hash |= 0; // Convert to 32bit integer
-        }
-        return hash;
+        return cyrb53(this);
     }
 });
+
+Object.defineProperty(String.prototype, 'hashCode128BitSalted', {
+    value: function() {
+        return hasher.hashCode128BitSalted(this);
+    }
+});
+
+const hasher = (() => {
+    let seeds;
+    return {
+        hashCode128BitSalted(str) {
+            if (!seeds) {
+                // seeds are created on first call to salt hash.
+                seeds = [4];
+                for (let i=0; i<4; i++) {
+                    const randomBuffer = new Uint32Array(1);
+                    crypto.webcrypto.getRandomValues(randomBuffer);
+                    seeds[i] = randomBuffer[0];
+                }
+            }
+            let hashCode = "";
+            for (let i=0; i<4; i++) {
+                hashCode += cyrb53(str, seeds[i]);
+            }
+            return hashCode;
+        }
+    }
+
+})()
+
+/*
+    cyrb53 (c) 2018 bryc (github.com/bryc)
+    A fast and simple hash function with decent collision resistance.
+    Largely inspired by MurmurHash2/3, but with a focus on speed/simplicity.
+    Public domain. Attribution appreciated.
+*/
+const cyrb53 = function(str, seed = 0) {
+    let h1 = 0xdeadbeef ^ seed, h2 = 0x41c6ce57 ^ seed;
+    for (let i = 0, ch; i < str.length; i++) {
+        ch = str.charCodeAt(i);
+        h1 = Math.imul(h1 ^ ch, 2654435761);
+        h2 = Math.imul(h2 ^ ch, 1597334677);
+    }
+    h1 = Math.imul(h1 ^ (h1>>>16), 2246822507) ^ Math.imul(h2 ^ (h2>>>13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2>>>16), 2246822507) ^ Math.imul(h1 ^ (h1>>>13), 3266489909);
+    return 4294967296 * (2097151 & h2) + (h1>>>0);
+};
 
 new PairDropServer();

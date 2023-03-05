@@ -80,6 +80,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [Progressive Web App](https://wikipedia.org/wiki/Progressive_Web_App)
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
 * [zip.js](https://gildas-lormeau.github.io/zip.js/)
+* [cyrb53](https://github.com/bryc) super fast hash function
 
 Have any questions? Read our [FAQ](/docs/faq.md).
 
