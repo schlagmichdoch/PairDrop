@@ -705,6 +705,11 @@ class RTCPeer extends Peer {
     _isConnecting() {
         return this._channel && this._channel.readyState === 'connecting';
     }
+
+    sendDisplayName(displayName) {
+        if (!this._isConnected()) return;
+        super.sendDisplayName(displayName);
+    }
 }
 
 class WSPeer extends Peer {
