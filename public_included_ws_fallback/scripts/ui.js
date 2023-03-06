@@ -241,7 +241,7 @@ class PeersUI {
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
-            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback));
+            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback), { once: true });
 
             this.$cancelPasteModeBtn.removeAttribute('hidden');
 
