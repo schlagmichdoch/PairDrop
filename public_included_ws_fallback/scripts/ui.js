@@ -1302,13 +1302,15 @@ class Base64ZipDialog extends Dialog {
     preparePasting(type) {
         if (navigator.clipboard.readText) {
             this.$pasteBtn.innerText = `Tap here to paste ${type}`;
-            this.$pasteBtn.addEventListener('click', _ => this.processClipboard(type), { once: true });
+            this._clickCallback = _ => this.processClipboard(type);
+            this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
         } else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
             this.$pasteBtn.setAttribute('hidden', '');
             this.$fallbackTextarea.setAttribute('placeholder', `Paste here to send ${type}`);
             this.$fallbackTextarea.removeAttribute('hidden');
-            this.$fallbackTextarea.addEventListener('input', _ => this.processInput(type), { once: true });
+            this._inputCallback = _ => this.processInput(type);
+            this.$fallbackTextarea.addEventListener('input', _ => this._inputCallback());
             this.$fallbackTextarea.focus();
         }
     }
@@ -1316,23 +1318,28 @@ class Base64ZipDialog extends Dialog {
     async processInput(type) {
         const base64 = this.$fallbackTextarea.textContent;
         this.$fallbackTextarea.textContent = '';
-        try {
-            // check if input is base64 encoded
-            window.atob(base64);
-            await this.processBase64(type, base64);
-        } catch (e) {
-            // input is not base64 string. Do nothing.
-        }
+        await this.processBase64(type, base64);
     }
 
     async processClipboard(type) {
-        this._setPasteBtnToProcessing();
         const base64 = await navigator.clipboard.readText();
         await this.processBase64(type, base64);
     }
 
+    isValidBase64(base64) {
+        try {
+            // check if input is base64 encoded
+            window.atob(base64);
+            return true;
+        } catch (e) {
+            // input is not base64 string.
+            return false;
+        }
+    }
+
     async processBase64(type, base64) {
-        if (!base64) return;
+        if (!base64 || !this.isValidBase64(base64)) return;
+        this._setPasteBtnToProcessing();
         try {
             if (type === "text") {
                 await this.processBase64Text(base64);
