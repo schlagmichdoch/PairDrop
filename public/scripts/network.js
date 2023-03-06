@@ -194,6 +194,10 @@ class Peer {
         this._send(JSON.stringify(message));
     }
 
+    sendDisplayName(displayName) {
+        this.sendJSON({type: 'display-name-changed', displayName: displayName});
+    }
+
     async createHeader(file) {
         return {
             name: file.name,
@@ -490,7 +494,8 @@ class Peer {
     }
 
     _onDisplayNameChanged(message) {
-        if (!message.displayName) return;
+        if (!message.displayName || this._displayName === message.displayName) return;
+        this._displayName = message.displayName;
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
     }
 }
@@ -707,6 +712,7 @@ class PeersManager {
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
+        Events.on('peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail.peerId));
     }
 
     _onMessage(message) {
@@ -793,7 +799,7 @@ class PeersManager {
     _notifyPeerDisplayNameChanged(peerId) {
         const peer = this.peers[peerId];
         if (!peer) return;
-        this.peers[peerId].sendJSON({type: 'display-name-changed', displayName: this._displayName});
+        this.peers[peerId].sendDisplayName(this._displayName);
     }
 
     _onDisplayName(displayName) {
