@@ -300,7 +300,8 @@ class PeerUI {
 
     constructor(peer, connectionHash) {
         this._peer = peer;
-        this._connectionHash = connectionHash;
+        this._connectionHash =
+            `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
         this._initDom();
         this._bindListeners();
 
@@ -345,8 +346,7 @@ class PeerUI {
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
-        this.$el.querySelector('.connection-hash').textContent =
-            this._connectionHash.substring(0, 4) + " " + this._connectionHash.substring(4, 8) + " " + this._connectionHash.substring(8, 12) + " " + this._connectionHash.substring(12, 16);
+        this.$el.querySelector('.connection-hash').textContent = this._connectionHash;
     }
 
     _initDom() {
@@ -569,7 +569,7 @@ class ReceiveDialog extends Dialog {
         }
     }
 
-    _parseFileData(displayName, files, imagesOnly, totalSize) {
+    _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize) {
         if (files.length > 1) {
             let fileOtherText = ` and ${files.length - 1} other `;
             if (files.length === 2) {
@@ -586,6 +586,7 @@ class ReceiveDialog extends Dialog {
         this.$fileStem.innerText = fileName.substring(0, fileName.length - fileExtension.length);
         this.$fileExtension.innerText = fileExtension;
         this.$displayName.innerText = displayName;
+        this.$displayName.title = connectionHash;
         this.$fileSize.innerText = this._formatFileSize(totalSize);
     }
 }
@@ -603,8 +604,9 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     _onFilesReceived(sender, files, imagesOnly, totalSize) {
-        const displayName = $(sender).ui._displayName()
-        this._filesQueue.push({peer: sender, displayName: displayName, files: files, imagesOnly: imagesOnly, totalSize: totalSize});
+        const displayName = $(sender).ui._displayName();
+        const connectionHash = $(sender).ui._connectionHash;
+        this._filesQueue.push({peer: sender, displayName: displayName, connectionHash: connectionHash, files: files, imagesOnly: imagesOnly, totalSize: totalSize});
         this._nextFiles();
         window.blop.play();
     }
@@ -612,12 +614,11 @@ class ReceiveFileDialog extends ReceiveDialog {
     _nextFiles() {
         if (this._busy) return;
         this._busy = true;
-        const {peer, displayName, files, imagesOnly, totalSize} = this._filesQueue.shift();
-        this._displayFiles(peer, displayName, files, imagesOnly, totalSize);
+        const {peer, displayName, connectionHash, files, imagesOnly, totalSize} = this._filesQueue.shift();
+        this._displayFiles(peer, displayName, connectionHash, files, imagesOnly, totalSize);
     }
 
     _dequeueFile() {
-        // Todo: change count in document.title and move '- PairDrop' to back
         if (!this._filesQueue.length) { // nothing to do
             this._busy = false;
             return;
@@ -655,8 +656,8 @@ class ReceiveFileDialog extends ReceiveDialog {
         });
     }
 
-    async _displayFiles(peerId, displayName, files, imagesOnly, totalSize) {
-        this._parseFileData(displayName, files, imagesOnly, totalSize);
+    async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize) {
+        this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize);
 
         let descriptor, url, filenameDownload;
         if (files.length === 1) {
@@ -803,7 +804,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.correspondingPeerId = peerId;
 
         const displayName = $(peerId).ui._displayName();
-        this._parseFileData(displayName, request.header, request.imagesOnly, request.totalSize);
+        const connectionHash = $(peerId).ui._connectionHash;
+        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize);
 
         if (request.thumbnailDataUrl?.substring(0, 22) === "data:image/jpeg;base64") {
             let element = document.createElement('img');
