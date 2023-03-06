@@ -1416,9 +1416,9 @@ class Notifications {
             this.$button.removeAttribute('hidden');
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
-        // Todo: fix Notifications
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
+        Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
     }
 
     _requestPermission() {
@@ -1491,8 +1491,29 @@ class Notifications {
         }
     }
 
+    _requestNotification(request, peerId) {
+        if (document.visibilityState !== 'visible') {
+            let imagesOnly = true;
+            for(let i=0; i<request.header.length; i++) {
+                if (request.header[i].mime.split('/')[0] !== 'image') {
+                    imagesOnly = false;
+                    break;
+                }
+            }
+            let descriptor;
+            if (request.header.length > 1) {
+                descriptor = imagesOnly ? ' images' : ' files';
+            } else {
+                descriptor = imagesOnly ? ' image' : ' file';
+            }
+            let displayName = $(peerId).querySelector('.name').textContent
+            let title = `${displayName} would like to transfer ${request.header.length} ${descriptor}`;
+            const notification = this._notify(title, 'Click to show');
+        }
+    }
+
     _download(notification) {
-        $('share-or-download').click();
+        $('download-btn').click();
         notification.close();
     }
 
