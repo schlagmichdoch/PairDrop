@@ -368,6 +368,10 @@ class PairDropServer {
         // delete the peer
         delete this._rooms[room][peer.id];
 
+        if (roomType === 'ip') {
+            peer.socket.terminate();
+        }
+
         //if room is empty, delete the room
         if (!Object.keys(this._rooms[room]).length) {
             delete this._rooms[room];

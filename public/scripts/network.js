@@ -8,7 +8,6 @@ class ServerConnection {
     constructor() {
         this._connect();
         Events.on('pagehide', _ => this._disconnect());
-        Events.on('beforeunload', _ => this._onBeforeUnload());
         document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
@@ -137,7 +136,8 @@ class ServerConnection {
         return ws_url.toString();
     }
 
-    _onBeforeUnload() {
+    _disconnect() {
+        this.send({ type: 'disconnect' });
         if (this._socket) {
             this._socket.onclose = null;
             this._socket.close();
@@ -145,10 +145,6 @@ class ServerConnection {
             Events.fire('ws-disconnected');
             this._isReconnect = true;
         }
-    }
-
-    _disconnect() {
-        this.send({ type: 'disconnect' });
     }
 
     _onDisconnect() {
@@ -573,7 +569,7 @@ class RTCPeer extends Peer {
         const channel = event.channel || event.target;
         channel.binaryType = 'arraybuffer';
         channel.onmessage = e => this._onMessage(e.data);
-        channel.onclose = e => this._onChannelClosed(e);
+        channel.onclose = _ => this._onChannelClosed();
         this._channel = channel;
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._onPageHide());
@@ -617,8 +613,6 @@ class RTCPeer extends Peer {
         if (this._busy) {
             e.preventDefault();
             return "There are unfinished transfers. Are you sure you want to close?";
-        } else {
-            this._disconnect();
         }
     }
 
@@ -798,7 +792,7 @@ class PeersManager {
 
     _notifyPeerDisplayNameChanged(peerId) {
         const peer = this.peers[peerId];
-        if (!peer || (peer._conn && (peer._conn.signalingState !== "stable" || !peer._channel || peer._channel.readyState !== "open"))) return;
+        if (!peer) return;
         this.peers[peerId].sendJSON({type: 'display-name-changed', displayName: this._displayName});
     }
 
