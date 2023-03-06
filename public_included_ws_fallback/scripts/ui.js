@@ -1386,6 +1386,8 @@ class Base64ZipDialog extends Dialog {
 
     hide() {
         this.clearBrowserHistory();
+        this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
+        this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
         super.hide();
     }
 }
