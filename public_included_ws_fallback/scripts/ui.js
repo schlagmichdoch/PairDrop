@@ -241,7 +241,7 @@ class PeersUI {
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
-            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback));
+            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback), { once: true });
 
             this.$cancelPasteModeBtn.removeAttribute('hidden');
 
@@ -1246,21 +1246,21 @@ class Base64ZipDialog extends Dialog {
         const base64Hash = window.location.hash.substring(1);
 
         this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
+        this.$fallbackTextarea = this.$el.querySelector('.textarea');
 
         if (base64Text) {
             this.show();
             if (base64Text === "paste") {
                 // ?base64text=paste
                 // base64 encoded string is ready to be pasted from clipboard
-                this.$pasteBtn.innerText = 'Tap here to paste text';
-                this.$pasteBtn.addEventListener('click', _ => this.processClipboard('text'));
+                this.preparePasting("text");
             } else if (base64Text === "hash") {
                 // ?base64text=hash#BASE64ENCODED
                 // base64 encoded string is url hash which is never sent to server and faster (recommended)
                 this.processBase64Text(base64Hash)
                     .catch(_ => {
                         Events.fire('notify-user', 'Text content is incorrect.');
-                        console.log("Text content incorrect.")
+                        console.log("Text content incorrect.");
                     }).finally(_ => {
                         this.hide();
                     });
@@ -1270,7 +1270,7 @@ class Base64ZipDialog extends Dialog {
                 this.processBase64Text(base64Text)
                     .catch(_ => {
                         Events.fire('notify-user', 'Text content is incorrect.');
-                        console.log("Text content incorrect.")
+                        console.log("Text content incorrect.");
                     }).finally(_ => {
                         this.hide();
                     });
@@ -1283,14 +1283,13 @@ class Base64ZipDialog extends Dialog {
                 this.processBase64Zip(base64Hash)
                     .catch(_ => {
                         Events.fire('notify-user', 'File content is incorrect.');
-                        console.log("File content incorrect.")
+                        console.log("File content incorrect.");
                     }).finally(_ => {
                         this.hide();
                     });
             } else {
                 // ?base64zip=paste || ?base64zip=true
-                this.$pasteBtn.innerText = 'Tap here to paste files';
-                this.$pasteBtn.addEventListener('click', _ => this.processClipboard('file'));
+                this.preparePasting('files');
             }
         }
     }
@@ -1300,37 +1299,58 @@ class Base64ZipDialog extends Dialog {
         this.$pasteBtn.innerText = "Processing...";
     }
 
-    async processClipboard(type) {
-        if (!navigator.clipboard.readText) {
-            Events.fire('notify-user', 'This feature is not available on your browser.');
-            console.log("navigator.clipboard.readText() is not available on your browser.")
-            this.hide();
-            return;
-        }
-
-        this._setPasteBtnToProcessing();
-
-        const base64 = await navigator.clipboard.readText();
-
-        if (!base64) return;
-
-        if (type === "text") {
-            this.processBase64Text(base64)
-                .catch(_ => {
-                    Events.fire('notify-user', 'Clipboard content is incorrect.');
-                    console.log("Clipboard content is incorrect.")
-                }).finally(_ => {
-                    this.hide();
-                });
+    preparePasting(type) {
+        if (navigator.clipboard.readText) {
+            this.$pasteBtn.innerText = `Tap here to paste ${type}`;
+            this._clickCallback = _ => this.processClipboard(type);
+            this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
         } else {
-            this.processBase64Zip(base64)
-                .catch(_ => {
-                    Events.fire('notify-user', 'Clipboard content is incorrect.');
-                    console.log("Clipboard content is incorrect.")
-                }).finally(_ => {
-                    this.hide();
-                });
+            console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
+            this.$pasteBtn.setAttribute('hidden', '');
+            this.$fallbackTextarea.setAttribute('placeholder', `Paste here to send ${type}`);
+            this.$fallbackTextarea.removeAttribute('hidden');
+            this._inputCallback = _ => this.processInput(type);
+            this.$fallbackTextarea.addEventListener('input', _ => this._inputCallback());
+            this.$fallbackTextarea.focus();
         }
+    }
+
+    async processInput(type) {
+        const base64 = this.$fallbackTextarea.textContent;
+        this.$fallbackTextarea.textContent = '';
+        await this.processBase64(type, base64);
+    }
+
+    async processClipboard(type) {
+        const base64 = await navigator.clipboard.readText();
+        await this.processBase64(type, base64);
+    }
+
+    isValidBase64(base64) {
+        try {
+            // check if input is base64 encoded
+            window.atob(base64);
+            return true;
+        } catch (e) {
+            // input is not base64 string.
+            return false;
+        }
+    }
+
+    async processBase64(type, base64) {
+        if (!base64 || !this.isValidBase64(base64)) return;
+        this._setPasteBtnToProcessing();
+        try {
+            if (type === "text") {
+                await this.processBase64Text(base64);
+            } else {
+                await this.processBase64Zip(base64);
+            }
+        } catch(_) {
+            Events.fire('notify-user', 'Clipboard content is incorrect.');
+            console.log("Clipboard content is incorrect.")
+        }
+        this.hide();
     }
 
     processBase64Text(base64Text){

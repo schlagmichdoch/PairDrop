@@ -817,10 +817,29 @@ x-dialog .dialog-subheader {
     margin: auto -24px;
 }
 
-#base64-paste-btn {
+#base64-paste-btn,
+#base64-paste-dialog .textarea {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
+    text-align: center;
+}
+
+#base64-paste-dialog .textarea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#base64-paste-dialog .textarea::before {
+    font-size: 15px;
+    letter-spacing: 0.12em;
+    color: var(--primary-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    content: attr(placeholder);
 }
 
 #base64-paste-dialog button {
