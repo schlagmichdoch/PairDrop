@@ -58,8 +58,11 @@ If your devices are paired and behind a NAT, the public TURN Server from [Open R
 Yes. Your files are sent using WebRTC, which encrypts them on transit. To ensure the connection is secure and there is no MITM, compare the security number shown under the device name on both devices. The security number is different for every connection.
 
 ### Transferring many files with paired devices takes too long
-Naturally, if traffic needs to be routed through the turn server transfer speed decreases.
-As a workaround you can open a hotspot on one of your devices to bridge the connection which makes transfers much faster.
+Naturally, if traffic needs to be routed through the turn server because your devices are behind different NATs, transfer speed decreases.
+
+As the public TURN server used is not super fast, you can easily [specify to use your own TURN server](https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md#specify-stunturn-servers) if you host your own instance.
+
+Alternatively, you can open a hotspot on one of your devices to bridge the connection which makes transfers much faster as no TURN server is needed.
 
 - [How to open a hotspot on Windows](https://support.microsoft.com/en-us/windows/use-your-windows-pc-as-a-mobile-hotspot-c89b0fad-72d5-41e8-f7ea-406ad9036b85#WindowsVersion=Windows_11)
 - [How to open a hotspot on Mac](https://support.apple.com/guide/mac-help/share-internet-connection-mac-network-users-mchlp1540/mac)
