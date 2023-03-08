@@ -96,7 +96,8 @@ header > div {
     align-self: flex-start;
     touch-action: manipulation;
 }
-header > div a {
+
+header > div .icon-button {
     height: 40px;
     transition: all 300ms;
 }
@@ -106,7 +107,7 @@ header > div > div {
     flex-direction: column;
 }
 
-header > div:not(:hover) a:not(.selected) {
+header > div:not(:hover) .icon-button:not(.selected) {
     height: 0;
     opacity: 0;
 }
@@ -125,16 +126,16 @@ header > div:hover::before {
     margin-bottom: 8px;
 }
 
-header > div:hover a.selected::before {
+header > div:hover .icon-button.selected::before {
     opacity: 0.1;
 }
 
 @media (pointer: coarse) {
-    header > div:hover a.selected:hover::before {
+    header > div:hover .icon-button.selected:hover::before {
         opacity: 0.2;
     }
 
-    header > div a:not(.selected) {
+    header > div .icon-button:not(.selected) {
         height: 0;
         opacity: 0;
         pointer-events: none;

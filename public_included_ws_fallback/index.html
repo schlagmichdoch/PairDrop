@@ -45,45 +45,45 @@
             </svg>
         </a>
         <div id="theme-wrapper">
-            <a id="theme-auto" class="icon-button selected" title="Adapt to System" >
+            <div id="theme-auto" class="icon-button selected" title="Adapt to System" >
                 <svg class="icon">
                     <use xlink:href="#icon-theme-auto" />
                 </svg>
-            </a>
+            </div>
             <div>
-                <a id="theme-light" class="icon-button" title="Always Light" >
+                <div id="theme-light" class="icon-button" title="Always Light" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-light" />
                     </svg>
-                </a>
-                <a id="theme-dark" class="icon-button" title="Always Dark" >
+                </div>
+                <div id="theme-dark" class="icon-button" title="Always Dark" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-dark" />
                     </svg>
-                </a>
+                </div>
             </div>
         </div>
-        <a id="notification" class="icon-button" title="Enable Notifications" hidden>
+        <div id="notification" class="icon-button" title="Enable Notifications" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
             </svg>
-        </a>
-        <a id="install" class="icon-button" title="Install PairDrop" hidden>
+        </div>
+        <div id="install" class="icon-button" title="Install PairDrop" hidden>
             <svg class="icon">
                 <use xlink:href="#homescreen" />
             </svg>
-        </a>
-        <a id="pair-device" class="icon-button" title="Pair Device" hidden>
+        </div>
+        <div id="pair-device" class="icon-button" title="Pair Device" hidden>
             <svg class="icon">
                 <use xlink:href="#pair-device-icon" />
             </svg>
-        </a>
-        <a id="clear-pair-devices" class="icon-button" title="Clear All Paired Devices" hidden>
+        </div>
+        <div id="clear-pair-devices" class="icon-button" title="Clear All Paired Devices" hidden>
             <svg class="icon">
                 <use xlink:href="#clear-pair-devices-icon" />
             </svg>
-        </a>
-        <a id="cancel-paste-mode" class="button" hidden>Done</a>
+        </div>
+        <div id="cancel-paste-mode" class="button" hidden>Done</div>
     </header>
     <!-- Center -->
     <div id="center">
@@ -129,12 +129,12 @@
                     <div id="pair-instructions" class="font-subheading center text-center">Input this key on another device<br>or scan the QR-Code.</div>
                     <hr>
                     <div id="key-input-container">
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center"  maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-3" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-4" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-5" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                        <input type="tel" class="textarea center" aria-label="pair-key-6" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
                     </div>
                     <div class="font-subheading center text-center">Enter key from another device to continue.</div>
                     <div class="center row-reverse">
@@ -223,7 +223,7 @@
                         <span class="display-name"></span>
                     </div>
                     <div class="row-separator"></div>
-                    <div id="text-input" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
+                    <div id="text-input" title="Message" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="center row-reverse">
                         <button class="button" type="submit" title="STR + ENTER" disabled close>Send</button>
                         <button class="button" type="button" title="ESCAPE" close>Cancel</button>
@@ -368,11 +368,11 @@
         </symbol>
     </svg>
     <!-- Scripts -->
-    <script src="scripts/util.js"></script>
+    <script src="scripts/theme.js"></script>
     <script src="scripts/network.js"></script>
     <script src="scripts/ui.js"></script>
-    <script src="scripts/theme.js" async></script>
-    <script src="scripts/qrcode.js" async></script>
+    <script src="scripts/util.js" async></script>
+    <script src="scripts/QRCode.min.js" async></script>
     <script src="scripts/zip.min.js" async></script>
     <script src="scripts/NoSleep.min.js" async></script>
     <!-- Sounds -->
