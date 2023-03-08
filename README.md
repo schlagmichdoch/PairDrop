@@ -6,7 +6,7 @@
   <h1>PairDrop</h1>
 
   <p>
-    Local file sharing in your browser. Inspired by Apple's Airdrop.
+    Local file sharing in your browser. Inspired by Apple's AirDrop.
     <br />
     <a href="https://pairdrop.net"><strong>Explore  »</strong></a>
     <br />
