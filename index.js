@@ -90,6 +90,12 @@ if (process.argv.includes('--include-ws-fallback')) {
     app.use(express.static('public'));
 }
 
+const debugMode = process.env.DEBUG_MODE === "true";
+
+if (debugMode) {
+    console.log("DEBUG_MODE is active. To protect privacy, do not use in production.")
+}
+
 app.use(function(req, res) {
     res.redirect('/');
 });
@@ -501,6 +507,17 @@ class Peer {
         // remove the prefix used for IPv4-translated addresses
         if (this.ip.substring(0,7) === "::ffff:")
             this.ip = this.ip.substring(7);
+
+        if (debugMode) {
+            console.debug("----DEBUGGING-PEER-IP-START----");
+            console.debug("remoteAddress:", request.connection.remoteAddress);
+            console.debug("x-forwarded-for:", request.headers['x-forwarded-for']);
+            console.debug("cf-connecting-ip:", request.headers['cf-connecting-ip']);
+            console.debug("PairDrop uses:", this.ip);
+            console.debug("IP is private:", this.ipIsPrivate(this.ip));
+            console.debug("if IP is private, '127.0.0.1' is used instead");
+            console.debug("----DEBUGGING-PEER-IP-END----");
+        }
 
         // IPv4 and IPv6 use different values to refer to localhost
         // put all peers on the same network as the server into the same room as well
