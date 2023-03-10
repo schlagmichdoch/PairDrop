@@ -524,6 +524,7 @@ class RTCPeer extends Peer {
         this._peerId = peerId;
         this._conn = new RTCPeerConnection(window.rtcConfig);
         this._conn.onicecandidate = e => this._onIceCandidate(e);
+        this._conn.onicecandidateerror = e => this._onError(e);
         this._conn.onconnectionstatechange = _ => this._onConnectionStateChange();
         this._conn.oniceconnectionstatechange = e => this._onIceConnectionStateChange(e);
     }
