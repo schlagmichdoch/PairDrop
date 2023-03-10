@@ -22,13 +22,18 @@ body {
 }
 
 body {
-    min-height: 100vh;
+    height: 100%;
     /* mobile viewport bug fix */
-    min-height: -webkit-fill-available;
+    min-height: -moz-available;          /* WebKit-based browsers will ignore this. */
+    min-height: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    min-height: fill-available;
 }
 
 html {
-    height: -webkit-fill-available;
+    height: 100%;
+    min-height: -moz-available;          /* WebKit-based browsers will ignore this. */
+    min-height: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    min-height: fill-available;
 }
 
 .row-reverse {
