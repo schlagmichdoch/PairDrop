@@ -431,14 +431,14 @@ class Peer {
 
         this.sendJSON({type: 'file-transfer-complete'});
 
-        // include for compatibility with Snapdrop for Android app
-        Events.fire('file-received');
-
         const sameSize = fileBlob.size === acceptedHeader.size;
         const sameName = fileBlob.name === acceptedHeader.name
         if (!sameSize || !sameName) {
             this._abortTransfer();
         }
+        
+        // include for compatibility with Snapdrop for Android app
+        Events.fire('file-received', fileBlob);
 
         this._filesReceived.push(fileBlob);
         if (!this._requestAccepted.header.length) {
