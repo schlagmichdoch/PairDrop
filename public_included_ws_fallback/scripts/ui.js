@@ -633,26 +633,34 @@ class ReceiveFileDialog extends ReceiveDialog {
 
     createPreviewElement(file) {
         return new Promise((resolve, reject) => {
-            let mime = file.type.split('/')[0]
-            let previewElement = {
-                image: 'img',
-                audio: 'audio',
-                video: 'video'
-            }
+            try {
+                let mime = file.type.split('/')[0]
+                let previewElement = {
+                    image: 'img',
+                    audio: 'audio',
+                    video: 'video'
+                }
 
-            if (Object.keys(previewElement).indexOf(mime) === -1) {
-                resolve(false);
-            } else {
-                console.log('the file is able to preview');
-                let element = document.createElement(previewElement[mime]);
-                element.src = URL.createObjectURL(file);
-                element.controls = true;
-                element.onload = _ => {
-                    this.$previewBox.appendChild(element);
-                    resolve(true)
-                };
-                element.addEventListener('loadeddata', _ => resolve(true));
-                element.onerror = _ => reject(`${mime} preview could not be loaded from type ${file.type}`);
+                if (Object.keys(previewElement).indexOf(mime) === -1) {
+                    resolve(false);
+                } else {
+                    let element = document.createElement(previewElement[mime]);
+                    element.controls = true;
+                    element.onload = _ => {
+                        this.$previewBox.appendChild(element);
+                        resolve(true);
+                    };
+                    element.onloadeddata = _ => {
+                        this.$previewBox.appendChild(element);
+                        resolve(true);
+                    };
+                    element.onerror = _ => {
+                        reject(`${mime} preview could not be loaded from type ${file.type}`);
+                    };
+                    element.src = URL.createObjectURL(file);
+                }
+            } catch (e) {
+                reject(`preview could not be loaded from type ${file.type}`);
             }
         });
     }
@@ -735,20 +743,30 @@ class ReceiveFileDialog extends ReceiveDialog {
             setTimeout(_ => this.$downloadBtn.style.pointerEvents = "unset", 2000);
         };
 
-        this.createPreviewElement(files[0]).finally(_ => {
-            document.title = files.length === 1
-                ? 'File received - PairDrop'
-                : `${files.length} Files received - PairDrop`;
-            document.changeFavicon("images/favicon-96x96-notification.png");
-            Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
-            this.show();
+        document.title = files.length === 1
+            ? 'File received - PairDrop'
+            : `${files.length} Files received - PairDrop`;
+        document.changeFavicon("images/favicon-96x96-notification.png");
+        Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
+        this.show();
 
+        setTimeout(_ => {
             if (canShare) {
                 this.$shareBtn.click();
             } else {
                 this.$downloadBtn.click();
             }
-        }).catch(r => console.error(r));
+        }, 500);
+
+        this.createPreviewElement(files[0])
+            .then(canPreview => {
+                if (canPreview) {
+                    console.log('the file is able to preview');
+                } else {
+                    console.log('the file is not able to preview');
+                }
+            })
+            .catch(r => console.error(r));
     }
 
     _downloadFilesIndividually(files) {
