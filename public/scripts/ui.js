@@ -107,8 +107,15 @@ class PeersUI {
     _getSavedDisplayName() {
         return new Promise((resolve) => {
             PersistentStorage.get('editedDisplayName')
-                .then(displayName => resolve(displayName ?? ""))
-                .catch(_ => resolve(localStorage.getItem('editedDisplayName') ?? ""))
+                .then(displayName => {
+                    if (!displayName) displayName = "";
+                    resolve(displayName);
+                })
+                .catch(_ => {
+                    let displayName = localStorage.getItem('editedDisplayName');
+                    if (!displayName) displayName = "";
+                    resolve(displayName);
+                })
         });
     }
 
@@ -825,7 +832,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         const connectionHash = $(peerId).ui._connectionHash;
         this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize);
 
-        if (request.thumbnailDataUrl?.substring(0, 22) === "data:image/jpeg;base64") {
+        if (request.thumbnailDataUrl && request.thumbnailDataUrl.substring(0, 22) === "data:image/jpeg;base64") {
             let element = document.createElement('img');
             element.src = request.thumbnailDataUrl;
             this.$previewBox.appendChild(element)

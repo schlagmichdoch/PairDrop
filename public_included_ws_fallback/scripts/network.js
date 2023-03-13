@@ -401,7 +401,7 @@ class Peer {
     }
 
     _onFilesHeader(header) {
-        if (this._requestAccepted?.header.length) {
+        if (this._requestAccepted && this._requestAccepted.header.length) {
             this._lastProgress = 0;
             this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
                 this._requestAccepted.totalSize,
