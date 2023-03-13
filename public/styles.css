@@ -459,7 +459,7 @@ x-peer[status] x-icon {
     text-align: center;
 }
 
-.name {
+.device-descriptor > div {
     width: 100%;
     white-space: nowrap;
     overflow: hidden;

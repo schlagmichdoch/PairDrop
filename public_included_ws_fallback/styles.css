@@ -486,7 +486,7 @@ x-peer.ws-peer .highlight-wrapper {
     text-align: center;
 }
 
-.name {
+.device-descriptor > div {
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
