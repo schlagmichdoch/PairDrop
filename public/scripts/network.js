@@ -329,7 +329,7 @@ class Peer {
                 this._onFilesTransferRequest(messageJSON);
                 break;
             case 'header':
-                this._onFilesHeader(messageJSON);
+                this._onFileHeader(messageJSON);
                 break;
             case 'partition':
                 this._onReceivedPartitionEnd(messageJSON);
@@ -389,7 +389,7 @@ class Peer {
         this._requestPending = null;
     }
 
-    _onFilesHeader(header) {
+    _onFileHeader(header) {
         if (this._requestAccepted && this._requestAccepted.header.length) {
             this._lastProgress = 0;
             this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
@@ -442,6 +442,9 @@ class Peer {
         if (!sameSize || !sameName) {
             this._abortTransfer();
         }
+
+        // include for compatibility with Snapdrop for Android app
+        Events.fire('file-received', fileBlob);
 
         this._filesReceived.push(fileBlob);
         if (!this._requestAccepted.header.length) {
