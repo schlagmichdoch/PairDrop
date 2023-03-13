@@ -14,7 +14,7 @@
     "express-rate-limit": "^6.7.0",
     "ua-parser-js": "^1.0.34",
     "unique-names-generator": "^4.3.0",
-    "ws": "^8.12.1"
+    "ws": "^8.13.0"
   },
   "engines": {
     "node": ">=15"
