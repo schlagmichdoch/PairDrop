@@ -195,7 +195,8 @@ x-noscript {
 
 /* Main Header */
 
-body>header a {
+body>header a,
+body>header div {
     margin-left: 8px;
 }
 
