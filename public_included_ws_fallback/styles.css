@@ -486,7 +486,7 @@ x-peer.ws-peer .highlight-wrapper {
     text-align: center;
 }
 
-.name {
+.device-descriptor > div {
     width: 100%;
     white-space: nowrap;
     overflow: hidden;
@@ -746,7 +746,7 @@ x-paper > div:last-child {
 
 x-paper > div:last-child > .button {
     height: 100%;
-    width: 50%;
+    width: 100%;
 }
 
 x-paper > div:last-child > .button:not(:last-child) {
