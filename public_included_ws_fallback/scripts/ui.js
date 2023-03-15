@@ -1118,7 +1118,7 @@ class SendTextDialog extends Dialog {
     constructor() {
         super('send-text-dialog');
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
-        this.$text = this.$el.querySelector('#text-input');
+        this.$text = this.$el.querySelector('#textInput');
         this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
