@@ -11,6 +11,16 @@ by clicking the install-button in the top-right corner while on [pairdrop.net](h
 <img width="400" src="pwa-install.png" alt="Example on how to install a pwa with Edge">
 
 On Firefox, PWAs are installable via [this browser extensions](https://addons.mozilla.org/de/firefox/addon/pwas-for-firefox/)
+
+<br>
+
+<b>Self-Hosted Instance?</b>
+
+To be able to install the PWA from a self-hosted instance, the connection needs to be [established through HTTPS](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Installable_PWAs).
+See [this host your own section](https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md#testing-pwa-related-features) for more information. 
+
+<br>
+
 </details>
 
 <details>
@@ -23,6 +33,9 @@ Shortcuts!
 - Close all send and pair dialogs by pressing `Escape`.
 - Copy a received message to clipboard with `CTRL/⌘ + C`.
 - Accept file transfer request with `Enter` and decline with `Escape`.
+
+<br>
+
 </details>
 
 <details>
@@ -37,6 +50,9 @@ iOS Shortcuts to the win:
 I created a simple iOS shortcut that takes your photos and saves them to your gallery:
 https://routinehub.co/shortcut/13988/
 
+
+<br>
+
 </details>
 
 <details>
@@ -49,6 +65,9 @@ Yes, it finally is!
 * [Send directly from share menu on iOS](/docs/how-to.md#send-directly-from-share-menu-on-ios)
 * [Send directly from share menu on Android](/docs/how-to.md#send-directly-from-share-menu-on-android)
 
+
+<br>
+
 </details>
 
 <details>
@@ -59,6 +78,9 @@ Yes, it finally is!
 Yes, it is!
 
 * [Send directly from command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
+
+
+<br>
 
 </details>
 
@@ -72,6 +94,9 @@ Here's a list of some third-party apps compatible with PairDrop:
 1. [Snapdrop Android App](https://github.com/fm-sys/snapdrop-android)
 2. [Snapdrop for Firefox (Addon)](https://github.com/ueen/SnapdropFirefoxAddon)
 3. Feel free to make one :)
+
+<br>
+
 </details>
 
 <details>
@@ -82,6 +107,9 @@ Here's a list of some third-party apps compatible with PairDrop:
 It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a Signaling Server, but it is only used to establish a connection and is not involved in the file transfer.
 
 If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
+
+
+<br>
 
 </details>
 
@@ -95,6 +123,9 @@ WebRTC encrypts the files on transit.
 
 If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
 
+
+<br>
+
 </details>
 
 <details>
@@ -103,6 +134,9 @@ If your devices are paired and behind a NAT, the public TURN Server from [Open R
 </summary>
 
 Yes. Your files are sent using WebRTC, which encrypts them on transit. To ensure the connection is secure and there is no MITM, compare the security number shown under the device name on both devices. The security number is different for every connection.
+
+
+<br>
 
 </details>
 
@@ -124,6 +158,9 @@ Alternatively, you can open a hotspot on one of your devices to bridge the conne
 You can also use mobile hotspots on phones to do that. 
 Then, all data should be sent directly between devices and your data plan should not be charged.
 
+
+<br>
+
 </details>
 
 <details>
@@ -135,6 +172,9 @@ Snapdrop and PairDrop are a study in radical simplicity. The user interface is i
 We are not trying to optimize for some edge-cases. We are optimizing the user flow of the average users. Don't be sad if we decline your feature request for the sake of simplicity. 
 
 If you want to learn more about simplicity you can read [Insanely Simple: The Obsession that Drives Apple's Success](https://www.amazon.com/Insanely-Simple-Ken-Segall-audiobook/dp/B007Z9686O) or [Thinking, Fast and Slow](https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555).
+
+
+<br>
 
 </details>
 
@@ -150,6 +190,9 @@ If you want to learn more about simplicity you can read [Insanely Simple: The Ob
 * Do security analysis and suggestions
 * To support the original Snapdrop and its creator go to [his GitHub page](https://github.com/RobinLinus/snapdrop)
 
+
+<br>
+
 </details>
 
 <details>
@@ -158,6 +201,9 @@ If you want to learn more about simplicity you can read [Insanely Simple: The Ob
 </summary>
 
 [See here for Information about the Technical Implementation](/docs/technical-documentation.md)
+
+<br>
+
 </details>
 
 [< Back](/README.md)
