@@ -1944,67 +1944,84 @@ Events.on('load', () => {
     style.zIndex = -1;
     style.top = 0;
     style.left = 0;
-    let ctx = c.getContext('2d');
+    let cCtx = c.getContext('2d');
     let x0, y0, w, h, dw, offset;
 
+    let offscreenCanvases = [];
+
     function init() {
+        let oldW = w;
+        let oldH = h;
+        let oldOffset = offset
         w = document.documentElement.clientWidth;
         h = document.documentElement.clientHeight;
+        offset = $$('footer').offsetHeight - 32;
+        if (h > 800) offset += 16;
+
+        if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
+
         c.width = w;
         c.height = h;
-        offset = $$('footer').offsetHeight - 32;
         x0 = w / 2;
         y0 = h - offset;
-        dw = Math.max(w, h, 1000) / 13;
-        drawCircles();
+        dw = Math.round(Math.max(w, h, 1000) / 13);
+        drawCircles(cCtx, 0);
+
+        // enforce redrawing of frames
+        offscreenCanvases = [];
     }
     Events.on('bg-resize', _ => init());
     window.onresize = _ => Events.fire('bg-resize');
 
-    function drawCircle(radius) {
+    function drawCircle(ctx, radius) {
         ctx.beginPath();
-        let color = Math.round(255 * (1 - radius / Math.max(w, h)));
-        ctx.strokeStyle = 'rgba(' + color + ',' + color + ',' + color + ',0.1)';
+        ctx.lineWidth = 2;
+        let opacity = 0.2 * (1 - 1.2 * radius / Math.max(w, h));
+        ctx.strokeStyle = `rgb(128, 128, 128, ${opacity})`;
         ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
-        ctx.lineWidth = 2;
     }
 
-    let step = 0;
-
-    function drawCircles() {
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < 8; i++) {
-            drawCircle(dw * i + step % dw);
-        }
-        step += 1;
-    }
-
-    let loading = true;
-
-    function animate() {
-        if (loading || !finished()) {
-            requestAnimationFrame(function() {
-                drawCircles();
-                animate();
-            });
+    function drawCircles(ctx, frame) {
+        for (let i = 0; i < 13; i++) {
+            drawCircle(ctx, dw * i + frame);
         }
     }
 
-    function finished() {
-        return step % dw >= dw - 5;
+    function createOffscreenCanvas(frame) {
+        let canvas = document.createElement("canvas");
+        canvas.width = c.width;
+        canvas.height = c.height;
+        offscreenCanvases[frame] = canvas;
+        let ctx = canvas.getContext('2d');
+        drawCircles(ctx, frame);
+    }
+
+    function drawFrame(frame) {
+        cCtx.clearRect(0, 0, w, h);
+        if (!offscreenCanvases[frame]) {
+            createOffscreenCanvas(frame);
+        }
+        cCtx.drawImage(offscreenCanvases[frame], 0, 0);
+    }
+
+    let animate = true;
+    let currentFrame = 0;
+
+    function animateBg() {
+        if (currentFrame + 1 < dw || animate) {
+            currentFrame = (currentFrame + 1) % dw;
+            drawFrame(currentFrame);
+        }
+        setTimeout(_ => animateBg(), 3000 / dw);
     }
 
     window.animateBackground = function(l) {
-        if (!l) {
-            loading = false;
-        } else if (!loading) {
-            loading = true;
-            if (finished()) animate();
-        }
+        animate = l;
     };
+
     init();
-    animate();
+    animateBg();
 });
 
 document.changeFavicon = function (src) {
