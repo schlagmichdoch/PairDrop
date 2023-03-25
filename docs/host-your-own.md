@@ -82,6 +82,8 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 gh
 >
 > To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
 
+> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](./docker-swarm-usage.md#docker-swarm-usage)
+
 ### Docker Image self-built
 #### Build the image
 ```bash
@@ -100,6 +102,8 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -i
 > To prevent bypassing the proxy by reaching the docker container directly, `127.0.0.1` is specified in the run command.
 >
 > To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
+
+> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](./docker-swarm-usage.md#docker-swarm-usage)
 
 <br>
 
