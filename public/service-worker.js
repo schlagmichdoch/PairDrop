@@ -137,7 +137,7 @@ const evaluateRequestData = async function (request) {
             }
         } else if (title?.length > 0 || text?.length > 0 || url?.length > 0) {
             console.debug(title || text || url);
-            resolve(`/?share-target=text&title=${title}&text=${text}&url=${url}`);
+            resolve(`/?share-target=text${title ? `&title=${title}` : ''}${text ? `&text=${text}` : ''}${url ? `&url=${url}` : ''}`);
         } else {
             resolve('/');
         }
