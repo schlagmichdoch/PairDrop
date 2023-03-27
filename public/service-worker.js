@@ -71,12 +71,12 @@ const update = request =>
 self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
-        evaluateRequestData(event.request).then(share_url => {
+        event.respondWith((async () => {
+            let share_url = await evaluateRequestData(event.request);
+            share_url = event.request.url + share_url.substring(1);
             console.debug(share_url);
-            event.respondWith(
-                Response.redirect(encodeURI(share_url), 302)
-            );
-        })
+            return Response.redirect(encodeURI(share_url), 302);
+        })());
     } else {
         // Regular requests not related to Web Share Target.
         event.respondWith(
@@ -107,7 +107,7 @@ const evaluateRequestData = async function (request) {
     const title = formData.get("title");
     const text = formData.get("text");
     const url = formData.get("url");
-    const files = formData.getAll("files");
+    const files = formData.getAll("allfiles");
     console.debug(files)
     let fileObjects = [];
     for (let i=0; i<files.length; i++) {
