@@ -1608,27 +1608,33 @@ class WebShareTargetUI {
                 let shareTargetText;
 
                 if (url) {
-                    shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
+                    shareTargetText = url; // we share only the link - no text.
                 } else if (title && text) {
                     shareTargetText = title + '\r\n' + text;
                 } else {
                     shareTargetText = title + text;
                 }
 
-                console.log('Shared Target Text:', '"' + shareTargetText + '"');
                 Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
             } else if (share_target_type === "files") {
-                const openRequest = window.indexedDB.open('pairdrop_store')
-                openRequest.onsuccess( db => {
+                let openRequest = window.indexedDB.open('pairdrop_store')
+                openRequest.onsuccess = e => {
+                    const db = e.target.result;
                     const tx = db.transaction('share_target_files', 'readwrite');
                     const store = tx.objectStore('share_target_files');
                     const request = store.getAll();
                     request.onsuccess = _ => {
-                        Events.fire('activate-paste-mode', {files: request.result, text: ""})
+                        const fileObjects = request.result;
+                        let filesReceived = [];
+                        for (let i=0; i<fileObjects.length; i++) {
+                            filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
+                        }
                         const clearRequest = store.clear()
                         clearRequest.onsuccess = _ => db.close();
+
+                        Events.fire('activate-paste-mode', {files: filesReceived, text: ""})
                     }
-                })
+                }
             }
             window.history.replaceState({}, "Rewrite URL", '/');
         }
@@ -1685,7 +1691,7 @@ class PersistentStorage {
             PersistentStorage.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 2);
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 3);
         DBOpenRequest.onerror = (e) => {
             PersistentStorage.logBrowserNotCapable();
             console.log('Error initializing database: ');
@@ -1711,7 +1717,10 @@ class PersistentStorage {
             }
 
             try {
-                db.createObjectStore('share_target_files');
+                if (db.objectStoreNames.contains('share_target_files')) {
+                    db.deleteObjectStore('share_target_files');
+                }
+                db.createObjectStore('share_target_files', {autoIncrement: true});
             } catch (error) {
                 console.log("Object store named 'share_target_files' already exists")
             }

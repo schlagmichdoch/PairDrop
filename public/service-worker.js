@@ -71,30 +71,11 @@ const update = request =>
 self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
-        event.respondWith(
-            (async () => {
-                const formData = await event.request.formData();
-                const title = formData.get("title");
-                const text = formData.get("text");
-                const url = formData.get("url");
-                const files = formData.get("files");
-                let share_url = "/";
-                if (files.length > 0) {
-                    share_url = "/?share-target=files";
-                    const db = await window.indexedDB.open('pairdrop_store');
-                    const tx = db.transaction('share_target_files', 'readwrite');
-                    const store = tx.objectStore('share_target_files');
-                    for (let i=0; i<files.length; i++) {
-                        await store.add(files[i]);
-                    }
-                    await tx.complete
-                    db.close()
-                } else if (title.length > 0 || text.length > 0 || url.length) {
-                    share_url = `/?share-target=text&title=${title}&text=${text}&url=${url}`;
-                }
-                return Response.redirect(encodeURI(share_url), 303);
-            })()
-        );
+        event.respondWith((async () => {
+            let share_url = await evaluateRequestData(event.request);
+            share_url = event.request.url + share_url;
+            return Response.redirect(encodeURI(share_url), 302);
+        })());
     } else {
         // Regular requests not related to Web Share Target.
         event.respondWith(
@@ -119,3 +100,49 @@ self.addEventListener('activate', evt =>
         })
     )
 );
+
+const evaluateRequestData = async function (request) {
+    const formData = await request.formData();
+    const title = formData.get("title");
+    const text = formData.get("text");
+    const url = formData.get("url");
+    const files = formData.getAll("allfiles");
+
+
+    return new Promise(async (resolve) => {
+        if (files && files.length > 0) {
+            let fileObjects = [];
+            for (let i=0; i<files.length; i++) {
+                fileObjects.push({
+                    name: files[i].name,
+                    buffer: await files[i].arrayBuffer()
+                });
+            }
+
+            const DBOpenRequest = indexedDB.open('pairdrop_store');
+            DBOpenRequest.onsuccess = e => {
+                const db = e.target.result;
+                for (let i = 0; i < fileObjects.length; i++) {
+                    const transaction = db.transaction('share_target_files', 'readwrite');
+                    const objectStore = transaction.objectStore('share_target_files');
+
+                    const objectStoreRequest = objectStore.add(fileObjects[i]);
+                    objectStoreRequest.onsuccess = _ => {
+                        if (i === fileObjects.length - 1) resolve('?share-target=files');
+                    }
+                }
+            }
+            DBOpenRequest.onerror = _ => {
+                resolve('');
+            }
+        } else {
+            let share_url = '?share-target=text';
+
+            if (title) share_url += `&title=${title}`;
+            if (text) share_url += `&text=${text}`;
+            if (url) share_url += `&url=${url}`;
+
+            resolve(share_url);
+        }
+    });
+}
