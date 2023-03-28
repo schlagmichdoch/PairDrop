@@ -75,11 +75,74 @@ html {
 }
 
 header {
-    position: relative;
-    height: 56px;
-    align-items: center;
-    padding: 16px;
+    position: absolute;
+    align-items: baseline;
+    padding: 8px 16px;
     box-sizing: border-box;
+    width: 100vw;
+    z-index: 2;
+    top: 0;
+    right: 0;
+}
+
+header > a,
+header > div {
+    margin-left: 8px;
+}
+
+header > div {
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    touch-action: manipulation;
+}
+header > div a {
+    height: 40px;
+    transition: all 300ms;
+}
+
+header > div > div {
+    display: flex;
+    flex-direction: column;
+}
+
+header > div:not(:hover) a:not(.selected) {
+    height: 0;
+    opacity: 0;
+}
+
+header > div:hover::before {
+    border-radius: 20px;
+    background: currentColor;
+    opacity: 0.1;
+    transition: opacity 300ms;
+    content: '';
+    position: absolute;
+    width: 40px;
+    top: 0;
+    bottom: 0;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+header > div:hover a.selected::before {
+    opacity: 0.1;
+}
+
+@media (pointer: coarse) {
+    header > div:hover a.selected:hover::before {
+        opacity: 0.2;
+    }
+
+    header > div a:not(.selected) {
+        height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    header > div > div {
+        flex-direction: column-reverse;
+    }
 }
 
 [hidden] {
@@ -192,15 +255,10 @@ x-noscript {
     }
 }
 
-/* Main Header */
-
-body>header a {
-    margin-left: 8px;
-}
-
 #center {
     position: relative;
     display: flex;
+    margin-top: 56px;
     flex-direction: column-reverse;
     flex-grow: 1;
     --footer-height: 132px;
@@ -974,8 +1032,8 @@ button::-moz-focus-inner {
 
 #about x-background {
     position: absolute;
-    top: calc(32px - 250px);
-    right: calc(32px - 250px);
+    top: calc(28px - 250px);
+    right: calc(36px - 250px);
     width: 500px;
     height: 500px;
     border-radius: 50%;
