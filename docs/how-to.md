@@ -33,10 +33,10 @@ https://routinehub.co/shortcut/13990/
 
 
 ## Send directly from share menu on Android
-The [Web Share Target API](https://developer.mozilla.org/en-US/docs/Web/Manifest/share_target) is implemented but not yet tested.
-When the PWA is installed, it should register itself to the share-menu of the device automatically.
+The [Web Share Target API](https://developer.mozilla.org/en-US/docs/Web/Manifest/share_target) is implemented.
 
-This feature is still under development. Please test this feature and create an issue if it does not work.
+When the PWA is installed, it will register itself to the share-menu of the device automatically.
+
 
 ## Send directly via command-line interface
 Send files or text with PairDrop via command-line interface.
