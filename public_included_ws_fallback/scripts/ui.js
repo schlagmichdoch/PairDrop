@@ -1608,14 +1608,13 @@ class WebShareTargetUI {
                 let shareTargetText;
 
                 if (url) {
-                    shareTargetText = url; // We share only the Link - no text. Because link-only text becomes clickable.
+                    shareTargetText = url; // we share only the link - no text.
                 } else if (title && text) {
                     shareTargetText = title + '\r\n' + text;
                 } else {
                     shareTargetText = title + text;
                 }
 
-                console.log('Shared Target Text:', '"' + shareTargetText + '"');
                 Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
             } else if (share_target_type === "files") {
                 let openRequest = window.indexedDB.open('pairdrop_store')
@@ -1630,10 +1629,10 @@ class WebShareTargetUI {
                         for (let i=0; i<fileObjects.length; i++) {
                             filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
                         }
-                        console.debug(filesReceived)
-                        Events.fire('activate-paste-mode', {files: filesReceived, text: ""})
                         const clearRequest = store.clear()
                         clearRequest.onsuccess = _ => db.close();
+
+                        Events.fire('activate-paste-mode', {files: filesReceived, text: ""})
                     }
                 }
             }

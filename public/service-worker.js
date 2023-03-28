@@ -73,8 +73,7 @@ self.addEventListener('fetch', function(event) {
         // Requests related to Web Share Target.
         event.respondWith((async () => {
             let share_url = await evaluateRequestData(event.request);
-            share_url = event.request.url + share_url.substring(1);
-            console.debug(share_url);
+            share_url = event.request.url + share_url;
             return Response.redirect(encodeURI(share_url), 302);
         })());
     } else {
@@ -108,19 +107,20 @@ const evaluateRequestData = async function (request) {
     const text = formData.get("text");
     const url = formData.get("url");
     const files = formData.getAll("allfiles");
-    console.debug(files)
-    let fileObjects = [];
-    for (let i=0; i<files.length; i++) {
-        fileObjects.push({
-            name: files[i].name,
-            buffer: await files[i].arrayBuffer()
-        });
-    }
 
-    return new Promise((resolve, reject) => {
-        if (fileObjects?.length > 0) {
+
+    return new Promise(async (resolve) => {
+        if (files && files.length > 0) {
+            let fileObjects = [];
+            for (let i=0; i<files.length; i++) {
+                fileObjects.push({
+                    name: files[i].name,
+                    buffer: await files[i].arrayBuffer()
+                });
+            }
+
             const DBOpenRequest = indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 for (let i = 0; i < fileObjects.length; i++) {
                     const transaction = db.transaction('share_target_files', 'readwrite');
@@ -128,18 +128,21 @@ const evaluateRequestData = async function (request) {
 
                     const objectStoreRequest = objectStore.add(fileObjects[i]);
                     objectStoreRequest.onsuccess = _ => {
-                        if (i === fileObjects.length - 1) resolve('/?share-target=files');
+                        if (i === fileObjects.length - 1) resolve('?share-target=files');
                     }
                 }
             }
             DBOpenRequest.onerror = _ => {
-                resolve('/');
+                resolve('');
             }
-        } else if (title?.length > 0 || text?.length > 0 || url?.length > 0) {
-            console.debug(title || text || url);
-            resolve(`/?share-target=text${title ? `&title=${title}` : ''}${text ? `&text=${text}` : ''}${url ? `&url=${url}` : ''}`);
         } else {
-            resolve('/');
+            let share_url = '?share-target=text';
+
+            if (title) share_url += `&title=${title}`;
+            if (text) share_url += `&text=${text}`;
+            if (url) share_url += `&url=${url}`;
+
+            resolve(share_url);
         }
     });
 }
