@@ -1,39 +1,78 @@
 (function(){
 
-  // Select the button
-  const btnTheme = document.getElementById('theme');
-  // Check for dark mode preference at the OS level
-  const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-   
-  // Get the user's theme preference from local storage, if it's available
-  const currentTheme = localStorage.getItem('theme');
-  // If the user's preference in localStorage is dark...
+  const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const prefersLightTheme = window.matchMedia('(prefers-color-scheme: light)').matches;
+
+  const $themeAuto = document.getElementById('theme-auto');
+  const $themeLight = document.getElementById('theme-light');
+  const $themeDark = document.getElementById('theme-dark');
+
+  let currentTheme = localStorage.getItem('theme');
+
   if (currentTheme === 'dark') {
-    // ...let's toggle the .dark-theme class on the body
-    document.body.classList.toggle('dark-theme');
-  // Otherwise, if the user's preference in localStorage is light...
+    setModeToDark();
   } else if (currentTheme === 'light') {
-    // ...let's toggle the .light-theme class on the body
-    document.body.classList.toggle('light-theme');
+    setModeToLight();
   }
-   
-  // Listen for a click on the button
-  btnTheme.addEventListener('click', function(e) {
-    e.preventDefault();
-    // If the user's OS setting is dark and matches our .dark-theme class...
-    let theme;
-    if (prefersDarkScheme.matches) {
-      // ...then toggle the light mode class
-      document.body.classList.toggle('light-theme');
-      // ...but use .dark-theme if the .light-theme class is already on the body,
-      theme = document.body.classList.contains('light-theme') ? 'light' : 'dark';
+
+  $themeAuto.addEventListener('click', _ => {
+    if (currentTheme) {
+      setModeToAuto();
     } else {
-      // Otherwise, let's do the same thing, but for .dark-theme
-      document.body.classList.toggle('dark-theme');
-      theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+      setModeToDark();
     }
-    // Finally, let's save the current preference to localStorage to keep using it
-    localStorage.setItem('theme', theme);
   });
+  $themeLight.addEventListener('click', _ => {
+    if (currentTheme !== 'light') {
+      setModeToLight();
+    } else {
+      setModeToAuto();
+    }
+  });
+  $themeDark.addEventListener('click', _ => {
+    if (currentTheme !== 'dark') {
+      setModeToDark();
+    } else {
+      setModeToLight();
+    }
+  });
+
+  function setModeToDark() {
+    document.body.classList.remove('light-theme');
+    document.body.classList.add('dark-theme');
+    localStorage.setItem('theme', 'dark');
+    currentTheme = 'dark';
+
+    $themeAuto.classList.remove("selected");
+    $themeLight.classList.remove("selected");
+    $themeDark.classList.add("selected");
+  }
+
+  function setModeToLight() {
+    document.body.classList.remove('dark-theme');
+    document.body.classList.add('light-theme');
+    localStorage.setItem('theme', 'light');
+    currentTheme = 'light';
+
+    $themeAuto.classList.remove("selected");
+    $themeLight.classList.add("selected");
+    $themeDark.classList.remove("selected");
+  }
+
+  function setModeToAuto() {
+    document.body.classList.remove('dark-theme');
+    document.body.classList.remove('light-theme');
+    if (prefersDarkTheme) {
+      document.body.classList.add('dark-theme');
+    } else if (prefersLightTheme) {
+      document.body.classList.add('light-theme');
+    }
+    localStorage.removeItem('theme');
+    currentTheme = undefined;
+
+    $themeAuto.classList.add("selected");
+    $themeLight.classList.remove("selected");
+    $themeDark.classList.remove("selected");
+  }
 
 })();
