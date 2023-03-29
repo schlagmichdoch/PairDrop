@@ -57,9 +57,10 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Change your display name permanently to easily differentiate your devices
 * [Paste files/text and choose the recipient afterwords ](https://github.com/RobinLinus/snapdrop/pull/534)
 * [Prevent devices from sleeping on file transfer](https://github.com/RobinLinus/snapdrop/pull/413)
-* Warn user before PairDrop is closed on file transfer  
+* Warn user before PairDrop is closed on file transfer
 * Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
 * [Video and Audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (Thanks [@victorwads](https://github.com/victorwads))
+* Switch theme back to auto/system after darkmode or lightmode is enabled
 * Node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
 * Automatic restart on error (Thanks [@KaKi87](https://github.com/KaKi87))
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
