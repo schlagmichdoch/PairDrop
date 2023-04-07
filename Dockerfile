@@ -1,4 +1,4 @@
-FROM node:lts-alpine
+FROM gcr.io/distroless/nodejs:16
 
 WORKDIR /home/node/app
 
