@@ -89,9 +89,9 @@ You can [host your own instance with Docker](/docs/host-your-own.md).
 
 
 ## Support the Community
-PairDrop is free and always will be. Still, we have to pay for the domain.
+PairDrop is free and always will be. Still, we have to pay for the domain and the server.
 
-To contribute and support me:<br>
+To contribute and support:<br>
 <a href="https://www.buymeacoffee.com/pairdrop" target="_blank">
 <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
 </a>
