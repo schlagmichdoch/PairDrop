@@ -112,7 +112,7 @@ header > div:not(:hover) .icon-button:not(.selected) {
     opacity: 0;
 }
 
-header > div:hover::before {
+#theme-wrapper:hover::before {
     border-radius: 20px;
     background: currentColor;
     opacity: 0.1;
@@ -204,7 +204,8 @@ body {
     line-height: 18px;
 }
 
-a {
+a,
+.icon-button {
     text-decoration: none;
     color: currentColor;
     cursor: pointer;
