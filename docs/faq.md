@@ -104,10 +104,13 @@ Here's a list of some third-party apps compatible with PairDrop:
     What about the connection? Is it a P2P-connection directly from device to device or is there any third-party-server?
 </summary>
 
-It uses a P2P connection if WebRTC is supported by the browser. WebRTC needs a Signaling Server, but it is only used to establish a connection and is not involved in the file transfer.
+It uses a WebRTC peer to peer connection. WebRTC needs a Signaling Server that is only used to establish a connection. The server is not involved in the file transfer.
 
-If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
+If devices are on the same network, none of your files are ever sent to any server.
 
+If your devices are paired and behind a NAT, the PairDrop TURN Server is used to route your files and messages. See the [Technical Documentation](technical-documentation.md#encryption-webrtc-stun-and-turn) to learn more about STUN, TURN and WebRTC.
+
+If you host your own instance and want to support devices that do not support WebRTC, you can [start the PairDrop instance with an activated Websocket fallback](https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md#websocket-fallback-for-vpn).
 
 <br>
 
@@ -118,11 +121,12 @@ If your devices are paired and behind a NAT, the public TURN Server from [Open R
     What about privacy? Will files be saved on third-party-servers?
 </summary>
 
-None of your files are ever sent to any server. Files are sent only between peers. PairDrop doesn't even use a database. If you are curious have a look [at the Server](https://github.com/schlagmichdoch/pairdrop/blob/master/index.js).
+Files are sent directly between peers. PairDrop doesn't even use a database. If you are curious, have a look [at the Server](https://github.com/schlagmichdoch/pairdrop/blob/master/index.js).
 WebRTC encrypts the files on transit.
 
-If your devices are paired and behind a NAT, the public TURN Server from [Open Relay](https://www.metered.ca/tools/openrelay/) is used to route your files and messages.
+If devices are on the same network, none of your files are ever sent to any server.
 
+If your devices are paired and behind a NAT, the PairDrop TURN Server is used to route your files and messages. See the [Technical Documentation](technical-documentation.md#encryption-webrtc-stun-and-turn) to learn more about STUN, TURN and WebRTC.
 
 <br>
 
@@ -147,9 +151,7 @@ Yes. Your files are sent using WebRTC, which encrypts them on transit. To ensure
 
 Naturally, if traffic needs to be routed through the turn server because your devices are behind different NATs, transfer speed decreases.
 
-As the public TURN server used is not super fast, you can easily [specify to use your own TURN server](https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md#specify-stunturn-servers) if you host your own instance.
-
-Alternatively, you can open a hotspot on one of your devices to bridge the connection which makes transfers much faster as no TURN server is needed.
+You can open a hotspot on one of your devices to bridge the connection which omits the need of the TURN server.
 
 - [How to open a hotspot on Windows](https://support.microsoft.com/en-us/windows/use-your-windows-pc-as-a-mobile-hotspot-c89b0fad-72d5-41e8-f7ea-406ad9036b85#WindowsVersion=Windows_11)
 - [How to open a hotspot on Mac](https://support.apple.com/guide/mac-help/share-internet-connection-mac-network-users-mchlp1540/mac)
@@ -171,7 +173,7 @@ Then, all data should be sent directly between devices and your data plan should
 Snapdrop and PairDrop are a study in radical simplicity. The user interface is insanely simple. Features are chosen very carefully because complexity grows quadratically since every feature potentially interferes with each other feature. We focus very narrowly on a single use case: instant file transfer. 
 We are not trying to optimize for some edge-cases. We are optimizing the user flow of the average users. Don't be sad if we decline your feature request for the sake of simplicity. 
 
-If you want to learn more about simplicity you can read [Insanely Simple: The Obsession that Drives Apple's Success](https://www.amazon.com/Insanely-Simple-Ken-Segall-audiobook/dp/B007Z9686O) or [Thinking, Fast and Slow](https://www.amazon.com/Thinking-Fast-Slow-Daniel-Kahneman/dp/0374533555).
+If you want to learn more about simplicity you can read *Insanely Simple: The Obsession that Drives Apple's Success* or *Thinking, Fast and Slow*.
 
 
 <br>
@@ -183,7 +185,7 @@ If you want to learn more about simplicity you can read [Insanely Simple: The Ob
     Snapdrop and PairDrop are awesome! How can I support them? 
 </summary>
 
-* [Buy me a coffee to support open source software](https://www.buymeacoffee.com/pairdrop)
+* [Buy me a coffee](https://www.buymeacoffee.com/pairdrop) to pay for the domain and the server, and support open source software
 * [File bugs, give feedback, submit suggestions](https://github.com/schlagmichdoch/pairdrop/issues)
 * Share PairDrop on social media.
 * Fix bugs and make a pull request. 

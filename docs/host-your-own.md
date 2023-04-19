@@ -1,6 +1,12 @@
 # Deployment Notes
 The easiest way to get PairDrop up and running is by using Docker.
 
+> <b>TURN server for Internet Transfer</b>
+> 
+> Beware that you have to host your own TURN server in order to enable transfers between different networks.
+>
+> You can follow [this guide](https://gabrieltanner.org/blog/turn-server/) to either install coturn directly on your system (Step 1) or deploy it via docker-compose (Step 5).
+
 ## Deployment with Docker
 
 ### Docker Image from Docker Hub
@@ -50,6 +56,8 @@ Set options by using the following flags in the `docker run` command:
 > Specify the STUN/TURN servers PairDrop clients use by setting `RTC_CONFIG` to a JSON file including the configuration.
 > You can use `pairdrop/rtc_config_example.json` as a starting point.
 >
+> To host your own TURN server you can follow this guide: https://gabrieltanner.org/blog/turn-server/
+>
 > Default configuration:
 > ```json
 > {
@@ -57,14 +65,6 @@ Set options by using the following flags in the `docker run` command:
 >   "iceServers": [
 >     {
 >       "urls": "stun:stun.l.google.com:19302"
->     },
->     {
->       "urls": "stun:openrelay.metered.ca:80"
->     },
->     {
->       "urls": "turn:openrelay.metered.ca:443",
->       "username": "openrelayproject",
->       "credential": "openrelayproject"
 >     }
 >   ]
 > }
@@ -186,6 +186,8 @@ $env:RTC_CONFIG="rtc_config.json"; npm start
 ```
 > Specify the STUN/TURN servers PairDrop clients use by setting `RTC_CONFIG` to a JSON file including the configuration.
 > You can use `pairdrop/rtc_config_example.json` as a starting point.
+> 
+> To host your own TURN server you can follow this guide: https://gabrieltanner.org/blog/turn-server/ 
 >
 > Default configuration:
 > ```json
@@ -194,14 +196,6 @@ $env:RTC_CONFIG="rtc_config.json"; npm start
 >   "iceServers": [
 >     {
 >       "urls": "stun:stun.l.google.com:19302"
->     },
->     {
->       "urls": "stun:openrelay.metered.ca:80"
->     },
->     {
->       "urls": "turn:openrelay.metered.ca:443",
->       "username": "openrelayproject",
->       "credential": "openrelayproject"
 >     }
 >   ]
 > }

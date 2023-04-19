@@ -33,13 +33,13 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
 ## Differences to Snapdrop
 
-### Device Pairing
+### Device Pairing / Internet Transfer
 * Pair devices via 6-digit code or QR-Code
 * Pair devices outside your local network or in complex network environment (public Wi-Fi, company network, Apple Private Relay, VPN etc.).
 * Connect to devices on your mobile hotspot.
 * Paired devices will always find each other via shared secrets even after reopening the browser or the Progressive Web App
 * You will always discover devices on your local network. Paired devices are shown additionally.
-* Paired devices outside your local network that are behind a NAT are connected automatically via [Open Relay: Free WebRTC TURN Server](https://www.metered.ca/tools/openrelay/)
+* Paired devices outside your local network that are behind a NAT are connected automatically via the PairDrop TURN server.
 
 ### [Improved UI for sending/receiving files](https://github.com/RobinLinus/snapdrop/issues/560)
 * Files are transferred only after a request is accepted first. On transfer completion files are downloaded automatically if possible.
