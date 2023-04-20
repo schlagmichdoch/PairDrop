@@ -57,6 +57,12 @@ class PeersUI {
             console.log("Retrieved edited display name:", displayName)
             if (displayName) Events.fire('self-display-name-changed', displayName);
         });
+
+
+        /* prevent animation on load */
+        setTimeout(_ => {
+            this.$xNoPeers.style.animationIterationCount = "1";
+        }, 300);
     }
 
     _insertDisplayName(displayName) {

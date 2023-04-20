@@ -415,10 +415,10 @@ x-no-peers {
     flex-direction: column;
     padding: 8px;
     text-align: center;
-    /* prevent flickering on load */
     animation: fade-in 300ms;
-    animation-delay: 500ms;
     animation-fill-mode: backwards;
+    /* prevent flickering on load */
+    animation-iteration-count: 0;
 }
 
 x-no-peers h2,
