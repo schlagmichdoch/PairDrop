@@ -6,7 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <!-- Web App Config -->
     <title>PairDrop</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3367d6">
     <meta name="color-scheme" content="dark light">
     <meta name="apple-mobile-web-app-capable" content="no">
@@ -39,24 +39,24 @@
 
 <body translate="no">
     <header class="row-reverse">
-        <a href="#about" class="icon-button" title="About PairDrop">
+        <a href="#about" class="icon-button" title="About PairDrop" aria-label="Open About PairDrop">
             <svg class="icon">
                 <use xlink:href="#info-outline" />
             </svg>
         </a>
         <div id="theme-wrapper">
-            <div id="theme-auto" class="icon-button selected" title="Adapt to System" >
+            <div id="theme-auto" class="icon-button selected" title="Adapt Theme to System" >
                 <svg class="icon">
                     <use xlink:href="#icon-theme-auto" />
                 </svg>
             </div>
             <div>
-                <div id="theme-light" class="icon-button" title="Always Light" >
+                <div id="theme-light" class="icon-button" title="Always Use Light-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-light" />
                     </svg>
                 </div>
-                <div id="theme-dark" class="icon-button" title="Always Dark" >
+                <div id="theme-dark" class="icon-button" title="Always Use Dark-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-dark" />
                     </svg>
@@ -267,7 +267,7 @@
     <!-- About Page -->
     <x-about id="about" class="full center column">
         <header class="row-reverse fade-in">
-            <a href="#" class="close icon-button">
+            <a href="#" class="close icon-button" aria-label="Close About PairDrop">
                 <svg class="icon">
                     <use xlink:href="#close-icon" />
                 </svg>
