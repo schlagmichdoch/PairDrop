@@ -181,7 +181,6 @@ class PeersUI {
         if (!$peer) return;
         $peer.remove();
         this.evaluateOverflowing();
-        if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
     }
 
     _onSecretRoomDeleted(roomSecret) {
@@ -321,7 +320,6 @@ class PeerUI {
         $$('x-peers').appendChild(this.$el)
         Events.fire('peer-added');
         this.$xInstructions = $$('x-instructions');
-        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
     }
 
     html() {
@@ -1577,27 +1575,15 @@ class NetworkStatusUI {
     constructor() {
         Events.on('offline', _ => this._showOfflineMessage());
         Events.on('online', _ => this._showOnlineMessage());
-        Events.on('ws-connected', _ => this._onWsConnected());
-        Events.on('ws-disconnected', _ => this._onWsDisconnected());
         if (!navigator.onLine) this._showOfflineMessage();
     }
 
     _showOfflineMessage() {
         Events.fire('notify-user', 'You are offline');
-        window.animateBackground(false);
     }
 
     _showOnlineMessage() {
         Events.fire('notify-user', 'You are back online');
-        window.animateBackground(true);
-    }
-
-    _onWsConnected() {
-        window.animateBackground(true);
-    }
-
-    _onWsDisconnected() {
-        window.animateBackground(false);
     }
 }
 
@@ -1948,20 +1934,18 @@ window.addEventListener('beforeinstallprompt', e => {
     return e.preventDefault();
 });
 
-// Background Animation
+// Background Circles
 Events.on('load', () => {
     let c = document.createElement('canvas');
-    document.body.appendChild(c);
     let style = c.style;
     style.width = '100%';
     style.position = 'absolute';
     style.zIndex = -1;
     style.top = 0;
     style.left = 0;
+    style.animation = "fade-in 800ms";
     let cCtx = c.getContext('2d');
     let x0, y0, w, h, dw, offset;
-
-    let offscreenCanvases = [];
 
     function init() {
         let oldW = w;
@@ -1969,7 +1953,7 @@ Events.on('load', () => {
         let oldOffset = offset
         w = document.documentElement.clientWidth;
         h = document.documentElement.clientHeight;
-        offset = $$('footer').offsetHeight - 32;
+        offset = $$('footer').offsetHeight - 33;
         if (h > 800) offset += 16;
 
         if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
@@ -1979,63 +1963,33 @@ Events.on('load', () => {
         x0 = w / 2;
         y0 = h - offset;
         dw = Math.round(Math.max(w, h, 1000) / 13);
-        drawCircles(cCtx, 0);
 
-        // enforce redrawing of frames
-        offscreenCanvases = [];
+        if (document.body.contains(c)) {
+            document.body.removeChild(c);
+        }
+        drawCircles(cCtx, dw);
+        document.body.appendChild(c);
     }
+
     Events.on('bg-resize', _ => init());
     window.onresize = _ => Events.fire('bg-resize');
 
     function drawCircle(ctx, radius) {
         ctx.beginPath();
         ctx.lineWidth = 2;
-        let opacity = 0.2 * (1 - 1.2 * radius / Math.max(w, h));
-        ctx.strokeStyle = `rgb(128, 128, 128, ${opacity})`;
+        let opacity = 0.3 * (1 - 1.2 * radius / Math.max(w, h));
+        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
         ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }
 
     function drawCircles(ctx, frame) {
         for (let i = 0; i < 13; i++) {
-            drawCircle(ctx, dw * i + frame);
+            drawCircle(ctx, dw * i + frame + 33);
         }
     }
-
-    function createOffscreenCanvas(frame) {
-        let canvas = document.createElement("canvas");
-        canvas.width = c.width;
-        canvas.height = c.height;
-        offscreenCanvases[frame] = canvas;
-        let ctx = canvas.getContext('2d');
-        drawCircles(ctx, frame);
-    }
-
-    function drawFrame(frame) {
-        cCtx.clearRect(0, 0, w, h);
-        if (!offscreenCanvases[frame]) {
-            createOffscreenCanvas(frame);
-        }
-        cCtx.drawImage(offscreenCanvases[frame], 0, 0);
-    }
-
-    let animate = true;
-    let currentFrame = 0;
-
-    function animateBg() {
-        if (currentFrame + 1 < dw || animate) {
-            currentFrame = (currentFrame + 1) % dw;
-            drawFrame(currentFrame);
-        }
-        setTimeout(_ => animateBg(), 3000 / dw);
-    }
-
-    window.animateBackground = function(l) {
-        animate = l;
-    };
 
     init();
-    animateBg();
 });
 
 document.changeFavicon = function (src) {
