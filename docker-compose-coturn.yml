@@ -23,5 +23,5 @@ services:
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf
       - ./logs/:/var/log/
-      - /etc/letsencrypt/live/<DOMAIN>/:/etc/letsencrypt/live/<DOMAIN>/
+      - ./letsencrypt/:/etc/letsencrypt/
     #you need to copy turnserver_example.conf to turnserver.conf and specify domain, IP address, user and password
