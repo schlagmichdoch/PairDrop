@@ -3,3 +3,9 @@ node_modules
 fqdn.env
 /docker/certs
 qrcode-svg/
+docker-compose-coturn.yml
+rtc_config.json
+turnserver.conf
+logs/*
+*.orig
+*.log

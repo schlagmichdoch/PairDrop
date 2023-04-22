@@ -1,0 +1,27 @@
+version: "3"
+services:
+  node:
+    image: "node:lts-alpine"
+    user: "node"
+    working_dir: /home/node/app
+    volumes:
+      - ./:/home/node/app
+    command: ash -c "npm i && npm run start:prod"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - RTC_CONFIG=/home/node/app/rtc_config.json
+      - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+      - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
+      - TZ=Europa/Vienna # Time Zone
+    #you need to copy rtc_config_example.json to rtc_config.json and specify domain, IP address, user and password
+  coturn_server:
+    image: "coturn/coturn"
+    restart: always
+    network_mode: "host"
+    volumes:
+      - ./turnserver.conf:/etc/coturn/turnserver.conf
+      - ./logs/:/var/log/
+      - /etc/letsencrypt/live/<DOMAIN>/:/etc/letsencrypt/live/<DOMAIN>/
+    #you need to copy turnserver_example.conf to turnserver.conf and specify domain, IP address, user and password

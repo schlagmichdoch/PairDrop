@@ -397,8 +397,25 @@ Now point your browser to `http://localhost:8080`.
 - To stop the containers run `docker-compose stop`.
 - To debug the NodeJS server run `docker logs pairdrop_node_1`.
 
-
 <br>
+
+# Coturn
+## docker-compose
+
+- copy `docker-compose-coturn_example.yml` to `docker-compose-coturn.yml`
+- copy `rtc_config_example-coturn.json` to `rtc_config.json`
+- copy `turnserver_example.conf` to `turnserver.conf`
+- change <DOMAIN> in all three files to the domain, where your pairdrop is running
+- change user and password for turn-server in `turnserver.conf` and `rtc-config.json`
+- To start the container including coturn run `docker-compose -f docker-compose-coturn.yml up -d`
+- To restart the container including coturn run `docker-compose -f docker-compose-coturn.yml restart`
+- To stop the container including coturn run `docker-compose -f docker-compose-coturn.yml stop`
+
+## Firewall
+To run PairDrop including its own coturn-server you need to punch holes in the firewall. This ports must be opened additionally:
+- 3478 tcp/udp
+- 5349 tcp/udp
+- 10000:20000 tcp/udp
 
 ## Testing PWA related features
 PWAs require that the app is served under a correctly set up and trusted TLS endpoint.
