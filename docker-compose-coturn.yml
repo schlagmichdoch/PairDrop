@@ -22,6 +22,8 @@ services:
     network_mode: "host"
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf
-      - ./logs/:/var/log/
       - ./letsencrypt/:/etc/letsencrypt/
+      - ./dhparams.pem:/etc/dhparam.pem
     #you need to copy turnserver_example.conf to turnserver.conf and specify domain, IP address, user and password
+    # create dhparams.pem with `openssl dhparam -out dhparams.pem 4096` it
+    # takes a very long time!!!
