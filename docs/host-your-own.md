@@ -409,6 +409,7 @@ Now point your browser to `http://localhost:8080`.
 - change <DOMAIN> in all 2 files to the domain, where your pairdrop is running
 - setup another domain <TURN-DOMAIN> for the turn-server if you want coturn listening on port 443 too. (Only then, it is needed)
 - change user and password for turn-server in `turnserver.conf` and `rtc-config.json`
+- generate or retrieve certificates for your <DOMAIN> and <TURN-DOMAIN> (f.e. letsencrypt maybe with wildcard-certs)
 - To start the container including coturn run `docker-compose -f docker-compose-coturn.yml up -d`
 - To restart the container including coturn run `docker-compose -f docker-compose-coturn.yml restart`
 - To stop the container including coturn run `docker-compose -f docker-compose-coturn.yml stop`
