@@ -415,7 +415,7 @@ Now point your browser to `http://localhost:8080`.
 - To stop the container including coturn run `docker-compose -f docker-compose-coturn.yml stop`
 
 ## Firewall
-To run PairDrop including its own coturn-server you need to punch holes in the firewall. This ports must be opened additionally:
+To run PairDrop including its own coturn-server you need to punch holes in the firewall. These ports must be opened additionally:
 - 3478 tcp/udp
 - 5349 tcp/udp
 - 10000:20000 tcp/udp
