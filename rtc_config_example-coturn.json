@@ -2,10 +2,10 @@
   "sdpSemantics": "unified-plan",
   "iceServers": [
     {
-        "urls": "stuns:<TURN-DOMAIN>:443"
+        "urls": "stuns:<DOMAIN>:5349"
     },
     {
-        "urls": "turns:<TURN-DOMAIN>:443",
+        "urls": "turns:<DOMAIN>:5349",
         "username": "user",
         "credential": "password"
     }
