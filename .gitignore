@@ -5,4 +5,4 @@ fqdn.env
 qrcode-svg/
 rtc_config.json
 turnserver.conf
-letsencrypt/*
+ssl/*
