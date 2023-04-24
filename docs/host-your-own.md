@@ -402,14 +402,13 @@ Now point your browser to `http://localhost:8080`.
 # Coturn
 ## docker-compose
 
-- copy your ssl-certificates and privkey to `./letsencrypt` and `chown -R nobody:nogroup ./letsencrypt`
-- create a dh-params file with `openssl dhparam -out coturn-dhparams.pem 4096`
+- generate or retrieve certificates for your <DOMAIN> (f.e. letsencrypt)
+- copy your ssl-certificates and privkey to `./ssl` and `chown -R nobody:nogroup ./ssl`
+- create a dh-params file with `openssl dhparam -out ./ssl/dhparams.pem 4096`
 - copy `rtc_config_example-coturn.json` to `rtc_config.json`
 - copy `turnserver_example.conf` to `turnserver.conf`
 - change <DOMAIN> in all 2 files to the domain, where your pairdrop is running
-- setup another domain <TURN-DOMAIN> for the turn-server if you want coturn listening on port 443 too. (Only then, it is needed)
 - change user and password for turn-server in `turnserver.conf` and `rtc-config.json`
-- generate or retrieve certificates for your <DOMAIN> and <TURN-DOMAIN> (f.e. letsencrypt maybe with wildcard-certs)
 - To start the container including coturn run `docker-compose -f docker-compose-coturn.yml up -d`
 - To restart the container including coturn run `docker-compose -f docker-compose-coturn.yml restart`
 - To stop the container including coturn run `docker-compose -f docker-compose-coturn.yml stop`
@@ -419,44 +418,6 @@ To run PairDrop including its own coturn-server you need to punch holes in the f
 - 3478 tcp/udp
 - 5349 tcp/udp
 - 10000:20000 tcp/udp
-
-## Coturn listens also on port 443
-### nginx
-If you want coturn listening von port 443, to avoid firewall-problems, you have to create a ssl-stream-redirection. Because nginx is 
-listening on port 443 to serve pairdrop (and all other websites on this host) ssl-secured. 
-
-Create a file `/etc/nginx/modules-available/coturn-stream.conf` and link it to `/etc/nginx/modules-enabled/90-coturn-stream.conf`
-Content:
-```
-stream {
-    map $ssl_preread_server_name $name {
-        <TURN-DOMAIN>           turn_server;
-        default                 url_backend;
-    }
-
-    upstream url_backend {
-        server 127.0.0.1:4444;
-    }
-
-    upstream turn_server {
-        server <IP-ADDRESS>:5349;
-    }
-
-    server {
-        listen 443;
-        listen 443 udp;
-        listen [::]:443;
-        listen [::]:443 udp;
-        ssl_preread on;
-        proxy_pass $name;
-        proxy_buffer_size 10m;
-    }
-}
-```
-And then you have to change in EVERY site-config EVERY https-listening port from 443 to 4444.
-Test and reload nginx `nginx -t && nginx -s reload`
-
-Now your websites should be availeable again, and coturn also listens on <TURN-DOMAIN>:443. The stream for coturn is redirected to <IP-ADDRESS>:5349. 
 
 ## Testing PWA related features
 PWAs require that the app is served under a correctly set up and trusted TLS endpoint.
