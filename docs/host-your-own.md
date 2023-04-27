@@ -30,7 +30,7 @@ Set options by using the following flags in the `docker run` command:
 > - 3000 -> `-p 127.0.0.1:3000:3000`
 > - 8080 -> `-p 127.0.0.1:8080:3000`
 ##### Rate limiting requests
-```
+```bash
 -e RATE_LIMIT=true
 ```
 > Limits clients to 1000 requests per 5 min
@@ -70,6 +70,31 @@ Set options by using the following flags in the `docker run` command:
 > }
 > ```
 
+##### Debug Mode
+```bash
+-e DEBUG_MODE="true"
+```
+
+> Use this flag to enable debugging information about the connecting peers IP addresses. This is quite useful to check whether the [#HTTP-Server](#http-server) 
+> is configured correctly, so the auto discovery feature works correctly. Otherwise, all clients discover each other mutually, independently of their network status.
+> 
+> If this flag is set to `"true"` each peer that connects to the PairDrop server will produce a log to STDOUT like this:
+> ```
+> ----DEBUGGING-PEER-IP-START----
+> remoteAddress: ::ffff:172.17.0.1
+> x-forwarded-for: 19.117.63.126
+> cf-connecting-ip: undefined
+> PairDrop uses: 19.117.63.126
+> IP is private: false
+> if IP is private, '127.0.0.1' is used instead
+> ----DEBUGGING-PEER-IP-END----
+> ```
+> If the IP PairDrop uses is the public IP of your device everything is correctly setup. 
+>To find out your devices public IP visit https://www.whatismyip.com/.
+> 
+> To preserve your clients' privacy, **never use this flag in production!** 
+
+
 <br>
 
 ### Docker Image from GHCR
@@ -82,7 +107,7 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 gh
 >
 > To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
 
-> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](./docker-swarm-usage.md#docker-swarm-usage)
+> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](docker-swarm-usage.md#docker-swarm-usage)
 
 ### Docker Image self-built
 #### Build the image
@@ -103,7 +128,7 @@ docker run -d --restart=unless-stopped --name=pairdrop -p 127.0.0.1:3000:3000 -i
 >
 > To specify options replace `npm run start:prod` according to [the documentation below.](#options--flags-1)
 
-> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](./docker-swarm-usage.md#docker-swarm-usage)
+> The Docker Image includes a Healthcheck. To learn more see [Docker Swarm Usage](docker-swarm-usage.md#docker-swarm-usage)
 
 <br>
 
@@ -201,6 +226,36 @@ $env:RTC_CONFIG="rtc_config.json"; npm start
 > }
 > ```
 
+#### Debug Mode
+On Unix based systems
+```bash
+DEBUG_MODE="true" npm start
+```
+On Windows
+```bash
+$env:DEBUG_MODE="true"; npm start 
+```
+
+> Use this flag to enable debugging information about the connecting peers IP addresses. This is quite useful to check whether the [#HTTP-Server](#http-server)
+> is configured correctly, so the auto discovery feature works correctly. Otherwise, all clients discover each other mutually, independently of their network status.
+>
+> If this flag is set to `"true"` each peer that connects to the PairDrop server will produce a log to STDOUT like this:
+> ```
+> ----DEBUGGING-PEER-IP-START----
+> remoteAddress: ::ffff:172.17.0.1
+> x-forwarded-for: 19.117.63.126
+> cf-connecting-ip: undefined
+> PairDrop uses: 19.117.63.126
+> IP is private: false
+> if IP is private, '127.0.0.1' is used instead
+> ----DEBUGGING-PEER-IP-END----
+> ```
+> If the IP PairDrop uses is the public IP of your device everything is correctly setup.
+>To find out your devices public IP visit https://www.whatismyip.com/.
+>
+> To preserve your clients' privacy, **never use this flag in production!**
+
+
 ### Options / Flags
 #### Local Run
 ```bash
@@ -256,6 +311,8 @@ npm run start:prod -- --localhost-only --include-ws-fallback
 
 ## HTTP-Server
 When running PairDrop, the `X-Forwarded-For` header has to be set by a proxy. Otherwise, all clients will be mutually visible.
+
+To check if your setup is configured correctly [use the environment variable `DEBUG_MODE="true"`](#debug-mode).
 
 ### Using nginx
 #### Allow http and https requests
