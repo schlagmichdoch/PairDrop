@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.6.2';
+const cacheVersion = 'v1.6.3';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const urlsToCache = [
     'index.html',
