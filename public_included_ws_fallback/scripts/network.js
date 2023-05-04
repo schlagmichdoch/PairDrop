@@ -734,7 +734,6 @@ class WSPeer extends Peer {
     }
 
     sendJSON(message) {
-        console.debug(message)
         message.to = this._peerId;
         message.roomType = this._roomType;
         message.roomSecret = this._roomSecret;
@@ -854,7 +853,6 @@ class PeersManager {
 
     _onWsDisconnected() {
         for (const peerId in this.peers) {
-            console.debug(this.peers[peerId].rtcSupported);
             if (this.peers[peerId] && (!this.peers[peerId].rtcSupported || !window.isRtcSupported)) {
                 Events.fire('peer-disconnected', peerId);
             }
