@@ -159,11 +159,8 @@ class PairDropServer {
             case 'room-secrets':
                 this._onRoomSecrets(sender, message);
                 break;
-            case 'room-secret-deleted':
-                this._onRoomSecretDeleted(sender, message);
-                break;
-            case 'room-secrets-cleared':
-                this._onRoomSecretsCleared(sender, message);
+            case 'room-secrets-deleted':
+                this._onRoomSecretsDeleted(sender, message);
                 break;
             case 'pair-device-initiate':
                 this._onPairDeviceInitiate(sender);
@@ -213,29 +210,26 @@ class PairDropServer {
         this._joinSecretRooms(sender, roomSecrets);
     }
 
-    _onRoomSecretDeleted(sender, message) {
-        this._deleteSecretRoom(sender, message.roomSecret)
-    }
-
-    _onRoomSecretsCleared(sender, message) {
+    _onRoomSecretsDeleted(sender, message) {
         for (let i = 0; i<message.roomSecrets.length; i++) {
-            this._deleteSecretRoom(sender, message.roomSecrets[i]);
+            this._deleteSecretRoom(message.roomSecrets[i]);
         }
     }
 
-    _deleteSecretRoom(sender, roomSecret) {
+    _deleteSecretRoom(roomSecret) {
         const room = this._rooms[roomSecret];
-        if (room) {
-            for (const peerId in room) {
-                const peer = room[peerId];
-                this._leaveRoom(peer, 'secret', roomSecret);
-                this._send(peer, {
-                    type: 'secret-room-deleted',
-                    roomSecret: roomSecret,
-                });
-            }
+        if (!room) return;
+
+        for (const peerId in room) {
+            const peer = room[peerId];
+
+            this._leaveRoom(peer, 'secret', roomSecret);
+
+            this._send(peer, {
+                type: 'secret-room-deleted',
+                roomSecret: roomSecret,
+            });
         }
-        this._notifyPeers(sender);
     }
 
     _onPairDeviceInitiate(sender) {

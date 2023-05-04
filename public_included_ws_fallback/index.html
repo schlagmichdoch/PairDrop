@@ -78,9 +78,9 @@
                 <use xlink:href="#pair-device-icon" />
             </svg>
         </div>
-        <div id="clear-pair-devices" class="icon-button" title="Clear All Paired Devices" hidden>
+        <div id="edit-paired-devices" class="icon-button" title="Edit Paired Devices" hidden>
             <svg class="icon">
-                <use xlink:href="#clear-pair-devices-icon" />
+                <use xlink:href="#edit-pair-devices-icon" />
             </svg>
         </div>
         <div id="cancel-paste-mode" class="button" hidden>Done</div>
@@ -145,16 +145,18 @@
             </x-background>
         </form>
     </x-dialog>
-    <!-- Clear Devices Dialog -->
-    <x-dialog id="clear-devices-dialog">
+    <!-- Edit Paired Devices Dialog -->
+    <x-dialog id="edit-paired-devices-dialog">
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <h2 class="center">Unpair Devices</h2>
-                    <div class="font-subheading center text-center">Are you sure to unpair all devices?</div>
+                    <h2 class="center">Edit Paired Devices</h2>
+                    <div class="paired-devices-wrapper"></div>
+                    <div class="font-subheading center">
+                        <p>Activate <u>auto-accept</u> to automatically accept all files sent from that device.</p>
+                    </div>
                     <div class="center row-reverse">
-                        <button class="button" type="submit">Unpair Devices</button>
-                        <button class="button" type="button" close>Cancel</button>
+                        <button class="button" type="button" close>Close</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -358,9 +360,11 @@
             <!--! Font Awesome Pro 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
             <path d="M579.8 267.7c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114L422.3 334.8c-31.5 31.5-82.5 31.5-114 0c-27.9-27.9-31.5-71.8-8.6-103.8l1.1-1.6c10.3-14.4 6.9-34.4-7.4-44.6s-34.4-6.9-44.6 7.4l-1.1 1.6C206.5 251.2 213 330 263 380c56.5 56.5 148 56.5 204.5 0L579.8 267.7zM60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5L217.7 177.2c31.5-31.5 82.5-31.5 114 0c27.9 27.9 31.5 71.8 8.6 103.9l-1.1 1.6c-10.3 14.4-6.9 34.4 7.4 44.6s34.4 6.9 44.6-7.4l1.1-1.6C433.5 260.8 427 182 377 132c-56.5-56.5-148-56.5-204.5 0L60.2 244.3z"/>
         </symbol>
-        <symbol id="clear-pair-devices-icon" viewBox="0 0 640 512">
-            <!--! Font Awesome Pro 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2022 Fonticons, Inc. -->
-            <path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L489.3 358.2l90.5-90.5c56.5-56.5 56.5-148 0-204.5c-50-50-128.8-56.5-186.3-15.4l-1.6 1.1c-14.4 10.3-17.7 30.3-7.4 44.6s30.3 17.7 44.6 7.4l1.6-1.1c32.1-22.9 76-19.3 103.8 8.6c31.5 31.5 31.5 82.5 0 114l-96 96-31.9-25C430.9 239.6 420.1 175.1 377 132c-52.2-52.3-134.5-56.2-191.3-11.7L38.8 5.1zM239 162c30.1-14.9 67.7-9.9 92.8 15.3c20 20 27.5 48.3 21.7 74.5L239 162zM406.6 416.4L220.9 270c-2.1 39.8 12.2 80.1 42.2 110c38.9 38.9 94.4 51 143.6 36.3zm-290-228.5L60.2 244.3c-56.5 56.5-56.5 148 0 204.5c50 50 128.8 56.5 186.3 15.4l1.6-1.1c14.4-10.3 17.7-30.3 7.4-44.6s-30.3-17.7-44.6-7.4l-1.6 1.1c-32.1 22.9-76 19.3-103.8-8.6C74 372 74 321 105.5 289.5l61.8-61.8-50.6-39.9z"/>
+        <symbol id="edit-pair-devices-icon" viewBox="-159 25 640 512">
+            <!--! Font Awesome Pro 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+            <!--! edited by @schlagmichdoch -->
+            <path d="M218,155.4c-56.5-56.5-148-56.5-204.5,0L-98.8,267.7c-56.5,56.5-56.5,148,0,204.5c50,50,128.8,56.5,186.3,15.4l1.6-1.1 c14.4-10.3,17.7-30.3,7.4-44.6s-30.3-17.7-44.6-7.4l-1.6,1.1c-32.1,22.9-76,19.3-103.8-8.6c-31.5-31.6-31.5-82.6,0-114.1L58.7,200.6 c31.5-31.5,82.5-31.5,114,0c15.8,15.8,23.8,36.7,23.6,57.6c7.9-8.3,18.9-13,30.6-13c4.5,0,8.9,0.7,13.2,2l17.4,5.5 c0.9-0.5,1.8-1,2.7-1.5C258.7,216.2,244.4,181.8,218,155.4z M420.8,86.6c-50-50-128.8-56.5-186.3-15.4l-1.6,1.1 c-14.4,10.3-17.7,30.3-7.4,44.6s30.3,17.7,44.6,7.4l1.6-1.1c32.1-22.9,76-19.3,103.8,8.6c25.8,25.8,30.5,64.7,14,95.2 c0.7,2,1.3,4,1.8,6.1l3.9,17.9c1.1,0.6,2.1,1.2,3.2,1.8l17.4-5.5c4.3-1.4,8.7-2,13.1-2c7.3,0,14.3,1.8,20.5,5.2 C474.7,196.8,465.1,130.9,420.8,86.6z M140.7,254.4l1.1-1.6c10.3-14.4,6.9-34.4-7.4-44.6s-34.4-6.9-44.6,7.4l-1.1,1.6 C47.5,274.6,54,353.4,104,403.4c18.7,18.7,41.2,31.2,65,37.5c-1.4-3.1-2.6-6.2-3.8-9.3c-6-16.4-1.5-34.6,11.6-46.4l7.2-6.6 c-12.7-3.6-24.7-10.5-34.8-20.5C121.4,330.3,117.8,286.4,140.7,254.4z"/>
+            <path d="M458.9,407.4l-24.3-22.1c0.6-4.7,1-9.4,1-14.2s-0.3-9.6-1-14.2l24.3-22.1c3.9-3.5,5.4-8.9,3.6-13.8v-0.1 c-2.5-6.7-5.4-13.1-8.9-19.2l-2.6-4.5c-3.7-6.2-7.8-12-12.4-17.5c-3.3-4-8.8-5.4-13.7-3.8l-31.2,9.9c-7.5-5.8-15.8-10.6-24.7-14.2 l-7-32c-1.1-5.1-5-9.1-10.2-10c-7.7-1.3-15.7-2-23.8-2s-16.1,0.7-23.8,2c-5.2,0.9-9.1,4.9-10.2,10l-7,32 c-8.9,3.7-17.2,8.5-24.7,14.2l-31.2-9.9c-4.9-1.6-10.4-0.2-13.7,3.8c-4.5,5.5-8.7,11.3-12.4,17.5l-2.6,4.5 c-3.4,6.2-6.4,12.6-8.9,19.2c-1.8,4.9-0.3,10.3,3.6,13.8l24.3,22.1c-0.6,4.7-1,9.4-1,14.2s0.3,9.6,1,14.3L197,407.5 c-3.9,3.5-5.4,8.9-3.6,13.8c2.5,6.7,5.4,13.1,8.9,19.2l2.6,4.5c3.7,6.2,7.8,12,12.4,17.5c3.3,4,8.8,5.4,13.7,3.8l31.2-10 c7.5,5.8,15.8,10.6,24.7,14.2l7,32c1.1,5.1,5,9.1,10.2,10c7.7,1.3,15.7,2,23.8,2c8.1,0,16.1-0.7,23.8-2c5.2-0.8,9.1-4.9,10.2-10 l7-32c8.9-3.6,17.2-8.5,24.7-14.2l31.2,9.9c4.9,1.6,10.4,0.2,13.7-3.8c4.5-5.5,8.7-11.3,12.4-17.5l2.6-4.5 c3.4-6.2,6.4-12.6,8.9-19.2C464.2,416.3,462.7,410.9,458.9,407.4z M328,415.9c-24.8,0-44.9-20.1-44.9-44.8 c0-24.8,20.1-44.8,44.9-44.8s44.8,20.1,44.8,44.8C372.8,395.9,352.7,415.9,328,415.9z"/>
         </symbol>
         <symbol id="edit-pen-icon" viewBox="0 0 512 512">
             <!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
