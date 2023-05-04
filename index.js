@@ -136,7 +136,7 @@ class PairDropServer {
                 displayName: peer.name.displayName,
                 deviceName: peer.name.deviceName,
                 peerId: peer.id,
-                peerIdHash: peer.id.hashCode128BitSalted()
+                peerIdHash: hasher.hashCodeSalted(peer.id)
             }
         });
     }
@@ -238,26 +238,8 @@ class PairDropServer {
         this._notifyPeers(sender);
     }
 
-    getRandomString(length) {
-        let string = "";
-        while (string.length < length) {
-            let arr = new Uint16Array(length);
-            crypto.webcrypto.getRandomValues(arr);
-            arr = Array.apply([], arr); /* turn into non-typed array */
-            arr = arr.map(function (r) {
-                return r % 128
-            })
-            arr = arr.filter(function (r) {
-                /* strip non-printables: if we transform into desirable range we have a propability bias, so I suppose we better skip this character */
-                return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
-            });
-            string += String.fromCharCode.apply(String, arr);
-        }
-        return string.substring(0, length)
-    }
-
     _onPairDeviceInitiate(sender) {
-        let roomSecret = this.getRandomString(64);
+        let roomSecret = randomizer.getRandomString(64);
         let roomKey = this._createRoomKey(sender, roomSecret);
         if (sender.roomKey) this._removeRoomKey(sender.roomKey);
         sender.roomKey = roomKey;
@@ -583,7 +565,7 @@ class Peer {
             separator: ' ',
             dictionaries: [colors, animals],
             style: 'capital',
-            seed: this.id.hashCode()
+            seed: cyrb53(this.id)
         })
 
         this.name = {
@@ -609,7 +591,7 @@ class Peer {
     }
 
     isPeerIdHashValid(peerId, peerIdHash) {
-        return peerIdHash === peerId.hashCode128BitSalted();
+        return peerIdHash === hasher.hashCodeSalted(peerId);
     }
 
     addRoomSecret(roomSecret) {
@@ -625,39 +607,43 @@ class Peer {
     }
 }
 
-Object.defineProperty(String.prototype, 'hashCode', {
-    value: function() {
-        return cyrb53(this);
-    }
-});
-
-Object.defineProperty(String.prototype, 'hashCode128BitSalted', {
-    value: function() {
-        return hasher.hashCode128BitSalted(this);
-    }
-});
-
 const hasher = (() => {
-    let seeds;
+    let password;
     return {
-        hashCode128BitSalted(str) {
-            if (!seeds) {
-                // seeds are created on first call to salt hash.
-                seeds = [4];
-                for (let i=0; i<4; i++) {
-                    const randomBuffer = new Uint32Array(1);
-                    crypto.webcrypto.getRandomValues(randomBuffer);
-                    seeds[i] = randomBuffer[0];
-                }
+        hashCodeSalted(salt) {
+            if (!password) {
+                // password is created on first call.
+                password = randomizer.getRandomString(128);
             }
-            let hashCode = "";
-            for (let i=0; i<4; i++) {
-                hashCode += cyrb53(str, seeds[i]);
-            }
-            return hashCode;
+
+            return crypto.createHash("sha3-512")
+                .update(password)
+                .update(crypto.createHash("sha3-512").update(salt, "utf8").digest("hex"))
+                .digest("hex");
         }
     }
+})()
 
+const randomizer = (() => {
+    return {
+        getRandomString(length) {
+            let string = "";
+            while (string.length < length) {
+                let arr = new Uint16Array(length);
+                crypto.webcrypto.getRandomValues(arr);
+                arr = Array.apply([], arr); /* turn into non-typed array */
+                arr = arr.map(function (r) {
+                    return r % 128
+                })
+                arr = arr.filter(function (r) {
+                    /* strip non-printables: if we transform into desirable range we have a probability bias, so I suppose we better skip this character */
+                    return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
+                });
+                string += String.fromCharCode.apply(String, arr);
+            }
+            return string.substring(0, length)
+        }
+    }
 })()
 
 /*
