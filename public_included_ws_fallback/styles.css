@@ -1154,6 +1154,7 @@ x-toast {
     line-height: 24px;
     border-radius: 8px;
     pointer-events: all;
+    white-space: pre-wrap;
 }
 
 x-toast:not([show]):not(:hover) {
