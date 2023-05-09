@@ -12,6 +12,7 @@ class ServerConnection {
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
         Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
+        Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
         Events.on('resend-peers', _ => this.send({ type: 'resend-peers'}));
         Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
         Events.on('pair-device-join', e => this._onPairDeviceJoin(e.detail));
@@ -104,6 +105,9 @@ class ServerConnection {
                 break;
             case 'secret-room-deleted':
                 Events.fire('secret-room-deleted', msg.roomSecret);
+                break;
+            case 'room-secret-regenerated':
+                Events.fire('room-secret-regenerated', msg);
                 break;
             default:
                 console.error('WS receive: unknown message type', msg);
@@ -808,6 +812,7 @@ class PeersManager {
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
         Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
@@ -911,6 +916,13 @@ class PeersManager {
                 this._onPeerDisconnected(peerId);
             }
         }
+    }
+
+    _onRoomSecretRegenerated(message) {
+        PersistentStorage.updateRoomSecret(message.oldRoomSecret, message.newRoomSecret).then(_ => {
+            console.log("successfully regenerated room secret");
+            Events.fire("room-secrets", [message.newRoomSecret]);
+        })
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {

@@ -171,6 +171,9 @@ class PairDropServer {
             case 'pair-device-cancel':
                 this._onPairDeviceCancel(sender);
                 break;
+            case 'regenerate-room-secret':
+                this._onRegenerateRoomSecret(sender, message);
+                break
             case 'resend-peers':
                 this._notifyPeers(sender);
                 break;
@@ -205,7 +208,7 @@ class PairDropServer {
 
     _onRoomSecrets(sender, message) {
         const roomSecrets = message.roomSecrets.filter(roomSecret => {
-            return /^[\x00-\x7F]{64}$/.test(roomSecret);
+            return /^[\x00-\x7F]{64,256}$/.test(roomSecret);
         })
         this._joinSecretRooms(sender, roomSecrets);
     }
@@ -233,7 +236,7 @@ class PairDropServer {
     }
 
     _onPairDeviceInitiate(sender) {
-        let roomSecret = randomizer.getRandomString(64);
+        let roomSecret = randomizer.getRandomString(256);
         let roomKey = this._createRoomKey(sender, roomSecret);
         if (sender.roomKey) this._removeRoomKey(sender.roomKey);
         sender.roomKey = roomKey;
@@ -246,16 +249,19 @@ class PairDropServer {
     }
 
     _onPairDeviceJoin(sender, message) {
+        // rate limit implementation: max 10 attempts every 10s
         if (sender.roomKeyRate >= 10) {
             this._send(sender, { type: 'pair-device-join-key-rate-limit' });
             return;
         }
         sender.roomKeyRate += 1;
         setTimeout(_ => sender.roomKeyRate -= 1, 10000);
+
         if (!this._roomSecrets[message.roomKey] || sender.id === this._roomSecrets[message.roomKey].creator.id) {
             this._send(sender, { type: 'pair-device-join-key-invalid' });
             return;
         }
+
         const roomSecret = this._roomSecrets[message.roomKey].roomSecret;
         const creator = this._roomSecrets[message.roomKey].creator;
         this._removeRoomKey(message.roomKey);
@@ -275,12 +281,29 @@ class PairDropServer {
 
     _onPairDeviceCancel(sender) {
         if (sender.roomKey) {
+            this._removeRoomKey(sender.roomKey);
             this._send(sender, {
                 type: 'pair-device-canceled',
                 roomKey: sender.roomKey,
             });
-            this._removeRoomKey(sender.roomKey);
         }
+    }
+
+    _onRegenerateRoomSecret(sender, message) {
+        const oldRoomSecret = message.roomSecret;
+        const newRoomSecret = randomizer.getRandomString(256);
+
+        // notify all other peers
+        for (const peerId in this._rooms[oldRoomSecret]) {
+            const peer = this._rooms[oldRoomSecret][peerId];
+            this._send(peer, {
+                type: 'room-secret-regenerated',
+                oldRoomSecret: oldRoomSecret,
+                newRoomSecret: newRoomSecret,
+            });
+            peer.removeRoomSecret(oldRoomSecret);
+        }
+        delete this._rooms[oldRoomSecret];
     }
 
     _createRoomKey(creator, roomSecret) {

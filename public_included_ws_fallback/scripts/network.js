@@ -104,6 +104,9 @@ class ServerConnection {
             case 'secret-room-deleted':
                 Events.fire('secret-room-deleted', msg.roomSecret);
                 break;
+            case 'room-secret-regenerated':
+                Events.fire('room-secret-regenerated', msg);
+                break;
             case 'request':
             case 'header':
             case 'partition':
@@ -860,6 +863,7 @@ class PeersManager {
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
         Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
@@ -990,6 +994,13 @@ class PeersManager {
                 this._onPeerDisconnected(peerId);
             }
         }
+    }
+
+    _onRoomSecretRegenerated(message) {
+        PersistentStorage.updateRoomSecret(message.oldRoomSecret, message.newRoomSecret).then(_ => {
+            console.log("successfully regenerated room secret");
+            Events.fire("room-secrets", [message.newRoomSecret]);
+        })
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {
