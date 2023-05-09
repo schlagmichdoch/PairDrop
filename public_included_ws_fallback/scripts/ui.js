@@ -87,12 +87,16 @@ class PeersUI {
         if (newDisplayName === savedDisplayName) return;
 
         if (newDisplayName) {
-            PersistentStorage.set('editedDisplayName', newDisplayName).then(_ => {
+            PersistentStorage.set('editedDisplayName', newDisplayName).then(async _ => {
+                const persistent = await PersistentStorage.isStoragePersistent();
+                if (!persistent) {
+                    throw ErrorEvent("Storage not persistent.")
+                }
                 Events.fire('notify-user', 'Device name is changed permanently.');
             }).catch(_ => {
                 console.log("This browser does not support IndexedDB. Use localStorage instead.");
                 localStorage.setItem('editedDisplayName', newDisplayName);
-                Events.fire('notify-user', 'Device name is changed only for this session.');
+                Events.fire('notify-user', 'Device name is changed for this session only.\n\nGoogle Chrome:\nSave page as bookmark or enable notifications to enable persistence.');
             }).finally(_ => {
                 Events.fire('self-display-name-changed', newDisplayName);
                 Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
@@ -101,7 +105,6 @@ class PeersUI {
             PersistentStorage.delete('editedDisplayName').catch(_ => {
                 console.log("This browser does not support IndexedDB. Use localStorage instead.")
                 localStorage.removeItem('editedDisplayName');
-                Events.fire('notify-user', 'Random Display name is used again.');
             }).finally(_ => {
                 Events.fire('notify-user', 'Device name is randomly generated again.');
                 Events.fire('self-display-name-changed', '');
@@ -1027,17 +1030,21 @@ class PairDeviceDialog extends Dialog {
 
     _pairDeviceJoined(peerId, roomSecret) {
         this.hide();
-        PersistentStorage.addRoomSecret(roomSecret).then(_ => {
+        PersistentStorage.addRoomSecret(roomSecret).then(async addedRoomSecret => {
+            const persistent = await PersistentStorage.isStoragePersistent();
+            if (!persistent) {
+                throw ErrorEvent("Storage not persistent.")
+            }
             Events.fire('notify-user', 'Devices paired successfully.');
             const oldRoomSecret = $(peerId).ui.roomSecret;
-            if (oldRoomSecret) PersistentStorage.deleteRoomSecret(oldRoomSecret);
-            $(peerId).ui.roomSecret = roomSecret;
-            this._evaluateNumberRoomSecrets();
+            if (oldRoomSecret) await PersistentStorage.deleteRoomSecret(oldRoomSecret);
+            $(peerId).ui.roomSecret = addedRoomSecret;
         }).finally(_ => {
+            this._evaluateNumberRoomSecrets();
             this._cleanUp();
         })
         .catch(_ => {
-            Events.fire('notify-user', 'Paired devices are not persistent.');
+            Events.fire('notify-user', 'Paired device is saved for this session only.\n\nGoogle Chrome:\nSave page as bookmark or enable notifications to enable persistence.');
             PersistentStorage.logBrowserNotCapable();
         });
     }
@@ -1460,6 +1467,15 @@ class Notifications {
                 return;
             }
             Events.fire('notify-user', 'Notifications enabled.');
+            PersistentStorage.isStoragePersistent().then(persistent => {
+                if (!persistent) {
+                    PersistentStorage.requestPersistentStorage().then(updatedPersistence => {
+                        if (updatedPersistence) {
+                            Events.fire('notify-user', 'Successfully enabled persistent storage.')
+                        }
+                    })
+                }
+            })
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -1722,8 +1738,27 @@ class PersistentStorage {
         console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 
+    static async isStoragePersistent() {
+        return await navigator.storage.persisted();
+    }
+
+    static async requestPersistentStorage() {
+        if (!navigator.storage || !navigator.storage.persist) return false;
+        if (await this.isStoragePersistent()) return true;
+
+        const persistent = await navigator.storage.persist()
+        if (persistent) {
+            console.log("Storage will not be cleared except by explicit user action");
+        } else {
+            console.warn("Storage may be cleared by the UA under storage pressure.");
+        }
+        return persistent;
+    }
+
     static set(key, value) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.requestPersistentStorage();
+
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
@@ -1780,7 +1815,9 @@ class PersistentStorage {
     }
 
     static addRoomSecret(roomSecret) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
+            await this.requestPersistentStorage();
+
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
@@ -1789,7 +1826,7 @@ class PersistentStorage {
                 const objectStoreRequest = objectStore.add({'secret': roomSecret});
                 objectStoreRequest.onsuccess = _ => {
                     console.log(`Request successful. RoomSecret added: ${roomSecret}`);
-                    resolve();
+                    resolve(roomSecret);
                 }
             }
             DBOpenRequest.onerror = (e) => {
