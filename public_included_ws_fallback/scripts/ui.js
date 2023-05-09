@@ -574,6 +574,10 @@ class Dialog {
         if (this.$autoFocus) this.$autoFocus.focus();
     }
 
+    isShown() {
+        return !!this.$el.attributes["show"];
+    }
+
     hide() {
         this.$el.removeAttribute('show');
         if (this.$autoFocus) {
@@ -582,10 +586,11 @@ class Dialog {
         }
         document.title = 'PairDrop';
         document.changeFavicon("images/favicon-96x96.png");
+        this.correspondingPeerId = undefined;
     }
 
     _onPeerDisconnected(peerId) {
-        if (this.correspondingPeerId === peerId) {
+        if (this.isShown() && this.correspondingPeerId === peerId) {
             this.hide();
             Events.fire('notify-user', 'Selected peer left.')
         }
@@ -851,14 +856,14 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
+        if (this.isShown() && e.code === "Escape") {
             this._respondToFileTransferRequest(false);
         }
     }
 
     _onRequestFileTransfer(request, peerId) {
         this._filesTransferRequestQueue.push({request: request, peerId: peerId});
-        if (this.$el.attributes["show"]) return;
+        if (this.isShown()) return;
         this._dequeueRequests();
     }
 
@@ -960,7 +965,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
+        if (this.isShown() && e.code === "Escape") {
             // Timeout to prevent paste mode from getting cancelled simultaneously
             setTimeout(_ => this._pairDeviceCancel(), 50);
         }
@@ -1153,7 +1158,7 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
+        if (this.isShown() && e.code === "Escape") {
             this.hide();
         }
     }
@@ -1253,7 +1258,7 @@ class SendTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"]) {
+        if (this.isShown()) {
             if (e.code === "Escape") {
                 this.hide();
             } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -1322,7 +1327,7 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"]) {
+        if (this.isShown()) {
             if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                 await this._onCopy()
                 this.hide();
@@ -1336,7 +1341,7 @@ class ReceiveTextDialog extends Dialog {
         window.blop.play();
         this._receiveTextQueue.push({text: text, peerId: peerId});
         this._setDocumentTitleMessages();
-        if (this.$el.attributes["show"]) return;
+        if (this.isShown()) return;
         this._dequeueRequests();
     }
 
