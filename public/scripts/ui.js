@@ -941,6 +941,8 @@ class PairDeviceDialog extends Dialog {
         Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._pairDeviceInitiated(e.detail));
         Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
+        Events.on('peers', e => this._onPeers(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._pairDeviceCanceled(e.detail));
         Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
@@ -949,6 +951,8 @@ class PairDeviceDialog extends Dialog {
 
         this.evaluateRoomKeyChars();
         this.evaluateUrlAttributes();
+
+        this.pairPeer = {};
     }
 
     _onCharsInput(e) {
@@ -1073,15 +1077,46 @@ class PairDeviceDialog extends Dialog {
     }
 
     _pairDeviceJoined(peerId, roomSecret) {
-        this.hide();
-
         // skip adding to IndexedDB if peer is another tab on the same browser
         if (BrowserTabsConnector.peerIsSameBrowser(peerId)) {
             this._cleanUp();
+            this.hide();
             Events.fire('notify-user', 'Pairing of two browser tabs is not possible.');
             return;
         }
 
+        // save pairPeer and wait for it to connect to ensure both devices have gotten the roomSecret
+        this.pairPeer = {
+            "peerId": peerId,
+            "roomSecret": roomSecret
+        };
+    }
+
+    _onPeers(message) {
+        if (!Object.keys(this.pairPeer)) return;
+
+        message.peers.forEach(messagePeer => {
+            this._evaluateJoinedPeer(messagePeer.id, message.roomSecret);
+        });
+    }
+
+    _onPeerJoined(message) {
+        if (!Object.keys(this.pairPeer)) return;
+
+        this._evaluateJoinedPeer(message.peer.id, message.roomSecret);
+    }
+
+    _evaluateJoinedPeer(peerId, roomSecret) {
+        const samePeerId = peerId === this.pairPeer.peerId;
+        const sameRoomSecret = roomSecret === this.pairPeer.roomSecret;
+
+        if (!peerId || !roomSecret || !samePeerId || !sameRoomSecret) return;
+
+        this._onPairPeerJoined(peerId, roomSecret);
+        this.pairPeer = {};
+    }
+
+    _onPairPeerJoined(peerId, roomSecret) {
         // if devices are paired that are already connected we must save the names at this point
         const $peer = $(peerId);
         let displayName, deviceName;
@@ -1097,6 +1132,7 @@ class PairDeviceDialog extends Dialog {
             })
             .finally(_ => {
                 this._cleanUp();
+                this.hide();
             })
             .catch(_ => {
                 Events.fire('notify-user', 'Paired devices are not persistent.');
@@ -1124,6 +1160,7 @@ class PairDeviceDialog extends Dialog {
         this.inputRoomKey = '';
         this.$inputRoomKeyChars.forEach(el => el.value = '');
         this.$inputRoomKeyChars.forEach(el => el.setAttribute("disabled", ""));
+        this.pairPeer = {};
     }
 
     _onSecretRoomDeleted(roomSecret) {
