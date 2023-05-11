@@ -286,13 +286,15 @@ class PairDropServer {
     }
 
     _onPairDeviceCancel(sender) {
-        if (sender.roomKey) {
-            this._removeRoomKey(sender.roomKey);
-            this._send(sender, {
-                type: 'pair-device-canceled',
-                roomKey: sender.roomKey,
-            });
-        }
+        const roomKey = sender.roomKey
+
+        if (!roomKey) return;
+
+        this._removeRoomKey(roomKey);
+        this._send(sender, {
+            type: 'pair-device-canceled',
+            roomKey: roomKey,
+        });
     }
 
     _onRegenerateRoomSecret(sender, message) {
