@@ -3,16 +3,25 @@ window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnecti
 
 if (!window.isRtcSupported) alert("WebRTC must be enabled for PairDrop to work");
 
+window.hiddenProperty = 'hidden' in document ? 'hidden' :
+    'webkitHidden' in document ? 'webkitHidden' :
+        'mozHidden' in document ? 'mozHidden' :
+            null;
+window.visibilityChangeEvent = 'visibilitychange' in document ? 'visibilitychange' :
+    'webkitvisibilitychange' in document ? 'webkitvisibilitychange' :
+        'mozvisibilitychange' in document ? 'mozvisibilitychange' :
+            null;
+
 class ServerConnection {
 
     constructor() {
         this._connect();
         Events.on('pagehide', _ => this._disconnect());
-        document.addEventListener('visibilitychange', _ => this._onVisibilityChange());
+        document.addEventListener(window.visibilityChangeEvent, _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
         Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
-        Events.on('room-secret-deleted', e => this.send({ type: 'room-secret-deleted', roomSecret: e.detail}));
-        Events.on('room-secrets-cleared', e => this.send({ type: 'room-secrets-cleared', roomSecrets: e.detail}));
+        Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
+        Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
         Events.on('resend-peers', _ => this.send({ type: 'resend-peers'}));
         Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
         Events.on('pair-device-join', e => this._onPairDeviceJoin(e.detail));
@@ -65,13 +74,13 @@ class ServerConnection {
 
     _onMessage(msg) {
         msg = JSON.parse(msg);
-        if (msg.type !== 'ping') console.log('WS:', msg);
+        if (msg.type !== 'ping') console.log('WS receive:', msg);
         switch (msg.type) {
             case 'rtc-config':
                 this._setRtcConfig(msg.config);
                 break;
             case 'peers':
-                Events.fire('peers', msg);
+                this._onPeers(msg);
                 break;
             case 'peer-joined':
                 Events.fire('peer-joined', msg);
@@ -106,19 +115,42 @@ class ServerConnection {
             case 'secret-room-deleted':
                 Events.fire('secret-room-deleted', msg.roomSecret);
                 break;
+            case 'room-secret-regenerated':
+                Events.fire('room-secret-regenerated', msg);
+                break;
             default:
-                console.error('WS: unknown message type', msg);
+                console.error('WS receive: unknown message type', msg);
         }
     }
 
     send(msg) {
         if (!this._isConnected()) return;
+        if (msg.type !== 'pong') console.log("WS send:", msg)
         this._socket.send(JSON.stringify(msg));
     }
 
+    _onPeers(msg) {
+        Events.fire('peers', msg);
+        if (msg.roomType === "ip" && msg.peers.length === 0) {
+            BrowserTabsConnector.removePeerIdsFromLocalStorage();
+            BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
+                if (peerId) return;
+                console.log("successfully added peerId from localStorage");
+            });
+        }
+    }
+
     _onDisplayName(msg) {
+        // Add peerId and peerIdHash to sessionStorage to authenticate as the same device on page reload
         sessionStorage.setItem("peerId", msg.message.peerId);
         sessionStorage.setItem("peerIdHash", msg.message.peerIdHash);
+
+        // Add peerId to localStorage to mark it on other PairDrop tabs on the same browser
+        BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
+            if (peerId) return;
+            console.log("successfully added peerId from localStorage");
+        });
+
         Events.fire('display-name', msg);
     }
 
@@ -138,13 +170,19 @@ class ServerConnection {
 
     _disconnect() {
         this.send({ type: 'disconnect' });
-        if (this._socket) {
-            this._socket.onclose = null;
-            this._socket.close();
-            this._socket = null;
-            Events.fire('ws-disconnected');
-            this._isReconnect = true;
-        }
+
+        const peerId = sessionStorage.getItem("peerId");
+        BrowserTabsConnector.removePeerIdFromLocalStorage(peerId).then(_ => {
+            console.log("successfully removed peerId from localStorage");
+        });
+
+        if (!this._socket) return;
+
+        this._socket.onclose = null;
+        this._socket.close();
+        this._socket = null;
+        Events.fire('ws-disconnected');
+        this._isReconnect = true;
     }
 
     _onDisconnect() {
@@ -157,7 +195,7 @@ class ServerConnection {
     }
 
     _onVisibilityChange() {
-        if (document.hidden) return;
+        if (window.hiddenProperty) return;
         this._connect();
     }
 
@@ -183,11 +221,16 @@ class Peer {
 
     constructor(serverConnection, peerId, roomType, roomSecret) {
         this._server = serverConnection;
+        this._isCaller = !!peerId;
         this._peerId = peerId;
         this._roomType = roomType;
-        this._roomSecret = roomSecret;
+        this._updateRoomSecret(roomSecret);
+
         this._filesQueue = [];
         this._busy = false;
+
+        // evaluate auto accept
+        this._evaluateAutoAccept();
     }
 
     sendJSON(message) {
@@ -198,12 +241,48 @@ class Peer {
         this.sendJSON({type: 'display-name-changed', displayName: displayName});
     }
 
-    async createHeader(file) {
-        return {
-            name: file.name,
-            mime: file.type,
-            size: file.size,
-        };
+    _updateRoomSecret(roomSecret) {
+        // if peer is another browser tab, peer is not identifiable with roomSecret as browser tabs share all roomSecrets
+        // -> abort
+        if (BrowserTabsConnector.peerIsSameBrowser(this._peerId)) {
+            this._roomSecret = "";
+            return;
+        }
+
+        if (this._roomSecret && this._roomSecret !== roomSecret) {
+            // remove old roomSecrets to prevent multiple pairings with same peer
+            PersistentStorage.deleteRoomSecret(this._roomSecret).then(deletedRoomSecret => {
+                if (deletedRoomSecret) console.log("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
+            })
+        }
+
+        this._roomSecret = roomSecret;
+
+        if (this._roomSecret && this._roomSecret.length !== 256 && this._isCaller) {
+            // increase security by increasing roomSecret length
+            console.log('RoomSecret is regenerated to increase security')
+            Events.fire('regenerate-room-secret', this._roomSecret);
+        }
+    }
+
+    _evaluateAutoAccept() {
+        if (!this._roomSecret) {
+            this._setAutoAccept(false);
+            return;
+        }
+
+        PersistentStorage.getRoomSecretEntry(this._roomSecret)
+            .then(roomSecretEntry => {
+                const autoAccept = roomSecretEntry ? roomSecretEntry.entry.auto_accept : false;
+                this._setAutoAccept(autoAccept);
+            })
+            .catch(_ => {
+                this._setAutoAccept(false);
+            });
+    }
+
+    _setAutoAccept(autoAccept) {
+        this._autoAccept = autoAccept;
     }
 
     getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
@@ -248,7 +327,11 @@ class Peer {
         let imagesOnly = true
         for (let i=0; i<files.length; i++) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 0.8*i/files.length, status: 'prepare'})
-            header.push(await this.createHeader(files[i]));
+            header.push({
+                name: files[i].name,
+                mime: files[i].type,
+                size: files[i].size
+            });
             totalSize += files[i].size;
             if (files[i].type.split('/')[0] !== 'image') imagesOnly = false;
         }
@@ -360,7 +443,7 @@ class Peer {
 
     _onFilesTransferRequest(request) {
         if (this._requestPending) {
-            // Only accept one request at a time
+            // Only accept one request at a time per peer
             this.sendJSON({type: 'files-transfer-response', accepted: false});
             return;
         }
@@ -372,6 +455,14 @@ class Peer {
         }
 
         this._requestPending = request;
+
+        if (this._autoAccept) {
+            // auto accept if set via Edit Paired Devices Dialog
+            this._respondToFileTransferRequest(true);
+            return;
+        }
+
+        // default behavior: show user transfer request
         Events.fire('files-transfer-request', {
             request: request,
             peerId: this._peerId
@@ -497,9 +588,16 @@ class Peer {
     }
 
     _onDisplayNameChanged(message) {
-        if (!message.displayName || this._displayName === message.displayName) return;
-        this._displayName = message.displayName;
+        const displayNameHasChanged = this._displayName !== message.displayName
+
+        if (message.displayName && displayNameHasChanged) {
+            this._displayName = message.displayName;
+        }
+
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
+
+        if (!displayNameHasChanged) return;
+        Events.fire('notify-peer-display-name-changed', this._peerId);
     }
 }
 
@@ -508,22 +606,21 @@ class RTCPeer extends Peer {
     constructor(serverConnection, peerId, roomType, roomSecret) {
         super(serverConnection, peerId, roomType, roomSecret);
         this.rtcSupported = true;
-        if (!peerId) return; // we will listen for a caller
+        if (!this._isCaller) return; // we will listen for a caller
         this._connect(peerId, true);
     }
 
-    _connect(peerId, isCaller) {
-        if (!this._conn || this._conn.signalingState === "closed") this._openConnection(peerId, isCaller);
+    _connect(peerId) {
+        if (!this._conn || this._conn.signalingState === "closed") this._openConnection(peerId);
 
-        if (isCaller) {
+        if (this._isCaller) {
             this._openChannel();
         } else {
             this._conn.ondatachannel = e => this._onChannelOpened(e);
         }
     }
 
-    _openConnection(peerId, isCaller) {
-        this._isCaller = isCaller;
+    _openConnection(peerId) {
         this._peerId = peerId;
         this._conn = new RTCPeerConnection(window.rtcConfig);
         this._conn.onicecandidate = e => this._onIceCandidate(e);
@@ -688,7 +785,11 @@ class RTCPeer extends Peer {
     refresh() {
         // check if channel is open. otherwise create one
         if (this._isConnected() || this._isConnecting()) return;
-        this._connect(this._peerId, this._isCaller);
+
+        // only reconnect if peer is caller
+        if (!this._isCaller) return;
+
+        this._connect(this._peerId);
     }
 
     _isConnected() {
@@ -716,32 +817,60 @@ class PeersManager {
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
-        Events.on('peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail.peerId));
+        Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
+        Events.on('auto-accept-updated', e => this._onAutoAcceptUpdated(e.detail.roomSecret, e.detail.autoAccept));
     }
 
     _onMessage(message) {
-        // if different roomType -> abort
-        if (this.peers[message.sender.id] && this.peers[message.sender.id]._roomType !== message.roomType) return;
-        if (!this.peers[message.sender.id]) {
-            this.peers[message.sender.id] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
-        }
-        this.peers[message.sender.id].onServerMessage(message);
+        const peerId = message.sender.id;
+        this.peers[peerId].onServerMessage(message);
     }
 
-    _onPeers(msg) {
-        msg.peers.forEach(peer => {
-            if (this.peers[peer.id]) {
-                // if different roomType -> abort
-                if (this.peers[peer.id].roomType !== msg.roomType || this.peers[peer.id].roomSecret !== msg.roomSecret) return;
-                this.peers[peer.id].refresh();
-                return;
+    _refreshExistingPeer(peerId, roomType, roomSecret) {
+        const peer = this.peers[peerId];
+        if (peer) {
+            const roomTypeIsSecret = roomType === "secret";
+            const roomSecretsDiffer = peer._roomSecret !== roomSecret;
+
+            // if roomSecrets differs peer is already connected -> abort but update roomSecret and reevaluate auto accept
+            if (roomTypeIsSecret && roomSecretsDiffer) {
+                peer._updateRoomSecret(roomSecret);
+                peer._evaluateAutoAccept();
+
+                return true;
             }
-            this.peers[peer.id] = new RTCPeer(this._server, peer.id, msg.roomType, msg.roomSecret);
+
+            const roomTypesDiffer = peer._roomType !== roomType;
+
+            // if roomTypes differ peer is already connected -> abort
+            if (roomTypesDiffer) return true;
+
+            peer.refresh();
+
+            return true;
+        }
+        // peer does not yet exist: return false
+        return false;
+    }
+
+    _onPeerJoined(message) {
+        if (this._refreshExistingPeer(message.peer.id, message.roomType, message.roomSecret)) return;
+
+        this.peers[message.peer.id] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
+    }
+
+    _onPeers(message) {
+        message.peers.forEach(messagePeer => {
+            if (this._refreshExistingPeer(messagePeer.id, message.roomType, message.roomSecret)) return;
+
+            this.peers[messagePeer.id] = new RTCPeer(this._server, messagePeer.id, message.roomType, message.roomSecret);
         })
     }
 
@@ -769,10 +898,10 @@ class PeersManager {
         this.peers[message.to].sendText(message.text);
     }
 
-    _onPeerLeft(msg) {
-        if (msg.disconnect === true) {
-            // if user actively disconnected from PairDrop disconnect all peer to peer connections immediately
-            Events.fire('peer-disconnected', msg.peerId);
+    _onPeerLeft(message) {
+        if (message.disconnect === true) {
+            // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
+            Events.fire('peer-disconnected', message.peerId);
         }
     }
 
@@ -792,10 +921,17 @@ class PeersManager {
     _onSecretRoomDeleted(roomSecret) {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
-            if (peer._roomSecret === roomSecret) {
+            if (peer._roomType === 'secret' && peer._roomSecret === roomSecret) {
                 this._onPeerDisconnected(peerId);
             }
         }
+    }
+
+    _onRoomSecretRegenerated(message) {
+        PersistentStorage.updateRoomSecret(message.oldRoomSecret, message.newRoomSecret).then(_ => {
+            console.log("successfully regenerated room secret");
+            Events.fire("room-secrets", [message.newRoomSecret]);
+        })
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {
@@ -813,6 +949,24 @@ class PeersManager {
 
     _onDisplayName(displayName) {
         this._originalDisplayName = displayName;
+        // if the displayName has not been changed (yet) set the displayName to the original displayName
+        if (!this._displayName) this._displayName = displayName;
+    }
+
+    _onAutoAcceptUpdated(roomSecret, autoAccept) {
+        const peerId = this._getPeerIdFromRoomSecret(roomSecret);
+        if (!peerId) return;
+        this.peers[peerId]._setAutoAccept(autoAccept);
+    }
+
+    _getPeerIdFromRoomSecret(roomSecret) {
+        for (const peerId in this.peers) {
+            const peer = this.peers[peerId];
+            if (peer._roomSecret === roomSecret) {
+                return peer._peerId;
+            }
+        }
+        return false;
     }
 }
 

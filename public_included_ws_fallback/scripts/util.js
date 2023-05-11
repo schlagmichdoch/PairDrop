@@ -399,6 +399,10 @@ const cyrb53 = function(str, seed = 0) {
     return 4294967296 * (2097151 & h2) + (h1>>>0);
 };
 
+function onlyUnique (value, index, array) {
+    return array.indexOf(value) === index;
+}
+
 function arrayBufferToBase64(buffer) {
     var binary = '';
     var bytes = new Uint8Array(buffer);
@@ -410,10 +414,10 @@ function arrayBufferToBase64(buffer) {
 }
 
 function base64ToArrayBuffer(base64) {
-    var binary_string =  window.atob(base64);
+    var binary_string = window.atob(base64);
     var len = binary_string.length;
     var bytes = new Uint8Array(len);
-    for (var i = 0; i < len; i++)        {
+    for (var i = 0; i < len; i++) {
         bytes[i] = binary_string.charCodeAt(i);
     }
     return bytes.buffer;

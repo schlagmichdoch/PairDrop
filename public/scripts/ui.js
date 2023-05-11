@@ -50,7 +50,7 @@ class PeersUI {
         this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
 
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
-        Events.on('peer-display-name-changed', e => this._changePeerDisplayName(e.detail.peerId, e.detail.displayName));
+        Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
 
         // Load saved display name on page load
         this._getSavedDisplayName().then(displayName => {
@@ -87,26 +87,31 @@ class PeersUI {
         if (newDisplayName === savedDisplayName) return;
 
         if (newDisplayName) {
-            PersistentStorage.set('editedDisplayName', newDisplayName).then(_ => {
-                Events.fire('notify-user', 'Device name is changed permanently.');
-            }).catch(_ => {
-                console.log("This browser does not support IndexedDB. Use localStorage instead.");
-                localStorage.setItem('editedDisplayName', newDisplayName);
-                Events.fire('notify-user', 'Device name is changed only for this session.');
-            }).finally(_ => {
-                Events.fire('self-display-name-changed', newDisplayName);
-                Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
-            });
+            PersistentStorage.set('editedDisplayName', newDisplayName)
+                .then(_ => {
+                    Events.fire('notify-user', 'Device name is changed permanently.');
+                })
+                .catch(_ => {
+                    console.log("This browser does not support IndexedDB. Use localStorage instead.");
+                    localStorage.setItem('editedDisplayName', newDisplayName);
+                    Events.fire('notify-user', 'Device name is changed only for this session.');
+                })
+                .finally(_ => {
+                    Events.fire('self-display-name-changed', newDisplayName);
+                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
+                });
         } else {
-            PersistentStorage.delete('editedDisplayName').catch(_ => {
-                console.log("This browser does not support IndexedDB. Use localStorage instead.")
-                localStorage.removeItem('editedDisplayName');
-                Events.fire('notify-user', 'Random Display name is used again.');
-            }).finally(_ => {
-                Events.fire('notify-user', 'Device name is randomly generated again.');
-                Events.fire('self-display-name-changed', '');
-                Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
-            });
+            PersistentStorage.delete('editedDisplayName')
+                .catch(_ => {
+                    console.log("This browser does not support IndexedDB. Use localStorage instead.")
+                    localStorage.removeItem('editedDisplayName');
+                    Events.fire('notify-user', 'Random Display name is used again.');
+                })
+                .finally(_ => {
+                    Events.fire('notify-user', 'Device name is randomly generated again.');
+                    Events.fire('self-display-name-changed', '');
+                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
+                });
         }
     }
 
@@ -129,6 +134,12 @@ class PeersUI {
         this.peers[peerId].name.displayName = displayName;
         const peerIdNode = $(peerId);
         if (peerIdNode && displayName) peerIdNode.querySelector('.name').textContent = displayName;
+        this._redrawPeerRoomTypes(peerId);
+    }
+
+    _onPeerDisplayNameChanged(e) {
+        if (!e.detail.displayName) return;
+        this._changePeerDisplayName(e.detail.peerId, e.detail.displayName);
     }
 
     _onKeyDown(e) {
@@ -142,26 +153,43 @@ class PeersUI {
     }
 
     _joinPeer(peer, roomType, roomSecret) {
+        const existingPeer = this.peers[peer.id];
+        if (existingPeer) {
+            // peer already exists. Abort but add roomType to GUI and update roomSecret
+            // skip if peer is a tab on the same browser
+            if (!existingPeer.sameBrowser()) {
+                // add roomType to PeerUI
+                if (!existingPeer.roomTypes.includes(roomType)) {
+                    existingPeer.roomTypes.push(roomType);
+                }
+                this._redrawPeerRoomTypes(peer.id);
+
+                if (roomType === "secret") existingPeer.roomSecret = roomSecret;
+            }
+            return;
+        }
+        peer.sameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
         peer.roomTypes = [roomType];
         peer.roomSecret = roomSecret;
-        if (this.peers[peer.id]) {
-            if (!this.peers[peer.id].roomTypes.includes(roomType)) this.peers[peer.id].roomTypes.push(roomType);
-            this._redrawPeer(this.peers[peer.id]);
-            return; // peer already exists
-        }
         this.peers[peer.id] = peer;
     }
 
     _onPeerConnected(peerId, connectionHash) {
-        if(this.peers[peerId] && !$(peerId))
-            new PeerUI(this.peers[peerId], connectionHash);
+        if (!this.peers[peerId] || $(peerId)) return;
+
+        const peer = this.peers[peerId];
+
+        new PeerUI(peer, connectionHash);
     }
 
-    _redrawPeer(peer) {
-        const peerNode = $(peer.id);
+    _redrawPeerRoomTypes(peerId) {
+        const peer = this.peers[peerId]
+        const peerNode = $(peerId);
         if (!peerNode) return;
         peerNode.classList.remove('type-ip', 'type-secret');
-        peer.roomTypes.forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+        if (!peer.sameBrowser()) {
+            peer.roomTypes.forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+        }
     }
 
     evaluateOverflowing() {
@@ -187,7 +215,17 @@ class PeersUI {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
             if (peer.roomSecret === roomSecret) {
+                let index = peer.roomTypes.indexOf('secret');
+                peer.roomTypes.splice(index, 1);
+                peer.roomSecret = "";
+
+                if (peer.roomTypes.length) {
+                    this._redrawPeerRoomTypes(peerId)
+                    return;
+                }
+
                 this._onPeerDisconnected(peerId);
+                return;
             }
         }
     }
@@ -364,8 +402,8 @@ class PeerUI {
         this.$el = document.createElement('x-peer');
         this.$el.id = this._peer.id;
         this.$el.ui = this;
-        this._peer.roomTypes.forEach(roomType => this.$el.classList.add(`type-${roomType}`));
         this.$el.classList.add('center');
+        if (!this._peer.sameBrowser()) this._peer.roomTypes.forEach(roomType => this.$el.classList.add(`type-${roomType}`));
         this.html();
 
         this._callbackInput = e => this._onFilesSelected(e)
@@ -535,6 +573,10 @@ class Dialog {
         if (this.$autoFocus) this.$autoFocus.focus();
     }
 
+    isShown() {
+        return !!this.$el.attributes["show"];
+    }
+
     hide() {
         this.$el.removeAttribute('show');
         if (this.$autoFocus) {
@@ -543,10 +585,11 @@ class Dialog {
         }
         document.title = 'PairDrop';
         document.changeFavicon("images/favicon-96x96.png");
+        this.correspondingPeerId = undefined;
     }
 
     _onPeerDisconnected(peerId) {
-        if (this.correspondingPeerId === peerId) {
+        if (this.isShown() && this.correspondingPeerId === peerId) {
             this.hide();
             Events.fire('notify-user', 'Selected peer left.')
         }
@@ -812,14 +855,14 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
+        if (this.isShown() && e.code === "Escape") {
             this._respondToFileTransferRequest(false);
         }
     }
 
     _onRequestFileTransfer(request, peerId) {
         this._filesTransferRequestQueue.push({request: request, peerId: peerId});
-        if (this.$el.attributes["show"]) return;
+        if (this.isShown()) return;
         this._dequeueRequests();
     }
 
@@ -862,8 +905,12 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     hide() {
-        this.$previewBox.innerHTML = '';
+        // clear previewBox after dialog is closed
+        setTimeout(_ => this.$previewBox.innerHTML = '', 300);
+
         super.hide();
+
+        // show next request
         setTimeout(_ => this._dequeueRequests(), 500);
     }
 }
@@ -876,7 +923,7 @@ class PairDeviceDialog extends Dialog {
         this.$roomKey = this.$el.querySelector('#room-key');
         this.$qrCode = this.$el.querySelector('#room-key-qr-code');
         this.$pairDeviceBtn = $('pair-device');
-        this.$clearSecretsBtn = $('clear-pair-devices');
+        this.$editPairedDevicesBtn = $('edit-paired-devices');
         this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
         this.$createJoinForm = this.$el.querySelector('form');
 
@@ -894,14 +941,18 @@ class PairDeviceDialog extends Dialog {
         Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._pairDeviceInitiated(e.detail));
         Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
+        Events.on('peers', e => this._onPeers(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._pairDeviceCanceled(e.detail));
-        Events.on('clear-room-secrets', e => this._onClearRoomSecrets(e.detail))
+        Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         this.$el.addEventListener('paste', e => this._onPaste(e));
 
         this.evaluateRoomKeyChars();
         this.evaluateUrlAttributes();
+
+        this.pairPeer = {};
     }
 
     _onCharsInput(e) {
@@ -917,7 +968,7 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.$el.attributes["show"] && e.code === "Escape") {
+        if (this.isShown() && e.code === "Escape") {
             // Timeout to prevent paste mode from getting cancelled simultaneously
             setTimeout(_ => this._pairDeviceCancel(), 50);
         }
@@ -978,7 +1029,7 @@ class PairDeviceDialog extends Dialog {
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             Events.fire('room-secrets', roomSecrets);
             this._evaluateNumberRoomSecrets();
-        }).catch(_ => PersistentStorage.logBrowserNotCapable());
+        });
     }
 
     _pairDeviceInitiate() {
@@ -1026,20 +1077,67 @@ class PairDeviceDialog extends Dialog {
     }
 
     _pairDeviceJoined(peerId, roomSecret) {
-        this.hide();
-        PersistentStorage.addRoomSecret(roomSecret).then(_ => {
-            Events.fire('notify-user', 'Devices paired successfully.');
-            const oldRoomSecret = $(peerId).ui.roomSecret;
-            if (oldRoomSecret) PersistentStorage.deleteRoomSecret(oldRoomSecret);
-            $(peerId).ui.roomSecret = roomSecret;
-            this._evaluateNumberRoomSecrets();
-        }).finally(_ => {
+        // skip adding to IndexedDB if peer is another tab on the same browser
+        if (BrowserTabsConnector.peerIsSameBrowser(peerId)) {
             this._cleanUp();
-        })
-        .catch(_ => {
-            Events.fire('notify-user', 'Paired devices are not persistent.');
-            PersistentStorage.logBrowserNotCapable();
+            this.hide();
+            Events.fire('notify-user', 'Pairing of two browser tabs is not possible.');
+            return;
+        }
+
+        // save pairPeer and wait for it to connect to ensure both devices have gotten the roomSecret
+        this.pairPeer = {
+            "peerId": peerId,
+            "roomSecret": roomSecret
+        };
+    }
+
+    _onPeers(message) {
+        if (!Object.keys(this.pairPeer)) return;
+
+        message.peers.forEach(messagePeer => {
+            this._evaluateJoinedPeer(messagePeer.id, message.roomSecret);
         });
+    }
+
+    _onPeerJoined(message) {
+        if (!Object.keys(this.pairPeer)) return;
+
+        this._evaluateJoinedPeer(message.peer.id, message.roomSecret);
+    }
+
+    _evaluateJoinedPeer(peerId, roomSecret) {
+        const samePeerId = peerId === this.pairPeer.peerId;
+        const sameRoomSecret = roomSecret === this.pairPeer.roomSecret;
+
+        if (!peerId || !roomSecret || !samePeerId || !sameRoomSecret) return;
+
+        this._onPairPeerJoined(peerId, roomSecret);
+        this.pairPeer = {};
+    }
+
+    _onPairPeerJoined(peerId, roomSecret) {
+        // if devices are paired that are already connected we must save the names at this point
+        const $peer = $(peerId);
+        let displayName, deviceName;
+        if ($peer) {
+            displayName = $peer.ui._peer.name.displayName;
+            deviceName = $peer.ui._peer.name.deviceName;
+        }
+
+        PersistentStorage.addRoomSecret(roomSecret, displayName, deviceName)
+            .then(_ => {
+                Events.fire('notify-user', 'Devices paired successfully.');
+                this._evaluateNumberRoomSecrets();
+            })
+            .finally(_ => {
+                this._cleanUp();
+                this.hide();
+            })
+            .catch(_ => {
+                Events.fire('notify-user', 'Paired devices are not persistent.');
+                PersistentStorage.logBrowserNotCapable();
+            });
     }
 
     _pairDeviceJoinKeyInvalid() {
@@ -1062,58 +1160,123 @@ class PairDeviceDialog extends Dialog {
         this.inputRoomKey = '';
         this.$inputRoomKeyChars.forEach(el => el.value = '');
         this.$inputRoomKeyChars.forEach(el => el.setAttribute("disabled", ""));
-    }
-
-    _onClearRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
-            Events.fire('room-secrets-cleared', roomSecrets);
-            PersistentStorage.clearRoomSecrets().finally(_ => {
-                Events.fire('notify-user', 'All Devices unpaired.')
-                this._evaluateNumberRoomSecrets();
-            })
-        }).catch(_ => PersistentStorage.logBrowserNotCapable());
+        this.pairPeer = {};
     }
 
     _onSecretRoomDeleted(roomSecret) {
         PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
             this._evaluateNumberRoomSecrets();
-        }).catch(e => console.error(e));
+        });
     }
 
     _evaluateNumberRoomSecrets() {
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             if (roomSecrets.length > 0) {
-                this.$clearSecretsBtn.removeAttribute('hidden');
+                this.$editPairedDevicesBtn.removeAttribute('hidden');
                 this.$footerInstructionsPairedDevices.removeAttribute('hidden');
             } else {
-                this.$clearSecretsBtn.setAttribute('hidden', '');
+                this.$editPairedDevicesBtn.setAttribute('hidden', '');
                 this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
             }
             Events.fire('bg-resize');
-        }).catch(_ => PersistentStorage.logBrowserNotCapable());
+        });
     }
 }
 
-class ClearDevicesDialog extends Dialog {
+class EditPairedDevicesDialog extends Dialog {
     constructor() {
-        super('clear-devices-dialog');
-        $('clear-pair-devices').addEventListener('click', _ => this._onClearPairDevices());
-        let clearDevicesForm = this.$el.querySelector('form');
-        clearDevicesForm.addEventListener('submit', e => this._onSubmit(e));
+        super('edit-paired-devices-dialog');
+        this.$pairedDevicesWrapper = this.$el.querySelector('.paired-devices-wrapper');
+        $('edit-paired-devices').addEventListener('click', _ => this._onEditPairedDevices());
+
+        Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
+        Events.on('keydown', e => this._onKeyDown(e));
     }
 
-    _onClearPairDevices() {
-        this.show();
+    _onKeyDown(e) {
+        if (this.isShown() && e.code === "Escape") {
+            this.hide();
+        }
     }
 
-    _onSubmit(e) {
-        e.preventDefault();
-        this._clearRoomSecrets();
+    async _initDOM() {
+        const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
+        roomSecretsEntries.forEach(roomSecretsEntry => {
+            let $pairedDevice = document.createElement('div');
+            $pairedDevice.classList = ["paired-device"];
+
+            $pairedDevice.innerHTML = `
+            <div class="display-name">
+                <span>${roomSecretsEntry.display_name}</span>
+            </div>
+            <div class="device-name">
+                <span>${roomSecretsEntry.device_name}</span>
+            </div>
+            <div class="button-wrapper">
+                <label class="auto-accept">auto-accept
+                    <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
+                </label>
+                <button class="button" type="button">unpair</button>
+            </div>`
+
+            $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
+                PersistentStorage.updateRoomSecretAutoAccept(roomSecretsEntry.secret, e.target.checked).then(roomSecretsEntry => {
+                    Events.fire('auto-accept-updated', {
+                        'roomSecret': roomSecretsEntry.entry.secret,
+                        'autoAccept': e.target.checked
+                    });
+                });
+            });
+
+            $pairedDevice.querySelector('button').addEventListener('click', e => {
+                PersistentStorage.deleteRoomSecret(roomSecretsEntry.secret).then(roomSecret => {
+                    Events.fire('room-secrets-deleted', [roomSecret]);
+                    Events.fire('evaluate-number-room-secrets');
+                    e.target.parentNode.parentNode.remove();
+                });
+            })
+
+            this.$pairedDevicesWrapper.appendChild($pairedDevice)
+        })
+
+    }
+
+    hide() {
+        super.hide();
+        setTimeout(_ => {
+            this.$pairedDevicesWrapper.innerHTML = ""
+        }, 300);
+    }
+
+    _onEditPairedDevices() {
+        this._initDOM().then(_ => this.show());
     }
 
     _clearRoomSecrets() {
-        Events.fire('clear-room-secrets');
-        this.hide();
+        PersistentStorage.getAllRoomSecrets()
+            .then(roomSecrets => {
+                PersistentStorage.clearRoomSecrets().finally(_ => {
+                    Events.fire('room-secrets-deleted', roomSecrets);
+                    Events.fire('evaluate-number-room-secrets');
+                    Events.fire('notify-user', 'All Devices unpaired.');
+                    this.hide();
+                })
+            });
+    }
+
+    _onPeerDisplayNameChanged(e) {
+        const peerId = e.detail.peerId;
+        const peerNode = $(peerId);
+
+        if (!peerNode) return;
+
+        const peer = peerNode.ui._peer;
+
+        if (!peer.roomSecret) return;
+
+        PersistentStorage.updateRoomSecretNames(peer.roomSecret, peer.name.displayName, peer.name.deviceName).then(roomSecretEntry => {
+            console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
+        })
     }
 }
 
@@ -1131,7 +1294,7 @@ class SendTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"]) {
+        if (this.isShown()) {
             if (e.code === "Escape") {
                 this.hide();
             } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
@@ -1200,7 +1363,7 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.$el.attributes["show"]) {
+        if (this.isShown()) {
             if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                 await this._onCopy()
                 this.hide();
@@ -1214,7 +1377,7 @@ class ReceiveTextDialog extends Dialog {
         window.blop.play();
         this._receiveTextQueue.push({text: text, peerId: peerId});
         this._setDocumentTitleMessages();
-        if (this.$el.attributes["show"]) return;
+        if (this.isShown()) return;
         this._dequeueRequests();
     }
 
@@ -1682,7 +1845,7 @@ class PersistentStorage {
             PersistentStorage.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 3);
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 4);
         DBOpenRequest.onerror = (e) => {
             PersistentStorage.logBrowserNotCapable();
             console.log('Error initializing database: ');
@@ -1693,27 +1856,32 @@ class PersistentStorage {
         };
         DBOpenRequest.onupgradeneeded = (e) => {
             const db = e.target.result;
+            const txn = e.target.transaction;
+
             db.onerror = e => console.log('Error loading database: ' + e);
-            try {
+
+            console.log(`Upgrading IndexedDB database from version ${e.oldVersion} to version ${e.newVersion}`);
+
+            if (e.oldVersion === 0) {
+                // initiate v1
                 db.createObjectStore('keyval');
-            } catch (error) {
-                console.log("Object store named 'keyval' already exists")
+                let roomSecretsObjectStore1 = db.createObjectStore('room_secrets', {autoIncrement: true});
+                roomSecretsObjectStore1.createIndex('secret', 'secret', { unique: true });
             }
-
-            try {
-                const roomSecretsObjectStore = db.createObjectStore('room_secrets', {autoIncrement: true});
-                roomSecretsObjectStore.createIndex('secret', 'secret', { unique: true });
-            } catch (error) {
-                console.log("Object store named 'room_secrets' already exists")
+            if (e.oldVersion <= 1) {
+                // migrate to v2
+                db.createObjectStore('share_target_files');
             }
-
-            try {
-                if (db.objectStoreNames.contains('share_target_files')) {
-                    db.deleteObjectStore('share_target_files');
-                }
+            if (e.oldVersion <= 2) {
+                // migrate to v3
+                db.deleteObjectStore('share_target_files');
                 db.createObjectStore('share_target_files', {autoIncrement: true});
-            } catch (error) {
-                console.log("Object store named 'share_target_files' already exists")
+            }
+            if (e.oldVersion <= 3) {
+                // migrate to v4
+                let roomSecretsObjectStore4 = txn.objectStore('room_secrets');
+                roomSecretsObjectStore4.createIndex('display_name', 'display_name');
+                roomSecretsObjectStore4.createIndex('auto_accept', 'auto_accept');
             }
         }
     }
@@ -1746,7 +1914,7 @@ class PersistentStorage {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
-                const transaction = db.transaction('keyval', 'readwrite');
+                const transaction = db.transaction('keyval', 'readonly');
                 const objectStore = transaction.objectStore('keyval');
                 const objectStoreRequest = objectStore.get(key);
                 objectStoreRequest.onsuccess = _ => {
@@ -1779,16 +1947,21 @@ class PersistentStorage {
         })
     }
 
-    static addRoomSecret(roomSecret) {
+    static addRoomSecret(roomSecret, displayName, deviceName) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
                 const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequest = objectStore.add({'secret': roomSecret});
-                objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. RoomSecret added: ${roomSecret}`);
+                const objectStoreRequest = objectStore.add({
+                    'secret': roomSecret,
+                    'display_name': displayName,
+                    'device_name': deviceName,
+                    'auto_accept': false
+                });
+                objectStoreRequest.onsuccess = e => {
+                    console.log(`Request successful. RoomSecret added: ${e.target.result}`);
                     resolve();
                 }
             }
@@ -1798,21 +1971,26 @@ class PersistentStorage {
         })
     }
 
-    static getAllRoomSecrets() {
+    static async getAllRoomSecrets() {
+        const roomSecrets = await this.getAllRoomSecretEntries();
+        let secrets = [];
+        for (let i=0; i<roomSecrets.length; i++) {
+            secrets.push(roomSecrets[i].secret);
+        }
+        console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
+        return(secrets);
+    }
+
+    static getAllRoomSecretEntries() {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readwrite');
+                const transaction = db.transaction('room_secrets', 'readonly');
                 const objectStore = transaction.objectStore('room_secrets');
                 const objectStoreRequest = objectStore.getAll();
                 objectStoreRequest.onsuccess = e => {
-                    let secrets = [];
-                    for (let i=0; i<e.target.result.length; i++) {
-                        secrets.push(e.target.result[i].secret);
-                    }
-                    console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
-                    resolve(secrets);
+                    resolve(e.target.result);
                 }
             }
             DBOpenRequest.onerror = (e) => {
@@ -1821,24 +1999,59 @@ class PersistentStorage {
         });
     }
 
-    static deleteRoomSecret(room_secret) {
+    static getRoomSecretEntry(roomSecret) {
+        return new Promise((resolve, reject) => {
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                const transaction = db.transaction('room_secrets', 'readonly');
+                const objectStore = transaction.objectStore('room_secrets');
+                const objectStoreRequestKey = objectStore.index("secret").getKey(roomSecret);
+                objectStoreRequestKey.onsuccess = e => {
+                    const key = e.target.result;
+                    if (!key) {
+                        console.log(`Nothing to retrieve. Entry for room_secret not existing: ${roomSecret}`);
+                        resolve();
+                        return;
+                    }
+                    const objectStoreRequestRetrieval = objectStore.get(key);
+                    objectStoreRequestRetrieval.onsuccess = e => {
+                        console.log(`Request successful. Retrieved entry for room_secret: ${key}`);
+                        resolve({
+                            "entry": e.target.result,
+                            "key": key
+                        });
+                    }
+                    objectStoreRequestRetrieval.onerror = (e) => {
+                        reject(e);
+                    }
+                };
+            }
+            DBOpenRequest.onerror = (e) => {
+                reject(e);
+            }
+        });
+    }
+
+    static deleteRoomSecret(roomSecret) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
                 const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequestKey = objectStore.index("secret").getKey(room_secret);
+                const objectStoreRequestKey = objectStore.index("secret").getKey(roomSecret);
                 objectStoreRequestKey.onsuccess = e => {
                     if (!e.target.result) {
-                        console.log(`Nothing to delete. room_secret not existing: ${room_secret}`);
+                        console.log(`Nothing to delete. room_secret not existing: ${roomSecret}`);
                         resolve();
                         return;
                     }
-                    const objectStoreRequestDeletion = objectStore.delete(e.target.result);
+                    const key = e.target.result;
+                    const objectStoreRequestDeletion = objectStore.delete(key);
                     objectStoreRequestDeletion.onsuccess = _ => {
-                        console.log(`Request successful. Deleted room_secret: ${room_secret}`);
-                        resolve();
+                        console.log(`Request successful. Deleted room_secret: ${key}`);
+                        resolve(roomSecret);
                     }
                     objectStoreRequestDeletion.onerror = (e) => {
                         reject(e);
@@ -1869,22 +2082,108 @@ class PersistentStorage {
             }
         })
     }
+
+    static updateRoomSecretNames(roomSecret, displayName, deviceName) {
+        return this.updateRoomSecret(roomSecret, undefined, displayName, deviceName);
+    }
+
+    static updateRoomSecretAutoAccept(roomSecret, autoAccept) {
+        return this.updateRoomSecret(roomSecret, undefined, undefined, undefined, autoAccept);
+    }
+
+    static updateRoomSecret(roomSecret, updatedRoomSecret = undefined, updatedDisplayName = undefined, updatedDeviceName = undefined, updatedAutoAccept = undefined) {
+        return new Promise((resolve, reject) => {
+            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
+            DBOpenRequest.onsuccess = (e) => {
+                const db = e.target.result;
+                this.getRoomSecretEntry(roomSecret)
+                    .then(roomSecretEntry => {
+                        if (!roomSecretEntry) {
+                           resolve(false);
+                           return;
+                        }
+                        const transaction = db.transaction('room_secrets', 'readwrite');
+                        const objectStore = transaction.objectStore('room_secrets');
+                        // Do not use `updatedRoomSecret ?? roomSecretEntry.entry.secret` to ensure compatibility with older browsers
+                        const updatedRoomSecretEntry = {
+                            'secret': updatedRoomSecret !== undefined ? updatedRoomSecret : roomSecretEntry.entry.secret,
+                            'display_name': updatedDisplayName !== undefined ? updatedDisplayName : roomSecretEntry.entry.display_name,
+                            'device_name': updatedDeviceName !== undefined ? updatedDeviceName : roomSecretEntry.entry.device_name,
+                            'auto_accept': updatedAutoAccept !== undefined ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
+                        };
+
+                        const objectStoreRequestUpdate = objectStore.put(updatedRoomSecretEntry, roomSecretEntry.key);
+
+                        objectStoreRequestUpdate.onsuccess = e => {
+                            console.log(`Request successful. Updated room_secret: ${roomSecretEntry.key}`);
+                            resolve({
+                                "entry": updatedRoomSecretEntry,
+                                "key": roomSecretEntry.key
+                            });
+                        }
+
+                        objectStoreRequestUpdate.onerror = (e) => {
+                            reject(e);
+                        }
+                    })
+                    .catch(e => reject(e));
+            };
+
+            DBOpenRequest.onerror = e => reject(e);
+        })
+    }
 }
 
-class Broadcast {
+class BrowserTabsConnector {
     constructor() {
         this.bc = new BroadcastChannel('pairdrop');
         this.bc.addEventListener('message', e => this._onMessage(e));
-        Events.on('broadcast-send', e => this._broadcastMessage(e.detail));
+        Events.on('broadcast-send', e => this._broadcastSend(e.detail));
     }
 
-    _broadcastMessage(message) {
+    _broadcastSend(message) {
         this.bc.postMessage(message);
     }
 
     _onMessage(e) {
-        console.log('Broadcast message received:', e.data)
-        Events.fire(e.data.type, e.data.detail);
+        console.log('Broadcast:', e.data)
+        switch (e.data.type) {
+            case 'self-display-name-changed':
+                Events.fire('self-display-name-changed', e.data.detail);
+                break;
+        }
+    }
+
+    static peerIsSameBrowser(peerId) {
+        let peerIdsBrowser = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        return peerIdsBrowser
+            ? peerIdsBrowser.indexOf(peerId) !== -1
+            : false;
+    }
+
+    static async addPeerIdToLocalStorage() {
+        const peerId = sessionStorage.getItem("peerId");
+        if (!peerId) return false;
+
+        let peerIdsBrowser = [];
+        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
+        peerIdsBrowser.push(peerId);
+        peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
+        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        return peerId;
+    }
+
+    static async removePeerIdFromLocalStorage(peerId) {
+        let peerIdsBrowser = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        const index = peerIdsBrowser.indexOf(peerId);
+        peerIdsBrowser.splice(index, 1);
+        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        return peerId;
+    }
+
+    static removePeerIdsFromLocalStorage() {
+        localStorage.removeItem("peerIdsBrowser");
     }
 }
 
@@ -1899,7 +2198,7 @@ class PairDrop {
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const pairDeviceDialog = new PairDeviceDialog();
-            const clearDevicesDialog = new ClearDevicesDialog();
+            const clearDevicesDialog = new EditPairedDevicesDialog();
             const base64ZipDialog = new Base64ZipDialog();
             const toast = new Toast();
             const notifications = new Notifications();
@@ -1907,7 +2206,7 @@ class PairDrop {
             const webShareTargetUI = new WebShareTargetUI();
             const webFileHandlersUI = new WebFileHandlersUI();
             const noSleepUI = new NoSleepUI();
-            const broadCast = new Broadcast();
+            const broadCast = new BrowserTabsConnector();
         });
     }
 }

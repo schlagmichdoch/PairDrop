@@ -142,7 +142,7 @@ class PairDropServer {
                 displayName: peer.name.displayName,
                 deviceName: peer.name.deviceName,
                 peerId: peer.id,
-                peerIdHash: peer.id.hashCode128BitSalted()
+                peerIdHash: hasher.hashCodeSalted(peer.id)
             }
         });
     }
@@ -165,11 +165,8 @@ class PairDropServer {
             case 'room-secrets':
                 this._onRoomSecrets(sender, message);
                 break;
-            case 'room-secret-deleted':
-                this._onRoomSecretDeleted(sender, message);
-                break;
-            case 'room-secrets-cleared':
-                this._onRoomSecretsCleared(sender, message);
+            case 'room-secrets-deleted':
+                this._onRoomSecretsDeleted(sender, message);
                 break;
             case 'pair-device-initiate':
                 this._onPairDeviceInitiate(sender);
@@ -180,6 +177,9 @@ class PairDropServer {
             case 'pair-device-cancel':
                 this._onPairDeviceCancel(sender);
                 break;
+            case 'regenerate-room-secret':
+                this._onRegenerateRoomSecret(sender, message);
+                break
             case 'resend-peers':
                 this._notifyPeers(sender);
                 break;
@@ -214,56 +214,35 @@ class PairDropServer {
 
     _onRoomSecrets(sender, message) {
         const roomSecrets = message.roomSecrets.filter(roomSecret => {
-            return /^[\x00-\x7F]{64}$/.test(roomSecret);
+            return /^[\x00-\x7F]{64,256}$/.test(roomSecret);
         })
         this._joinSecretRooms(sender, roomSecrets);
     }
 
-    _onRoomSecretDeleted(sender, message) {
-        this._deleteSecretRoom(sender, message.roomSecret)
-    }
-
-    _onRoomSecretsCleared(sender, message) {
+    _onRoomSecretsDeleted(sender, message) {
         for (let i = 0; i<message.roomSecrets.length; i++) {
-            this._deleteSecretRoom(sender, message.roomSecrets[i]);
+            this._deleteSecretRoom(message.roomSecrets[i]);
         }
     }
 
-    _deleteSecretRoom(sender, roomSecret) {
+    _deleteSecretRoom(roomSecret) {
         const room = this._rooms[roomSecret];
-        if (room) {
-            for (const peerId in room) {
-                const peer = room[peerId];
-                this._leaveRoom(peer, 'secret', roomSecret);
-                this._send(peer, {
-                    type: 'secret-room-deleted',
-                    roomSecret: roomSecret,
-                });
-            }
-        }
-        this._notifyPeers(sender);
-    }
+        if (!room) return;
 
-    getRandomString(length) {
-        let string = "";
-        while (string.length < length) {
-            let arr = new Uint16Array(length);
-            crypto.webcrypto.getRandomValues(arr);
-            arr = Array.apply([], arr); /* turn into non-typed array */
-            arr = arr.map(function (r) {
-                return r % 128
-            })
-            arr = arr.filter(function (r) {
-                /* strip non-printables: if we transform into desirable range we have a propability bias, so I suppose we better skip this character */
-                return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
+        for (const peerId in room) {
+            const peer = room[peerId];
+
+            this._leaveRoom(peer, 'secret', roomSecret);
+
+            this._send(peer, {
+                type: 'secret-room-deleted',
+                roomSecret: roomSecret,
             });
-            string += String.fromCharCode.apply(String, arr);
         }
-        return string.substring(0, length)
     }
 
     _onPairDeviceInitiate(sender) {
-        let roomSecret = this.getRandomString(64);
+        let roomSecret = randomizer.getRandomString(256);
         let roomKey = this._createRoomKey(sender, roomSecret);
         if (sender.roomKey) this._removeRoomKey(sender.roomKey);
         sender.roomKey = roomKey;
@@ -276,16 +255,19 @@ class PairDropServer {
     }
 
     _onPairDeviceJoin(sender, message) {
+        // rate limit implementation: max 10 attempts every 10s
         if (sender.roomKeyRate >= 10) {
             this._send(sender, { type: 'pair-device-join-key-rate-limit' });
             return;
         }
         sender.roomKeyRate += 1;
         setTimeout(_ => sender.roomKeyRate -= 1, 10000);
+
         if (!this._roomSecrets[message.roomKey] || sender.id === this._roomSecrets[message.roomKey].creator.id) {
             this._send(sender, { type: 'pair-device-join-key-invalid' });
             return;
         }
+
         const roomSecret = this._roomSecrets[message.roomKey].roomSecret;
         const creator = this._roomSecrets[message.roomKey].creator;
         this._removeRoomKey(message.roomKey);
@@ -305,12 +287,29 @@ class PairDropServer {
 
     _onPairDeviceCancel(sender) {
         if (sender.roomKey) {
+            this._removeRoomKey(sender.roomKey);
             this._send(sender, {
                 type: 'pair-device-canceled',
                 roomKey: sender.roomKey,
             });
-            this._removeRoomKey(sender.roomKey);
         }
+    }
+
+    _onRegenerateRoomSecret(sender, message) {
+        const oldRoomSecret = message.roomSecret;
+        const newRoomSecret = randomizer.getRandomString(256);
+
+        // notify all other peers
+        for (const peerId in this._rooms[oldRoomSecret]) {
+            const peer = this._rooms[oldRoomSecret][peerId];
+            this._send(peer, {
+                type: 'room-secret-regenerated',
+                oldRoomSecret: oldRoomSecret,
+                newRoomSecret: newRoomSecret,
+            });
+            peer.removeRoomSecret(oldRoomSecret);
+        }
+        delete this._rooms[oldRoomSecret];
     }
 
     _createRoomKey(creator, roomSecret) {
@@ -600,7 +599,7 @@ class Peer {
             separator: ' ',
             dictionaries: [colors, animals],
             style: 'capital',
-            seed: this.id.hashCode()
+            seed: cyrb53(this.id)
         })
 
         this.name = {
@@ -626,7 +625,7 @@ class Peer {
     }
 
     isPeerIdHashValid(peerId, peerIdHash) {
-        return peerIdHash === peerId.hashCode128BitSalted();
+        return peerIdHash === hasher.hashCodeSalted(peerId);
     }
 
     addRoomSecret(roomSecret) {
@@ -642,39 +641,43 @@ class Peer {
     }
 }
 
-Object.defineProperty(String.prototype, 'hashCode', {
-    value: function() {
-        return cyrb53(this);
-    }
-});
-
-Object.defineProperty(String.prototype, 'hashCode128BitSalted', {
-    value: function() {
-        return hasher.hashCode128BitSalted(this);
-    }
-});
-
 const hasher = (() => {
-    let seeds;
+    let password;
     return {
-        hashCode128BitSalted(str) {
-            if (!seeds) {
-                // seeds are created on first call to salt hash.
-                seeds = [4];
-                for (let i=0; i<4; i++) {
-                    const randomBuffer = new Uint32Array(1);
-                    crypto.webcrypto.getRandomValues(randomBuffer);
-                    seeds[i] = randomBuffer[0];
-                }
+        hashCodeSalted(salt) {
+            if (!password) {
+                // password is created on first call.
+                password = randomizer.getRandomString(128);
             }
-            let hashCode = "";
-            for (let i=0; i<4; i++) {
-                hashCode += cyrb53(str, seeds[i]);
-            }
-            return hashCode;
+
+            return crypto.createHash("sha3-512")
+                .update(password)
+                .update(crypto.createHash("sha3-512").update(salt, "utf8").digest("hex"))
+                .digest("hex");
         }
     }
+})()
 
+const randomizer = (() => {
+    return {
+        getRandomString(length) {
+            let string = "";
+            while (string.length < length) {
+                let arr = new Uint16Array(length);
+                crypto.webcrypto.getRandomValues(arr);
+                arr = Array.apply([], arr); /* turn into non-typed array */
+                arr = arr.map(function (r) {
+                    return r % 128
+                })
+                arr = arr.filter(function (r) {
+                    /* strip non-printables: if we transform into desirable range we have a probability bias, so I suppose we better skip this character */
+                    return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
+                });
+                string += String.fromCharCode.apply(String, arr);
+            }
+            return string.substring(0, length)
+        }
+    }
 })()
 
 /*

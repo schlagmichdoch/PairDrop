@@ -20,6 +20,10 @@ body {
     overflow-x: hidden;
     overscroll-behavior: none;
     overflow-y: hidden;
+    /* Only allow selection on message and pair key */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 
 body {
@@ -216,6 +220,14 @@ hr {
     color: white;
 }
 
+input {
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    min-width: 13px;
+}
+
 x-noscript {
     background: var(--primary-color);
     color: white;
@@ -274,7 +286,7 @@ x-noscript {
 }
 
 @media screen and (min-width: 402px) and (max-width: 425px) {
-    header:has(#clear-pair-devices:not([hidden]))~#center {
+    header:has(#edit-pair-devices:not([hidden]))~#center {
         --footer-height: 164px;
     }
 }
@@ -452,8 +464,6 @@ x-no-peers[drop-bg] * {
 /* Peer */
 
 x-peer {
-    -webkit-user-select: none;
-    user-select: none;
     padding: 8px;
     align-content: start;
     flex-wrap: wrap;
@@ -557,7 +567,6 @@ x-peer.ws-peer .highlight-wrapper {
 .status,
 .device-name,
 .connection-hash {
-    height: 18px;
     opacity: 0.7;
 }
 
@@ -717,6 +726,12 @@ x-dialog x-paper {
     height: 625px;
 }
 
+#pair-device-dialog ::-moz-selection,
+#pair-device-dialog ::selection {
+    color: black;
+    background: var(--paired-device-color);
+}
+
 x-dialog:not([show]) {
     pointer-events: none;
 }
@@ -738,7 +753,7 @@ x-dialog .font-subheading {
     margin-bottom: 5px;
 }
 
-/* PairDevicesDialog */
+/* Pair Devices Dialog */
 
 #key-input-container {
     width: 100%;
@@ -746,7 +761,7 @@ x-dialog .font-subheading {
     justify-content: center;
 }
 
-#key-input-container>input {
+#key-input-container > input {
     width: 45px;
     height: 45px;
     font-size: 30px;
@@ -762,15 +777,18 @@ x-dialog .font-subheading {
     justify-content: center;
 }
 
-#key-input-container>input + * {
+#key-input-container > input + * {
     margin-left: 6px;
 }
 
-#key-input-container>input:nth-of-type(4) {
+#key-input-container > input:nth-of-type(4) {
     margin-left: 5%;
 }
 
 #room-key {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
     font-size: 50px;
     letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 23px);
     display: inline-block;
@@ -782,12 +800,104 @@ x-dialog .font-subheading {
     margin: 16px;
 }
 
-#pair-device-dialog hr {
-    margin: 40px -24px;
+x-dialog hr {
+    margin: 40px -24px 30px -24px;
+    border: solid 1.25px var(--border-color);
 }
 
 #pair-device-dialog x-background {
     padding: 16px!important;
+}
+
+/* Edit Paired Devices Dialog */
+.paired-devices-wrapper:empty:before {
+    content: "No paired devices.";
+}
+
+.paired-devices-wrapper:empty {
+    padding: 10px;
+}
+
+.paired-devices-wrapper {
+    border-top: solid 4px var(--paired-device-color);
+    border-bottom: solid 4px var(--paired-device-color);
+    max-height: 65vh;
+    overflow: scroll;
+    background: /* Shadow covers */ linear-gradient(rgb(var(--bg-color)) 30%, rgba(var(--bg-color), 0)),
+    linear-gradient(rgba(var(--bg-color), 0), rgb(var(--bg-color)) 70%) 0 100%,
+        /* Shadows */ radial-gradient(farthest-side at 50% 0, rgba(var(--text-color), .3), rgba(var(--text-color), 0)),
+    radial-gradient(farthest-side at 50% 100%, rgba(var(--text-color), .3), rgba(var(--text-color), 0)) 0 100%;
+
+    background-repeat: no-repeat;
+    background-size: 100% 80px, 100% 80px, 100% 24px, 100% 24px;
+
+    /* Opera doesn't support this in the shorthand */
+    background-attachment: local, local, scroll, scroll;
+}
+
+.paired-device {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+}
+
+.paired-device:not(:last-child) {
+    border-bottom: solid 4px var(--paired-device-color);
+}
+
+.paired-device > .display-name,
+.paired-device > .device-name {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    align-self: center;
+    border-bottom: solid 2px rgba(128, 128, 128, 0.5);
+    opacity: 1;
+}
+.paired-device span {
+    width: 100%;
+}
+
+.paired-device > .button-wrapper {
+    display: flex;
+    height: 36px;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+}
+
+.paired-device > .button-wrapper > label,
+.paired-device > .button-wrapper > button {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    white-space: nowrap;
+    justify-content: center;
+    width: 50%;
+    padding-left: 6px;
+    padding-right: 6px;
+    height: 36px;
+}
+
+.paired-device > .button-wrapper > :not(:last-child) {
+    border-right: solid 1px rgba(128, 128, 128, 0.5);
+}
+
+.paired-device > .button-wrapper > :not(:first-child) {
+    border-left: solid 1px rgba(128, 128, 128, 0.5);
+}
+
+.paired-device * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.paired-device > .auto-accept {
+    cursor: pointer;
 }
 
 /* Receive Dialog */
@@ -838,7 +948,7 @@ x-paper > div:last-child > .button:not(:last-child) {
 }
 
 /* Send Text Dialog */
-
+/* Todo: add pair underline to send / receive dialogs displayName */
 x-dialog .dialog-subheader {
     margin-bottom: 25px;
 }
@@ -856,9 +966,9 @@ x-dialog .dialog-subheader {
     max-height: calc(100vh - 393px);
     overflow-x: hidden;
     overflow-y: auto;
-    -webkit-user-select: all;
-    -moz-user-select: all;
-    user-select: all;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
     white-space: pre-wrap;
     padding: 15px 0;
 }
@@ -1060,8 +1170,6 @@ button::-moz-focus-inner {
 
 #about x-background {
     position: absolute;
-    top: calc(32px - 250px);
-    right: calc(32px - 250px);
     width: 500px;
     height: 500px;
     border-radius: 50%;
@@ -1213,7 +1321,7 @@ x-peers:empty~x-instructions {
     transition: opacity 300ms;
 }
 
-#websocket-fallback>span {
+#websocket-fallback > span {
     margin: 2px;
 }
 
@@ -1233,7 +1341,7 @@ x-peers:empty~x-instructions {
 
 @media screen and (min-height: 800px) {
     #websocket-fallback {
-        padding-bottom: 15px;
+        padding-bottom: 16px;
     }
 }
 
@@ -1362,4 +1470,10 @@ x-dialog x-paper {
 ::-webkit-scrollbar-thumb{
     background: #bfbfbf;
     border-radius: 4px;
+}
+
+::-moz-selection,
+::selection {
+    color: black;
+    background: var(--primary-color);
 }
