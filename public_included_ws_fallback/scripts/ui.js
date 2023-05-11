@@ -169,8 +169,12 @@ class PeersUI {
             return;
         }
         peer.sameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
-        peer.roomTypes = [roomType];
-        peer.roomSecret = roomSecret;
+
+        if (!(roomType === "secret" && peer.sameBrowser())) {
+            peer.roomTypes = [roomType];
+            peer.roomSecret = roomSecret;
+        }
+
         this.peers[peer.id] = peer;
     }
 
@@ -1027,10 +1031,7 @@ class PairDeviceDialog extends Dialog {
 
     _onWsConnected() {
         this.$pairDeviceBtn.removeAttribute('hidden');
-        PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
-            Events.fire('room-secrets', roomSecrets);
-            this._evaluateNumberRoomSecrets();
-        });
+        this._evaluateNumberRoomSecrets();
     }
 
     _pairDeviceInitiate() {
@@ -1973,13 +1974,18 @@ class PersistentStorage {
     }
 
     static async getAllRoomSecrets() {
-        const roomSecrets = await this.getAllRoomSecretEntries();
-        let secrets = [];
-        for (let i=0; i<roomSecrets.length; i++) {
-            secrets.push(roomSecrets[i].secret);
+        try {
+            const roomSecrets = await this.getAllRoomSecretEntries();
+            let secrets = [];
+            for (let i = 0; i < roomSecrets.length; i++) {
+                secrets.push(roomSecrets[i].secret);
+            }
+            console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
+            return(secrets);
+        } catch (e) {
+            this.logBrowserNotCapable();
+            return false;
         }
-        console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
-        return(secrets);
     }
 
     static getAllRoomSecretEntries() {
@@ -2168,11 +2174,13 @@ class BrowserTabsConnector {
 
         let peerIdsBrowser = [];
         let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+
         if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
         peerIdsBrowser.push(peerId);
         peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
         localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
-        return peerId;
+
+        return peerIdsBrowser;
     }
 
     static async removePeerIdFromLocalStorage(peerId) {
@@ -2183,8 +2191,14 @@ class BrowserTabsConnector {
         return peerId;
     }
 
-    static removePeerIdsFromLocalStorage() {
-        localStorage.removeItem("peerIdsBrowser");
+
+    static async removeOtherPeerIdsFromLocalStorage() {
+        const peerId = sessionStorage.getItem("peerId");
+        if (!peerId) return false;
+
+        let peerIdsBrowser = [peerId];
+        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        return peerIdsBrowser;
     }
 }
 

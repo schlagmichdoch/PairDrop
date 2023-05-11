@@ -19,7 +19,8 @@ class ServerConnection {
         Events.on('pagehide', _ => this._disconnect());
         document.addEventListener(window.visibilityChangeEvent, _ => this._onVisibilityChange());
         if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
-        Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
+        Events.on('room-secrets', e => this.send({ type: 'room-secrets', roomSecrets: e.detail }));
+        Events.on('join-ip-room', e => this.send({ type: 'join-ip-room'}));
         Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
         Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
         Events.on('resend-peers', _ => this.send({ type: 'resend-peers'}));
@@ -46,10 +47,6 @@ class ServerConnection {
         console.log('WS: server connected');
         Events.fire('ws-connected');
         if (this._isReconnect) Events.fire('notify-user', 'Connected.');
-    }
-
-    _sendRoomSecrets(roomSecrets) {
-        this.send({ type: 'room-secrets', roomSecrets: roomSecrets });
     }
 
     _onPairDeviceInitiate() {
@@ -131,13 +128,6 @@ class ServerConnection {
 
     _onPeers(msg) {
         Events.fire('peers', msg);
-        if (msg.roomType === "ip" && msg.peers.length === 0) {
-            BrowserTabsConnector.removePeerIdsFromLocalStorage();
-            BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
-                if (peerId) return;
-                console.log("successfully added peerId from localStorage");
-            });
-        }
     }
 
     _onDisplayName(msg) {
@@ -145,10 +135,16 @@ class ServerConnection {
         sessionStorage.setItem("peerId", msg.message.peerId);
         sessionStorage.setItem("peerIdHash", msg.message.peerIdHash);
 
-        // Add peerId to localStorage to mark it on other PairDrop tabs on the same browser
+        // Add peerId to localStorage to mark it for other PairDrop tabs on the same browser
         BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
-            if (peerId) return;
-            console.log("successfully added peerId from localStorage");
+            if (!peerId) return;
+            console.log("successfully added peerId to localStorage");
+
+            // Only now join rooms
+            Events.fire('join-ip-room');
+            PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
+                Events.fire('room-secrets', roomSecrets);
+            });
         });
 
         Events.fire('display-name', msg);
@@ -219,9 +215,9 @@ class ServerConnection {
 
 class Peer {
 
-    constructor(serverConnection, peerId, roomType, roomSecret) {
+    constructor(serverConnection, isCaller, peerId, roomType, roomSecret) {
         this._server = serverConnection;
-        this._isCaller = !!peerId;
+        this._isCaller = isCaller;
         this._peerId = peerId;
         this._roomType = roomType;
         this._updateRoomSecret(roomSecret);
@@ -241,15 +237,14 @@ class Peer {
         this.sendJSON({type: 'display-name-changed', displayName: displayName});
     }
 
+    _isSameBrowser() {
+        return BrowserTabsConnector.peerIsSameBrowser(this._peerId);
+    }
+
     _updateRoomSecret(roomSecret) {
         // if peer is another browser tab, peer is not identifiable with roomSecret as browser tabs share all roomSecrets
-        // -> abort
-        if (BrowserTabsConnector.peerIsSameBrowser(this._peerId)) {
-            this._roomSecret = "";
-            return;
-        }
-
-        if (this._roomSecret && this._roomSecret !== roomSecret) {
+        // -> do not delete duplicates and do not regenerate room secrets
+        if (!this._isSameBrowser() && this._roomSecret && this._roomSecret !== roomSecret) {
             // remove old roomSecrets to prevent multiple pairings with same peer
             PersistentStorage.deleteRoomSecret(this._roomSecret).then(deletedRoomSecret => {
                 if (deletedRoomSecret) console.log("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
@@ -258,7 +253,7 @@ class Peer {
 
         this._roomSecret = roomSecret;
 
-        if (this._roomSecret && this._roomSecret.length !== 256 && this._isCaller) {
+        if (!this._isSameBrowser() && this._roomSecret && this._roomSecret.length !== 256 && this._isCaller) {
             // increase security by increasing roomSecret length
             console.log('RoomSecret is regenerated to increase security')
             Events.fire('regenerate-room-secret', this._roomSecret);
@@ -603,15 +598,15 @@ class Peer {
 
 class RTCPeer extends Peer {
 
-    constructor(serverConnection, peerId, roomType, roomSecret) {
-        super(serverConnection, peerId, roomType, roomSecret);
+    constructor(serverConnection, isCaller, peerId, roomType, roomSecret) {
+        super(serverConnection, isCaller, peerId, roomType, roomSecret);
         this.rtcSupported = true;
         if (!this._isCaller) return; // we will listen for a caller
-        this._connect(peerId, true);
+        this._connect();
     }
 
-    _connect(peerId) {
-        if (!this._conn || this._conn.signalingState === "closed") this._openConnection(peerId);
+    _connect() {
+        if (!this._conn || this._conn.signalingState === "closed") this._openConnection();
 
         if (this._isCaller) {
             this._openChannel();
@@ -620,8 +615,7 @@ class RTCPeer extends Peer {
         }
     }
 
-    _openConnection(peerId) {
-        this._peerId = peerId;
+    _openConnection() {
         this._conn = new RTCPeerConnection(window.rtcConfig);
         this._conn.onicecandidate = e => this._onIceCandidate(e);
         this._conn.onicecandidateerror = e => this._onError(e);
@@ -653,7 +647,7 @@ class RTCPeer extends Peer {
     }
 
     onServerMessage(message) {
-        if (!this._conn) this._connect(message.sender.id, false);
+        if (!this._conn) this._connect();
 
         if (message.sdp) {
             this._conn.setRemoteDescription(message.sdp)
@@ -738,7 +732,7 @@ class RTCPeer extends Peer {
         console.log('RTC: channel closed', this._peerId);
         Events.fire('peer-disconnected', this._peerId);
         if (!this._isCaller) return;
-        this._connect(this._peerId, true); // reopen the channel
+        this._connect(); // reopen the channel
     }
 
     _onConnectionStateChange() {
@@ -789,7 +783,7 @@ class RTCPeer extends Peer {
         // only reconnect if peer is caller
         if (!this._isCaller) return;
 
-        this._connect(this._peerId);
+        this._connect();
     }
 
     _isConnected() {
@@ -833,44 +827,47 @@ class PeersManager {
         this.peers[peerId].onServerMessage(message);
     }
 
-    _refreshExistingPeer(peerId, roomType, roomSecret) {
-        const peer = this.peers[peerId];
-        if (peer) {
-            const roomTypeIsSecret = roomType === "secret";
-            const roomSecretsDiffer = peer._roomSecret !== roomSecret;
+    _refreshPeer(peer, roomType, roomSecret) {
+        if (!peer) return false;
 
-            // if roomSecrets differs peer is already connected -> abort but update roomSecret and reevaluate auto accept
-            if (roomTypeIsSecret && roomSecretsDiffer) {
-                peer._updateRoomSecret(roomSecret);
-                peer._evaluateAutoAccept();
+        const roomTypeIsSecret = roomType === "secret";
+        const roomSecretsDiffer = peer._roomSecret !== roomSecret;
 
-                return true;
-            }
-
-            const roomTypesDiffer = peer._roomType !== roomType;
-
-            // if roomTypes differ peer is already connected -> abort
-            if (roomTypesDiffer) return true;
-
-            peer.refresh();
+        // if roomSecrets differs peer is already connected -> abort but update roomSecret and reevaluate auto accept
+        if (roomTypeIsSecret && roomSecretsDiffer) {
+            peer._updateRoomSecret(roomSecret);
+            peer._evaluateAutoAccept();
 
             return true;
         }
-        // peer does not yet exist: return false
-        return false;
+
+        const roomTypesDiffer = peer._roomType !== roomType;
+
+        // if roomTypes differ peer is already connected -> abort
+        if (roomTypesDiffer) return true;
+
+        peer.refresh();
+
+        return true;
+    }
+
+    _createOrRefreshPeer(isCaller, peerId, roomType, roomSecret) {
+        const peer = this.peers[peerId];
+        if (peer) {
+            this._refreshPeer(peer, roomType, roomSecret);
+            return;
+        }
+
+        this.peers[peerId] = new RTCPeer(this._server, isCaller, peerId, roomType, roomSecret);
     }
 
     _onPeerJoined(message) {
-        if (this._refreshExistingPeer(message.peer.id, message.roomType, message.roomSecret)) return;
-
-        this.peers[message.peer.id] = new RTCPeer(this._server, undefined, message.roomType, message.roomSecret);
+        this._createOrRefreshPeer(false, message.peer.id, message.roomType, message.roomSecret);
     }
 
     _onPeers(message) {
-        message.peers.forEach(messagePeer => {
-            if (this._refreshExistingPeer(messagePeer.id, message.roomType, message.roomSecret)) return;
-
-            this.peers[messagePeer.id] = new RTCPeer(this._server, messagePeer.id, message.roomType, message.roomSecret);
+        message.peers.forEach(peer => {
+            this._createOrRefreshPeer(true, peer.id, message.roomType, message.roomSecret);
         })
     }
 
@@ -902,6 +899,15 @@ class PeersManager {
         if (message.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
             Events.fire('peer-disconnected', message.peerId);
+
+            // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
+            // Tidy up peerIds in localStorage
+            if (Object.keys(this.peers).length === 0) {
+                BrowserTabsConnector.removeOtherPeerIdsFromLocalStorage().then(peerIds => {
+                    if (!peerIds) return;
+                    console.log("successfully removed other peerIds from localStorage");
+                });
+            }
         }
     }
 
@@ -962,7 +968,8 @@ class PeersManager {
     _getPeerIdFromRoomSecret(roomSecret) {
         for (const peerId in this.peers) {
             const peer = this.peers[peerId];
-            if (peer._roomSecret === roomSecret) {
+            // peer must have same roomSecret and not be on the same browser.
+            if (peer._roomSecret === roomSecret && !peer._isSameBrowser()) {
                 return peer._peerId;
             }
         }

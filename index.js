@@ -133,7 +133,6 @@ class PairDropServer {
             type: 'rtc-config',
             config: rtcConfig
         });
-        this._joinRoom(peer);
 
         // send displayName
         this._send(peer, {
@@ -161,6 +160,9 @@ class PairDropServer {
                 break;
             case 'pong':
                 sender.lastBeat = Date.now();
+                break;
+            case 'join-ip-room':
+                this._joinRoom(sender);
                 break;
             case 'room-secrets':
                 this._onRoomSecrets(sender, message);
