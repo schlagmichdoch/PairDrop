@@ -215,9 +215,14 @@ class PairDropServer {
     }
 
     _onRoomSecrets(sender, message) {
+        if (!message.roomSecrets) return;
+
         const roomSecrets = message.roomSecrets.filter(roomSecret => {
             return /^[\x00-\x7F]{64,256}$/.test(roomSecret);
         })
+
+        if (!roomSecrets) return;
+
         this._joinSecretRooms(sender, roomSecrets);
     }
 
@@ -481,7 +486,7 @@ class Peer {
         this._setIP(request);
 
         // set peer id
-        this._setPeerId(request)
+        this._setPeerId(request);
 
         // is WebRTC supported ?
         this.rtcSupported = request.url.indexOf('webrtc') > -1;
