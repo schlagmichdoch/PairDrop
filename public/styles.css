@@ -1144,6 +1144,8 @@ button::-moz-focus-inner {
 
 #about x-background {
     position: absolute;
+    top: calc(28px - 250px);
+    right: calc(36px - 250px);
     width: 500px;
     height: 500px;
     border-radius: 50%;
@@ -1282,7 +1284,7 @@ x-peers:empty~x-instructions {
 @media (hover: none) and (pointer: coarse) {
     x-peer {
         transform: scale(0.95);
-        padding: 4px 0;
+        padding: 4px;
     }
 }
 
