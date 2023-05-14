@@ -1144,10 +1144,12 @@ button::-moz-focus-inner {
 
 #about x-background {
     position: absolute;
-    top: calc(28px - 250px);
-    right: calc(36px - 250px);
-    width: 500px;
-    height: 500px;
+    --size: max(max(23vw, 23vh), calc((22.5vh + 22.5vw) / 1.5));
+    --size-half: calc(var(--size)/2);
+    top: calc(28px - var(--size-half));
+    right: calc(36px - var(--size-half));
+    width: var(--size);
+    height: var(--size);
     border-radius: 50%;
     background: var(--primary-color);
     transform: scale(0);
