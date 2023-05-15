@@ -1144,7 +1144,7 @@ button::-moz-focus-inner {
 
 #about x-background {
     position: absolute;
-    --size: max(max(23vw, 23vh), calc((22.5vh + 22.5vw) / 1.5));
+    --size: max(max(230vw, 230vh), calc(150vh + 150vw));
     --size-half: calc(var(--size)/2);
     top: calc(28px - var(--size-half));
     right: calc(36px - var(--size-half));
@@ -1163,7 +1163,7 @@ button::-moz-focus-inner {
 }
 
 #about:target x-background {
-    transform: scale(10);
+    transform: scale(1);
 }
 
 #about .row a {
