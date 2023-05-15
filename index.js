@@ -96,6 +96,16 @@ if (debugMode) {
     console.log("DEBUG_MODE is active. To protect privacy, do not use in production.")
 }
 
+if (process.env.IPV6_LOCALIZE) {
+    let ipv6_lcl = parseInt(process.env.IPV6_LOCALIZE);
+    if (!ipv6_lcl || !(0 < ipv6_lcl && ipv6_lcl < 8)) {
+        console.error("IPV6_LOCALIZE must be an integer between 1 and 7");
+        return;
+    } else {
+        console.log("IPv6 client IPs will be localized to", ipv6_lcl, ipv6_lcl > 1 ? "segments" : "segment");
+    }
+}
+
 app.use(function(req, res) {
     res.redirect('/');
 });
@@ -516,11 +526,19 @@ class Peer {
         if (this.ip.substring(0,7) === "::ffff:")
             this.ip = this.ip.substring(7);
 
+        let ipv6_was_localized = false;
+        if (ipv6_lcl && this.ip.includes(':')) {
+            this.ip = this.ip.split(':',ipv6_lcl).join(':');
+            ipv6_was_localized = true;
+        }
+
         if (debugMode) {
             console.debug("----DEBUGGING-PEER-IP-START----");
             console.debug("remoteAddress:", request.connection.remoteAddress);
             console.debug("x-forwarded-for:", request.headers['x-forwarded-for']);
             console.debug("cf-connecting-ip:", request.headers['cf-connecting-ip']);
+            if (ipv6_was_localized)
+                console.debug("IPv6 client IP was localized to", ipv6_lcl, ipv6_lcl > 1 ? "segments" : "segment");
             console.debug("PairDrop uses:", this.ip);
             console.debug("IP is private:", this.ipIsPrivate(this.ip));
             console.debug("if IP is private, '127.0.0.1' is used instead");

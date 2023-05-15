@@ -35,6 +35,14 @@ Set options by using the following flags in the `docker run` command:
 ```
 > Limits clients to 1000 requests per 5 min
 
+##### IPv6 Localization
+```bash
+-e IPV6_LOCALIZE=4
+```
+> To enable Peer Discovery among IPv6 peers, you can specify a reduced number of segments of the client IPv6 address to be evaluated as the peer's IP. This can be especially useful when using Cloudflare as a proxy.
+> 
+> The flag must be set to an **integer** between `1` and `7`. The number represents the number of IPv6 [hextets](https://en.wikipedia.org/wiki/IPv6#Address_representation) to match the client IP against. The most common value would be `4`, which will group peers within the same `/64` subnet.
+
 ##### Websocket Fallback (for VPN)
 ```bash
 -e WS_FALLBACK=true
@@ -199,6 +207,12 @@ On Windows
 $env:PORT=3010; npm start 
 ```
 > Specify the port PairDrop is running on. (Default: 3000)
+
+#### IPv6 Localization
+```bash
+IPV6_LOCALIZE=4
+```
+> Truncate a portion of the client IPv6 address to make peers more discoverable. See [Options/Flags](#options--flags) above.
 
 #### Specify STUN/TURN Server
 On Unix based systems
