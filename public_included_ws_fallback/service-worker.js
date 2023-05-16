@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.7.1';
+const cacheVersion = 'v1.7.2';
 const cacheTitle = `pairdrop-included-ws-fallback-cache-${cacheVersion}`;
 const urlsToCache = [
     'index.html',
