@@ -1204,7 +1204,7 @@ button::-moz-focus-inner {
     align-self: end;
 }
 
-canvas .circles {
+canvas.circles {
     width: 100vw;
     position: absolute;
     z-index: -10;
