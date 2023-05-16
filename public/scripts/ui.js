@@ -1306,7 +1306,7 @@ class SendTextDialog extends Dialog {
     }
 
     _textInputEmpty() {
-        return this.$text.innerText === "\n";
+        return !this.$text.innerText || this.$text.innerText === "\n";
     }
 
     _onChange(e) {
