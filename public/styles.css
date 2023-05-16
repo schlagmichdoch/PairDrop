@@ -1178,6 +1178,14 @@ button::-moz-focus-inner {
     align-self: end;
 }
 
+canvas .circles {
+    width: 100vw;
+    position: absolute;
+    z-index: -10;
+    top: 0;
+    left: 0;
+}
+
 /* Loading Indicator */
 
 .progress {

@@ -2249,14 +2249,7 @@ window.addEventListener('beforeinstallprompt', e => {
 
 // Background Circles
 Events.on('load', () => {
-    let c = document.createElement('canvas');
-    let style = c.style;
-    style.width = '100%';
-    style.position = 'absolute';
-    style.zIndex = -1;
-    style.top = 0;
-    style.left = 0;
-    style.animation = "fade-in 800ms";
+    let c = $$('canvas');
     let cCtx = c.getContext('2d');
     let x0, y0, w, h, dw, offset;
 
@@ -2277,11 +2270,7 @@ Events.on('load', () => {
         y0 = h - offset;
         dw = Math.round(Math.max(w, h, 1000) / 13);
 
-        if (document.body.contains(c)) {
-            document.body.removeChild(c);
-        }
         drawCircles(cCtx, dw);
-        document.body.appendChild(c);
     }
 
     Events.on('bg-resize', _ => init());
@@ -2297,6 +2286,7 @@ Events.on('load', () => {
     }
 
     function drawCircles(ctx, frame) {
+        ctx.clearRect(0, 0, w, h);
         for (let i = 0; i < 13; i++) {
             drawCircle(ctx, dw * i + frame + 33);
         }
