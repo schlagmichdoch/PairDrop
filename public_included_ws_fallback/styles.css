@@ -1168,6 +1168,15 @@ button::-moz-focus-inner {
     --icon-size: 96px;
 }
 
+#about .title-wrapper {
+    display: flex;
+    align-items: baseline;
+}
+
+#about .title-wrapper > div {
+    margin-left: 0.5em;
+}
+
 #about x-background {
     position: absolute;
     --size: max(max(230vw, 230vh), calc(150vh + 150vw));
