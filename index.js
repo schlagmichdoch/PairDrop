@@ -96,14 +96,15 @@ if (debugMode) {
     console.log("DEBUG_MODE is active. To protect privacy, do not use in production.")
 }
 
+let ipv6_lcl;
 if (process.env.IPV6_LOCALIZE) {
-    let ipv6_lcl = parseInt(process.env.IPV6_LOCALIZE);
+    ipv6_lcl = parseInt(process.env.IPV6_LOCALIZE);
     if (!ipv6_lcl || !(0 < ipv6_lcl && ipv6_lcl < 8)) {
         console.error("IPV6_LOCALIZE must be an integer between 1 and 7");
         return;
-    } else {
-        console.log("IPv6 client IPs will be localized to", ipv6_lcl, ipv6_lcl > 1 ? "segments" : "segment");
     }
+
+    console.log("IPv6 client IPs will be localized to", ipv6_lcl, ipv6_lcl === 1 ? "segment" : "segments");
 }
 
 app.use(function(req, res) {
