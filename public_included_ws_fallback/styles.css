@@ -1150,11 +1150,14 @@ button::-moz-focus-inner {
     text-align: center;
 }
 
+#about header {
+    z-index: 1;
+}
+
 #about .fade-in {
     transition: opacity 300ms;
     will-change: opacity;
     transition-delay: 300ms;
-    z-index: 11;
     pointer-events: all;
 }
 
