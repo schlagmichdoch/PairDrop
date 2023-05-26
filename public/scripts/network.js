@@ -529,7 +529,7 @@ class Peer {
             this._abortTransfer();
         }
 
-        // include for compatibility with Snapdrop for Android app
+        // include for compatibility with 'Snapdrop & PairDrop for Android' app
         Events.fire('file-received', fileBlob);
 
         this._filesReceived.push(fileBlob);
@@ -547,6 +547,7 @@ class Peer {
         if (!this._filesQueue.length) {
             this._busy = false;
             Events.fire('notify-user', 'File transfer completed.');
+            Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
         } else {
             this._dequeueFile();
         }
