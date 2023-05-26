@@ -5,7 +5,7 @@ if (!navigator.clipboard) {
 
             // A <span> contains the text to copy
             const span = document.createElement('span');
-            span.textContent = text;
+            span.innerText = text;
             span.style.whiteSpace = 'pre'; // Preserve consecutive spaces and newlines
 
             // Paint the span outside the viewport

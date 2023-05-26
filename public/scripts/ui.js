@@ -1419,7 +1419,7 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onCopy() {
-        await navigator.clipboard.writeText(this.$text.textContent);
+        await navigator.clipboard.writeText(this.$text.innerText);
         Events.fire('notify-user', 'Copied to clipboard');
         this.hide();
     }
@@ -1594,7 +1594,7 @@ class Toast extends Dialog {
 
     _onNotify(message) {
         if (this.hideTimeout) clearTimeout(this.hideTimeout);
-        this.$el.textContent = message;
+        this.$el.innerText = message;
         this.show();
         this.hideTimeout = setTimeout(_ => this.hide(), 5000);
     }
