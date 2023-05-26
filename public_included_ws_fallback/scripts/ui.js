@@ -1297,13 +1297,13 @@ class SendTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.isShown()) {
-            if (e.code === "Escape") {
-                this.hide();
-            } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
-                if (this._textInputEmpty()) return;
-                this._send();
-            }
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
+            this.hide();
+        } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+            if (this._textInputEmpty()) return;
+            this._send();
         }
     }
 
@@ -1421,7 +1421,8 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onCopy() {
-        await navigator.clipboard.writeText(this.$text.innerText);
+        const sanitizedText = this.$text.innerText.replace(/\u00A0/gm, ' ');
+        await navigator.clipboard.writeText(sanitizedText);
         Events.fire('notify-user', 'Copied to clipboard');
         this.hide();
     }
