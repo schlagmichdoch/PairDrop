@@ -402,3 +402,7 @@ const cyrb53 = function(str, seed = 0) {
 function onlyUnique (value, index, array) {
     return array.indexOf(value) === index;
 }
+
+function getUrlWithoutArguments() {
+    return `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+}

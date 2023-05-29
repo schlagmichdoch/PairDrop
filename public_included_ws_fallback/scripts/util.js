@@ -403,6 +403,10 @@ function onlyUnique (value, index, array) {
     return array.indexOf(value) === index;
 }
 
+function getUrlWithoutArguments() {
+    return `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+}
+
 function arrayBufferToBase64(buffer) {
     var binary = '';
     var bytes = new Uint8Array(buffer);

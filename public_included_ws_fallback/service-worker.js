@@ -72,8 +72,7 @@ self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
         event.respondWith((async () => {
-            let share_url = await evaluateRequestData(event.request);
-            share_url = event.request.url + share_url;
+            const share_url = await evaluateRequestData(event.request);
             return Response.redirect(encodeURI(share_url), 302);
         })());
     } else {
@@ -101,15 +100,16 @@ self.addEventListener('activate', evt =>
     )
 );
 
-const evaluateRequestData = async function (request) {
-    const formData = await request.formData();
-    const title = formData.get("title");
-    const text = formData.get("text");
-    const url = formData.get("url");
-    const files = formData.getAll("allfiles");
-
-
+const evaluateRequestData = function (request) {
     return new Promise(async (resolve) => {
+        const formData = await request.formData();
+        const title = formData.get("title");
+        const text = formData.get("text");
+        const url = formData.get("url");
+        const files = formData.getAll("allfiles");
+
+        const pairDropUrl = request.url;
+
         if (files && files.length > 0) {
             let fileObjects = [];
             for (let i=0; i<files.length; i++) {
@@ -128,21 +128,21 @@ const evaluateRequestData = async function (request) {
 
                     const objectStoreRequest = objectStore.add(fileObjects[i]);
                     objectStoreRequest.onsuccess = _ => {
-                        if (i === fileObjects.length - 1) resolve('?share-target=files');
+                        if (i === fileObjects.length - 1) resolve(pairDropUrl + '?share-target=files');
                     }
                 }
             }
             DBOpenRequest.onerror = _ => {
-                resolve('');
+                resolve(pairDropUrl);
             }
         } else {
-            let share_url = '?share-target=text';
+            let urlArgument = '?share-target=text';
 
-            if (title) share_url += `&title=${title}`;
-            if (text) share_url += `&text=${text}`;
-            if (url) share_url += `&url=${url}`;
+            if (title) urlArgument += `&title=${title}`;
+            if (text) urlArgument += `&text=${text}`;
+            if (url) urlArgument += `&url=${url}`;
 
-            resolve(share_url);
+            resolve(pairDropUrl + urlArgument);
         }
     });
 }

@@ -1025,7 +1025,8 @@ class PairDeviceDialog extends Dialog {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.has('room_key')) {
             this._pairDeviceJoin(urlParams.get('room_key'));
-            window.history.replaceState({}, "title**", '/'); //remove room_key from url
+            const url = getUrlWithoutArguments();
+            window.history.replaceState({}, "Rewrite URL", url); //remove room_key from url
         }
     }
 
@@ -1576,7 +1577,8 @@ class Base64ZipDialog extends Dialog {
     }
 
     clearBrowserHistory() {
-        window.history.replaceState({}, "Rewrite URL", '/');
+        const url = getUrlWithoutArguments();
+        window.history.replaceState({}, "Rewrite URL", url);
     }
 
     hide() {
@@ -1792,7 +1794,8 @@ class WebShareTargetUI {
                     }
                 }
             }
-            window.history.replaceState({}, "Rewrite URL", '/');
+            const url = getUrlWithoutArguments();
+            window.history.replaceState({}, "Rewrite URL", url);
         }
     }
 }
@@ -1816,7 +1819,8 @@ class WebFileHandlersUI {
                 Events.fire('activate-paste-mode', {files: files, text: ""})
                 launchParams = null;
             });
-            window.history.replaceState({}, "Rewrite URL", '/');
+            const url = getUrlWithoutArguments();
+            window.history.replaceState({}, "Rewrite URL", url);
         }
     }
 }
