@@ -219,10 +219,15 @@ class PairDropServer {
     }
 
     _onDisconnect(sender) {
+        this._disconnect(sender);
+    }
+
+    _disconnect(sender) {
         this._leaveRoom(sender, 'ip', '', true);
         this._leaveAllSecretRooms(sender, true);
         this._removeRoomKey(sender.roomKey);
         sender.roomKey = null;
+        sender.socket.terminate();
     }
 
     _onRoomSecrets(sender, message) {
@@ -357,10 +362,6 @@ class PairDropServer {
     _joinRoom(peer, roomType = 'ip', roomSecret = '') {
         const room = roomType === 'ip' ? peer.ip : roomSecret;
 
-        if (this._rooms[room] && this._rooms[room][peer.id]) {
-            this._leaveRoom(peer, roomType, roomSecret);
-        }
-
         // if room doesn't exist, create it
         if (!this._rooms[room]) {
             this._rooms[room] = {};
@@ -384,10 +385,6 @@ class PairDropServer {
 
         // delete the peer
         delete this._rooms[room][peer.id];
-
-        if (roomType === 'ip') {
-            peer.socket.terminate();
-        }
 
         //if room is empty, delete the room
         if (!Object.keys(this._rooms[room]).length) {
@@ -468,8 +465,7 @@ class PairDropServer {
             peer.lastBeat = Date.now();
         }
         if (Date.now() - peer.lastBeat > 2 * timeout) {
-            this._leaveRoom(peer);
-            this._leaveAllSecretRooms(peer);
+            this._disconnect(peer);
             return;
         }
 
