@@ -362,6 +362,11 @@ class PairDropServer {
     _joinRoom(peer, roomType = 'ip', roomSecret = '') {
         const room = roomType === 'ip' ? peer.ip : roomSecret;
 
+        if (this._rooms[room] && this._rooms[room][peer.id]) {
+            // ensures that otherPeers never receive `peer-left` after `peer-joined` on reconnect.
+            this._leaveRoom(peer, roomType, roomSecret);
+        }
+
         // if room doesn't exist, create it
         if (!this._rooms[room]) {
             this._rooms[room] = {};
