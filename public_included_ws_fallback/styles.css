@@ -1345,11 +1345,11 @@ x-peers:empty~x-instructions {
     transition: opacity 300ms;
 }
 
-#websocket-fallback > span {
+#websocket-fallback {
     margin: 2px;
 }
 
-#websocket-fallback > span > span {
+#websocket-fallback > span:nth-child(2) {
     border-bottom: solid 4px var(--ws-peer-color);
 }
 

@@ -44,12 +44,12 @@ class ServerConnection {
     _onOpen() {
         console.log('WS: server connected');
         Events.fire('ws-connected');
-        if (this._isReconnect) Events.fire('notify-user', 'Connected.');
+        if (this._isReconnect) Events.fire('notify-user', Localization.getTranslation("notifications.connected"));
     }
 
     _onPairDeviceInitiate() {
         if (!this._isConnected()) {
-            Events.fire('notify-user', 'You need to be online to pair devices.');
+            Events.fire('notify-user', Localization.getTranslation("notifications.online-requirement"));
             return;
         }
         this.send({ type: 'pair-device-initiate' })
@@ -105,7 +105,7 @@ class ServerConnection {
                 Events.fire('pair-device-canceled', msg.roomKey);
                 break;
             case 'pair-device-join-key-rate-limit':
-                Events.fire('notify-user', 'Rate limit reached. Wait 10 seconds and try again.');
+                Events.fire('notify-user', Localization.getTranslation("notifications.rate-limit-join-key"));
                 break;
             case 'secret-room-deleted':
                 Events.fire('secret-room-deleted', msg.roomSecret);
@@ -200,7 +200,7 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', 'Connecting..');
+        Events.fire('notify-user', Localization.getTranslation("notifications.connecting"));
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         Events.fire('ws-disconnected');
@@ -505,7 +505,7 @@ class Peer {
 
     _abortTransfer() {
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
-        Events.fire('notify-user', 'Files are incorrect.');
+        Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
         this._filesReceived = [];
         this._requestAccepted = null;
         this._digester = null;
@@ -546,7 +546,7 @@ class Peer {
             this._abortTransfer();
         }
 
-        // include for compatibility with Snapdrop for Android app
+        // include for compatibility with 'Snapdrop & PairDrop for Android' app
         Events.fire('file-received', fileBlob);
 
         this._filesReceived.push(fileBlob);
@@ -563,7 +563,8 @@ class Peer {
         this._chunker = null;
         if (!this._filesQueue.length) {
             this._busy = false;
-            Events.fire('notify-user', 'File transfer completed.');
+            Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
+            Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
         } else {
             this._dequeueFile();
         }
@@ -574,7 +575,7 @@ class Peer {
             Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
             this._filesRequested = null;
             if (message.reason === 'ios-memory-limit') {
-                Events.fire('notify-user', "Sending files to iOS is only possible up to 200MB at once");
+                Events.fire('notify-user', Localization.getTranslation("notifications.ios-memory-limit"));
             }
             return;
         }
@@ -584,7 +585,7 @@ class Peer {
     }
 
     _onMessageTransferCompleted() {
-        Events.fire('notify-user', 'Message transfer completed.');
+        Events.fire('notify-user', Localization.getTranslation("notifications.message-transfer-completed"));
     }
 
     sendText(text) {
@@ -729,7 +730,7 @@ class RTCPeer extends Peer {
     _onBeforeUnload(e) {
         if (this._busy) {
             e.preventDefault();
-            return "There are unfinished transfers. Are you sure you want to close?";
+            return Localization.getTranslation("notifications.unfinished-transfers-warning");
         }
     }
 

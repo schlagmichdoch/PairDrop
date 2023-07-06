@@ -39,62 +39,66 @@
 
 <body translate="no">
     <header class="row-reverse">
-        <a href="#about" class="icon-button" title="About PairDrop" aria-label="Open About PairDrop">
+        <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label" title="About PairDrop" aria-label="Open About PairDrop">
             <svg class="icon">
                 <use xlink:href="#info-outline" />
             </svg>
         </a>
         <div id="theme-wrapper">
-            <div id="theme-auto" class="icon-button selected" title="Adapt Theme to System" >
+            <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title" title="Adapt Theme to System" >
                 <svg class="icon">
                     <use xlink:href="#icon-theme-auto" />
                 </svg>
             </div>
             <div>
-                <div id="theme-light" class="icon-button" title="Always Use Light-Theme" >
+                <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title" title="Always Use Light-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-light" />
                     </svg>
                 </div>
-                <div id="theme-dark" class="icon-button" title="Always Use Dark-Theme" >
+                <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title" title="Always Use Dark-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-dark" />
                     </svg>
                 </div>
             </div>
         </div>
-        <div id="notification" class="icon-button" title="Enable Notifications" hidden>
+        <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" title="Enable Notifications" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
             </svg>
         </div>
-        <div id="install" class="icon-button" title="Install PairDrop" hidden>
+        <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" title="Install PairDrop" hidden>
             <svg class="icon">
                 <use xlink:href="#homescreen" />
             </svg>
         </div>
-        <div id="pair-device" class="icon-button" title="Pair Device" hidden>
+        <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title" title="Pair Device" hidden>
             <svg class="icon">
                 <use xlink:href="#pair-device-icon" />
             </svg>
         </div>
-        <div id="edit-paired-devices" class="icon-button" title="Edit Paired Devices" hidden>
+        <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" title="Edit Paired Devices" hidden>
             <svg class="icon">
                 <use xlink:href="#edit-pair-devices-icon" />
             </svg>
         </div>
-        <div id="cancel-paste-mode" class="button" hidden>Done</div>
+        <div id="cancel-paste-mode" class="button" data-i18n-key="header.done" data-i18n-attrs="text" hidden>Done</div>
     </header>
     <!-- Center -->
     <div id="center">
         <!-- Peers -->
         <div class="x-peers-filler"></div>
         <x-peers class="center"></x-peers>
-        <x-no-peers>
-            <h2>Open PairDrop on other devices to send files</h2>
-            <div>Pair devices to be discoverable on other networks</div>
+        <x-no-peers data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg" data-drop-bg="Release to select recipient">
+            <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text">Open PairDrop on other devices to send files</h2>
+            <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text">Pair devices to be discoverable on other networks</div>
         </x-no-peers>
-        <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
+        <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"
+                        desktop="Click to send files or right click to send a message"
+                        mobile="Tap to send files or long tap to send a message"
+                        data-drop-peer="Release to send to peer"
+                        data-drop-bg="Release to select recipient">
             <p id="paste-filename"></p>
         </x-instructions>
     </div>
@@ -104,15 +108,21 @@
             <use xlink:href="#wifi-tethering" />
         </svg>
         <div>
-            <span>You are known as:</span>
-            <div id="display-name" placeholder="Loading..." title="Edit your device name permanently" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
+            <span data-i18n-key="footer.known-as" data-i18n-attrs="text">You are known as:</span>
+            <div id="display-name" data-i18n-key="footer.display-name" data-i18n-attrs="placeholder title" placeholder="Loading..." title="Edit your device name permanently" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
             <svg id="edit-pen" class="icon">
                 <use xlink:href="#edit-pen-icon" />
             </svg>
         </div>
         <div class="font-body2">
-            You can be discovered by everyone <span id="on-this-network">on&nbsp;this&nbsp;network</span>
-            <span id="and-by-paired-devices" hidden> and&nbsp;by&nbsp;<span id="paired-devices">paired&nbsp;devices</span></span>
+            <div>
+                <span data-i18n-key="footer.discovery-everyone" data-i18n-attrs="text">You can be discovered by everyone</span>
+                <span id="on-this-network" data-i18n-key="footer.on-this-network" data-i18n-attrs="text">on this network</span>
+            </div>
+            <div id="and-by-paired-devices" hidden>
+                <span id="and-by" data-i18n-key="footer.and-by" data-i18n-attrs="text">and by</span>
+                <span id="paired-devices" data-i18n-key="footer.paired-devices" data-i18n-attrs="text">paired devices</span>
+            </div>
         </div>
     </footer>
     <!-- Pair Device Dialog -->
@@ -120,10 +130,13 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <h2 class="center">Pair Devices</h2>
+                    <h2 class="center" data-i18n-key="dialogs.pair-devices-title" data-i18n-attrs="text">Pair Devices</h2>
                     <div id="room-key-qr-code" class="center"></div>
                     <h1 id="room-key" class="center">000 000</h1>
-                    <div id="pair-instructions" class="font-subheading center text-center">Input this key on another device<br>or scan the QR-Code.</div>
+                    <div id="pair-instructions" class="center text-center">
+                        <span class="font-subheading" data-i18n-key="dialogs.input-key-on-this-device" data-i18n-attrs="text">Input this key on another device</span>
+                        <span class="font-subheading" data-i18n-key="dialogs.scan-qr-code" data-i18n-attrs="text">or scan the QR-Code.</span>
+                    </div>
                     <hr>
                     <div id="key-input-container">
                         <input type="tel" class="textarea center" aria-label="pair-key-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
@@ -133,10 +146,10 @@
                         <input type="tel" class="textarea center" aria-label="pair-key-5" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
                         <input type="tel" class="textarea center" aria-label="pair-key-6" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
                     </div>
-                    <div class="font-subheading center text-center">Enter key from another device to continue.</div>
+                    <div class="font-subheading center text-center" data-i18n-key="dialogs.enter-key-from-another-device" data-i18n-attrs="text">Enter key from another device to continue.</div>
                     <div class="center row-reverse">
-                        <button class="button" type="submit" disabled>Pair</button>
-                        <button class="button" type="button" close>Cancel</button>
+                        <button class="button" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled>Pair</button>
+                        <button class="button" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -147,13 +160,21 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <h2 class="center">Edit Paired Devices</h2>
-                    <div class="paired-devices-wrapper"></div>
+                    <h2 class="center" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text">Edit Paired Devices</h2>
+                    <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-empty" data-i18n-attrs="data-empty" data-empty="No paired devices."></div>
                     <div class="font-subheading center">
-                        <p>Activate <u>auto-accept</u> to automatically accept all files sent from that device.</p>
+                        <p>
+                            <span  data-i18n-key="dialogs.auto-accept-instructions-1" data-i18n-attrs="text">
+                                Activate
+                            </span>
+                            <u data-i18n-key="dialogs.auto-accept" data-i18n-attrs="text">auto-accept</u>
+                            <span data-i18n-key="dialogs.auto-accept-instructions-2" data-i18n-attrs="text">
+                                to automatically accept all files sent from that device.
+                            </span>
+                        </p>
                     </div>
                     <div class="center row-reverse">
-                        <button class="button" type="button" close>Close</button>
+                        <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -167,7 +188,7 @@
                 <div class="center column file-description">
                     <div>
                         <span class="display-name"></span>
-                        <span>would like to share</span>
+                        <span data-i18n-key="dialogs.would-like-to-share" data-i18n-attrs="text">would like to share</span>
                     </div>
                     <div class="row file-name" >
                         <span class="file-stem"></span>
@@ -179,8 +200,8 @@
                 </div>
                 <div class="center file-preview"></div>
                 <div class="center row-reverse">
-                    <button id="accept-request" class="button" title="ENTER" autofocus>Accept</button>
-                    <button id="decline-request" class="button" title="ESCAPE">Decline</button>
+                    <button id="accept-request" class="button" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus>Accept</button>
+                    <button id="decline-request" class="button" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text">Decline</button>
                 </div>
             </x-paper>
         </x-background>
@@ -193,7 +214,7 @@
                 <div class="center column file-description">
                     <div>
                         <span class="display-name"></span>
-                        <span>has sent</span>
+                        <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text">has sent</span>
                     </div>
                     <div class="row file-name" >
                         <span class="file-stem"></span>
@@ -204,9 +225,9 @@
                 </div>
                 <div class="center file-preview"></div>
                 <div class="center row-reverse">
-                    <button id="share-btn" class="button" autofocus hidden>Share</button>
-                    <button id="download-btn" class="button" autofocus>Download</button>
-                    <button class="button" close>Close</button>
+                    <button id="share-btn" class="button" data-i18n-key="dialogs.share" data-i18n-attrs="text" autofocus hidden>Share</button>
+                    <button id="download-btn" class="button" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus>Download</button>
+                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
                 </div>
             </x-paper>
         </x-background>
@@ -216,16 +237,16 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2 class="text-center">Send Message</h2>
+                    <h2 class="text-center" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text">Send Message</h2>
                     <div class="dialog-subheader text-center">
-                        <span>Send a Message to</span>
+                        <span data-i18n-key="dialogs.send-message-to" data-i18n-attrs="text">Send a Message to</span>
                         <span class="display-name"></span>
                     </div>
                     <div class="row-separator"></div>
                     <div id="text-input" title="Message" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
                     <div class="center row-reverse">
-                        <button class="button" type="submit" title="CTRL/⌘ + ENTER" disabled>Send</button>
-                        <button class="button" type="button" title="ESCAPE" close>Cancel</button>
+                        <button class="button" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled>Send</button>
+                        <button class="button" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -235,16 +256,16 @@
     <x-dialog id="receive-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 class="text-center">Message Received</h2>
+                <h2 class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text">Message Received</h2>
                 <div class="text-center dialog-subheader">
                     <span class="display-name"></span>
-                    <span>has sent:</span>
+                    <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text">has sent:</span>
                 </div>
                 <div class="row-separator"></div>
                 <div id="text"></div>
                 <div class="center row-reverse">
-                    <button id="copy" class="button" title="CTRL/⌘ + C">Copy</button>
-                    <button id="close" class="button" title="ESCAPE">Close</button>
+                    <button id="copy" class="button" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text">Copy</button>
+                    <button id="close" class="button" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text">Close</button>
                 </div>
             </x-paper>
         </x-background>
@@ -253,9 +274,9 @@
     <x-dialog id="base64-paste-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <button class="button center" id="base64-paste-btn" title="Paste">Tap here to paste files</button>
+                <button class="button center" id="base64-paste-btn" title="Paste"></button>
                 <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
-                <button class="button center" close>Close</button>
+                <button class="button center" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
             </x-paper>
         </x-background>
     </x-dialog>
@@ -266,7 +287,7 @@
     <!-- About Page -->
     <x-about id="about" class="full center column">
         <header class="row-reverse fade-in">
-            <a href="#" class="close icon-button" aria-label="Close About PairDrop">
+            <a href="#" class="close icon-button" data-i18n-key="about.close-about" data-i18n-attrs="text" aria-label="Close About PairDrop">
                 <svg class="icon">
                     <use xlink:href="#close-icon" />
                 </svg>
@@ -280,7 +301,7 @@
                 <h1>PairDrop</h1>
                 <div class="font-subheading">v1.7.6</div>
             </div>
-            <div class="font-subheading">The easiest way to transfer files across devices</div>
+            <div class="font-subheading" data-i18n-key="about.claim" data-i18n-attrs="text">The easiest way to transfer files across devices</div>
             <div class="row">
                 <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop" title="PairDrop on Github" rel="noreferrer">
                     <svg class="icon">
@@ -373,6 +394,7 @@
         </symbol>
     </svg>
     <!-- Scripts -->
+    <script src="scripts/localization.js"></script>
     <script src="scripts/theme.js"></script>
     <script src="scripts/network.js"></script>
     <script src="scripts/ui.js"></script>
