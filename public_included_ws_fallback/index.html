@@ -83,7 +83,7 @@
                 <use xlink:href="#edit-pair-devices-icon" />
             </svg>
         </div>
-        <div id="cancel-paste-mode" class="button" data-i18n-key="header.done" data-i18n-attrs="text" hidden>Done</div>
+        <div id="cancel-paste-mode" class="button" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden>Done</div>
     </header>
     <!-- Center -->
     <div id="center">
@@ -166,7 +166,7 @@
             <x-background class="full center text-center">
                 <x-paper shadow="2">
                     <h2 class="center" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text">Edit Paired Devices</h2>
-                    <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-empty" data-i18n-attrs="data-empty" data-empty="No paired devices."></div>
+                    <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-wrapper" data-i18n-attrs="data-empty" data-empty="No paired devices."></div>
                     <div class="font-subheading center">
                         <p>
                             <span  data-i18n-key="dialogs.auto-accept-instructions-1" data-i18n-attrs="text">
@@ -292,7 +292,7 @@
     <!-- About Page -->
     <x-about id="about" class="full center column">
         <header class="row-reverse fade-in">
-            <a href="#" class="close icon-button" data-i18n-key="about.close-about" data-i18n-attrs="text" aria-label="Close About PairDrop">
+            <a href="#" class="close icon-button" data-i18n-key="about.close-about" data-i18n-attrs="aria-label" aria-label="Close About PairDrop">
                 <svg class="icon">
                     <use xlink:href="#close-icon" />
                 </svg>
@@ -308,22 +308,22 @@
             </div>
             <div class="font-subheading" data-i18n-key="about.claim" data-i18n-attrs="text">The easiest way to transfer files across devices</div>
             <div class="row">
-                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop" title="PairDrop on Github" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop" title="PairDrop on Github" rel="noreferrer" data-i18n-key="about.github" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#github" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://www.buymeacoffee.com/pairdrop" title="Buy me a coffee!" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://www.buymeacoffee.com/pairdrop" title="Buy me a coffee!" rel="noreferrer" data-i18n-key="about.buy-me-a-coffee" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#monetarization" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&" title="Tweet about PairDrop" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&" title="Tweet about PairDrop" rel="noreferrer" data-i18n-key="about.tweet" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#twitter" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop/blob/master/docs/faq.md" title="Frequently asked questions" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop/blob/master/docs/faq.md" title="Frequently asked questions" rel="noreferrer" data-i18n-key="about.faq" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#help-outline" />
                     </svg>
