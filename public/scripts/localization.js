@@ -2,8 +2,8 @@ class Localization {
     constructor() {
         Localization.defaultLocale = "en";
         Localization.supportedLocales = ["en"];
-
         Localization.translations = {};
+        Localization.defaultTranslations = {};
 
         const initialLocale = Localization.supportedOrDefault(Localization.browserLocales());
 
@@ -29,12 +29,12 @@ class Localization {
 
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
+        const firstTranslation = !Localization.locale
 
+        Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
 
         if(!newTranslations) return false;
-
-        const firstTranslation = !Localization.locale
 
         Localization.locale = newLocale;
         Localization.translations = newTranslations;
@@ -65,18 +65,20 @@ class Localization {
         for (let i in attrs) {
             let attr = attrs[i];
             if (attr === "text") {
-                element.innerText = await Localization.getTranslation(key);
+                element.innerText = Localization.getTranslation(key);
             } else {
-                element.attr = await Localization.getTranslation(key, attr);
+                element.attr = Localization.getTranslation(key, attr);
             }
         }
 
     }
 
-    static getTranslation(key, attr, data) {
+    static getTranslation(key, attr, data, useDefault=false) {
         const keys = key.split(".");
 
-        let translationCandidates = Localization.translations;
+        let translationCandidates = useDefault
+            ? Localization.defaultTranslations
+            : Localization.translations;
 
         for (let i=0; i<keys.length-1; i++) {
             translationCandidates = translationCandidates[keys[i]]
@@ -87,8 +89,18 @@ class Localization {
 
         let translation = translationCandidates[lastKey];
 
-        for (key in data) {
-            translation = translation.replace(`{{${key}}}`, data[key]);
+        for (let j in data) {
+            translation = translation.replace(`{{${j}}}`, data[j]);
+        }
+
+        if (!translation) {
+            if (!useDefault) {
+                translation = this.getTranslation(key, attr, data, true);
+                console.warn(`Missing translation entry for your language ${Localization.locale.toUpperCase()}. Using ${Localization.defaultLocale.toUpperCase()} instead.`, key, attr);
+                console.warn("Help translating PairDrop: https://hosted.weblate.org/projects/pairdrop/pairdrop-spa/");
+            } else {
+                console.warn("Missing translation in default language:", key, attr);
+            }
         }
 
         return Localization.escapeHTML(translation);

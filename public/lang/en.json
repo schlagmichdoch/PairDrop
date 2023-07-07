@@ -78,8 +78,12 @@
     "download-again": "Download again"
   },
   "about": {
-    "close-about-aria-label": "Close About PairDrop",
-    "claim": "The easiest way to transfer files across devices"
+    "close-about_aria-label": "Close About PairDrop",
+    "claim": "The easiest way to transfer files across devices",
+    "github_title": "PairDrop on Github",
+    "buy-me-a-coffee_title": "Buy me a coffee!",
+    "tweet_title": "Tweet about PairDrop",
+    "faq_title": "Frequently asked questions"
   },
   "notifications": {
     "display-name-changed-permanently": "Display name is changed permanently.",
