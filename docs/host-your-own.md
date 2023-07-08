@@ -528,7 +528,7 @@ Install that certificate to the trust store of your operating system. \
 - expand `Trust`, and select `Always Trust` for SSL. \
 - Firefox uses its own trust store. To install the CA, \
 - point Firefox at `http://<Your FQDN>:8080/ca.crt`. \
-- When prompted, select `Trust this CA to identify websites` and click \"OK\". \
+- When prompted, select `Trust this CA to identify websites` and click *OK*. \
 - When using Chrome, you need to restart Chrome so it reloads the trust store (`chrome://restart`). \
 - Additionally, after installing a new cert, \
 - you need to clear the Storage (DevTools → Application → Clear storage → Clear site data).
