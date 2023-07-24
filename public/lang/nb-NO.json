@@ -109,7 +109,17 @@
         "message-transfer-completed": "Meldingsoverføring utført.",
         "download-successful": "{{descriptor}} nedlastet",
         "pairing-success": "Enheter sammenkoblet.",
-        "pairing-cleared": "Sammenkobling av alle enheter opphevet."
+        "pairing-cleared": "Sammenkobling av alle enheter opphevet.",
+        "pairing-key-invalidated": "Nøkkel {{key}} ugyldiggjort.",
+        "copied-text-error": "Kunne ikke legge innhold i utklkippstavlen. Kopier manuelt.",
+        "clipboard-content-incorrect": "Utklippstavleinnholdet er uriktig.",
+        "link-received": "Lenke mottatt av {{name}}. Klikk for å åpne.",
+        "request-title": "{{name}} ønsker å overføre {{count}} {{descriptor}}",
+        "message-received": "Melding mottatt av {{name}}. Klikk for å åpne.",
+        "files-incorrect": "Filene er uriktige.",
+        "ios-memory-limit": "Forsendelse av filer til iOS er kun mulig opptil 200 MB av gangen.",
+        "unfinished-transfers-warning": "Lukk med ufullførte overføringer?",
+        "rate-limit-join-key": "Forsøksgrense overskredet. Vent 10 sek. og prøv igjen."
     },
     "document-titles": {
         "file-received": "Fil mottatt",
@@ -124,6 +134,7 @@
         "processing": "Behandler …",
         "transferring": "Overfører …",
         "click-to-send": "Klikk for å sende filer, eller høyreklikk for å sende en melding",
-        "click-to-send-paste-mode": "Klikk for å sende {{descriptor}}"
+        "click-to-send-paste-mode": "Klikk for å sende {{descriptor}}",
+        "connection-hash": "Sammenlign dette sikkerhetsnummeret på begge enhetene for å bekrefte ende-til-ende -krypteringen."
     }
 }
