@@ -1,1 +1,25 @@
-{}
+{
+    "header": {
+        "about_title": "PairDrop Hakkında",
+        "about_aria-label": "PairDrop Hakkında Aç",
+        "theme-auto_title": "Temayı Sisteme Uyarla",
+        "theme-light_title": "Daima Açık Tema Kullan",
+        "theme-dark_title": "Daima Koyu Tema Kullan",
+        "notification_title": "Bildirimleri Etkinleştir",
+        "install_title": "PairDrop'u Yükle",
+        "pair-device_title": "Cihaz Eşleştir",
+        "edit-paired-devices_title": "Eşleştirilmiş Cihazları Düzenle",
+        "cancel-paste-mode": "Bitti"
+    },
+    "instructions": {
+        "no-peers_data-drop-bg": "Alıcıyı seçmek için bırakın"
+    },
+    "footer": {
+        "display-name_placeholder": "Yükleniyor…",
+        "display-name_title": "Cihazının adını kalıcı olarak düzenle"
+    },
+    "dialogs": {
+        "cancel": "İptal",
+        "edit-paired-devices-title": "Eşleştirilmiş Cihazları Düzenle"
+    }
+}
