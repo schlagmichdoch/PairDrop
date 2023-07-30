@@ -66,6 +66,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
 * When hosting PairDrop yourself you can [set your own STUN/TURN servers](/docs/host-your-own.md#specify-stunturn-servers)
+* Built-in translations
 
 ## Screenshots
 <div align="center">
@@ -82,6 +83,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
 * [zip.js](https://gildas-lormeau.github.io/zip.js/)
 * [cyrb53](https://github.com/bryc) super fast hash function
+* [Weblate](https://weblate.org/) Web based localization tool
 
 Have any questions? Read our [FAQ](/docs/faq.md).
 
