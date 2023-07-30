@@ -23,7 +23,7 @@ class Localization {
 
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
-
+        
         const isFirstTranslation = !Localization.locale
 
         Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
