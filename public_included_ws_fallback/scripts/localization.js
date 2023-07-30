@@ -5,7 +5,7 @@ class Localization {
         Localization.translations = {};
         Localization.defaultTranslations = {};
 
-        const initialLocale = Localization.supportedOrDefault(Localization.browserLocales());
+        const initialLocale = Localization.supportedOrDefault(navigator.languages);
 
         Localization.setLocale(initialLocale)
             .then(_ => {
@@ -21,17 +21,13 @@ class Localization {
         return locales.find(Localization.isSupported) || Localization.defaultLocale;
     }
 
-    static browserLocales() {
-        return navigator.languages.map(locale =>
-            locale.split("-")[0]
-        );
-    }
-
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
-        const firstTranslation = !Localization.locale
+        
+        const isFirstTranslation = !Localization.locale
 
         Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
+
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
 
         if(!newTranslations) return false;
@@ -39,7 +35,7 @@ class Localization {
         Localization.locale = newLocale;
         Localization.translations = newTranslations;
 
-        if (firstTranslation) {
+        if (isFirstTranslation) {
             Events.fire("translation-loaded");
         }
     }
@@ -85,6 +81,7 @@ class Localization {
         }
 
         let lastKey = keys[keys.length-1];
+
         if (attr) lastKey += "_" + attr;
 
         let translation = translationCandidates[lastKey];
