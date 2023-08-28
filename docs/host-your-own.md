@@ -8,6 +8,10 @@ The easiest way to get PairDrop up and running is by using Docker.
 > Follow [this guide](https://gabrieltanner.org/blog/turn-server/) to either install coturn directly on your system (Step 1) \
 > or deploy it via docker-compose (Step 5).
 
+> <b>PairDrop via HTTPS</b>
+> 
+> On some browsers PairDrop must be served over TLS in order for some feautures to work properly. These may include copying an incoming message via the 'copy' button, installing PairDrop as PWA, persistent pairing of devices and changing of the display name, and notifications. Naturally, this is also recommended to increase security.
+
 ## Deployment with Docker
 
 ### Docker Image from Docker Hub
