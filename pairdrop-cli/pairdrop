@@ -38,7 +38,10 @@ openPairDrop()
   else
     xdg-open "$url"
   fi
+
+
   exit
+
 }
 
 setOs()
@@ -98,13 +101,19 @@ sendFiles()
   [[ -a "$zipPath" ]] && echo "Cannot overwrite $zipPath. Please remove first." && exit
 
   if [[ -d $path ]]; then
-    zipPathTemp="temp_${zipPath}"
+    zipPathTemp="${path}_pairdrop_temp.zip"
     [[ -a "$zipPathTemp" ]] && echo "Cannot overwrite $zipPathTemp. Please remove first." && exit
     echo "Processing directory..."
 
     # Create zip files temporarily to send directory
-    zip -q -b /tmp/ -r "$zipPath" "$path"
-    zip -q -b /tmp/ "$zipPathTemp" "$zipPath"
+    if [[ $OS == "Windows" ]];then
+          powershell.exe -Command "Compress-Archive -Path ${path} -DestinationPath ${zipPath}"
+          echo "Compress-Archive -Path ${zipPath} -DestinationPath ${zipPathTemp}"
+          powershell.exe -Command "Compress-Archive -Path ${zipPath} -DestinationPath ${zipPathTemp}"
+    else
+          zip -q -b /tmp/ -r "$zipPath" "$path"
+          zip -q -b /tmp/ "$zipPathTemp" "$zipPath"
+    fi
 
     if [[ $OS == "Mac" ]];then
       hash=$(base64 -i "$zipPathTemp")
@@ -118,8 +127,12 @@ sendFiles()
     echo "Processing file..."
 
     # Create zip file temporarily to send file
-    zip -q -b /tmp/ "$zipPath" "$path"
 
+    if [[ $OS == "Windows" ]];then
+      powershell.exe -Command "Compress-Archive -Path ${path} -DestinationPath ${zipPath} -CompressionLevel Optimal"
+    else
+      zip -q -b /tmp/ "$zipPath" "$path"
+    fi
     if [[ $OS == "Mac" ]];then
       hash=$(base64 -i "$zipPath")
     else
@@ -141,6 +154,7 @@ sendFiles()
     fi
     hash=
   fi
+
 
   openPairDrop
   exit

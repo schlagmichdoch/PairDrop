@@ -5,7 +5,7 @@ The [File Handling API](https://learn.microsoft.com/en-us/microsoft-edge/progres
 
 This is still experimental and must be enabled via a flag **before** the PWA is installed to Windows.
 1. [Enabled feature in Edge](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/handle-files#enable-the-file-handling-api)
-2. Install PairDrop by visiting https://pairdrop.net/ with the Edge browser and install it as described [here](faq.md#help--i-cant-install-the-pwa-).
+2. Install PairDrop by visiting https://pairdrop.net/ with the Edge web browser and install it as described [here](faq.md#help--i-cant-install-the-pwa-).
 3. You are done! You can now send most files one at a time via PairDrop:
    
    _context menu > Open with > PairDrop_
@@ -13,7 +13,8 @@ This is still experimental and must be enabled via a flag **before** the PWA is 
 [//]: # (Todo: add screenshots)
 
 ### Sending multiple files to PairDrop
-Outstandingly, it is also possible to send multiple files to PairDrop via the context menu by adding PairDrop to the `Send to` menu:
+Outstandingly, it is also possible to send multiple files to PairDrop \
+via the context menu by adding PairDrop to the `Send to` menu:
 1. [Register PairDrop as file handler](#registering-to-open-files-with-pairdrop) 
 2. Hit Windows Key+R, type: `shell:programs` and hit Enter.
 3. Copy the PairDrop shortcut from the directory
@@ -26,7 +27,8 @@ Outstandingly, it is also possible to send multiple files to PairDrop via the co
 [//]: # (Todo: add screenshots)
 
 ## Send directly from share menu on iOS
-I created an iOS shortcut to send images, files, folder, URLs or text directly from the share-menu 
+I created an iOS shortcut to send images, files, folder, URLs \
+or text directly from the share-menu 
 https://routinehub.co/shortcut/13990/
 
 [//]: # (Todo: add doku with screenshots)
@@ -63,7 +65,7 @@ On Windows Command Prompt you need to use bash: `bash pairdrop -h`
 Download the bash file: [pairdrop-cli/pairdrop](/pairdrop-cli/pairdrop).
 
 #### Linux
-1. Put file in a preferred folder e.g. `/usr/local/bin`
+1. Put the file in a preferred folder e.g. `/usr/local/bin`
 2. Make sure the bash file is executable. Otherwise, use `chmod +x pairdrop`
 3. Add absolute path of the folder to PATH variable to make `pairdrop` available globally by executing
    `export PATH=$PATH:/opt/pairdrop-cli`
@@ -74,7 +76,7 @@ Download the bash file: [pairdrop-cli/pairdrop](/pairdrop-cli/pairdrop).
 #### Windows
 1. Put file in a preferred folder e.g. `C:\Users\Public\pairdrop-cli`
 2. Search for and open `Edit environment variables for your account`
-3. Click `Environment Variables...`
+3. Click `Environment Variables…`
 4. Under *System Variables* select `Path` and click *Edit...*
 5. Click *New*, insert the preferred folder (`C:\Users\Public\pairdrop-cli`), click *OK* until all windows are closed
 6. Reopen Command prompt window

@@ -1,8 +1,8 @@
 ---
 name: Bug Report
 about: Create a report to help us improve. Please check the FAQ first.
-title: 'Bug:/Enhancement:/Feature Request: '
-labels: ''
+title: '[Bug] '
+labels: 'bug'
 assignees: ''
 
 ---
@@ -34,12 +34,17 @@ If applicable, add screenshots to help explain your problem.
  - Browser [e.g. stock browser, safari]
  - Version [e.g. 22]
 
-**Self-Hosted**
+**Bug occurs on official PairDrop instance https://pairdrop.net/**
+No | Yes
+Version: v1.7.7
+
+**Bug occurs on self-hosted PairDrop instance**
 No | Yes
 
 **Self-Hosted Setup**
 Proxy: Nginx | Apache2
 Deployment: docker run | docker-compose | npm run start:prod
+Version: v1.7.7
 
 **Additional context**
 Add any other context about the problem here.
