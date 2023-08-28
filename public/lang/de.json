@@ -1,6 +1,48 @@
 {
     "header": {
         "about_title": "Über PairDrop",
-        "notification_title": "Benachrichtigungen aktivieren"
+        "notification_title": "Benachrichtigungen aktivieren",
+        "about_aria-label": "Über PairDrop öffnen",
+        "install_title": "PairDrop installieren",
+        "pair-device_title": "Gerät koppeln",
+        "edit-paired-devices_title": "Gekoppelte Geräte bearbeiten"
+    },
+    "dialogs": {
+        "share": "Teilen",
+        "download": "Herunterladen",
+        "activate-paste-mode-base": "Öffne PairDrop auf anderen Geräten um",
+        "activate-paste-mode-and-other-files": "und {{count}} andere Dateien zu senden",
+        "pair-devices-title": "Geräte koppeln",
+        "input-key-on-this-device": "Gebe diesen Schlüssel auf einem anderen Gerät ein",
+        "enter-key-from-another-device": "Gebe den Schlüssel von einem anderen Gerät ein um fortzufahren.",
+        "pair": "Koppeln",
+        "cancel": "Abbrechen",
+        "edit-paired-devices-title": "Gekoppelte Geräte bearbeiten",
+        "paired-devices-wrapper_data-empty": "Keine gekoppelten Geräte.",
+        "close": "Schließen",
+        "accept": "Akzeptieren",
+        "decline": "Ablehnen",
+        "title-image": "Bild",
+        "title-file": "Datei",
+        "title-image-plural": "Bilder",
+        "title-file-plural": "Dateien",
+        "scan-qr-code": "oder scanne den QR-Code."
+    },
+    "about": {
+        "tweet_title": "Über PairDrop twittern",
+        "faq_title": "Häufig gestellte Fragen",
+        "close-about_aria-label": "Über PairDrop schließen",
+        "github_title": "PairDrop auf GitHub",
+        "buy-me-a-coffee_title": "Kauf mir einen Kaffee!"
+    },
+    "footer": {
+        "known-as": "Du bist bekannt als:"
+    },
+    "notifications": {
+        "link-received": "Link von {{name}} empfangen - Klicke um ihn zu öffnen",
+        "message-received": "Nachricht von {{name}} empfangen - Klicke um sie zu kopieren",
+        "click-to-download": "Klicken zum Download",
+        "copied-text": "Text in die Zwischenablage kopiert",
+        "connected": "Verbunden."
     }
 }
