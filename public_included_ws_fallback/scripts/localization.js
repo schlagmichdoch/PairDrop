@@ -63,7 +63,7 @@ class Localization {
             if (attr === "text") {
                 element.innerText = Localization.getTranslation(key);
             } else {
-                element.attr = Localization.getTranslation(key, attr);
+                element.setAttribute(attr, Localization.getTranslation(key, attr));
             }
         }
 
