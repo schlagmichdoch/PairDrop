@@ -76,18 +76,24 @@ class Localization {
             ? Localization.defaultTranslations
             : Localization.translations;
 
-        for (let i=0; i<keys.length-1; i++) {
-            translationCandidates = translationCandidates[keys[i]]
-        }
+        let translation;
 
-        let lastKey = keys[keys.length-1];
+        try {
+            for (let i = 0; i < keys.length - 1; i++) {
+                translationCandidates = translationCandidates[keys[i]]
+            }
 
-        if (attr) lastKey += "_" + attr;
+            let lastKey = keys[keys.length - 1];
 
-        let translation = translationCandidates[lastKey];
+            if (attr) lastKey += "_" + attr;
 
-        for (let j in data) {
-            translation = translation.replace(`{{${j}}}`, data[j]);
+            translation = translationCandidates[lastKey];
+
+            for (let j in data) {
+                translation = translation.replace(`{{${j}}}`, data[j]);
+            }
+        } catch (e) {
+            translation = "";
         }
 
         if (!translation) {
