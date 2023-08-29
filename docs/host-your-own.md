@@ -82,6 +82,7 @@ Set options by using the following flags in the `docker run` command:
 > You can use `pairdrop/rtc_config_example.json` as a starting point.
 >
 > To host your own TURN server you can follow this guide: https://gabrieltanner.org/blog/turn-server/
+> Alternatively, use a free, pre-configured TURN server like [OpenRelay]([url](https://www.metered.ca/tools/openrelay/))
 >
 > Default configuration:
 > ```json
