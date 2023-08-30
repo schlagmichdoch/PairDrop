@@ -24,7 +24,7 @@
     },
     "footer": {
         "known-as": "You are known as:",
-        "display-name_placeholder": "Loading…",
+        "display-name_data-placeholder": "Loading…",
         "display-name_title": "Edit your device name permanently",
         "discovery-everyone": "You can be discovered by everyone",
         "on-this-network": "on this network",

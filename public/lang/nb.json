@@ -15,7 +15,7 @@
         "discovery-everyone": "Du kan oppdages av alle",
         "and-by": "og av",
         "webrtc": "hvis WebRTC ikke er tilgjengelig.",
-        "display-name_placeholder": "Laster inn …",
+        "display-name_data-placeholder": "Laster inn…",
         "display-name_title": "Rediger det vedvarende enhetsnavnet ditt",
         "traffic": "Trafikken",
         "on-this-network": "på dette nettverket",

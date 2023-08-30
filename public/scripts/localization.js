@@ -5,12 +5,19 @@ class Localization {
         Localization.translations = {};
         Localization.defaultTranslations = {};
 
-        const initialLocale = Localization.supportedOrDefault(navigator.languages);
+        Localization.systemLocale = Localization.supportedOrDefault(navigator.languages);
 
-        Localization.setLocale(initialLocale)
+        let storedLanguageCode = localStorage.getItem("language-code");
+
+        Localization.initialLocale = storedLanguageCode && Localization.isSupported(storedLanguageCode)
+            ? storedLanguageCode
+            : Localization.systemLocale;
+
+        Localization.setTranslation(Localization.initialLocale)
             .then(_ => {
-                Localization.translatePage();
-            })
+                console.log("Initial translation successful.");
+                Events.fire("translation-loaded");
+            });
     }
 
     static isSupported(locale) {
@@ -21,11 +28,21 @@ class Localization {
         return locales.find(Localization.isSupported) || Localization.defaultLocale;
     }
 
+    static async setTranslation(locale) {
+        if (!locale) locale = Localization.systemLocale;
+
+        await Localization.setLocale(locale)
+        await Localization.translatePage();
+
+        console.log("Page successfully translated",
+            `System language: ${Localization.systemLocale}`,
+            `Selected language: ${locale}`
+        );
+    }
+
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
         
-        const isFirstTranslation = !Localization.locale
-
         Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
 
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
@@ -34,10 +51,14 @@ class Localization {
 
         Localization.locale = newLocale;
         Localization.translations = newTranslations;
+    }
 
-        if (isFirstTranslation) {
-            Events.fire("translation-loaded");
-        }
+    static getLocale() {
+        return Localization.locale;
+    }
+
+    static isSystemLocale() {
+        return !localStorage.getItem('language-code');
     }
 
     static async fetchTranslationsFor(newLocale) {
@@ -48,7 +69,7 @@ class Localization {
         return await response.json();
     }
 
-    static translatePage() {
+    static async translatePage() {
         document
             .querySelectorAll("[data-i18n-key]")
             .forEach(element => Localization.translateElement(element));
@@ -63,10 +84,14 @@ class Localization {
             if (attr === "text") {
                 element.innerText = Localization.getTranslation(key);
             } else {
-                element.setAttribute(attr, Localization.getTranslation(key, attr));
+                if (attr.startsWith("data-")) {
+                    let dataAttr = attr.substring(5);
+                    element.dataset.dataAttr = Localization.getTranslation(key, attr);
+                } {
+                    element.setAttribute(attr, Localization.getTranslation(key, attr));
+                }
             }
         }
-
     }
 
     static getTranslation(key, attr, data, useDefault=false) {

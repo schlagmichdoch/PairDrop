@@ -45,6 +45,8 @@ class PeersUI {
 
         this.$displayName = $('display-name');
 
+        this.$displayName.setAttribute("placeholder", this.$displayName.dataset.placeholder);
+
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
         this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
@@ -611,6 +613,58 @@ class Dialog {
             this.hide();
             Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
         }
+    }
+}
+
+class LanguageSelectDialog extends Dialog {
+
+    constructor() {
+        super('language-select-dialog');
+
+        this.$languageSelectBtn = $('language-selector');
+        this.$languageSelectBtn.addEventListener('click', _ => this.show());
+
+        this.$languageButtons = this.$el.querySelectorAll(".language-buttons button");
+        this.$languageButtons.forEach($btn => {
+            $btn.addEventListener("click", e => this.selectLanguage(e));
+        })
+        Events.on('keydown', e => this._onKeyDown(e));
+    }
+
+    _onKeyDown(e) {
+        if (this.isShown() && e.code === "Escape") {
+            this.hide();
+        }
+    }
+
+    show() {
+        if (Localization.isSystemLocale()) {
+            this.$languageButtons[0].focus();
+        } else {
+            let locale = Localization.getLocale();
+            for (let i=0; i<this.$languageButtons.length; i++) {
+                const $btn = this.$languageButtons[i];
+                if ($btn.value === locale) {
+                    $btn.focus();
+                    break;
+                }
+            }
+        }
+        super.show();
+    }
+
+    selectLanguage(e) {
+        e.preventDefault()
+        let languageCode = e.target.value;
+
+        if (languageCode) {
+            localStorage.setItem('language-code', languageCode);
+        } else {
+            localStorage.removeItem('language-code');
+        }
+
+        Localization.setTranslation(languageCode)
+            .then(_ => this.hide());
     }
 }
 
@@ -2256,6 +2310,7 @@ class PairDrop {
             const server = new ServerConnection();
             const peers = new PeersManager(server);
             const peersUI = new PeersUI();
+            const languageSelectDialog = new LanguageSelectDialog();
             const receiveFileDialog = new ReceiveFileDialog();
             const receiveRequestDialog = new ReceiveRequestDialog();
             const sendTextDialog = new SendTextDialog();

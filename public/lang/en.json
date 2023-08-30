@@ -1,6 +1,7 @@
 {
     "header": {
         "about_title": "About PairDrop",
+        "language-selector_title": "Select Language",
         "about_aria-label": "Open About PairDrop",
         "theme-auto_title": "Adapt Theme to System",
         "theme-light_title": "Always Use Light-Theme",
@@ -24,7 +25,7 @@
     },
     "footer": {
         "known-as": "You are known as:",
-        "display-name_placeholder": "Loading…",
+        "display-name_data-placeholder": "Loading…",
         "display-name_title": "Edit your device name permanently",
         "discovery-everyone": "You can be discovered by everyone",
         "on-this-network": "on this network",
@@ -75,7 +76,9 @@
         "title-image-plural": "Images",
         "title-file-plural": "Files",
         "receive-title": "{{descriptor}} Received",
-        "download-again": "Download again"
+        "download-again": "Download again",
+        "language-selector-title": "Select Language",
+        "system-language": "System Language"
     },
     "about": {
         "close-about_aria-label": "Close About PairDrop",

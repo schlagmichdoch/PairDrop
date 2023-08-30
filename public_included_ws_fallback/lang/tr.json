@@ -15,7 +15,7 @@
         "no-peers_data-drop-bg": "Alıcıyı seçmek için bırakın"
     },
     "footer": {
-        "display-name_placeholder": "Yükleniyor…",
+        "display-name_data-placeholder": "Yükleniyor…",
         "display-name_title": "Cihazının adını kalıcı olarak düzenle"
     },
     "dialogs": {

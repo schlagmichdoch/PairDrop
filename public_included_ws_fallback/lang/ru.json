@@ -24,7 +24,7 @@
     },
     "footer": {
         "discovery-everyone": "О вас может узнать каждый",
-        "display-name_placeholder": "Загрузка…",
+        "display-name_data-placeholder": "Загрузка…",
         "routed": "направляется через сервер",
         "webrtc": ", если WebRTC недоступен.",
         "traffic": "Трафик",

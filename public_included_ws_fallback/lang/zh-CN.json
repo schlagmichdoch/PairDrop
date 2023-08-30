@@ -26,7 +26,7 @@
         "routed": "途径服务器",
         "webrtc": "如果 WebRTC 不可用。",
         "known-as": "你的名字是:",
-        "display-name_placeholder": "加载中…",
+        "display-name_data-placeholder": "加载中…",
         "and-by": "和",
         "display-name_title": "长久修改你的设备名",
         "discovery-everyone": "你对所有人可见",

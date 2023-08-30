@@ -23,6 +23,7 @@ body {
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
+    transition: color 300ms;
 }
 
 body {
@@ -38,6 +39,10 @@ html {
     min-height: -moz-available;          /* WebKit-based browsers will ignore this. */
     min-height: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
     min-height: fill-available;
+}
+
+.fw {
+    width: 100%;
 }
 
 .row-reverse {
@@ -591,7 +596,6 @@ footer {
     align-items: center;
     padding: 0 0 16px 0;
     text-align: center;
-    transition: color 300ms;
     cursor: default;
 }
 
@@ -683,7 +687,6 @@ x-dialog x-paper {
     top: max(50%, 350px);
     margin-top: -328.5px;
     width: calc(100vw - 20px);
-    height: 625px;
 }
 
 #pair-device-dialog ::-moz-selection,
@@ -761,7 +764,7 @@ x-dialog a {
 }
 
 x-dialog hr {
-    margin: 40px -24px 30px -24px;
+    margin: 20px -24px 20px -24px;
     border: solid 1.25px var(--border-color);
 }
 
@@ -868,18 +871,18 @@ x-dialog .row {
 }
 
 /* button row*/
-x-paper > div:last-child {
-    margin: auto -24px -15px;
+x-paper > .button-row {
+    margin: 25px -24px -15px;
     border-top: solid 2.5px var(--border-color);
     height: 50px;
 }
 
-x-paper > div:last-child > .button {
+x-paper > .button-row > .button {
     height: 100%;
     width: 100%;
 }
 
-x-paper > div:last-child > .button:not(:last-child) {
+x-paper > .button-row > .button:not(:last-child) {
     border-left: solid 2.5px var(--border-color);
 }
 
@@ -1041,6 +1044,11 @@ x-dialog .dialog-subheader {
 
 .button:not([disabled]):hover:before,
 .icon-button:hover:before {
+    opacity: 0.1;
+}
+
+.button[selected],
+.icon-button[selected] {
     opacity: 0.1;
 }
 
@@ -1301,7 +1309,7 @@ x-peers:empty~x-instructions {
     x-dialog x-paper {
         padding: 15px;
     }
-    x-paper > div:last-child {
+    x-paper > .button-row {
         margin: auto -15px -15px;
     }
 }
