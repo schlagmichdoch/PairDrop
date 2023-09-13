@@ -177,7 +177,7 @@ class PairDropServer {
                 this._keepAliveTimers[sender.id].lastBeat = Date.now();
                 break;
             case 'join-ip-room':
-                this._joinRoom(sender);
+                this._joinIpRoom(sender);
                 break;
             case 'room-secrets':
                 this._onRoomSecrets(sender, message);
@@ -196,9 +196,15 @@ class PairDropServer {
                 break;
             case 'regenerate-room-secret':
                 this._onRegenerateRoomSecret(sender, message);
-                break
-            case 'resend-peers':
-                this._notifyPeers(sender);
+                break;
+            case 'create-public-room':
+                this._onCreatePublicRoom(sender);
+                break;
+            case 'join-public-room':
+                this._onJoinPublicRoom(sender, message);
+                break;
+            case 'leave-public-room':
+                this._onLeavePublicRoom(sender);
                 break;
             case 'signal':
             default:
@@ -207,7 +213,9 @@ class PairDropServer {
     }
 
     _signalAndRelay(sender, message) {
-        const room = message.roomType === 'ip' ? sender.ip : message.roomSecret;
+        const room = message.roomType === 'ip'
+            ? sender.ip
+            : message.roomId;
 
         // relay message to recipient
         if (message.to && Peer.isValidUuid(message.to) && this._rooms[room]) {
@@ -227,14 +235,15 @@ class PairDropServer {
     }
 
     _disconnect(sender) {
-        this._removeRoomKey(sender.roomKey);
-        sender.roomKey = null;
+        this._removePairKey(sender.pairKey);
+        sender.pairKey = null;
 
         this._cancelKeepAlive(sender);
         delete this._keepAliveTimers[sender.id];
 
-        this._leaveRoom(sender, 'ip', '', true);
+        this._leaveIpRoom(sender, true);
         this._leaveAllSecretRooms(sender, true);
+        this._leavePublicRoom(sender, true);
 
         sender.socket.terminate();
     }
@@ -264,7 +273,7 @@ class PairDropServer {
         for (const peerId in room) {
             const peer = room[peerId];
 
-            this._leaveRoom(peer, 'secret', roomSecret);
+            this._leaveSecretRoom(peer, roomSecret, true);
 
             this._send(peer, {
                 type: 'secret-room-deleted',
@@ -275,34 +284,35 @@ class PairDropServer {
 
     _onPairDeviceInitiate(sender) {
         let roomSecret = randomizer.getRandomString(256);
-        let roomKey = this._createRoomKey(sender, roomSecret);
-        if (sender.roomKey) this._removeRoomKey(sender.roomKey);
-        sender.roomKey = roomKey;
+        let pairKey = this._createPairKey(sender, roomSecret);
+
+        if (sender.pairKey) {
+            this._removePairKey(sender.pairKey);
+        }
+        sender.pairKey = pairKey;
+
         this._send(sender, {
             type: 'pair-device-initiated',
             roomSecret: roomSecret,
-            roomKey: roomKey
+            pairKey: pairKey
         });
-        this._joinRoom(sender, 'secret', roomSecret);
+        this._joinSecretRoom(sender, roomSecret);
     }
 
     _onPairDeviceJoin(sender, message) {
-        // rate limit implementation: max 10 attempts every 10s
-        if (sender.roomKeyRate >= 10) {
-            this._send(sender, { type: 'pair-device-join-key-rate-limit' });
+        if (sender.rateLimitReached()) {
+            this._send(sender, { type: 'join-key-rate-limit' });
             return;
         }
-        sender.roomKeyRate += 1;
-        setTimeout(_ => sender.roomKeyRate -= 1, 10000);
 
-        if (!this._roomSecrets[message.roomKey] || sender.id === this._roomSecrets[message.roomKey].creator.id) {
+        if (!this._roomSecrets[message.pairKey] || sender.id === this._roomSecrets[message.pairKey].creator.id) {
             this._send(sender, { type: 'pair-device-join-key-invalid' });
             return;
         }
 
-        const roomSecret = this._roomSecrets[message.roomKey].roomSecret;
-        const creator = this._roomSecrets[message.roomKey].creator;
-        this._removeRoomKey(message.roomKey);
+        const roomSecret = this._roomSecrets[message.pairKey].roomSecret;
+        const creator = this._roomSecrets[message.pairKey].creator;
+        this._removePairKey(message.pairKey);
         this._send(sender, {
             type: 'pair-device-joined',
             roomSecret: roomSecret,
@@ -313,20 +323,51 @@ class PairDropServer {
             roomSecret: roomSecret,
             peerId: sender.id
         });
-        this._joinRoom(sender, 'secret', roomSecret);
-        this._removeRoomKey(sender.roomKey);
+        this._joinSecretRoom(sender, roomSecret);
+        this._removePairKey(sender.pairKey);
     }
 
     _onPairDeviceCancel(sender) {
-        const roomKey = sender.roomKey
+        const pairKey = sender.pairKey
 
-        if (!roomKey) return;
+        if (!pairKey) return;
 
-        this._removeRoomKey(roomKey);
+        this._removePairKey(pairKey);
         this._send(sender, {
             type: 'pair-device-canceled',
-            roomKey: roomKey,
+            pairKey: pairKey,
         });
+    }
+
+    _onCreatePublicRoom(sender) {
+        let publicRoomId = randomizer.getRandomString(5, true).toLowerCase();
+
+        this._send(sender, {
+            type: 'public-room-created',
+            roomId: publicRoomId
+        });
+
+        this._joinPublicRoom(sender, publicRoomId);
+    }
+
+    _onJoinPublicRoom(sender, message) {
+        if (sender.rateLimitReached()) {
+            this._send(sender, { type: 'join-key-rate-limit' });
+            return;
+        }
+
+        if (!this._rooms[message.publicRoomId] && !message.createIfInvalid) {
+            this._send(sender, { type: 'public-room-id-invalid', publicRoomId: message.publicRoomId });
+            return;
+        }
+
+        this._leavePublicRoom(sender);
+        this._joinPublicRoom(sender, message.publicRoomId);
+    }
+
+    _onLeavePublicRoom(sender) {
+        this._leavePublicRoom(sender, true);
+        this._send(sender, { type: 'public-room-left' });
     }
 
     _onRegenerateRoomSecret(sender, message) {
@@ -346,122 +387,158 @@ class PairDropServer {
         delete this._rooms[oldRoomSecret];
     }
 
-    _createRoomKey(creator, roomSecret) {
-        let roomKey;
+    _createPairKey(creator, roomSecret) {
+        let pairKey;
         do {
             // get randomInt until keyRoom not occupied
-            roomKey = crypto.randomInt(1000000, 1999999).toString().substring(1); // include numbers with leading 0s
-        } while (roomKey in this._roomSecrets)
+            pairKey = crypto.randomInt(1000000, 1999999).toString().substring(1); // include numbers with leading 0s
+        } while (pairKey in this._roomSecrets)
 
-        this._roomSecrets[roomKey] = {
+        this._roomSecrets[pairKey] = {
             roomSecret: roomSecret,
             creator: creator
         }
 
-        return roomKey;
+        return pairKey;
     }
 
-    _removeRoomKey(roomKey) {
+    _removePairKey(roomKey) {
         if (roomKey in this._roomSecrets) {
             this._roomSecrets[roomKey].creator.roomKey = null
             delete this._roomSecrets[roomKey];
         }
     }
 
-    _joinRoom(peer, roomType = 'ip', roomSecret = '') {
-        const room = roomType === 'ip' ? peer.ip : roomSecret;
+    _joinIpRoom(peer) {
+        this._joinRoom(peer, 'ip', peer.ip);
+    }
 
-        if (this._rooms[room] && this._rooms[room][peer.id]) {
+    _joinSecretRoom(peer, roomSecret) {
+        this._joinRoom(peer, 'secret', roomSecret);
+
+        // add secret to peer
+        peer.addRoomSecret(roomSecret);
+    }
+
+    _joinPublicRoom(peer, publicRoomId) {
+        // prevent joining of 2 public rooms simultaneously
+        this._leavePublicRoom(peer);
+
+        this._joinRoom(peer, 'public-id', publicRoomId);
+
+        peer.publicRoomId = publicRoomId;
+    }
+
+    _joinRoom(peer, roomType, roomId) {
+        // roomType: 'ip', 'secret' or 'public-id'
+        if (this._rooms[roomId] && this._rooms[roomId][peer.id]) {
             // ensures that otherPeers never receive `peer-left` after `peer-joined` on reconnect.
-            this._leaveRoom(peer, roomType, roomSecret);
+            this._leaveRoom(peer, roomType, roomId);
         }
 
         // if room doesn't exist, create it
-        if (!this._rooms[room]) {
-            this._rooms[room] = {};
+        if (!this._rooms[roomId]) {
+            this._rooms[roomId] = {};
         }
 
-        this._notifyPeers(peer, roomType, roomSecret);
+        this._notifyPeers(peer, roomType, roomId);
 
         // add peer to room
-        this._rooms[room][peer.id] = peer;
-        // add secret to peer
-        if (roomType === 'secret') {
-            peer.addRoomSecret(roomSecret);
-        }
+        this._rooms[roomId][peer.id] = peer;
     }
 
-    _leaveRoom(peer, roomType = 'ip', roomSecret = '', disconnect = false) {
-        const room = roomType === 'ip' ? peer.ip : roomSecret;
 
-        if (!this._rooms[room] || !this._rooms[room][peer.id]) return;
-        this._cancelKeepAlive(this._rooms[room][peer.id]);
+    _leaveIpRoom(peer, disconnect = false) {
+        this._leaveRoom(peer, 'ip', peer.ip, disconnect);
+    }
 
-        // delete the peer
-        delete this._rooms[room][peer.id];
+    _leaveSecretRoom(peer, roomSecret, disconnect = false) {
+        this._leaveRoom(peer, 'secret', roomSecret, disconnect)
 
-        //if room is empty, delete the room
-        if (!Object.keys(this._rooms[room]).length) {
-            delete this._rooms[room];
-        } else {
-            // notify all other peers
-            for (const otherPeerId in this._rooms[room]) {
-                const otherPeer = this._rooms[room][otherPeerId];
-                this._send(otherPeer, {
-                    type: 'peer-left',
-                    peerId: peer.id,
-                    roomType: roomType,
-                    roomSecret: roomSecret,
-                    disconnect: disconnect
-                });
-            }
-        }
         //remove secret from peer
-        if (roomType === 'secret') {
-            peer.removeRoomSecret(roomSecret);
+        peer.removeRoomSecret(roomSecret);
+    }
+
+    _leavePublicRoom(peer, disconnect = false) {
+        if (!peer.publicRoomId) return;
+
+        this._leaveRoom(peer, 'public-id', peer.publicRoomId, disconnect);
+
+        peer.publicRoomId = null;
+    }
+
+    _leaveRoom(peer, roomType, roomId, disconnect = false) {
+        if (!this._rooms[roomId] || !this._rooms[roomId][peer.id]) return;
+
+        // remove peer from room
+        delete this._rooms[roomId][peer.id];
+
+        // delete room if empty and abort
+        if (!Object.keys(this._rooms[roomId]).length) {
+            delete this._rooms[roomId];
+            return;
+        }
+
+        // notify all other peers that remain in room that peer left
+        for (const otherPeerId in this._rooms[roomId]) {
+            const otherPeer = this._rooms[roomId][otherPeerId];
+
+            let msg = {
+                type: 'peer-left',
+                peerId: peer.id,
+                roomType: roomType,
+                roomId: roomId,
+                disconnect: disconnect
+            };
+
+            this._send(otherPeer, msg);
         }
     }
 
-    _notifyPeers(peer, roomType = 'ip', roomSecret = '') {
-        const room = roomType === 'ip' ? peer.ip : roomSecret;
-        if (!this._rooms[room]) return;
+    _notifyPeers(peer, roomType, roomId) {
+        if (!this._rooms[roomId]) return;
 
-        // notify all other peers
-        for (const otherPeerId in this._rooms[room]) {
+        // notify all other peers that peer joined
+        for (const otherPeerId in this._rooms[roomId]) {
             if (otherPeerId === peer.id) continue;
-            const otherPeer = this._rooms[room][otherPeerId];
-            this._send(otherPeer, {
+            const otherPeer = this._rooms[roomId][otherPeerId];
+
+            let msg = {
                 type: 'peer-joined',
                 peer: peer.getInfo(),
                 roomType: roomType,
-                roomSecret: roomSecret
-            });
+                roomId: roomId
+            };
+
+            this._send(otherPeer, msg);
         }
 
-        // notify peer about the other peers
+        // notify peer about peers already in the room
         const otherPeers = [];
-        for (const otherPeerId in this._rooms[room]) {
+        for (const otherPeerId in this._rooms[roomId]) {
             if (otherPeerId === peer.id) continue;
-            otherPeers.push(this._rooms[room][otherPeerId].getInfo());
+            otherPeers.push(this._rooms[roomId][otherPeerId].getInfo());
         }
 
-        this._send(peer, {
+        let msg = {
             type: 'peers',
             peers: otherPeers,
             roomType: roomType,
-            roomSecret: roomSecret
-        });
+            roomId: roomId
+        };
+
+        this._send(peer, msg);
     }
 
     _joinSecretRooms(peer, roomSecrets) {
         for (let i=0; i<roomSecrets.length; i++) {
-            this._joinRoom(peer, 'secret', roomSecrets[i])
+            this._joinSecretRoom(peer, roomSecrets[i])
         }
     }
 
     _leaveAllSecretRooms(peer, disconnect = false) {
         for (let i=0; i<peer.roomSecrets.length; i++) {
-            this._leaveRoom(peer, 'secret', peer.roomSecrets[i], disconnect);
+            this._leaveSecretRoom(peer, peer.roomSecrets[i], disconnect);
         }
     }
 
@@ -483,7 +560,7 @@ class PairDropServer {
             };
         }
 
-        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 2 * timeout) {
+        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 5 * timeout) {
             // Disconnect peer if unresponsive for 10s
             this._disconnect(peer);
             return;
@@ -521,9 +598,22 @@ class Peer {
         // set name
         this._setName(request);
 
+        this.requestRate = 0;
+
         this.roomSecrets = [];
         this.roomKey = null;
-        this.roomKeyRate = 0;
+
+        this.publicRoomId = null;
+    }
+
+    rateLimitReached() {
+        // rate limit implementation: max 10 attempts every 10s
+        if (this.requestRate >= 10) {
+            return true;
+        }
+        this.requestRate += 1;
+        setTimeout(_ => this.requestRate -= 1, 10000);
+        return false;
     }
 
     _setIP(request) {
@@ -699,8 +789,15 @@ const hasher = (() => {
 })()
 
 const randomizer = (() => {
+    let charCodeLettersOnly = r => 65 <= r && r <= 90;
+    let charCodeAllPrintableChars = r => r === 45 || 47 <= r && r <= 57 || 64 <= r && r <= 90 || 97 <= r && r <= 122;
+
     return {
-        getRandomString(length) {
+        getRandomString(length, lettersOnly = false) {
+            const charCodeCondition = lettersOnly
+                ? charCodeLettersOnly
+                : charCodeAllPrintableChars;
+
             let string = "";
             while (string.length < length) {
                 let arr = new Uint16Array(length);
@@ -711,7 +808,7 @@ const randomizer = (() => {
                 })
                 arr = arr.filter(function (r) {
                     /* strip non-printables: if we transform into desirable range we have a probability bias, so I suppose we better skip this character */
-                    return r === 45 || r >= 47 && r <= 57 || r >= 64 && r <= 90 || r >= 97 && r <= 122;
+                    return charCodeCondition(r);
                 });
                 string += String.fromCharCode.apply(String, arr);
             }
