@@ -130,8 +130,10 @@ class PairDropServer {
         this._wss = new WebSocket.Server({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request)));
 
-        this._rooms = {};
-        this._roomSecrets = {};
+        this._rooms = {}; // { roomId: peers[] }
+        this._roomSecrets = {}; // { pairKey: roomSecret }
+
+        this._keepAliveTimers = {};
 
         console.log('PairDrop is running on port', port);
     }
@@ -139,7 +141,9 @@ class PairDropServer {
     _onConnection(peer) {
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
+
         this._keepAlive(peer);
+
         this._send(peer, {
             type: 'rtc-config',
             config: rtcConfig
@@ -170,7 +174,7 @@ class PairDropServer {
                 this._onDisconnect(sender);
                 break;
             case 'pong':
-                sender.lastBeat = Date.now();
+                this._keepAliveTimers[sender.id].lastBeat = Date.now();
                 break;
             case 'join-ip-room':
                 this._joinRoom(sender);
@@ -223,10 +227,15 @@ class PairDropServer {
     }
 
     _disconnect(sender) {
-        this._leaveRoom(sender, 'ip', '', true);
-        this._leaveAllSecretRooms(sender, true);
         this._removeRoomKey(sender.roomKey);
         sender.roomKey = null;
+
+        this._cancelKeepAlive(sender);
+        delete this._keepAliveTimers[sender.id];
+
+        this._leaveRoom(sender, 'ip', '', true);
+        this._leaveAllSecretRooms(sender, true);
+
         sender.socket.terminate();
     }
 
@@ -465,23 +474,29 @@ class PairDropServer {
 
     _keepAlive(peer) {
         this._cancelKeepAlive(peer);
-        let timeout = 500;
-        if (!peer.lastBeat) {
-            peer.lastBeat = Date.now();
+        let timeout = 1000;
+
+        if (!this._keepAliveTimers[peer.id]) {
+            this._keepAliveTimers[peer.id] = {
+                timer: 0,
+                lastBeat: Date.now()
+            };
         }
-        if (Date.now() - peer.lastBeat > 2 * timeout) {
+
+        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 2 * timeout) {
+            // Disconnect peer if unresponsive for 10s
             this._disconnect(peer);
             return;
         }
 
         this._send(peer, { type: 'ping' });
 
-        peer.timerId = setTimeout(() => this._keepAlive(peer), timeout);
+        this._keepAliveTimers[peer.id].timer = setTimeout(() => this._keepAlive(peer), timeout);
     }
 
     _cancelKeepAlive(peer) {
-        if (peer && peer.timerId) {
-            clearTimeout(peer.timerId);
+        if (this._keepAliveTimers[peer.id]?.timer) {
+            clearTimeout(this._keepAliveTimers[peer.id].timer);
         }
     }
 }
@@ -505,10 +520,6 @@ class Peer {
 
         // set name
         this._setName(request);
-
-        // for keepalive
-        this.timerId = 0;
-        this.lastBeat = Date.now();
 
         this.roomSecrets = [];
         this.roomKey = null;
