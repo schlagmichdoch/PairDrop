@@ -94,7 +94,7 @@ class Localization {
         }
     }
 
-    static getTranslation(key, attr, data, useDefault=false) {
+    static getTranslation(key, attr=null, data={}, useDefault=false) {
         const keys = key.split(".");
 
         let translationCandidates = useDefault

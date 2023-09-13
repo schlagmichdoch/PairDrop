@@ -42,7 +42,7 @@ class Localization {
 
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
-        
+
         Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
 
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
@@ -94,7 +94,7 @@ class Localization {
         }
     }
 
-    static getTranslation(key, attr, data, useDefault=false) {
+    static getTranslation(key, attr=null, data={}, useDefault=false) {
         const keys = key.split(".");
 
         let translationCandidates = useDefault
