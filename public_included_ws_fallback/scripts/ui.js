@@ -1498,9 +1498,14 @@ class ReceiveTextDialog extends Dialog {
 
     async _onCopy() {
         const sanitizedText = this.$text.innerText.replace(/\u00A0/gm, ' ');
-        await navigator.clipboard.writeText(sanitizedText);
-        Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard"));
-        this.hide();
+        navigator.clipboard.writeText(sanitizedText)
+            .then(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard"));
+                this.hide();
+            })
+            .catch(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard-error"));
+            });
     }
 
     hide() {
