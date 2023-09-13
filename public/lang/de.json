@@ -6,10 +6,11 @@
         "install_title": "PairDrop installieren",
         "pair-device_title": "Gerät koppeln",
         "edit-paired-devices_title": "Gekoppelte Geräte bearbeiten",
-        "theme-auto_title": "An Systemthema anpassen",
-        "theme-dark_title": "Immer dunkle Ansicht nutzen",
-        "theme-light_title": "Immer helle Ansicht nutzen",
-        "cancel-paste-mode": "Fertig"
+        "theme-auto_title": "Systemstil verwenden",
+        "theme-dark_title": "Immer dunklen Stil nutzen",
+        "theme-light_title": "Immer hellen Stil nutzen",
+        "cancel-paste-mode": "Fertig",
+        "language-selector_title": "Sprache auswählen"
     },
     "dialogs": {
         "share": "Teilen",
@@ -37,7 +38,7 @@
         "receive-text-title": "Textnachricht erhalten",
         "file-other-description-image-plural": "und {{count}} andere Bilder",
         "file-other-description-file-plural": "und {{count}} andere Dateien",
-        "activate-paste-mode-activate-paste-mode-shared-text": "geteilter Text",
+        "activate-paste-mode-activate-paste-mode-shared-text": "Freigegebener Text",
         "auto-accept-instructions-1": "Aktiviere",
         "auto-accept": "auto-accept",
         "auto-accept-instructions-2": "um automatisch alle Dateien von diesem Gerät zu akzeptieren.",
@@ -52,7 +53,9 @@
         "file-other-description-image": "und 1 anderes Bild",
         "file-other-description-file": "und 1 andere Datei",
         "receive-title": "{{descriptor}} erhalten",
-        "download-again": "Erneut herunterladen"
+        "download-again": "Erneut herunterladen",
+        "system-language": "Systemsprache",
+        "language-selector-title": "Sprache auswählen"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -72,7 +75,8 @@
         "traffic": "Datenverkehr wird",
         "display-name_placeholder": "Lade…",
         "routed": "durch den Server geleitet",
-        "webrtc": "wenn WebRTC nicht verfügbar ist."
+        "webrtc": "wenn WebRTC nicht verfügbar ist.",
+        "display-name_data-placeholder": "Lade…"
     },
     "notifications": {
         "link-received": "Link von {{name}} empfangen - Klicke um ihn zu öffnen",
@@ -111,15 +115,15 @@
         "ios-memory-limit": "An iOS können nur parallel 200 MB an Dateien gleichzeitig gesendet werden"
     },
     "instructions": {
-        "x-instructions_desktop": "Klicke um Dateien zu senden oder nutze einen Rechtsklick um eine Textnachricht zu senden",
+        "x-instructions_desktop": "Klicke, um Dateien zu senden oder klicke mit der rechten Maustaste, um eine Textnachricht zu senden",
         "no-peers-title": "Öffne PairDrop auf anderen Geräten um Dateien zu senden",
-        "no-peers_data-drop-bg": "Loslassen um Empfänger auszuwählen",
+        "no-peers_data-drop-bg": "Loslassen, um Empfänger auszuwählen",
         "no-peers-subtitle": "Kopple Geräte, damit du in anderen Netzwerken sichtbar bist",
         "click-to-send": "Klicke zum Senden",
         "tap-to-send": "Tippe zum Senden",
         "x-instructions_data-drop-peer": "Loslassen um an Peer zu senden",
         "x-instructions_data-drop-bg": "Loslassen um Empfänger auszuwählen",
-        "x-instructions_mobile": "Tippe um Dateien zu senden oder halte den Knopf lange"
+        "x-instructions_mobile": "Tippe zum Senden von Dateien oder tippe lange zum Senden von Nachrichten"
     },
     "document-titles": {
         "file-transfer-requested": "Datenübertagung angefordert",
