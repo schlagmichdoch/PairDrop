@@ -131,7 +131,7 @@
         "file-transfer-completed": "File transfer completed.",
         "ios-memory-limit": "Sending files to iOS is only possible up to 200 MB at once",
         "message-transfer-completed": "Message transfer completed.",
-        "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close?",
+        "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close PairDrop?",
         "rate-limit-join-key": "Rate limit reached. Wait 10 seconds and try again.",
         "selected-peer-left": "Selected peer left."
     },
