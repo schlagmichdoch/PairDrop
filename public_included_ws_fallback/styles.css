@@ -4,6 +4,8 @@
     --icon-size: 24px;
     --primary-color: #4285f4;
     --paired-device-color: #00a69c;
+    --public-room-color: #db8500;
+    --accent-color: var(--primary-color);
     --peer-width: 120px;
     --ws-peer-color: #ff6b6b;
     color-scheme: light dark;
@@ -57,7 +59,6 @@ html {
 
 .row {
     display: flex;
-    justify-content: center;
     flex-direction: row;
 }
 
@@ -82,6 +83,10 @@ html {
     left: 0;
     right: 0;
     bottom: 0;
+}
+
+.pointer {
+    cursor: pointer;
 }
 
 header {
@@ -221,10 +226,6 @@ a,
     cursor: pointer;
 }
 
-hr {
-    color: white;
-}
-
 input {
     cursor: pointer;
 }
@@ -290,11 +291,6 @@ x-noscript {
     overscroll-behavior-x: none;
 }
 
-@media screen and (min-width: 402px) and (max-width: 425px) {
-    header:has(#edit-pair-devices:not([hidden]))~#center {
-        --footer-height: 164px;
-    }
-}
 
 @media screen and (max-width: 402px) {
     #center {
@@ -476,7 +472,6 @@ x-peer {
 
 x-peer label {
     width: var(--peer-width);
-    cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     position: relative;
@@ -505,8 +500,12 @@ x-peer .icon-wrapper {
     display: flex;
 }
 
-x-peer:not(.type-ip).type-secret .icon-wrapper {
+x-peer.type-secret .icon-wrapper {
     background: var(--paired-device-color);
+}
+
+x-peer:not(.type-ip):not(.type-secret).type-public-id .icon-wrapper {
+    background: var(--public-room-color);
 }
 
 x-peer x-icon > .highlight-wrapper {
@@ -517,14 +516,26 @@ x-peer x-icon > .highlight-wrapper {
 }
 
 x-peer x-icon > .highlight-wrapper > .highlight {
-    width: 6px;
+    width: 15px;
     height: 6px;
-    border-radius: 50%;
+    border-radius: 4px;
+    margin-left: 1px;
+    margin-right: 1px;
     display: none;
 }
 
-x-peer.type-secret x-icon > .highlight-wrapper > .highlight {
+x-peer.type-ip x-icon > .highlight-wrapper > .highlight.highlight-room-ip {
+    background-color: var(--primary-color);
+    display: inline;
+}
+
+x-peer.type-secret x-icon > .highlight-wrapper > .highlight.highlight-room-secret {
     background-color: var(--paired-device-color);
+    display: inline;
+}
+
+x-peer.type-public-id x-icon > .highlight-wrapper > .highlight.highlight-room-public-id {
+    background-color: var(--public-room-color);
     display: inline;
 }
 
@@ -556,6 +567,16 @@ x-peer.ws-peer .highlight-wrapper {
     margin-top: 3px;
 }
 
+#websocket-fallback {
+    position: absolute;
+    top: 56px;
+    opacity: 0.5;
+}
+
+#websocket-fallback > span:nth-of-type(2) {
+    border-bottom: solid 2px var(--ws-peer-color);
+}
+
 .device-descriptor {
     width: 100%;
     text-align: center;
@@ -583,22 +604,6 @@ x-peer.ws-peer .highlight-wrapper {
 .connection-hash {
     font-size: 12px;
     white-space: nowrap;
-}
-
-x-peer[status=transfer] .status:before {
-    content: 'Transferring...';
-}
-
-x-peer[status=prepare] .status:before {
-    content: 'Preparing...';
-}
-
-x-peer[status=wait] .status:before {
-    content: 'Waiting...';
-}
-
-x-peer[status=process] .status:before {
-    content: 'Processing...';
 }
 
 x-peer:not([status]) .status,
@@ -634,12 +639,11 @@ x-peer[drop] x-icon {
 
 footer {
     position: relative;
-    margin-top: auto;
     z-index: 2;
     align-items: center;
     text-align: center;
-    transition: color 300ms;
     cursor: default;
+    margin: auto 5px 5px;
 }
 
 footer .logo {
@@ -649,45 +653,72 @@ footer .logo {
     margin-top: -10px;
 }
 
-footer .font-body2 {
-    color: var(--primary-color);
-    margin: auto 18px;
+.discovery-wrapper {
+    font-size: 12px;
+    max-width: 350px;
+    margin: 10px auto auto;
+    border: 3px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 2px;
+    background-color: rgb(var(--bg-color));
+    transition: background-color 0.5s ease;
 }
 
-#on-this-network {
-    border-bottom: solid 4px var(--primary-color);
-    padding-bottom: 1px;
-    word-break: keep-all;
+/*You can be discovered wrapper*/
+.discovery-wrapper > div:first-of-type {
+    padding-left: 4px;
+    padding-right: 4px;
 }
 
-#paired-devices {
-    border-bottom: solid 4px var(--paired-device-color);
-    padding-bottom: 1px;
+
+.discovery-wrapper .badge {
     word-break: keep-all;
+    margin: 2px;
+}
+
+.badge {
+    border-radius: 0.3rem/0.3rem;
+    padding-right: 0.3rem;
+    padding-left: 0.3em;
+    background-color: var(--badge-color);
+    color: white;
+    transition: background-color 0.5s ease;
+    white-space: nowrap;
+}
+
+.badge-room-ip {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.badge-room-secret {
+    background-color: var(--paired-device-color);
+    border-color: var(--paired-device-color);
+}
+
+.badge-room-public-id {
+    background-color: var(--public-room-color);
+    border-color: var(--public-room-color);
 }
 
 #display-name {
+    position: relative;
     display: inline-block;
     text-align: left;
     border: none;
     outline: none;
     max-width: 15em;
     text-overflow: ellipsis;
-    white-space: nowrap;
     cursor: text;
     margin-left: -1rem;
     margin-bottom: -6px;
-    padding-right: 0.3rem;
-    padding-left: 0.3em;
     padding-bottom: 0.1rem;
     border-radius: 1.3rem/30%;
     border-right: solid 1rem transparent;
     border-left: solid 1rem transparent;
     background-clip: padding-box;
-    background-color: rgba(var(--text-color), 43%);
-    color: white;
-    transition: background-color 0.5s ease;
     overflow: hidden;
+    z-index: 1;
 }
 
 #edit-pen {
@@ -696,7 +727,6 @@ footer .font-body2 {
     margin-left: -1rem;
     margin-bottom: -2px;
     position: relative;
-    z-index: -1;
 }
 
 /* Dialog */
@@ -714,7 +744,6 @@ x-dialog x-paper {
     z-index: 3;
     background: white;
     border-radius: 8px;
-    padding: 16px 24px;
     width: 100%;
     max-width: 400px;
     overflow: hidden;
@@ -723,7 +752,27 @@ x-dialog x-paper {
     will-change: transform;
 }
 
-#pair-device-dialog x-paper {
+x-paper > .row:first-of-type {
+    background-color: var(--accent-color);
+    border-bottom: solid 4px var(--border-color);
+    margin-bottom: 10px;
+}
+
+x-paper > .row:first-of-type h2 {
+    color: white;
+}
+
+#pair-device-dialog,
+#edit-paired-devices-dialog {
+    --accent-color: var(--paired-device-color);
+}
+
+#public-room-dialog {
+    --accent-color: var(--public-room-color);
+}
+
+#pair-device-dialog x-paper,
+#public-room-dialog x-paper {
     display: flex;
     flex-direction: column;
     position: absolute;
@@ -736,6 +785,12 @@ x-dialog x-paper {
 #pair-device-dialog ::selection {
     color: black;
     background: var(--paired-device-color);
+}
+
+#public-room-dialog ::-moz-selection,
+#public-room-dialog ::selection {
+    color: black;
+    background: var(--public-room-color);
 }
 
 x-dialog:not([show]) {
@@ -755,24 +810,21 @@ x-dialog a {
     color: var(--primary-color);
 }
 
-x-dialog .font-subheading {
-    margin-bottom: 5px;
-}
-
 /* Pair Devices Dialog */
 
-#key-input-container {
+.input-key-container {
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
-#key-input-container > input {
+.input-key-container > input {
     width: 45px;
     height: 45px;
     font-size: 30px;
     padding: 0;
     text-align: center;
+    text-transform: uppercase;
     display: -webkit-box !important;
     display: -webkit-flex !important;
     display: -moz-flex !important;
@@ -783,15 +835,15 @@ x-dialog .font-subheading {
     justify-content: center;
 }
 
-#key-input-container > input + * {
+.input-key-container > input + * {
     margin-left: 6px;
 }
 
-#key-input-container > input:nth-of-type(4) {
+.input-key-container.six-chars > input:nth-of-type(4) {
     margin-left: 5%;
 }
 
-#room-key {
+.key {
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
@@ -802,17 +854,48 @@ x-dialog .font-subheading {
     margin: 15px -15px;
 }
 
-#room-key-qr-code {
+.key-qr-code {
     margin: 16px;
 }
 
-#pair-instructions {
+.key-instructions {
     flex-direction: column;
 }
 
+x-dialog h2 {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
 x-dialog hr {
-    margin: 20px -24px 20px -24px;
-    border: solid 1.25px var(--border-color);
+    height: 3px;
+    border: none;
+    width: 100%;
+    background-color: var(--border-color);
+}
+
+.hr-note {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.hr-note hr {
+    margin-bottom: -2px;
+}
+
+.hr-note > div {
+    height: 0;
+    transform: translateY(-10px);
+}
+
+
+.hr-note > div > span {
+    padding: 3px 10px;
+    border-radius: 10px;
+    color: rgb(var(--text-color));
+    background-color: rgb(var(--bg-color));
+    border: var(--border-color) solid 3px;
+    text-transform: uppercase;
 }
 
 #pair-device-dialog x-background {
@@ -906,22 +989,17 @@ x-dialog hr {
     text-overflow: ellipsis;
 }
 
-.paired-device > .auto-accept {
-    cursor: pointer;
-}
-
 /* Receive Dialog */
 
-x-dialog .row {
-    margin-top: 24px;
-    margin-bottom: 8px;
+x-paper > .row {
+    padding: 10px;
 }
 
 /* button row*/
 x-paper > .button-row {
-    margin: 25px -24px -15px;
-    border-top: solid 2.5px var(--border-color);
+    border-top: solid 3px var(--border-color);
     height: 50px;
+    margin-top: 10px;
 }
 
 x-paper > .button-row > .button {
@@ -929,16 +1007,16 @@ x-paper > .button-row > .button {
     width: 100%;
 }
 
+x-paper > .button-row > .button:not(:first-child) {
+    border-right: solid 1.5px var(--border-color);
+}
+
 x-paper > .button-row > .button:not(:last-child) {
-    border-left: solid 2.5px var(--border-color);
+    border-left: solid 1.5px var(--border-color);
 }
 
 .file-description {
-    margin-bottom: 25px;
-}
-
-.file-description .row {
-    margin: 0
+    max-width: 100%;
 }
 
 .file-description span {
@@ -949,23 +1027,29 @@ x-paper > .button-row > .button:not(:last-child) {
 .file-name {
     font-style: italic;
     max-width: 100%;
+    margin-top: 5px;
 }
 
 .file-stem {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    padding-right: 1px;
 }
 
 /* Send Text Dialog */
-/* Todo: add pair underline to send / receive dialogs displayName */
 x-dialog .dialog-subheader {
-    margin-bottom: 25px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+#send-text-dialog .display-name-wrapper {
+    padding-bottom: 0;
 }
 
 #text-input {
     min-height: 200px;
-    margin: 14px auto;
+    width: 100%;
 }
 
 /* Receive Text Dialog */
@@ -980,7 +1064,6 @@ x-dialog .dialog-subheader {
     -moz-user-select: text;
     user-select: text;
     white-space: pre-wrap;
-    padding: 15px 0;
 }
 
 #receive-text-dialog #text a {
@@ -1055,12 +1138,13 @@ x-dialog .dialog-subheader {
     cursor: pointer;
     user-select: none;
     background: inherit;
-    color: var(--primary-color);
+    color: var(--accent-color);
     overflow: hidden;
 }
 
 .button[disabled] {
     color: #5B5B66;
+    cursor: not-allowed;
 }
 
 
@@ -1141,8 +1225,7 @@ button::-moz-focus-inner {
     border: none;
     outline: none;
     padding: 16px 24px;
-    border-radius: 16px;
-    margin: 10px 0;
+    border-radius: 8px;
     font-size: 14px;
     font-family: inherit;
     background: #f1f3f4;
@@ -1351,32 +1434,7 @@ x-peers:empty~x-instructions {
     }
 }
 
-#websocket-fallback {
-    margin-left: 5px;
-    margin-right: 5px;
-    padding: 5px;
-    text-align: center;
-    opacity: 0.5;
-    transition: opacity 300ms;
-}
-
-#websocket-fallback {
-    margin: 2px;
-}
-
-#websocket-fallback > span:nth-child(2) {
-    border-bottom: solid 4px var(--ws-peer-color);
-}
-
 /* Responsive Styles */
-@media screen and (max-width: 360px) {
-    x-dialog x-paper {
-        padding: 15px;
-    }
-    x-paper > .button-row {
-        margin: auto -15px -15px;
-    }
-}
 
 @media screen and (min-height: 800px) {
     #websocket-fallback {
@@ -1399,8 +1457,9 @@ body {
     --text-color: 51,51,51;
     --bg-color: 250,250,250; /*rgb code*/
     --bg-color-test: 18,18,18;
-    --bg-color-secondary: #f1f3f4;
-    --border-color: #e7e8e8;
+    --bg-color-secondary: #e4e4e4;
+    --border-color: rgb(169, 169, 169);
+    --badge-color: #a5a5a5;
 }
 
 /* Dark theme colors */
@@ -1408,7 +1467,8 @@ body.dark-theme {
     --text-color: 238,238,238;
     --bg-color: 18,18,18; /*rgb code*/
     --bg-color-secondary: #333;
-    --border-color: #252525;
+    --border-color: rgb(238,238,238);
+    --badge-color: #717171;
 }
 
 /* Colored Elements */
@@ -1442,7 +1502,7 @@ x-dialog x-paper {
 
 /* Image/Video/Audio Preview */
 .file-preview {
-    margin: 10px -24px 40px -24px;
+    margin-bottom: 15px;
 }
 
 .file-preview:empty {
@@ -1466,15 +1526,17 @@ x-dialog x-paper {
         --text-color: 238,238,238;
         --bg-color: 18,18,18; /*rgb code*/
         --bg-color-secondary: #333;
-        --border-color: #252525;
+        --border-color: rgb(238,238,238);
+        --badge-color: #717171;
     }
 
     /* Override dark mode with light mode styles if the user decides to swap */
     body.light-theme {
         --text-color: 51,51,51;
         --bg-color: 250,250,250; /*rgb code*/
-        --bg-color-secondary: #f1f3f4;
-        --border-color: #e7e8e8;
+        --bg-color-secondary: #e4e4e4;
+        --border-color: rgb(169, 169, 169);
+        --badge-color: #a5a5a5;
    }
 }
 

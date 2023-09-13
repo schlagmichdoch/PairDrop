@@ -109,7 +109,6 @@
         "public-room-left": "Left public room {{publicRoomId}}.",
         "copied-to-clipboard": "Copied to clipboard.",
         "copied-to-clipboard-error": "Copying not possible. Copy manually.",
-        "copied-to-clipboard-error": "Copying not possible. Copy manually.",
         "text-content-incorrect": "Text content is incorrect.",
         "file-content-incorrect": "File content is incorrect.",
         "clipboard-content-incorrect": "Clipboard content is incorrect.",
