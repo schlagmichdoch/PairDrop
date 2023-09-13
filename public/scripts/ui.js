@@ -695,19 +695,19 @@ class ReceiveDialog extends Dialog {
     }
 
     _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize) {
-        if (files.length > 1) {
-            let fileOther;
-            if (files.length === 2) {
-                fileOther = imagesOnly
-                    ? Localization.getTranslation("dialogs.file-other-description-image")
-                    : Localization.getTranslation("dialogs.file-other-description-file");
-            } else {
-                fileOther = imagesOnly
-                    ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
-                    : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
-            }
-            this.$fileOther.innerText = fileOther;
+        let fileOther = "";
+
+        if (files.length === 2) {
+            fileOther = imagesOnly
+                ? Localization.getTranslation("dialogs.file-other-description-image")
+                : Localization.getTranslation("dialogs.file-other-description-file");
+        } else if (files.length >= 2) {
+            fileOther = imagesOnly
+                ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
+                : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
         }
+
+        this.$fileOther.innerText = fileOther;
 
         const fileName = files[0].name;
         const fileNameSplit = fileName.split('.');
