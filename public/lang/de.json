@@ -4,22 +4,23 @@
         "notification_title": "Benachrichtigungen aktivieren",
         "about_aria-label": "Über PairDrop öffnen",
         "install_title": "PairDrop installieren",
-        "pair-device_title": "Gerät koppeln",
+        "pair-device_title": "Deine Geräte dauerhaft koppeln",
         "edit-paired-devices_title": "Gekoppelte Geräte bearbeiten",
         "theme-auto_title": "Systemstil verwenden",
         "theme-dark_title": "Dunklen Stil verwenden",
         "theme-light_title": "Hellen Stil verwenden",
         "cancel-paste-mode": "Fertig",
-        "language-selector_title": "Sprache auswählen"
+        "language-selector_title": "Sprache auswählen",
+        "join-public-room_title": "Öffentlichen Raum temporär betreten"
     },
     "dialogs": {
         "share": "Teilen",
         "download": "Herunterladen",
         "activate-paste-mode-base": "Öffne PairDrop auf anderen Geräten um",
         "activate-paste-mode-and-other-files": "und {{count}} andere Dateien zu senden",
-        "pair-devices-title": "Geräte koppeln",
+        "pair-devices-title": "Geräte dauerhaft koppeln",
         "input-key-on-this-device": "Gebe diesen Schlüssel auf einem anderen Gerät ein",
-        "enter-key-from-another-device": "Gebe den Schlüssel von einem anderen Gerät ein um fortzufahren.",
+        "enter-key-from-another-device": "Gebe den Schlüssel von einem anderen Gerät hier ein.",
         "pair": "Koppeln",
         "cancel": "Abbrechen",
         "edit-paired-devices-title": "Gekoppelte Geräte bearbeiten",
@@ -55,7 +56,9 @@
         "receive-title": "{{descriptor}} erhalten",
         "download-again": "Erneut herunterladen",
         "system-language": "Systemsprache",
-        "language-selector-title": "Sprache auswählen"
+        "language-selector-title": "Sprache auswählen",
+        "hr-or": "ODER",
+        "input-room-id-on-another-device": "Gebe diese Raum ID auf einem anderen Gerät ein"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -76,7 +79,12 @@
         "display-name_placeholder": "Lade…",
         "routed": "durch den Server geleitet",
         "webrtc": "wenn WebRTC nicht verfügbar ist.",
-        "display-name_data-placeholder": "Lade…"
+        "display-name_data-placeholder": "Lade…",
+        "public-room-devices_title": "Du kannst von Geräten in diesem öffentlichen Raum unabhängig von deinem Netzwerk gefunden werden.",
+        "paired-devices_title": "Du kannst immer von gepaarten Geräten egal in welchem Netzwerk gefunden werden.",
+        "public-room-devices": "in Raum {{roomId}}",
+        "discovery": "Du kannst gefunden werden als:",
+        "on-this-network_title": "Du kannst von jedem in diesem Netzwerk gefunden werden."
     },
     "notifications": {
         "link-received": "Link von {{name}} empfangen - Klicke um ihn zu öffnen",
@@ -98,7 +106,7 @@
         "notifications-enabled": "Benachrichtigungen aktiviert.",
         "offline": "Du bist offline",
         "online": "Du bist wieder Online",
-        "unfinished-transfers-warning": "Es wurden noch nicht alle Übertragungen fertiggestellt. Möchtest du wirklich schließen?",
+        "unfinished-transfers-warning": "Es wurden noch nicht alle Übertragungen fertiggestellt. Möchtest du PairDrop wirklich schließen?",
         "display-name-changed-permanently": "Anzeigename wurde dauerhaft geändert.",
         "download-successful": "{{descriptor}} heruntergeladen",
         "pairing-cleared": "Alle Geräte entkoppelt.",
@@ -112,13 +120,18 @@
         "message-transfer-completed": "Nachrichtenübertragung fertiggestellt.",
         "rate-limit-join-key": "Rate Limit erreicht. Warte 10 Sekunden und versuche es erneut.",
         "selected-peer-left": "Ausgewählter Peer ist verschwunden.",
-        "ios-memory-limit": "An iOS können nur parallel 200 MB an Dateien gleichzeitig gesendet werden"
+        "ios-memory-limit": "Für Übertragungen an iOS Geräte beträgt die maximale Dateigröße 200 MB",
+        "public-room-left": "Öffentlichen Raum {{publicRoomId}} verlassen",
+        "copied-to-clipboard-error": "Konnte nicht kopieren. Kopiere manuell.",
+        "public-room-id-invalid": "Ungültige Raum ID",
+        "online-requirement-pairing": "Du musst online sein, um Geräte zu koppeln.",
+        "online-requirement-public-room": "Du musst online sein, um öffentliche Räume erstellen zu können."
     },
     "instructions": {
         "x-instructions_desktop": "Klicke zum Senden von Dateien oder klicke mit der rechten Maustaste zum Senden von Textnachrichten",
         "no-peers-title": "Öffne PairDrop auf anderen Geräten um Dateien zu senden",
         "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
-        "no-peers-subtitle": "Kopple Geräte, damit du in anderen Netzwerken sichtbar bist",
+        "no-peers-subtitle": "Kopple Geräte oder besuche einen öffentlichen Raum, damit du in anderen Netzwerken sichtbar bist",
         "click-to-send": "Klicke zum Senden",
         "tap-to-send": "Tippe zum Senden",
         "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
