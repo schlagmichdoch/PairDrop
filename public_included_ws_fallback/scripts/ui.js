@@ -1519,6 +1519,7 @@ class PublicRoomDialog extends Dialog {
         this.evaluateUrlAttributes();
 
         Events.on('ws-connected', _ => this._onWsConnected());
+        Events.on('translation-loaded', _ => this.setFooterBadge());
     }
 
     _onKeyDown(e) {
@@ -1556,6 +1557,8 @@ class PublicRoomDialog extends Dialog {
     }
 
     setIdAndQrCode() {
+        if (!this.roomId) return;
+
         this.$key.innerText = this.roomId.toUpperCase();
 
         // Display the QR code for the url
@@ -1571,10 +1574,17 @@ class PublicRoomDialog extends Dialog {
         });
         this.$qrCode.innerHTML = qr.svg();
 
+        this.setFooterBadge();
+    }
+
+    setFooterBadge() {
+        if (!this.roomId) return;
+
         this.$footerInstructionsPublicRoomDevices.innerText = Localization.getTranslation("footer.public-room-devices", null, {
             roomId: this.roomId.toUpperCase()
         });
         this.$footerInstructionsPublicRoomDevices.removeAttribute('hidden');
+
         super.evaluateFooterBadges();
     }
 
@@ -1599,7 +1609,7 @@ class PublicRoomDialog extends Dialog {
         if (!roomId) return;
 
         this.roomId = roomId;
-        this.setIdAndQrCode(roomId);
+        this.setIdAndQrCode();
 
         this._joinPublicRoom(roomId, true);
     }
@@ -1651,7 +1661,7 @@ class PublicRoomDialog extends Dialog {
         if (isJoinedRoomId) {
             this.roomId = roomId;
             this.roomIdJoin = false;
-            this.setIdAndQrCode(roomId);
+            this.setIdAndQrCode();
         }
     }
 
@@ -1702,7 +1712,7 @@ class SendTextDialog extends Dialog {
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
         this.$text.addEventListener('input', e => this._onChange(e));
-        Events.on("keydown", e => this._onKeyDown(e));
+        Events.on('keydown', e => this._onKeyDown(e));
     }
 
     async _onKeyDown(e) {
@@ -1771,7 +1781,7 @@ class ReceiveTextDialog extends Dialog {
         this.$copy.addEventListener('click', _ => this._onCopy());
         this.$close.addEventListener('click', _ => this.hide());
 
-        Events.on("keydown", e => this._onKeyDown(e));
+        Events.on('keydown', e => this._onKeyDown(e));
 
         this.$displayName = this.$el.querySelector('.display-name');
         this._receiveTextQueue = [];
@@ -2645,7 +2655,7 @@ class BrowserTabsConnector {
 
 class PairDrop {
     constructor() {
-        Events.on('translation-loaded', _ => {
+        Events.on('initial-translation-loaded', _ => {
             const server = new ServerConnection();
             const peers = new PeersManager(server);
             const peersUI = new PeersUI();

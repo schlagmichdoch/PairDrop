@@ -16,7 +16,7 @@ class Localization {
         Localization.setTranslation(Localization.initialLocale)
             .then(_ => {
                 console.log("Initial translation successful.");
-                Events.fire("translation-loaded");
+                Events.fire("initial-translation-loaded");
             });
     }
 
@@ -38,6 +38,8 @@ class Localization {
             `System language: ${Localization.systemLocale}`,
             `Selected language: ${locale}`
         );
+
+        Events.fire("translation-loaded");
     }
 
     static async setLocale(newLocale) {
