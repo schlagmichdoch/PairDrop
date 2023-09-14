@@ -6,9 +6,9 @@
         "install_title": "PairDrop installieren",
         "pair-device_title": "Gerät koppeln",
         "edit-paired-devices_title": "Gekoppelte Geräte bearbeiten",
-        "theme-auto_title": "An Systemthema anpassen",
-        "theme-dark_title": "Immer dunklen Stil nutzen",
-        "theme-light_title": "Immer hellen Stil nutzen",
+        "theme-auto_title": "Systemstil verwenden",
+        "theme-dark_title": "Dunklen Stil verwenden",
+        "theme-light_title": "Hellen Stil verwenden",
         "cancel-paste-mode": "Fertig",
         "language-selector_title": "Sprache auswählen"
     },
@@ -49,7 +49,7 @@
         "base64-paste-to-send": "Füge {{type}} hier zum Versenden ein",
         "base64-text": "Text",
         "base64-files": "Dateien",
-        "base64-processing": "Bearbeitung läuft...",
+        "base64-processing": "Bearbeitung läuft…",
         "file-other-description-image": "und 1 anderes Bild",
         "file-other-description-file": "und 1 andere Datei",
         "receive-title": "{{descriptor}} erhalten",
@@ -66,7 +66,7 @@
         "claim": "Der einfachste Weg Dateien zwischen Geräten zu teilen"
     },
     "footer": {
-        "known-as": "Du bist bekannt als:",
+        "known-as": "Du wirst angezeigt als:",
         "display-name_title": "Setze einen permanenten Gerätenamen",
         "discovery-everyone": "Du bist erkennbar von jedem",
         "on-this-network": "in diesem Netzwerk",
@@ -115,13 +115,13 @@
         "ios-memory-limit": "An iOS können nur parallel 200 MB an Dateien gleichzeitig gesendet werden"
     },
     "instructions": {
-        "x-instructions_desktop": "Klicke, um Dateien zu senden oder klicke mit der rechten Maustaste, um eine Textnachricht zu senden",
+        "x-instructions_desktop": "Klicke zum Senden von Dateien oder klicke mit der rechten Maustaste zum Senden von Textnachrichten",
         "no-peers-title": "Öffne PairDrop auf anderen Geräten um Dateien zu senden",
-        "no-peers_data-drop-bg": "Loslassen, um Empfänger auszuwählen",
+        "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
         "no-peers-subtitle": "Kopple Geräte, damit du in anderen Netzwerken sichtbar bist",
         "click-to-send": "Klicke zum Senden",
         "tap-to-send": "Tippe zum Senden",
-        "x-instructions_data-drop-peer": "Loslassen um an Peer zu senden",
+        "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
         "x-instructions_data-drop-bg": "Loslassen um Empfänger auszuwählen",
         "x-instructions_mobile": "Tippe zum Senden von Dateien oder tippe lange zum Senden von Nachrichten"
     },
