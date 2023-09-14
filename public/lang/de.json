@@ -58,7 +58,8 @@
         "system-language": "Systemsprache",
         "language-selector-title": "Sprache auswählen",
         "hr-or": "ODER",
-        "input-room-id-on-another-device": "Gebe diese Raum ID auf einem anderen Gerät ein"
+        "input-room-id-on-another-device": "Gebe diese Raum ID auf einem anderen Gerät ein",
+        "unpair": "Entkoppeln"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -74,7 +75,7 @@
         "discovery-everyone": "Du bist erkennbar von jedem",
         "on-this-network": "in diesem Netzwerk",
         "and-by": "und von",
-        "paired-devices": "gekoppelten Geräten",
+        "paired-devices": "von gekoppelten Geräten",
         "traffic": "Datenverkehr wird",
         "display-name_placeholder": "Lade…",
         "routed": "durch den Server geleitet",
@@ -97,7 +98,7 @@
         "pairing-tabs-error": "Es können keine zwei Webbrowser Tabs gekoppelt werden.",
         "pairing-not-persistent": "Gekoppelte Geräte sind nicht persistent.",
         "pairing-key-invalid": "Ungültiger Schlüssel",
-        "pairing-key-invalidated": "Schlüssel {{key}} wurde widerrufen.",
+        "pairing-key-invalidated": "Schlüssel {{key}} wurde ungültig gemacht.",
         "copied-to-clipboard": "In die Zwischenablage kopiert",
         "text-content-incorrect": "Textinhalt ist fehlerhaft.",
         "clipboard-content-incorrect": "Inhalt der Zwischenablage ist fehlerhaft.",
@@ -119,7 +120,7 @@
         "file-transfer-completed": "Dateiübertragung fertiggestellt.",
         "message-transfer-completed": "Nachrichtenübertragung fertiggestellt.",
         "rate-limit-join-key": "Rate Limit erreicht. Warte 10 Sekunden und versuche es erneut.",
-        "selected-peer-left": "Ausgewählter Peer ist verschwunden.",
+        "selected-peer-left": "Ausgewählter Peer ist gegangen.",
         "ios-memory-limit": "Für Übertragungen an iOS Geräte beträgt die maximale Dateigröße 200 MB",
         "public-room-left": "Öffentlichen Raum {{publicRoomId}} verlassen",
         "copied-to-clipboard-error": "Konnte nicht kopieren. Kopiere manuell.",
