@@ -52,6 +52,7 @@
         "pair": "Pair",
         "cancel": "Cancel",
         "edit-paired-devices-title": "Edit Paired Devices",
+        "unpair": "Unpair",
         "paired-devices-wrapper_data-empty": "No paired devices.",
         "auto-accept-instructions-1": "Activate",
         "auto-accept": "auto-accept",

@@ -1393,7 +1393,10 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     async _initDOM() {
+        const unpairString = Localization.getTranslation("dialogs.unpair").toUpperCase();
+        const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
+
         roomSecretsEntries.forEach(roomSecretsEntry => {
             let $pairedDevice = document.createElement('div');
             $pairedDevice.classList = ["paired-device"];
@@ -1406,10 +1409,10 @@ class EditPairedDevicesDialog extends Dialog {
                 <span>${roomSecretsEntry.device_name}</span>
             </div>
             <div class="button-wrapper">
-                <label class="auto-accept pointer">auto-accept
+                <label class="auto-accept pointer">${autoAcceptString}
                     <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                 </label>
-                <button class="button" type="button">unpair</button>
+                <button class="button" type="button">${unpairString}</button>
             </div>`
 
             $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
