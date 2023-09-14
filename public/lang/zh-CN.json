@@ -50,7 +50,7 @@
         "auto-accept-instructions-1": "启用",
         "auto-accept": "自动接收",
         "decline": "拒绝",
-        "base64-processing": "处理中...",
+        "base64-processing": "处理中…",
         "base64-tap-to-paste": "轻触此处粘贴{{type}}",
         "base64-paste-to-send": "粘贴到此处以发送 {{type}}",
         "auto-accept-instructions-2": "以无需同意而自动接收从那个设备上发送的所有文件。",
