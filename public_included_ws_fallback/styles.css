@@ -282,8 +282,6 @@ x-noscript {
     margin-top: 56px;
     flex-direction: column-reverse;
     flex-grow: 1;
-    --footer-height: 146px;
-    max-height: calc(100vh - 56px - var(--footer-height));
     justify-content: space-around;
     align-items: center;
     overflow-x: hidden;
@@ -292,11 +290,6 @@ x-noscript {
 }
 
 
-@media screen and (max-width: 402px) {
-    #center {
-        --footer-height: 184px;
-    }
-}
 /* Peers List */
 
 #x-peers-filler {
@@ -568,8 +561,6 @@ x-peer.ws-peer .highlight-wrapper {
 }
 
 #websocket-fallback {
-    position: absolute;
-    top: 56px;
     opacity: 0.5;
 }
 
@@ -1437,8 +1428,8 @@ x-peers:empty~x-instructions {
 /* Responsive Styles */
 
 @media screen and (min-height: 800px) {
-    #websocket-fallback {
-        padding-bottom: 16px;
+    footer {
+        margin-bottom: 16px;
     }
 }
 

@@ -95,13 +95,6 @@
         </div>
         <div id="cancel-paste-mode" class="button" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden>Done</div>
     </header>
-    <div class="row center">
-        <div id="websocket-fallback" style="position: absolute;top: 56px;">
-            <span data-i18n-key="footer.traffic" data-i18n-attrs="text">Traffic is</span>
-            <span data-i18n-key="footer.routed" data-i18n-attrs="text">routed through the server</span>
-            <span data-i18n-key="footer.webrtc" data-i18n-attrs="text">if WebRTC is not available.</span>
-        </div>
-    </div>
     <!-- Center -->
     <div id="center">
         <!-- Peers -->
@@ -118,6 +111,11 @@
                         data-drop-bg="Release to select recipient">
             <p id="paste-filename"></p>
         </x-instructions>
+        <div id="websocket-fallback">
+            <span data-i18n-key="footer.traffic" data-i18n-attrs="text">Traffic is</span>
+            <span data-i18n-key="footer.routed" data-i18n-attrs="text">routed through the server</span>
+            <span data-i18n-key="footer.webrtc" data-i18n-attrs="text">if WebRTC is not available.</span>
+        </div>
     </div>
     <!-- Footer -->
     <footer class="column">

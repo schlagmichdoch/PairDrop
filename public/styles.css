@@ -281,8 +281,6 @@ x-noscript {
     margin-top: 56px;
     flex-direction: column-reverse;
     flex-grow: 1;
-    --footer-height: 132px;
-    max-height: calc(100vh - 56px - var(--footer-height));
     justify-content: space-around;
     align-items: center;
     overflow-x: hidden;
