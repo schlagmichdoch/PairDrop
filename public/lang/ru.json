@@ -54,7 +54,7 @@
         "copy": "Копировать",
         "base64-files": "файлы",
         "base64-paste-to-send": "Вставьте здесь, чтобы отправить {{type}}",
-        "base64-processing": "Обработка...",
+        "base64-processing": "Обработка…",
         "base64-tap-to-paste": "Прикоснитесь здесь, чтобы вставить {{type}}",
         "base64-text": "текст",
         "title-file": "Файл",
