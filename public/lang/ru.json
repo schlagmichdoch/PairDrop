@@ -1,7 +1,7 @@
 {
     "header": {
         "about_aria-label": "Открыть страницу \"О сервисе\"",
-        "pair-device_title": "Подключить устройство",
+        "pair-device_title": "Связать ваши устройства навсегда",
         "install_title": "Установить PairDrop",
         "cancel-paste-mode": "Выполнено",
         "edit-paired-devices_title": "Редактировать сопряженные устройства",
@@ -9,7 +9,9 @@
         "about_title": "О сервисе",
         "theme-auto_title": "Адаптировать тему к системной",
         "theme-dark_title": "Всегда использовать темную тему",
-        "theme-light_title": "Всегда использовать светлую тему"
+        "theme-light_title": "Всегда использовать светлую тему",
+        "join-public-room_title": "Войти на время в публичную комнату",
+        "language-selector_title": "Выбрать язык"
     },
     "instructions": {
         "x-instructions_desktop": "Нажмите, чтобы отправить файлы, или щелкните правой кнопкой мыши, чтобы отправить сообщение",
@@ -20,7 +22,7 @@
         "x-instructions_data-drop-peer": "Отпустите, чтобы послать узлу",
         "x-instructions_mobile": "Прикоснитесь коротко, чтобы отправить файлы, или долго, чтобы отправить сообщение",
         "no-peers-title": "Откройте PairDrop на других устройствах, чтобы отправить файлы",
-        "no-peers-subtitle": "Сопрягите устройства, чтобы вас могли обнаружить из других сетей"
+        "no-peers-subtitle": "Сопрягите устройства или войдите в публичную комнату, чтобы вас могли обнаружить из других сетей"
     },
     "footer": {
         "discovery-everyone": "О вас может узнать каждый",
@@ -29,10 +31,15 @@
         "webrtc": ", если WebRTC недоступен.",
         "traffic": "Трафик",
         "and-by": "и",
-        "paired-devices": "сопряженные устройства",
+        "paired-devices": "сопряженными устройствами",
         "known-as": "Вы известны под именем:",
         "on-this-network": "в этой сети",
-        "display-name_title": "Изменить имя вашего устройства навсегда"
+        "display-name_title": "Изменить имя вашего устройства навсегда",
+        "public-room-devices_title": "Вы можете быть обнаружены устройствами в этой публичной комнате вне зависимости от сети.",
+        "paired-devices_title": "Вы можете быть обнаружены сопряженными устройствами в любое время вне зависимости от сети.",
+        "public-room-devices": "в комнате {{roomId}}",
+        "discovery": "Вы можете быть обнаружены:",
+        "on-this-network_title": "Вы можете быть обнаружены кем угодно в этой сети."
     },
     "dialogs": {
         "activate-paste-mode-and-other-files": "и {{count}} других файлов",
@@ -62,9 +69,9 @@
         "title-image": "Изображение",
         "title-image-plural": "Изображения",
         "download-again": "Скачать еще раз",
-        "auto-accept-instructions-2": "чтобы автоматически принимать все файлы, отправленные с этого устройства.",
-        "enter-key-from-another-device": "Для продолжения введите ключ с другого устройства.",
-        "pair-devices-title": "Сопрягите устройства",
+        "auto-accept-instructions-2": ", чтобы автоматически принимать все файлы, отправленные с того устройства.",
+        "enter-key-from-another-device": "Введите сюда ключ с другого устройства.",
+        "pair-devices-title": "Сопрягите устройства навсегда",
         "input-key-on-this-device": "Введите этот ключ на другом устройстве",
         "scan-qr-code": "или отсканируйте QR-код.",
         "cancel": "Отменить",
@@ -75,7 +82,12 @@
         "file-other-description-image-plural": "и {{count}} других изображений",
         "file-other-description-image": "и 1 другое изображение",
         "file-other-description-file-plural": "и {{count}} других файлов",
-        "receive-title": "{{descriptor}} получен"
+        "receive-title": "{{descriptor}} получен",
+        "system-language": "Язык системы",
+        "unpair": "Разорвать сопряжение",
+        "language-selector-title": "Выберите язык",
+        "hr-or": "ИЛИ",
+        "input-room-id-on-another-device": "Введите этот ID комнаты на другом устройстве"
     },
     "about": {
         "close-about-aria-label": "Закрыть страницу \"О сервисе\"",
@@ -108,7 +120,7 @@
         "selected-peer-left": "Выбранный узел вышел.",
         "request-title": "{{name}} хотел бы передать {{count}} {{descriptor}}",
         "rate-limit-join-key": "Достигнут предел скорости. Подождите 10 секунд и повторите попытку.",
-        "unfinished-transfers-warning": "Есть незавершенные передачи. Вы уверены, что хотите закрыть?",
+        "unfinished-transfers-warning": "Есть незавершенные передачи. Вы уверены, что хотите закрыть PairDrop?",
         "copied-text-error": "Запись в буфер обмена не удалась. Скопируйте вручную!",
         "pairing-cleared": "Все устройства не сопряжены.",
         "pairing-key-invalid": "Неверный ключ",
@@ -120,7 +132,12 @@
         "download-successful": "{{descriptor}} загружен",
         "display-name-changed-temporarily": "Отображаемое имя было изменено только для этой сессии.",
         "file-content-incorrect": "Содержимое файла неверно.",
-        "file-transfer-completed": "Передача файла завершена."
+        "file-transfer-completed": "Передача файла завершена.",
+        "public-room-left": "Покинуть публичную комнату {{publicRoomId}}",
+        "copied-to-clipboard-error": "Копирование невозможно. Скопируйте вручную.",
+        "public-room-id-invalid": "Неверный ID комнаты",
+        "online-requirement-pairing": "Для сопряжения устройств необходимо находиться быть онлайн.",
+        "online-requirement-public-room": "Для создания публичной комнаты необходимо быть онлайн."
     },
     "peer-ui": {
         "click-to-send-paste-mode": "Нажмите, чтобы отправить {{descriptor}}",
