@@ -84,7 +84,7 @@
         "public-room-devices_title": "Du kannst von Geräten in diesem öffentlichen Raum unabhängig von deinem Netzwerk gefunden werden.",
         "paired-devices_title": "Du kannst immer von gepaarten Geräten egal in welchem Netzwerk gefunden werden.",
         "public-room-devices": "in Raum {{roomId}}",
-        "discovery": "Du kannst gefunden werden als:",
+        "discovery": "Du wirst gefunden:",
         "on-this-network_title": "Du kannst von jedem in diesem Netzwerk gefunden werden."
     },
     "notifications": {
