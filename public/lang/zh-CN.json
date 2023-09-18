@@ -22,7 +22,10 @@
         "x-instructions_mobile": "轻触以发送文件 或 长按来发送信息",
         "x-instructions_data-drop-bg": "释放来选择接收者",
         "click-to-send": "点击发送",
-        "tap-to-send": "轻触发送"
+        "tap-to-send": "轻触发送",
+        "activate-paste-mode-base": "在其他设备上打开 PairDrop 来发送",
+        "activate-paste-mode-and-other-files": "和 {{count}} 个其他的文件",
+        "activate-paste-mode-shared-text": "分享文本"
     },
     "footer": {
         "routed": "途径服务器",
@@ -40,9 +43,6 @@
         "on-this-network_title": "您可以被这个网络上的每个人发现。"
     },
     "dialogs": {
-        "activate-paste-mode-base": "在其他设备上打开 PairDrop 来发送",
-        "activate-paste-mode-and-other-files": "和 {{count}} 个其他的文件",
-        "activate-paste-mode-activate-paste-mode-shared-text": "分享文本",
         "pair-devices-title": "配对新设备（常驻）",
         "input-key-on-this-device": "在另一个设备上输入这串数字",
         "base64-text": "信息",

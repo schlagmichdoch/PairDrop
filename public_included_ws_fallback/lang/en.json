@@ -22,7 +22,10 @@
         "x-instructions_data-drop-peer": "Release to send to peer",
         "x-instructions_data-drop-bg": "Release to select recipient",
         "click-to-send": "Click to send",
-        "tap-to-send": "Tap to send"
+        "tap-to-send": "Tap to send",
+        "activate-paste-mode-base": "Open PairDrop on other devices to send",
+        "activate-paste-mode-and-other-files": "and {{count}} other files",
+        "activate-paste-mode-shared-text": "shared text"
     },
     "footer": {
         "known-as": "You are known as:",
@@ -40,9 +43,6 @@
         "webrtc": "if WebRTC is not available."
     },
     "dialogs": {
-        "activate-paste-mode-base": "Open PairDrop on other devices to send",
-        "activate-paste-mode-and-other-files": "and {{count}} other files",
-        "activate-paste-mode-activate-paste-mode-shared-text": "shared text",
         "pair-devices-title": "Pair Devices Permanently",
         "input-key-on-this-device": "Input this key on another device",
         "scan-qr-code": "or scan the QR-code.",

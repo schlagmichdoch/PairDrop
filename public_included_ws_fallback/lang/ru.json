@@ -22,7 +22,10 @@
         "x-instructions_data-drop-peer": "Отпустите, чтобы послать узлу",
         "x-instructions_mobile": "Прикоснитесь коротко, чтобы отправить файлы, или долго, чтобы отправить сообщение",
         "no-peers-title": "Откройте PairDrop на других устройствах, чтобы отправить файлы",
-        "no-peers-subtitle": "Сопрягите устройства или войдите в публичную комнату, чтобы вас могли обнаружить из других сетей"
+        "no-peers-subtitle": "Сопрягите устройства или войдите в публичную комнату, чтобы вас могли обнаружить из других сетей",
+        "activate-paste-mode-and-other-files": "и {{count}} других файлов",
+        "activate-paste-mode-base": "Откройте PairDrop на других устройствах, чтобы отправить",
+        "activate-paste-mode-shared-text": "общий текст"
     },
     "footer": {
         "display-name_data-placeholder": "Загрузка…",
@@ -40,9 +43,6 @@
         "on-this-network_title": "Вы можете быть обнаружены кем угодно в этой сети."
     },
     "dialogs": {
-        "activate-paste-mode-and-other-files": "и {{count}} других файлов",
-        "activate-paste-mode-base": "Откройте PairDrop на других устройствах, чтобы отправить",
-        "activate-paste-mode-activate-paste-mode-shared-text": "общий текст",
         "edit-paired-devices-title": "Редактировать сопряженные устройства",
         "auto-accept": "автоприем",
         "close": "Закрыть",

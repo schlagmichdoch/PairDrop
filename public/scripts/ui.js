@@ -259,27 +259,28 @@ class PeersUI {
 
     _activatePasteMode(files, text) {
         if (!window.pasteMode.activated && (files.length > 0 || text.length > 0)) {
-            let descriptor;
-            let noPeersMessage;
+            const openPairDrop = Localization.getTranslation("instructions.activate-paste-mode-base");
+            const andOtherFiles = Localization.getTranslation("instructions.activate-paste-mode-and-other-files", null, {count: files.length-1});
+            const sharedText = Localization.getTranslation("instructions.activate-paste-mode-shared-text");
+            const clickToSend = Localization.getTranslation("instructions.click-to-send")
+            const tapToSend = Localization.getTranslation("instructions.tap-to-send")
 
-            const openPairDrop = Localization.getTranslation("dialogs.activate-paste-mode-base");
-            const andOtherFiles = Localization.getTranslation("dialogs.activate-paste-mode-and-other-files", null, {count: files.length-1});
-            const sharedText = Localization.getTranslation("dialogs.activate-paste-mode-shared-text");
+            let descriptor;
 
             if (files.length === 1) {
-                noPeersMessage = `${openPairDrop}<br><i>${files[0].name}</i>`;
+                descriptor = `<i>${files[0].name}</i>`;
             } else if (files.length > 1) {
-                noPeersMessage = `${openPairDrop}<br><i>${files[0].name}</i> ${andOtherFiles}`;
+                descriptor = `<i>${files[0].name}</i><br>${andOtherFiles}`;
             } else {
-                noPeersMessage = `${openPairDrop}<br>${sharedText}`;
+                descriptor = sharedText;
             }
 
-            this.$xInstructions.querySelector('p').innerHTML = noPeersMessage;
+            this.$xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
             this.$xInstructions.querySelector('p').style.display = 'block';
-            this.$xInstructions.setAttribute('desktop', Localization.getTranslation("instructions.click-to-send"));
-            this.$xInstructions.setAttribute('mobile', Localization.getTranslation("instructions.tap-to-send"));
+            this.$xInstructions.setAttribute('desktop', clickToSend);
+            this.$xInstructions.setAttribute('mobile', tapToSend);
 
-            this.$xNoPeers.querySelector('h2').innerHTML = noPeersMessage;
+            this.$xNoPeers.querySelector('h2').innerHTML = `${openPairDrop}<br>${descriptor}`;
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);

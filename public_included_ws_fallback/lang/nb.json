@@ -30,7 +30,10 @@
         "no-peers-title": "Åpne PairDrop på andre enheter for å sende filer",
         "no-peers-subtitle": "Sammenkoble enheter for å kunne oppdages på andre nettverk",
         "x-instructions_data-drop-peer": "Slipp for å sende til likemann",
-        "tap-to-send": "Trykk for å sende"
+        "tap-to-send": "Trykk for å sende",
+        "activate-paste-mode-base": "Åpne PairDrop på andre enheter for å sende",
+        "activate-paste-mode-and-other-files": "og {{count}} andre filer",
+        "activate-paste-mode-shared-text": "delt tekst"
     },
     "dialogs": {
         "input-key-on-this-device": "Skriv inn denne nøkkelen på en annen enhet",
@@ -70,10 +73,7 @@
         "file-other-description-file": "og én annen fil",
         "title-image": "Bilde",
         "title-file": "Fil",
-        "title-image-plural": "Bilder",
-        "activate-paste-mode-base": "Åpne PairDrop på andre enheter for å sende",
-        "activate-paste-mode-and-other-files": "og {{count}} andre filer",
-        "activate-paste-mode-activate-paste-mode-shared-text": "delt tekst"
+        "title-image-plural": "Bilder"
     },
     "about": {
         "close-about_aria-label": "Lukk «Om PairDrop»",
