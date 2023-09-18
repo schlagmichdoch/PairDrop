@@ -1,8 +1,8 @@
 const $ = query => document.getElementById(query);
 const $$ = query => document.body.querySelector(query);
-window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.android = /android/i.test(navigator.userAgent);
+window.isMobile = window.iOS || window.android;
 window.pasteMode = {};
 window.pasteMode.activated = false;
 
@@ -22,7 +22,7 @@ class PeersUI {
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('set-progress', e => this._onSetProgress(e.detail));
         Events.on('paste', e => this._onPaste(e));
-        Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
         Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
         this.peers = {};
 
@@ -44,6 +44,8 @@ class PeersUI {
         Events.on('bg-resize', _ => this.evaluateOverflowing());
 
         this.$displayName = $('display-name');
+
+        this.$displayName.setAttribute("placeholder", this.$displayName.dataset.placeholder);
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
@@ -89,12 +91,12 @@ class PeersUI {
         if (newDisplayName) {
             PersistentStorage.set('editedDisplayName', newDisplayName)
                 .then(_ => {
-                    Events.fire('notify-user', 'Device name is changed permanently.');
+                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-permanently"));
                 })
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.");
                     localStorage.setItem('editedDisplayName', newDisplayName);
-                    Events.fire('notify-user', 'Device name is changed only for this session.');
+                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
                 .finally(_ => {
                     Events.fire('self-display-name-changed', newDisplayName);
@@ -105,10 +107,9 @@ class PeersUI {
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.")
                     localStorage.removeItem('editedDisplayName');
-                    Events.fire('notify-user', 'Random Display name is used again.');
                 })
                 .finally(_ => {
-                    Events.fire('notify-user', 'Device name is randomly generated again.');
+                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
                     Events.fire('self-display-name-changed', '');
                     Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
                 });
@@ -149,32 +150,22 @@ class PeersUI {
     }
 
     _onPeerJoined(msg) {
-        this._joinPeer(msg.peer, msg.roomType, msg.roomSecret);
+        this._joinPeer(msg.peer, msg.roomType, msg.roomId);
     }
 
-    _joinPeer(peer, roomType, roomSecret) {
+    _joinPeer(peer, roomType, roomId) {
         const existingPeer = this.peers[peer.id];
         if (existingPeer) {
-            // peer already exists. Abort but add roomType to GUI and update roomSecret
-            // skip if peer is a tab on the same browser
-            if (!existingPeer.sameBrowser()) {
-                // add roomType to PeerUI
-                if (!existingPeer.roomTypes.includes(roomType)) {
-                    existingPeer.roomTypes.push(roomType);
-                }
-                this._redrawPeerRoomTypes(peer.id);
-
-                if (roomType === "secret") existingPeer.roomSecret = roomSecret;
-            }
+            // peer already exists. Abort but add roomType to GUI
+            existingPeer._roomIds[roomType] = roomId;
+            this._redrawPeerRoomTypes(peer.id);
             return;
         }
-        peer.sameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
 
-        if (!(roomType === "secret" && peer.sameBrowser())) {
-            peer.roomTypes = [roomType];
-            peer.roomSecret = roomSecret;
-        }
+        peer._isSameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
+        peer._roomIds = {};
 
+        peer._roomIds[roomType] = roomId;
         this.peers[peer.id] = peer;
     }
 
@@ -187,13 +178,18 @@ class PeersUI {
     }
 
     _redrawPeerRoomTypes(peerId) {
-        const peer = this.peers[peerId]
+        const peer = this.peers[peerId];
         const peerNode = $(peerId);
-        if (!peerNode) return;
-        peerNode.classList.remove('type-ip', 'type-secret');
-        if (!peer.sameBrowser()) {
-            peer.roomTypes.forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+
+        if (!peer || !peerNode) return;
+
+        peerNode.classList.remove('type-ip', 'type-secret', 'type-public-id', 'type-same-browser');
+
+        if (peer._isSameBrowser()) {
+            peerNode.classList.add(`type-same-browser`);
         }
+
+        Object.keys(peer._roomIds).forEach(roomType => peerNode.classList.add(`type-${roomType}`));
     }
 
     evaluateOverflowing() {
@@ -205,7 +201,7 @@ class PeersUI {
     }
 
     _onPeers(msg) {
-        msg.peers.forEach(peer => this._joinPeer(peer, msg.roomType, msg.roomSecret));
+        msg.peers.forEach(peer => this._joinPeer(peer, msg.roomType, msg.roomId));
     }
 
     _onPeerDisconnected(peerId) {
@@ -215,23 +211,14 @@ class PeersUI {
         this.evaluateOverflowing();
     }
 
-    _onSecretRoomDeleted(roomSecret) {
-        for (const peerId in this.peers) {
-            const peer = this.peers[peerId];
-            if (peer.roomSecret === roomSecret) {
-                let index = peer.roomTypes.indexOf('secret');
-                peer.roomTypes.splice(index, 1);
-                peer.roomSecret = "";
+    _onRoomTypeRemoved(peerId, roomType) {
+        const peer = this.peers[peerId];
 
-                if (peer.roomTypes.length) {
-                    this._redrawPeerRoomTypes(peerId)
-                    return;
-                }
+        if (!peer) return;
 
-                this._onPeerDisconnected(peerId);
-                return;
-            }
-        }
+        delete peer._roomIds[roomType];
+
+        this._redrawPeerRoomTypes(peerId)
     }
 
     _onSetProgress(progress) {
@@ -272,26 +259,28 @@ class PeersUI {
 
     _activatePasteMode(files, text) {
         if (!window.pasteMode.activated && (files.length > 0 || text.length > 0)) {
+            const openPairDrop = Localization.getTranslation("instructions.activate-paste-mode-base");
+            const andOtherFiles = Localization.getTranslation("instructions.activate-paste-mode-and-other-files", null, {count: files.length-1});
+            const sharedText = Localization.getTranslation("instructions.activate-paste-mode-shared-text");
+            const clickToSend = Localization.getTranslation("instructions.click-to-send")
+            const tapToSend = Localization.getTranslation("instructions.tap-to-send")
+
             let descriptor;
-            let noPeersMessage;
 
             if (files.length === 1) {
-                descriptor = files[0].name;
-                noPeersMessage = `Open PairDrop on other devices to send<br><i>${descriptor}</i>`;
+                descriptor = `<i>${files[0].name}</i>`;
             } else if (files.length > 1) {
-                descriptor = `${files[0].name} and ${files.length-1} other files`;
-                noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
+                descriptor = `<i>${files[0].name}</i><br>${andOtherFiles}`;
             } else {
-                descriptor = "shared text";
-                noPeersMessage = `Open PairDrop on other devices to send<br>${descriptor}`;
+                descriptor = sharedText;
             }
 
             this.$xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
             this.$xInstructions.querySelector('p').style.display = 'block';
-            this.$xInstructions.setAttribute('desktop', `Click to send`);
-            this.$xInstructions.setAttribute('mobile', `Tap to send`);
+            this.$xInstructions.setAttribute('desktop', clickToSend);
+            this.$xInstructions.setAttribute('mobile', tapToSend);
 
-            this.$xNoPeers.querySelector('h2').innerHTML = noPeersMessage;
+            this.$xNoPeers.querySelector('h2').innerHTML = `${openPairDrop}<br>${descriptor}`;
 
             const _callback = (e) => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
@@ -320,10 +309,10 @@ class PeersUI {
             this.$xInstructions.querySelector('p').innerText = '';
             this.$xInstructions.querySelector('p').style.display = 'none';
 
-            this.$xInstructions.setAttribute('desktop', 'Click to send files or right click to send a message');
-            this.$xInstructions.setAttribute('mobile', 'Tap to send files or long tap to send a message');
+            this.$xInstructions.setAttribute('desktop', Localization.getTranslation("instructions.x-instructions", "desktop"));
+            this.$xInstructions.setAttribute('mobile',  Localization.getTranslation("instructions.x-instructions", "mobile"));
 
-            this.$xNoPeers.querySelector('h2').innerHTML = 'Open PairDrop on other devices to send files';
+            this.$xNoPeers.querySelector('h2').innerHTML =  Localization.getTranslation("instructions.no-peers-title");
 
             this.$cancelPasteModeBtn.setAttribute('hidden', "");
 
@@ -368,20 +357,22 @@ class PeerUI {
         let title;
         let input = '';
         if (window.pasteMode.activated) {
-            title = `Click to send ${window.pasteMode.descriptor}`;
+            title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: window.pasteMode.descriptor});
         } else {
-            title = 'Click to send files or right click to send a message';
+            title = Localization.getTranslation("peer-ui.click-to-send");
             input = '<input type="file" multiple>';
         }
         this.$el.innerHTML = `
-            <label class="column center" title="${title}">
+            <label class="column center pointer" title="${title}">
                 ${input}
                 <x-icon>
                     <div class="icon-wrapper" shadow="1">
                         <svg class="icon"><use xlink:href="#"/></svg>
                     </div>
                     <div class="highlight-wrapper center">
-                        <div class="highlight" shadow="1"></div>
+                        <div class="highlight highlight-room-ip" shadow="1"></div>
+                        <div class="highlight highlight-room-secret" shadow="1"></div>
+                        <div class="highlight highlight-room-public-id" shadow="1"></div>
                     </div>
                 </x-icon>
                 <div class="progress">
@@ -392,7 +383,7 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <span class="connection-hash font-body2" title="To verify the security of the end-to-end encryption, compare this security number on both devices"></span>
+                    <span class="connection-hash font-body2" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
                 </div>
             </label>`;
 
@@ -402,13 +393,24 @@ class PeerUI {
         this.$el.querySelector('.connection-hash').textContent = this._connectionHash;
     }
 
+    addTypesToClassList() {
+        if (this._peer._isSameBrowser()) {
+            this.$el.classList.add(`type-same-browser`);
+        }
+
+        Object.keys(this._peer._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+
+        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer');
+    }
+
     _initDom() {
         this.$el = document.createElement('x-peer');
         this.$el.id = this._peer.id;
         this.$el.ui = this;
         this.$el.classList.add('center');
-        if (!this._peer.sameBrowser()) this._peer.roomTypes.forEach(roomType => this.$el.classList.add(`type-${roomType}`));
-        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer');
+
+        this.addTypesToClassList();
+
         this.html();
 
         this._callbackInput = e => this._onFilesSelected(e)
@@ -422,6 +424,7 @@ class PeerUI {
         this._callbackTouchStart = e => this._onTouchStart(e)
         this._callbackTouchEnd = e => this._onTouchEnd(e)
         this._callbackPointerDown = e => this._onPointerDown(e)
+
         // PasteMode
         Events.on('paste-mode-changed', _ => this._onPasteModeChanged());
     }
@@ -481,6 +484,15 @@ class PeerUI {
         return this._peer.name.deviceName;
     }
 
+    _badgeClassName() {
+        const roomTypes = Object.keys(this._peer._roomIds);
+        return roomTypes.includes('secret')
+            ? 'badge-room-secret'
+            : roomTypes.includes('ip')
+                ? 'badge-room-ip'
+                : 'badge-room-public-id';
+    }
+
     _icon() {
         const device = this._peer.name.device || this._peer.name;
         if (device.type === 'mobile') {
@@ -510,10 +522,23 @@ class PeerUI {
             $progress.classList.remove('over50');
         }
         if (progress < 1) {
-            this.$el.setAttribute('status', status);
+            if (status !== this.currentStatus) {
+                let statusName = {
+                    "prepare": Localization.getTranslation("peer-ui.preparing"),
+                    "transfer": Localization.getTranslation("peer-ui.transferring"),
+                    "process": Localization.getTranslation("peer-ui.processing"),
+                    "wait": Localization.getTranslation("peer-ui.waiting")
+                }[status];
+
+                this.$el.setAttribute('status', status);
+                this.$el.querySelector('.status').innerText = statusName;
+                this.currentStatus = status;
+            }
         } else {
             this.$el.removeAttribute('status');
+            this.$el.querySelector('.status').innerHTML = '';
             progress = 0;
+            this.currentStatus = null;
         }
         const degrees = `rotate(${360 * progress}deg)`;
         $progress.style.setProperty('--progress', degrees);
@@ -571,11 +596,13 @@ class Dialog {
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
         this.$autoFocus = this.$el.querySelector('[autofocus]');
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
+
+        this.$discoveryWrapper = $$('footer .discovery-wrapper');
     }
 
     show() {
         this.$el.setAttribute('show', 1);
-        if (this.$autoFocus) this.$autoFocus.focus();
+        if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
     }
 
     isShown() {
@@ -584,7 +611,7 @@ class Dialog {
 
     hide() {
         this.$el.removeAttribute('show');
-        if (this.$autoFocus) {
+        if (!window.isMobile && this.$autoFocus) {
             document.activeElement.blur();
             window.blur();
         }
@@ -596,8 +623,71 @@ class Dialog {
     _onPeerDisconnected(peerId) {
         if (this.isShown() && this.correspondingPeerId === peerId) {
             this.hide();
-            Events.fire('notify-user', 'Selected peer left.')
+            Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
         }
+    }
+
+    evaluateFooterBadges() {
+        if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
+            this.$discoveryWrapper.classList.remove('row');
+            this.$discoveryWrapper.classList.add('column');
+        } else {
+            this.$discoveryWrapper.classList.remove('column');
+            this.$discoveryWrapper.classList.add('row');
+        }
+        Events.fire('bg-resize');
+    }
+}
+
+class LanguageSelectDialog extends Dialog {
+
+    constructor() {
+        super('language-select-dialog');
+
+        this.$languageSelectBtn = $('language-selector');
+        this.$languageSelectBtn.addEventListener('click', _ => this.show());
+
+        this.$languageButtons = this.$el.querySelectorAll(".language-buttons button");
+        this.$languageButtons.forEach($btn => {
+            $btn.addEventListener("click", e => this.selectLanguage(e));
+        })
+        Events.on('keydown', e => this._onKeyDown(e));
+    }
+
+    _onKeyDown(e) {
+        if (this.isShown() && e.code === "Escape") {
+            this.hide();
+        }
+    }
+
+    show() {
+        if (Localization.isSystemLocale()) {
+            this.$languageButtons[0].focus();
+        } else {
+            let locale = Localization.getLocale();
+            for (let i=0; i<this.$languageButtons.length; i++) {
+                const $btn = this.$languageButtons[i];
+                if ($btn.value === locale) {
+                    $btn.focus();
+                    break;
+                }
+            }
+        }
+        super.show();
+    }
+
+    selectLanguage(e) {
+        e.preventDefault()
+        let languageCode = e.target.value;
+
+        if (languageCode) {
+            localStorage.setItem('language-code', languageCode);
+        } else {
+            localStorage.removeItem('language-code');
+        }
+
+        Localization.setTranslation(languageCode)
+            .then(_ => this.hide());
     }
 }
 
@@ -628,25 +718,31 @@ class ReceiveDialog extends Dialog {
         }
     }
 
-    _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize) {
-        if (files.length > 1) {
-            let fileOtherText = ` and ${files.length - 1} other `;
-            if (files.length === 2) {
-                fileOtherText += imagesOnly ? 'image' : 'file';
-            } else {
-                fileOtherText += imagesOnly ? 'images' : 'files';
-            }
-            this.$fileOther.innerText = fileOtherText;
+    _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
+        let fileOther = "";
+
+        if (files.length === 2) {
+            fileOther = imagesOnly
+                ? Localization.getTranslation("dialogs.file-other-description-image")
+                : Localization.getTranslation("dialogs.file-other-description-file");
+        } else if (files.length >= 2) {
+            fileOther = imagesOnly
+                ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
+                : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
         }
+
+        this.$fileOther.innerText = fileOther;
 
         const fileName = files[0].name;
         const fileNameSplit = fileName.split('.');
         const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
         this.$fileStem.innerText = fileName.substring(0, fileName.length - fileExtension.length);
         this.$fileExtension.innerText = fileExtension;
+        this.$fileSize.innerText = this._formatFileSize(totalSize);
         this.$displayName.innerText = displayName;
         this.$displayName.title = connectionHash;
-        this.$fileSize.innerText = this._formatFileSize(totalSize);
+        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$displayName.classList.add(badgeClassName)
     }
 }
 
@@ -658,23 +754,35 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$downloadBtn = this.$el.querySelector('#download-btn');
         this.$shareBtn = this.$el.querySelector('#share-btn');
 
-        Events.on('files-received', e => this._onFilesReceived(e.detail.sender, e.detail.files, e.detail.imagesOnly, e.detail.totalSize));
+        Events.on('files-received', e => this._onFilesReceived(e.detail.peerId, e.detail.files, e.detail.imagesOnly, e.detail.totalSize));
         this._filesQueue = [];
     }
 
-    _onFilesReceived(sender, files, imagesOnly, totalSize) {
-        const displayName = $(sender).ui._displayName();
-        const connectionHash = $(sender).ui._connectionHash;
-        this._filesQueue.push({peer: sender, displayName: displayName, connectionHash: connectionHash, files: files, imagesOnly: imagesOnly, totalSize: totalSize});
+    _onFilesReceived(peerId, files, imagesOnly, totalSize) {
+        const displayName = $(peerId).ui._displayName();
+        const connectionHash = $(peerId).ui._connectionHash;
+        const badgeClassName = $(peerId).ui._badgeClassName();
+
+        this._filesQueue.push({
+            peerId: peerId,
+            displayName: displayName,
+            connectionHash: connectionHash,
+            files: files,
+            imagesOnly: imagesOnly,
+            totalSize: totalSize,
+            badgeClassName: badgeClassName
+        });
+
         this._nextFiles();
+
         window.blop.play();
     }
 
     _nextFiles() {
         if (this._busy) return;
         this._busy = true;
-        const {peer, displayName, connectionHash, files, imagesOnly, totalSize} = this._filesQueue.shift();
-        this._displayFiles(peer, displayName, connectionHash, files, imagesOnly, totalSize);
+        const {peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName} = this._filesQueue.shift();
+        this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
     }
 
     _dequeueFile() {
@@ -723,16 +831,20 @@ class ReceiveFileDialog extends ReceiveDialog {
         });
     }
 
-    async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize) {
-        this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize);
+    async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
+        this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
 
         let descriptor, url, filenameDownload;
         if (files.length === 1) {
-            descriptor = imagesOnly ? 'Image' : 'File';
+            descriptor = imagesOnly
+                ? Localization.getTranslation("dialogs.title-image")
+                : Localization.getTranslation("dialogs.title-file");
         } else {
-            descriptor = imagesOnly ? 'Images' : 'Files';
+            descriptor = imagesOnly
+                ? Localization.getTranslation("dialogs.title-image-plural")
+                : Localization.getTranslation("dialogs.title-file-plural");
         }
-        this.$receiveTitle.innerText = `${descriptor} Received`;
+        this.$receiveTitle.innerText = Localization.getTranslation("dialogs.receive-title", null, {descriptor: descriptor});
 
         const canShare = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files});
         if (canShare) {
@@ -782,7 +894,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             }
         }
 
-        this.$downloadBtn.innerText = "Download";
+        this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download");
         this.$downloadBtn.onclick = _ => {
             if (downloadZipped) {
                 let tmpZipBtn = document.createElement("a");
@@ -794,17 +906,18 @@ class ReceiveFileDialog extends ReceiveDialog {
             }
 
             if (!canShare) {
-                this.$downloadBtn.innerText = "Download again";
+                this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download-again");
             }
-            Events.fire('notify-user', `${descriptor} downloaded successfully`);
+            Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
             this.$downloadBtn.style.pointerEvents = "none";
             setTimeout(_ => this.$downloadBtn.style.pointerEvents = "unset", 2000);
         };
 
         document.title = files.length === 1
-            ? 'File received - PairDrop'
-            : `${files.length} Files received - PairDrop`;
+            ? `${ Localization.getTranslation("document-titles.file-received") } - PairDrop`
+            : `${ Localization.getTranslation("document-titles.file-received-plural", null, {count: files.length}) } - PairDrop`;
         document.changeFavicon("images/favicon-96x96-notification.png");
+
         Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
         this.show();
 
@@ -882,7 +995,10 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
-        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize);
+
+        const badgeClassName = $(peerId).ui._badgeClassName();
+
+        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize, badgeClassName);
 
         if (request.thumbnailDataUrl && request.thumbnailDataUrl.substring(0, 22) === "data:image/jpeg;base64") {
             let element = document.createElement('img');
@@ -892,7 +1008,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         this.$receiveTitle.innerText = `${request.imagesOnly ? 'Image' : 'File'} Transfer Request`
 
-        document.title = `${request.imagesOnly ? 'Image' : 'File'} Transfer Requested - PairDrop`;
+        document.title = `${ Localization.getTranslation("document-titles.file-transfer-requested") } - PairDrop`;
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
@@ -920,62 +1036,53 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 }
 
-class PairDeviceDialog extends Dialog {
-    constructor() {
-        super('pair-device-dialog');
-        this.$inputRoomKeyChars = this.$el.querySelectorAll('#key-input-container>input');
-        this.$submitBtn = this.$el.querySelector('button[type="submit"]');
-        this.$roomKey = this.$el.querySelector('#room-key');
-        this.$qrCode = this.$el.querySelector('#room-key-qr-code');
-        this.$pairDeviceBtn = $('pair-device');
-        this.$editPairedDevicesBtn = $('edit-paired-devices');
-        this.$footerInstructionsPairedDevices = $('and-by-paired-devices');
-        this.$createJoinForm = this.$el.querySelector('form');
+class InputKeyContainer {
+    constructor(inputKeyContainer, evaluationRegex, onAllCharsFilled, onNoAllCharsFilled, onLastCharFilled) {
 
-        this.$createJoinForm.addEventListener('submit', e => this._onSubmit(e));
-        this.$pairDeviceBtn.addEventListener('click', _ => this._pairDeviceInitiate());
+        this.$inputKeyContainer = inputKeyContainer;
+        this.$inputKeyChars = inputKeyContainer.querySelectorAll('input');
 
-        this.$el.querySelector('[close]').addEventListener('click', _ => this._pairDeviceCancel())
-        this.$inputRoomKeyChars.forEach(el => el.addEventListener('input', e => this._onCharsInput(e)));
-        this.$inputRoomKeyChars.forEach(el => el.addEventListener('keydown', e => this._onCharsKeyDown(e)));
-        this.$inputRoomKeyChars.forEach(el => el.addEventListener('focus', e => e.target.select()));
-        this.$inputRoomKeyChars.forEach(el => el.addEventListener('click', e => e.target.select()));
+        this.$inputKeyChars.forEach(char => char.addEventListener('input', e => this._onCharsInput(e)));
+        this.$inputKeyChars.forEach(char => char.addEventListener('keydown', e => this._onCharsKeyDown(e)));
+        this.$inputKeyChars.forEach(char => char.addEventListener('keyup', e => this._onCharsKeyUp(e)));
+        this.$inputKeyChars.forEach(char => char.addEventListener('focus', e => e.target.select()));
+        this.$inputKeyChars.forEach(char => char.addEventListener('click', e => e.target.select()));
 
-        Events.on('keydown', e => this._onKeyDown(e));
-        Events.on('ws-connected', _ => this._onWsConnected());
-        Events.on('ws-disconnected', _ => this.hide());
-        Events.on('pair-device-initiated', e => this._pairDeviceInitiated(e.detail));
-        Events.on('pair-device-joined', e => this._pairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
-        Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('pair-device-join-key-invalid', _ => this._pairDeviceJoinKeyInvalid());
-        Events.on('pair-device-canceled', e => this._pairDeviceCanceled(e.detail));
-        Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
-        Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
-        this.$el.addEventListener('paste', e => this._onPaste(e));
+        this.evalRgx = evaluationRegex
 
-        this.evaluateRoomKeyChars();
-        this.evaluateUrlAttributes();
+        this._onAllCharsFilled = onAllCharsFilled;
+        this._onNotAllCharsFilled = onNoAllCharsFilled;
+        this._onLastCharFilled = onLastCharFilled;
+    }
 
-        this.pairPeer = {};
+    _enableChars() {
+        this.$inputKeyChars.forEach(char => char.removeAttribute("disabled"));
+    }
+
+    _disableChars() {
+        this.$inputKeyChars.forEach(char => char.setAttribute("disabled", ""));
+    }
+
+    _clearChars() {
+        this.$inputKeyChars.forEach(char => char.value = '');
+    }
+
+    _cleanUp() {
+        this._clearChars();
+        this._disableChars();
     }
 
     _onCharsInput(e) {
-        e.target.value = e.target.value.replace(/\D/g,'');
-        if (!e.target.value) return;
-        this.evaluateRoomKeyChars();
+        if (!e.target.value.match(this.evalRgx)) {
+            e.target.value = '';
+            return;
+        }
+        this._evaluateKeyChars();
 
         let nextSibling = e.target.nextElementSibling;
         if (nextSibling) {
             e.preventDefault();
             nextSibling.focus();
-        }
-    }
-
-    _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
-            // Timeout to prevent paste mode from getting cancelled simultaneously
-            setTimeout(_ => this._pairDeviceCancel(), 50);
         }
     }
 
@@ -994,44 +1101,118 @@ class PairDeviceDialog extends Dialog {
         }
     }
 
-    _onPaste(e) {
-        e.preventDefault();
-        let num = e.clipboardData.getData("Text").replace(/\D/g,'').substring(0, 6);
-        for (let i = 0; i < num.length; i++) {
-            document.activeElement.value = num.charAt(i);
+    _onCharsKeyUp(e) {
+        // deactivate submit btn when e.g. using backspace to clear element
+        if (!e.target.value) {
+            this._evaluateKeyChars();
+        }
+    }
+
+    _getInputKey() {
+        let key = "";
+        this.$inputKeyChars.forEach(char => {
+            key += char.value;
+        })
+        return key;
+    }
+
+    _onPaste(pastedKey) {
+        let rgx = new RegExp("(?!" + this.evalRgx.source + ").", "g");
+        pastedKey = pastedKey.replace(rgx,'').substring(0, this.$inputKeyChars.length)
+        for (let i = 0; i < pastedKey.length; i++) {
+            document.activeElement.value = pastedKey.charAt(i);
             let nextSibling = document.activeElement.nextElementSibling;
             if (!nextSibling) break;
             nextSibling.focus();
         }
-        this.evaluateRoomKeyChars();
+        this._evaluateKeyChars();
     }
 
-    evaluateRoomKeyChars() {
-        if (this.$el.querySelectorAll('#key-input-container>input:placeholder-shown').length > 0) {
-            this.$submitBtn.setAttribute("disabled", "");
+    _evaluateKeyChars() {
+        if (this.$inputKeyContainer.querySelectorAll('input:placeholder-shown').length > 0) {
+            this._onNotAllCharsFilled();
         } else {
-            this.inputRoomKey = "";
-            this.$inputRoomKeyChars.forEach(el => {
-                this.inputRoomKey += el.value;
-            })
-            this.$submitBtn.removeAttribute("disabled");
-            if (document.activeElement === this.$inputRoomKeyChars[5]) {
-                this._pairDeviceJoin(this.inputRoomKey);
+            this._onAllCharsFilled();
+
+            const lastCharFocused = document.activeElement === this.$inputKeyChars[this.$inputKeyChars.length - 1];
+            if (lastCharFocused) {
+                this._onLastCharFilled();
             }
         }
     }
 
+    focusLastChar() {
+        let lastChar = this.$inputKeyChars[this.$inputKeyChars.length-1];
+        lastChar.focus();
+    }
+}
+
+class PairDeviceDialog extends Dialog {
+    constructor() {
+        super('pair-device-dialog');
+        this.$pairDeviceHeaderBtn = $('pair-device');
+        this.$editPairedDevicesHeaderBtn = $('edit-paired-devices');
+        this.$footerInstructionsPairedDevices = $$('.discovery-wrapper .badge-room-secret');
+
+        this.$key = this.$el.querySelector('.key');
+        this.$qrCode = this.$el.querySelector('.key-qr-code');
+        this.$form = this.$el.querySelector('form');
+        this.$closeBtn = this.$el.querySelector('[close]')
+        this.$pairSubmitBtn = this.$el.querySelector('button[type="submit"]');
+
+        this.inputKeyContainer = new InputKeyContainer(
+            this.$el.querySelector('.input-key-container'),
+            /\d/,
+            () => this.$pairSubmitBtn.removeAttribute("disabled"),
+            () => this.$pairSubmitBtn.setAttribute("disabled", ""),
+            () => this._submit()
+        );
+
+        this.$pairDeviceHeaderBtn.addEventListener('click', _ => this._pairDeviceInitiate());
+        this.$form.addEventListener('submit', e => this._onSubmit(e));
+        this.$closeBtn.addEventListener('click', _ => this._close());
+
+        Events.on('keydown', e => this._onKeyDown(e));
+        Events.on('ws-connected', _ => this._onWsConnected());
+        Events.on('ws-disconnected', _ => this.hide());
+        Events.on('pair-device-initiated', e => this._onPairDeviceInitiated(e.detail));
+        Events.on('pair-device-joined', e => this._onPairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
+        Events.on('peers', e => this._onPeers(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
+        Events.on('pair-device-join-key-invalid', _ => this._onPublicRoomJoinKeyInvalid());
+        Events.on('pair-device-canceled', e => this._onPairDeviceCanceled(e.detail));
+        Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
+        Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
+        this.$el.addEventListener('paste', e => this._onPaste(e));
+
+        this.evaluateUrlAttributes();
+
+        this.pairPeer = {};
+    }
+
+    _onKeyDown(e) {
+        if (this.isShown() && e.code === "Escape") {
+            // Timeout to prevent paste mode from getting cancelled simultaneously
+            setTimeout(_ => this._close(), 50);
+        }
+    }
+
+    _onPaste(e) {
+        e.preventDefault();
+        let pastedKey = e.clipboardData.getData("Text").replace(/\D/g,'').substring(0, 6);
+        this.inputKeyContainer._onPaste(pastedKey);
+    }
+
     evaluateUrlAttributes() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('room_key')) {
-            this._pairDeviceJoin(urlParams.get('room_key'));
+        if (urlParams.has('pair_key')) {
+            this._pairDeviceJoin(urlParams.get('pair_key'));
             const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove room_key from url
+            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
         }
     }
 
     _onWsConnected() {
-        this.$pairDeviceBtn.removeAttribute('hidden');
         this._evaluateNumberRoomSecrets();
     }
 
@@ -1039,13 +1220,13 @@ class PairDeviceDialog extends Dialog {
         Events.fire('pair-device-initiate');
     }
 
-    _pairDeviceInitiated(msg) {
-        this.roomKey = msg.roomKey;
+    _onPairDeviceInitiated(msg) {
+        this.pairKey = msg.pairKey;
         this.roomSecret = msg.roomSecret;
-        this.$roomKey.innerText = `${this.roomKey.substring(0,3)} ${this.roomKey.substring(3,6)}`
+        this.$key.innerText = `${this.pairKey.substring(0,3)} ${this.pairKey.substring(3,6)}`
         // Display the QR code for the url
         const qr = new QRCode({
-            content: this._getShareRoomURL(),
+            content: this._getPairURL(),
             width: 150,
             height: 150,
             padding: 0,
@@ -1055,36 +1236,42 @@ class PairDeviceDialog extends Dialog {
             join: true
         });
         this.$qrCode.innerHTML = qr.svg();
-        this.$inputRoomKeyChars.forEach(el => el.removeAttribute("disabled"));
+        this.inputKeyContainer._enableChars();
         this.show();
     }
 
-    _getShareRoomURL() {
+    _getPairURL() {
         let url = new URL(location.href);
-        url.searchParams.append('room_key', this.roomKey)
+        url.searchParams.append('pair_key', this.pairKey)
         return url.href;
     }
 
     _onSubmit(e) {
         e.preventDefault();
-        this._pairDeviceJoin(this.inputRoomKey);
+        this._submit();
     }
 
-    _pairDeviceJoin(roomKey) {
-        if (/^\d{6}$/g.test(roomKey)) {
-            roomKey = roomKey.substring(0,6);
-            Events.fire('pair-device-join', roomKey);
-            let lastChar = this.$inputRoomKeyChars[5];
-            lastChar.focus();
+    _submit() {
+        let inputKey = this.inputKeyContainer._getInputKey();
+        this._pairDeviceJoin(inputKey);
+    }
+
+    _pairDeviceJoin(pairKey) {
+        if (/^\d{6}$/g.test(pairKey)) {
+            Events.fire('pair-device-join', pairKey);
+            this.inputKeyContainer.focusLastChar();
         }
     }
 
-    _pairDeviceJoined(peerId, roomSecret) {
-        // skip adding to IndexedDB if peer is another tab on the same browser
+    _onPairDeviceJoined(peerId, roomSecret) {
+        // abort if peer is another tab on the same browser and remove room-type from gui
         if (BrowserTabsConnector.peerIsSameBrowser(peerId)) {
             this._cleanUp();
             this.hide();
-            Events.fire('notify-user', 'Pairing of two browser tabs is not possible.');
+
+            Events.fire('room-secrets-deleted', [roomSecret]);
+
+            Events.fire('notify-user', Localization.getTranslation("notifications.pairing-tabs-error"));
             return;
         }
 
@@ -1096,26 +1283,27 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onPeers(message) {
-        if (!Object.keys(this.pairPeer)) return;
-
         message.peers.forEach(messagePeer => {
-            this._evaluateJoinedPeer(messagePeer.id, message.roomSecret);
+            this._evaluateJoinedPeer(messagePeer.id, message.roomType, message.roomId);
         });
     }
 
     _onPeerJoined(message) {
-        if (!Object.keys(this.pairPeer)) return;
-
-        this._evaluateJoinedPeer(message.peer.id, message.roomSecret);
+        this._evaluateJoinedPeer(message.peer.id, message.roomType, message.roomId);
     }
 
-    _evaluateJoinedPeer(peerId, roomSecret) {
+    _evaluateJoinedPeer(peerId, roomType, roomId) {
+        const noPairPeerSaved = !Object.keys(this.pairPeer);
+
+        if (!peerId || !roomType || !roomId || noPairPeerSaved) return;
+
         const samePeerId = peerId === this.pairPeer.peerId;
-        const sameRoomSecret = roomSecret === this.pairPeer.roomSecret;
+        const sameRoomSecret = roomId === this.pairPeer.roomSecret;
+        const typeIsSecret = roomType === "secret";
 
-        if (!peerId || !roomSecret || !samePeerId || !sameRoomSecret) return;
+        if (!samePeerId || !sameRoomSecret || !typeIsSecret) return;
 
-        this._onPairPeerJoined(peerId, roomSecret);
+        this._onPairPeerJoined(peerId, roomId);
         this.pairPeer = {};
     }
 
@@ -1130,7 +1318,7 @@ class PairDeviceDialog extends Dialog {
 
         PersistentStorage.addRoomSecret(roomSecret, displayName, deviceName)
             .then(_ => {
-                Events.fire('notify-user', 'Devices paired successfully.');
+                Events.fire('notify-user', Localization.getTranslation("notifications.pairing-success"));
                 this._evaluateNumberRoomSecrets();
             })
             .finally(_ => {
@@ -1138,13 +1326,17 @@ class PairDeviceDialog extends Dialog {
                 this.hide();
             })
             .catch(_ => {
-                Events.fire('notify-user', 'Paired devices are not persistent.');
+                Events.fire('notify-user', Localization.getTranslation("notifications.pairing-not-persistent"));
                 PersistentStorage.logBrowserNotCapable();
             });
     }
 
-    _pairDeviceJoinKeyInvalid() {
-        Events.fire('notify-user', 'Key not valid');
+    _onPublicRoomJoinKeyInvalid() {
+        Events.fire('notify-user', Localization.getTranslation("notifications.pairing-key-invalid"));
+    }
+
+    _close() {
+        this._pairDeviceCancel();
     }
 
     _pairDeviceCancel() {
@@ -1153,16 +1345,14 @@ class PairDeviceDialog extends Dialog {
         Events.fire('pair-device-cancel');
     }
 
-    _pairDeviceCanceled(roomKey) {
-        Events.fire('notify-user', `Key ${roomKey} invalidated.`);
+    _onPairDeviceCanceled(pairKey) {
+        Events.fire('notify-user', Localization.getTranslation("notifications.pairing-key-invalidated", null, {key: pairKey}));
     }
 
     _cleanUp() {
         this.roomSecret = null;
-        this.roomKey = null;
-        this.inputRoomKey = '';
-        this.$inputRoomKeyChars.forEach(el => el.value = '');
-        this.$inputRoomKeyChars.forEach(el => el.setAttribute("disabled", ""));
+        this.pairKey = null;
+        this.inputKeyContainer._cleanUp();
         this.pairPeer = {};
     }
 
@@ -1175,13 +1365,13 @@ class PairDeviceDialog extends Dialog {
     _evaluateNumberRoomSecrets() {
         PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
             if (roomSecrets.length > 0) {
-                this.$editPairedDevicesBtn.removeAttribute('hidden');
+                this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
                 this.$footerInstructionsPairedDevices.removeAttribute('hidden');
             } else {
-                this.$editPairedDevicesBtn.setAttribute('hidden', '');
+                this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
                 this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
             }
-            Events.fire('bg-resize');
+            super.evaluateFooterBadges();
         });
     }
 }
@@ -1190,7 +1380,10 @@ class EditPairedDevicesDialog extends Dialog {
     constructor() {
         super('edit-paired-devices-dialog');
         this.$pairedDevicesWrapper = this.$el.querySelector('.paired-devices-wrapper');
+        this.$footerInstructionsPairedDevices = $$('.discovery-wrapper .badge-room-secret');
+
         $('edit-paired-devices').addEventListener('click', _ => this._onEditPairedDevices());
+        this.$footerInstructionsPairedDevices.addEventListener('click', _ => this._onEditPairedDevices());
 
         Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
         Events.on('keydown', e => this._onKeyDown(e));
@@ -1203,7 +1396,10 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     async _initDOM() {
+        const unpairString = Localization.getTranslation("dialogs.unpair").toUpperCase();
+        const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
+
         roomSecretsEntries.forEach(roomSecretsEntry => {
             let $pairedDevice = document.createElement('div');
             $pairedDevice.classList = ["paired-device"];
@@ -1216,10 +1412,10 @@ class EditPairedDevicesDialog extends Dialog {
                 <span>${roomSecretsEntry.device_name}</span>
             </div>
             <div class="button-wrapper">
-                <label class="auto-accept">auto-accept
+                <label class="auto-accept pointer">${autoAcceptString}
                     <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                 </label>
-                <button class="button" type="button">unpair</button>
+                <button class="button" type="button">${unpairString}</button>
             </div>`
 
             $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
@@ -1239,6 +1435,7 @@ class EditPairedDevicesDialog extends Dialog {
                 });
             })
 
+            this.$pairedDevicesWrapper.html = "";
             this.$pairedDevicesWrapper.appendChild($pairedDevice)
         })
 
@@ -1261,7 +1458,7 @@ class EditPairedDevicesDialog extends Dialog {
                 PersistentStorage.clearRoomSecrets().finally(_ => {
                     Events.fire('room-secrets-deleted', roomSecrets);
                     Events.fire('evaluate-number-room-secrets');
-                    Events.fire('notify-user', 'All Devices unpaired.');
+                    Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
                     this.hide();
                 })
             });
@@ -1275,11 +1472,234 @@ class EditPairedDevicesDialog extends Dialog {
 
         const peer = peerNode.ui._peer;
 
-        if (!peer.roomSecret) return;
+        if (!peer || !peer._roomIds["secret"]) return;
 
-        PersistentStorage.updateRoomSecretNames(peer.roomSecret, peer.name.displayName, peer.name.deviceName).then(roomSecretEntry => {
+        PersistentStorage.updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName).then(roomSecretEntry => {
             console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
         })
+    }
+}
+
+class PublicRoomDialog extends Dialog {
+    constructor() {
+        super('public-room-dialog');
+
+        this.$key = this.$el.querySelector('.key');
+        this.$qrCode = this.$el.querySelector('.key-qr-code');
+        this.$form = this.$el.querySelector('form');
+        this.$closeBtn = this.$el.querySelector('[close]');
+        this.$leaveBtn = this.$el.querySelector('.leave-room');
+        this.$joinSubmitBtn = this.$el.querySelector('button[type="submit"]');
+        this.$headerBtnJoinPublicRoom = $('join-public-room');
+        this.$footerInstructionsPublicRoomDevices = $$('.discovery-wrapper .badge-room-public-id');
+
+
+        this.$form.addEventListener('submit', e => this._onSubmit(e));
+        this.$closeBtn.addEventListener('click', _ => this.hide());
+        this.$leaveBtn.addEventListener('click', _ => this._leavePublicRoom())
+
+        this.$headerBtnJoinPublicRoom.addEventListener('click', _ => this._onHeaderBtnClick());
+        this.$footerInstructionsPublicRoomDevices.addEventListener('click', _ => this._onHeaderBtnClick());
+
+        this.inputKeyContainer = new InputKeyContainer(
+            this.$el.querySelector('.input-key-container'),
+            /[a-z|A-Z]/,
+            () => this.$joinSubmitBtn.removeAttribute("disabled"),
+            () => this.$joinSubmitBtn.setAttribute("disabled", ""),
+            () => this._submit()
+        );
+
+        Events.on('keydown', e => this._onKeyDown(e));
+        Events.on('public-room-created', e => this._onPublicRoomCreated(e.detail));
+        Events.on('peers', e => this._onPeers(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
+        Events.on('public-room-id-invalid', e => this._onPublicRoomIdInvalid(e.detail));
+        Events.on('public-room-left', _ => this._onPublicRoomLeft());
+        this.$el.addEventListener('paste', e => this._onPaste(e));
+
+        this.evaluateUrlAttributes();
+
+        Events.on('ws-connected', _ => this._onWsConnected());
+        Events.on('translation-loaded', _ => this.setFooterBadge());
+    }
+
+    _onKeyDown(e) {
+        if (this.isShown() && e.code === "Escape") {
+            this.hide();
+        }
+    }
+
+    _onPaste(e) {
+        e.preventDefault();
+        let pastedKey = e.clipboardData.getData("Text");
+        this.inputKeyContainer._onPaste(pastedKey);
+    }
+
+    _onHeaderBtnClick() {
+        if (this.roomId) {
+            this.show();
+        } else {
+            this._createPublicRoom();
+        }
+    }
+
+    _createPublicRoom() {
+        Events.fire('create-public-room');
+    }
+
+    _onPublicRoomCreated(roomId) {
+        this.roomId = roomId;
+
+        this.setIdAndQrCode();
+
+        this.show();
+
+        sessionStorage.setItem('public_room_id', roomId);
+    }
+
+    setIdAndQrCode() {
+        if (!this.roomId) return;
+
+        this.$key.innerText = this.roomId.toUpperCase();
+
+        // Display the QR code for the url
+        const qr = new QRCode({
+            content: this._getShareRoomURL(),
+            width: 150,
+            height: 150,
+            padding: 0,
+            background: "transparent",
+            color: `rgb(var(--text-color))`,
+            ecl: "L",
+            join: true
+        });
+        this.$qrCode.innerHTML = qr.svg();
+
+        this.setFooterBadge();
+    }
+
+    setFooterBadge() {
+        if (!this.roomId) return;
+
+        this.$footerInstructionsPublicRoomDevices.innerText = Localization.getTranslation("footer.public-room-devices", null, {
+            roomId: this.roomId.toUpperCase()
+        });
+        this.$footerInstructionsPublicRoomDevices.removeAttribute('hidden');
+
+        super.evaluateFooterBadges();
+    }
+
+    _getShareRoomURL() {
+        let url = new URL(location.href);
+        url.searchParams.append('room_key', this.roomId)
+        return url.href;
+    }
+
+    evaluateUrlAttributes() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('room_key')) {
+            this._joinPublicRoom(urlParams.get('room_key'));
+            const url = getUrlWithoutArguments();
+            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
+        }
+    }
+
+    _onWsConnected() {
+        let roomId = sessionStorage.getItem('public_room_id');
+
+        if (!roomId) return;
+
+        this.roomId = roomId;
+        this.setIdAndQrCode();
+
+        this._joinPublicRoom(roomId, true);
+    }
+
+    _onSubmit(e) {
+        e.preventDefault();
+        this._submit();
+    }
+
+    _submit() {
+        let inputKey = this.inputKeyContainer._getInputKey();
+        this._joinPublicRoom(inputKey);
+    }
+
+    _joinPublicRoom(roomId, createIfInvalid = false) {
+        roomId = roomId.toLowerCase();
+        if (/^[a-z]{5}$/g.test(roomId)) {
+            this.roomIdJoin = roomId;
+
+            this.inputKeyContainer.focusLastChar();
+
+            Events.fire('join-public-room', {
+                roomId: roomId,
+                createIfInvalid: createIfInvalid
+            });
+        }
+    }
+
+    _onPeers(message) {
+        message.peers.forEach(messagePeer => {
+            this._evaluateJoinedPeer(messagePeer.id, message.roomId);
+        });
+    }
+
+    _onPeerJoined(message) {
+        this._evaluateJoinedPeer(message.peer.id, message.roomId);
+    }
+
+    _evaluateJoinedPeer(peerId, roomId) {
+        const isInitiatedRoomId = roomId === this.roomId;
+        const isJoinedRoomId = roomId === this.roomIdJoin;
+
+        if (!peerId || !roomId || !(isInitiatedRoomId || isJoinedRoomId)) return;
+
+        this.hide();
+
+        sessionStorage.setItem('public_room_id', roomId);
+
+        if (isJoinedRoomId) {
+            this.roomId = roomId;
+            this.roomIdJoin = false;
+            this.setIdAndQrCode();
+        }
+    }
+
+    _onPublicRoomIdInvalid(roomId) {
+        Events.fire('notify-user', Localization.getTranslation("notifications.public-room-id-invalid"));
+        if (roomId === sessionStorage.getItem('public_room_id')) {
+            sessionStorage.removeItem('public_room_id');
+        }
+    }
+
+    _leavePublicRoom() {
+        Events.fire('leave-public-room', this.roomId);
+    }
+
+    _onPublicRoomLeft() {
+        let publicRoomId = this.roomId.toUpperCase();
+        this.hide();
+        this._cleanUp();
+        Events.fire('notify-user', Localization.getTranslation("notifications.public-room-left", null, {publicRoomId: publicRoomId}));
+    }
+
+    show() {
+        this.inputKeyContainer._enableChars();
+        super.show();
+    }
+
+    hide() {
+        this.inputKeyContainer._cleanUp();
+        super.hide();
+    }
+
+    _cleanUp() {
+        this.roomId = null;
+        this.inputKeyContainer._cleanUp();
+        sessionStorage.removeItem('public_room_id');
+        this.$footerInstructionsPublicRoomDevices.setAttribute('hidden', '');
+        super.evaluateFooterBadges();
     }
 }
 
@@ -1293,7 +1713,7 @@ class SendTextDialog extends Dialog {
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
         this.$text.addEventListener('input', e => this._onChange(e));
-        Events.on("keydown", e => this._onKeyDown(e));
+        Events.on('keydown', e => this._onKeyDown(e));
     }
 
     async _onKeyDown(e) {
@@ -1322,6 +1742,9 @@ class SendTextDialog extends Dialog {
     _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
         this.$peerDisplayName.innerText = deviceName;
+        this.$peerDisplayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$peerDisplayName.classList.add($(peerId).ui._badgeClassName());
+
         this.show();
 
         const range = document.createRange();
@@ -1359,9 +1782,9 @@ class ReceiveTextDialog extends Dialog {
         this.$copy.addEventListener('click', _ => this._onCopy());
         this.$close.addEventListener('click', _ => this.hide());
 
-        Events.on("keydown", e => this._onKeyDown(e));
+        Events.on('keydown', e => this._onKeyDown(e));
 
-        this.$displayNameNode = this.$el.querySelector('.display-name');
+        this.$displayName = this.$el.querySelector('.display-name');
         this._receiveTextQueue = [];
     }
 
@@ -1391,7 +1814,9 @@ class ReceiveTextDialog extends Dialog {
     }
 
     _showReceiveTextDialog(text, peerId) {
-        this.$displayNameNode.innerText = $(peerId).ui._displayName();
+        this.$displayName.innerText = $(peerId).ui._displayName();
+        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;
         this.$text.classList.remove('text-center');
@@ -1402,10 +1827,6 @@ class ReceiveTextDialog extends Dialog {
             this.$text.innerHTML = this.$text.innerHTML.replace(/((https?:\/\/|www)[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)/g, url => {
                 return `<a href="${url}" target="_blank">${url}</a>`;
             });
-
-            if (!/\s/.test(text)) {
-                this.$text.classList.add('text-center');
-            }
         }
 
         this._setDocumentTitleMessages();
@@ -1416,15 +1837,20 @@ class ReceiveTextDialog extends Dialog {
 
     _setDocumentTitleMessages() {
         document.title = !this._receiveTextQueue.length
-            ? 'Message Received - PairDrop'
-            : `${this._receiveTextQueue.length + 1} Messages Received - PairDrop`;
+            ? `${ Localization.getTranslation("document-titles.message-received") } - PairDrop`
+            : `${ Localization.getTranslation("document-titles.message-received-plural", null, {count: this._receiveTextQueue.length + 1}) } - PairDrop`;
     }
 
     async _onCopy() {
         const sanitizedText = this.$text.innerText.replace(/\u00A0/gm, ' ');
-        await navigator.clipboard.writeText(sanitizedText);
-        Events.fire('notify-user', 'Copied to clipboard');
-        this.hide();
+        navigator.clipboard.writeText(sanitizedText)
+            .then(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard"));
+                this.hide();
+            })
+            .catch(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard-error"));
+            });
     }
 
     hide() {
@@ -1447,16 +1873,16 @@ class Base64ZipDialog extends Dialog {
 
         if (base64Text) {
             this.show();
-            if (base64Text === "paste") {
+            if (base64Text === 'paste') {
                 // ?base64text=paste
                 // base64 encoded string is ready to be pasted from clipboard
-                this.preparePasting("text");
-            } else if (base64Text === "hash") {
+                this.preparePasting('text');
+            } else if (base64Text === 'hash') {
                 // ?base64text=hash#BASE64ENCODED
                 // base64 encoded string is url hash which is never sent to server and faster (recommended)
                 this.processBase64Text(base64Hash)
                     .catch(_ => {
-                        Events.fire('notify-user', 'Text content is incorrect.');
+                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
                         console.log("Text content incorrect.");
                     }).finally(_ => {
                         this.hide();
@@ -1466,7 +1892,7 @@ class Base64ZipDialog extends Dialog {
                 // base64 encoded string was part of url param (not recommended)
                 this.processBase64Text(base64Text)
                     .catch(_ => {
-                        Events.fire('notify-user', 'Text content is incorrect.');
+                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
                         console.log("Text content incorrect.");
                     }).finally(_ => {
                         this.hide();
@@ -1479,7 +1905,7 @@ class Base64ZipDialog extends Dialog {
                 // base64 encoded zip file is url hash which is never sent to the server
                 this.processBase64Zip(base64Hash)
                     .catch(_ => {
-                        Events.fire('notify-user', 'File content is incorrect.');
+                        Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
                         console.log("File content incorrect.");
                     }).finally(_ => {
                         this.hide();
@@ -1493,18 +1919,22 @@ class Base64ZipDialog extends Dialog {
 
     _setPasteBtnToProcessing() {
         this.$pasteBtn.style.pointerEvents = "none";
-        this.$pasteBtn.innerText = "Processing...";
+        this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-processing");
     }
 
     preparePasting(type) {
+        const translateType = type === 'text'
+            ? Localization.getTranslation("dialogs.base64-text")
+            : Localization.getTranslation("dialogs.base64-files");
+
         if (navigator.clipboard.readText) {
-            this.$pasteBtn.innerText = `Tap here to paste ${type}`;
+            this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", null, {type: translateType});
             this._clickCallback = _ => this.processClipboard(type);
             this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
         } else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
             this.$pasteBtn.setAttribute('hidden', '');
-            this.$fallbackTextarea.setAttribute('placeholder', `Paste here to send ${type}`);
+            this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
             this.$fallbackTextarea.removeAttribute('hidden');
             this._inputCallback = _ => this.processInput(type);
             this.$fallbackTextarea.addEventListener('input', _ => this._inputCallback());
@@ -1538,13 +1968,13 @@ class Base64ZipDialog extends Dialog {
         if (!base64 || !this.isValidBase64(base64)) return;
         this._setPasteBtnToProcessing();
         try {
-            if (type === "text") {
+            if (type === 'text') {
                 await this.processBase64Text(base64);
             } else {
                 await this.processBase64Zip(base64);
             }
         } catch(_) {
-            Events.fire('notify-user', 'Clipboard content is incorrect.');
+            Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-content-incorrect"));
             console.log("Clipboard content is incorrect.")
         }
         this.hide();
@@ -1627,7 +2057,7 @@ class Notifications {
                 Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
                 return;
             }
-            Events.fire('notify-user', 'Notifications enabled.');
+            Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
             this.$button.setAttribute('hidden', 1);
         });
     }
@@ -1662,10 +2092,10 @@ class Notifications {
         if (document.visibilityState !== 'visible') {
             const peerDisplayName = $(peerId).ui._displayName();
             if (/^((https?:\/\/|www)[abcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)$/.test(message.toLowerCase())) {
-                const notification = this._notify(`Link received by ${peerDisplayName} - Click to open`, message);
+                const notification = this._notify(Localization.getTranslation("notifications.link-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => window.open(message, '_blank', null, true));
             } else {
-                const notification = this._notify(`Message received by ${peerDisplayName} - Click to copy`, message);
+                const notification = this._notify(Localization.getTranslation("notifications.message-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => this._copyText(message, notification));
             }
         }
@@ -1680,13 +2110,23 @@ class Notifications {
                     break;
                 }
             }
-            let title = files[0].name;
-            if (files.length >= 2) {
-                title += ` and ${files.length - 1} other `;
-                title += imagesOnly ? 'image' : 'file';
-                if (files.length > 2) title += "s";
+            let title;
+            if (files.length === 1) {
+                title = `${files[0].name}`;
+            } else {
+                let fileOther;
+                if (files.length === 2) {
+                    fileOther = imagesOnly
+                        ? Localization.getTranslation("dialogs.file-other-description-image")
+                        : Localization.getTranslation("dialogs.file-other-description-file");
+                } else {
+                    fileOther = imagesOnly
+                        ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
+                        : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
+                }
+                title = `${files[0].name} ${fileOther}`
             }
-            const notification = this._notify(title, 'Click to download');
+            const notification = this._notify(title, Localization.getTranslation("notifications.click-to-download"));
             this._bind(notification, _ => this._download(notification));
         }
     }
@@ -1700,15 +2140,27 @@ class Notifications {
                     break;
                 }
             }
-            let descriptor;
-            if (request.header.length > 1) {
-                descriptor = imagesOnly ? ' images' : ' files';
-            } else {
-                descriptor = imagesOnly ? ' image' : ' file';
-            }
+
             let displayName = $(peerId).querySelector('.name').textContent
-            let title = `${displayName} would like to transfer ${request.header.length} ${descriptor}`;
-            const notification = this._notify(title, 'Click to show');
+
+            let descriptor;
+            if (request.header.length === 1) {
+                descriptor = imagesOnly
+                    ? Localization.getTranslation("dialogs.title-image")
+                    : Localization.getTranslation("dialogs.title-file");
+            } else {
+                descriptor = imagesOnly
+                    ? Localization.getTranslation("dialogs.title-image-plural")
+                    : Localization.getTranslation("dialogs.title-file-plural");
+            }
+
+            let title = Localization.getTranslation("notifications.request-title", null, {
+                name: displayName,
+                count: request.header.length,
+                descriptor: descriptor.toLowerCase()
+            });
+
+            const notification = this._notify(title, Localization.getTranslation("notifications.click-to-show"));
         }
     }
 
@@ -1720,10 +2172,9 @@ class Notifications {
     _copyText(message, notification) {
         if (navigator.clipboard.writeText(message)) {
             notification.close();
-            this._notify('Copied text to clipboard');
+            this._notify(Localization.getTranslation("notifications.copied-text"));
         } else {
-            this._notify('Writing to clipboard failed. Copy manually!');
-
+            this._notify(Localization.getTranslation("notifications.copied-text-error"));
         }
     }
 
@@ -1747,11 +2198,11 @@ class NetworkStatusUI {
     }
 
     _showOfflineMessage() {
-        Events.fire('notify-user', 'You are offline');
+        Events.fire('notify-user', Localization.getTranslation("notifications.offline"));
     }
 
     _showOnlineMessage() {
-        Events.fire('notify-user', 'You are back online');
+        Events.fire('notify-user', Localization.getTranslation("notifications.online"));
     }
 }
 
@@ -2167,58 +2618,60 @@ class BrowserTabsConnector {
     }
 
     static peerIsSameBrowser(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
         return peerIdsBrowser
             ? peerIdsBrowser.indexOf(peerId) !== -1
             : false;
     }
 
     static async addPeerIdToLocalStorage() {
-        const peerId = sessionStorage.getItem("peerId");
+        const peerId = sessionStorage.getItem("peer_id");
         if (!peerId) return false;
 
         let peerIdsBrowser = [];
-        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peer_ids_browser"));
 
         if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
         peerIdsBrowser.push(peerId);
         peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
-        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
 
         return peerIdsBrowser;
     }
 
     static async removePeerIdFromLocalStorage(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peerIdsBrowser"));
+        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
         const index = peerIdsBrowser.indexOf(peerId);
         peerIdsBrowser.splice(index, 1);
-        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
         return peerId;
     }
 
 
     static async removeOtherPeerIdsFromLocalStorage() {
-        const peerId = sessionStorage.getItem("peerId");
+        const peerId = sessionStorage.getItem("peer_id");
         if (!peerId) return false;
 
         let peerIdsBrowser = [peerId];
-        localStorage.setItem("peerIdsBrowser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
         return peerIdsBrowser;
     }
 }
 
 class PairDrop {
     constructor() {
-        Events.on('load', _ => {
+        Events.on('initial-translation-loaded', _ => {
             const server = new ServerConnection();
             const peers = new PeersManager(server);
             const peersUI = new PeersUI();
+            const languageSelectDialog = new LanguageSelectDialog();
             const receiveFileDialog = new ReceiveFileDialog();
             const receiveRequestDialog = new ReceiveRequestDialog();
             const sendTextDialog = new SendTextDialog();
             const receiveTextDialog = new ReceiveTextDialog();
             const pairDeviceDialog = new PairDeviceDialog();
             const clearDevicesDialog = new EditPairedDevicesDialog();
+            const publicRoomDialog = new PublicRoomDialog();
             const base64ZipDialog = new Base64ZipDialog();
             const toast = new Toast();
             const notifications = new Notifications();
@@ -2233,6 +2686,7 @@ class PairDrop {
 
 const persistentStorage = new PersistentStorage();
 const pairDrop = new PairDrop();
+const localization = new Localization();
 
 
 if ('serviceWorker' in navigator) {
@@ -2265,7 +2719,7 @@ Events.on('load', () => {
         let oldOffset = offset
         w = document.documentElement.clientWidth;
         h = document.documentElement.clientHeight;
-        offset = $$('footer').offsetHeight - 33;
+        offset = $$('footer').offsetHeight - 27;
 
         if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
 

@@ -20,8 +20,12 @@
 ## Features
 [PairDrop](https://pairdrop.net) is a sublime alternative to AirDrop that works on all platforms.
 
-Send images, documents or text via peer to peer connection to devices in the same local network/Wi-Fi or to paired devices.
-As it is web based, it runs on all devices.
+- File Sharing on your local network
+  - Send images, documents or text via peer to peer connection to devices on the same local network.
+- Internet Transfers
+  - Join temporary public rooms to transfer files easily over the internet!
+- Web-Application 
+  - As it is web based, it runs on all devices.
 
 You want to quickly send a file from your phone to your laptop?
 <br>You want to share photos in original quality with friends that use a mixture of Android and iOS?
@@ -32,14 +36,29 @@ You want to quickly send a file from your phone to your laptop?
 Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 
 ## Differences to Snapdrop
+<details><summary>Click to expand</summary>
 
-### Device Pairing / Internet Transfer
-* Pair devices via 6-digit code or QR-Code
-* Pair devices outside your local network or in complex network environment (public Wi-Fi, company network, Apple Private Relay, VPN etc.).
+### Paired Devices and Public Rooms - Internet Transfer
+* Transfer files over the internet between paired devices or by entering temporary public rooms.
+* Connect to devices in complex network environments (public Wi-Fi, company network, Apple Private Relay, VPN etc.).
 * Connect to devices on your mobile hotspot.
-* Paired devices will always find each other via shared secrets even after reopening the browser or the Progressive Web App
-* You will always discover devices on your local network. Paired devices are shown additionally.
-* Paired devices outside your local network that are behind a NAT are connected automatically via the PairDrop TURN server.
+* Devices outside your local network that are behind a NAT are connected automatically via the PairDrop TURN server.
+* Connect to devices on your mobile hotspot.
+* You will always discover devices on your local network. Paired devices and devices in the same public room are shown additionally.
+
+#### Persistent Device Pairing
+* Pair your devices via a 6-digit code or a QR-Code.
+* Paired devices will always find each other via shared secrets independently of their local network. 
+* Paired devices are persistent. You find your devices even after reopening PairDrop.
+* You can edit and unpair devices easily
+* Ideal to always connect easily to your own devices
+
+#### Temporary Public Rooms
+* Enter a public room via a 5-letter code or a QR-Code.
+* Enter a public room to temporarily connect to devices outside your local network.
+* All devices in the same public room see each other mutually.
+* Public rooms are temporary. Public rooms are left as soon as PairDrop is closed.
+* Ideal to connect easily to others in complex network situations or over the internet.
 
 ### [Improved UI for sending/receiving files](https://github.com/RobinLinus/snapdrop/issues/560)
 * Files are transferred only after a request is accepted first. On transfer completion files are downloaded automatically if possible.
@@ -66,13 +85,12 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
 * When hosting PairDrop yourself you can [set your own STUN/TURN servers](/docs/host-your-own.md#specify-stunturn-servers)
+* Built-in translations
+
+</details>
 
 ## Screenshots
-<div align="center">
-
-![Pairdrop Preview](/docs/pairdrop_screenshot_mobile.gif)
-
-</div>
+<img src="https://raw.githubusercontent.com/schlagmichdoch/PairDrop/master/docs/pairdrop_screenshot_mobile.gif" style="max-height: 50vh">
 
 ## PairDrop is built with the following awesome technologies:
 * Vanilla HTML5 / ES6 / CSS3 frontend
@@ -82,23 +100,29 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
 * [zip.js](https://gildas-lormeau.github.io/zip.js/)
 * [cyrb53](https://github.com/bryc) super fast hash function
+* [Weblate](https://weblate.org/) Web based localization tool
 
 Have any questions? Read our [FAQ](/docs/faq.md).
 
 You can [host your own instance with Docker](/docs/host-your-own.md).
 
 
-## Support the Community
-PairDrop is free and always will be. Still, we have to pay for the domain and the server.
-
-To contribute and support:<br>
+## Support PairDrop
 <a href="https://www.buymeacoffee.com/pairdrop" target="_blank">
 <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" >
 </a>
 
+PairDrop is free and always will be.
+Still, we have to pay for the domain and the server.
+
+To contribute and support, please use BuyMeACoffee via the button above.
+
 Thanks a lot for supporting free and open software!
 
-To support the original Snapdrop and its creator go to [his GitHub page](https://github.com/RobinLinus/snapdrop).
+## Translate PairDrop
+<a href="https://hosted.weblate.org/engage/pairdrop/">
+<img src="https://hosted.weblate.org/widget/pairdrop/pairdrop-spa/open-graph.png" alt="Translation status" style="max-height: 30vh" />
+</a>
 
 ## How to contribute
 

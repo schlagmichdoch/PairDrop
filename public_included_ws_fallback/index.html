@@ -39,107 +39,172 @@
 
 <body translate="no">
     <header class="row-reverse">
-        <a href="#about" class="icon-button" title="About PairDrop" aria-label="Open About PairDrop">
+        <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label" title="About PairDrop" aria-label="Open About PairDrop">
             <svg class="icon">
                 <use xlink:href="#info-outline" />
             </svg>
         </a>
+        <div id="language-selector" class="icon-button" data-i18n-key="header.language-selector" data-i18n-attrs="title" title="Select Language">
+            <svg class="icon">
+                <use xlink:href="#icon-language-selector" />
+            </svg>
+        </div>
         <div id="theme-wrapper">
-            <div id="theme-auto" class="icon-button selected" title="Adapt Theme to System" >
+            <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title" title="Adapt Theme to System" >
                 <svg class="icon">
                     <use xlink:href="#icon-theme-auto" />
                 </svg>
             </div>
             <div>
-                <div id="theme-light" class="icon-button" title="Always Use Light-Theme" >
+                <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title" title="Always Use Light-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-light" />
                     </svg>
                 </div>
-                <div id="theme-dark" class="icon-button" title="Always Use Dark-Theme" >
+                <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title" title="Always Use Dark-Theme" >
                     <svg class="icon">
                         <use xlink:href="#icon-theme-dark" />
                     </svg>
                 </div>
             </div>
         </div>
-        <div id="notification" class="icon-button" title="Enable Notifications" hidden>
+        <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" title="Enable Notifications" hidden>
             <svg class="icon">
                 <use xlink:href="#notifications" />
             </svg>
         </div>
-        <div id="install" class="icon-button" title="Install PairDrop" hidden>
+        <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" title="Install PairDrop" hidden>
             <svg class="icon">
                 <use xlink:href="#homescreen" />
             </svg>
         </div>
-        <div id="pair-device" class="icon-button" title="Pair Device" hidden>
+        <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title" title="Pair Your Devices Permanently">
             <svg class="icon">
                 <use xlink:href="#pair-device-icon" />
             </svg>
         </div>
-        <div id="edit-paired-devices" class="icon-button" title="Edit Paired Devices" hidden>
+        <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" title="Edit Paired Devices" hidden>
             <svg class="icon">
                 <use xlink:href="#edit-pair-devices-icon" />
             </svg>
         </div>
-        <div id="cancel-paste-mode" class="button" hidden>Done</div>
+        <div id="join-public-room" class="icon-button" data-i18n-key="header.join-public-room" data-i18n-attrs="title" title="Join Public Room Temporarily">
+            <svg class="icon">
+                <use xlink:href="#public-room-icon" />
+            </svg>
+        </div>
+        <div id="cancel-paste-mode" class="button" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden>Done</div>
     </header>
     <!-- Center -->
     <div id="center">
         <!-- Peers -->
         <div class="x-peers-filler"></div>
         <x-peers class="center"></x-peers>
-        <x-no-peers>
-            <h2>Open PairDrop on other devices to send files</h2>
-            <div>Pair devices to be discoverable on other networks</div>
+        <x-no-peers data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg" data-drop-bg="Release to select recipient">
+            <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text">Open PairDrop on other devices to send files</h2>
+            <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text">Pair devices or enter a public room to be discoverable on other networks</div>
         </x-no-peers>
-        <x-instructions desktop="Click to send files or right click to send a message" mobile="Tap to send files or long tap to send a message">
+        <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"
+                        desktop="Click to send files or right click to send a message"
+                        mobile="Tap to send files or long tap to send a message"
+                        data-drop-peer="Release to send to peer"
+                        data-drop-bg="Release to select recipient">
             <p id="paste-filename"></p>
         </x-instructions>
+        <div id="websocket-fallback">
+            <span data-i18n-key="footer.traffic" data-i18n-attrs="text">Traffic is</span>
+            <span data-i18n-key="footer.routed" data-i18n-attrs="text">routed through the server</span>
+            <span data-i18n-key="footer.webrtc" data-i18n-attrs="text">if WebRTC is not available.</span>
+        </div>
     </div>
     <!-- Footer -->
     <footer class="column">
         <svg class="icon logo">
             <use xlink:href="#wifi-tethering" />
         </svg>
-        <div>
-            <span>You are known as:</span>
-            <div id="display-name" placeholder="Loading..." title="Edit your device name permanently" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
-            <svg id="edit-pen" class="icon">
-                <use xlink:href="#edit-pen-icon" />
-            </svg>
-        </div>
-        <div class="font-body2">
-            You can be discovered by everyone <span id="on-this-network">on&nbsp;this&nbsp;network</span>
-            <span id="and-by-paired-devices" hidden> and&nbsp;by&nbsp;<span id="paired-devices">paired&nbsp;devices</span></span>
-        </div>
-        <div id="websocket-fallback">
-            <span>Traffic is <span>routed through the server</span> if WebRTC is not available.</span>
+        <div class="column">
+            <div class="known-as-wrapper">
+                <span data-i18n-key="footer.known-as" data-i18n-attrs="text">You are known as:</span>
+                <div id="display-name" class="badge" data-i18n-key="footer.display-name" data-i18n-attrs="data-placeholder title"
+                     placeholder="Loading..." data-placeholder="Loading..." title="Edit your device name permanently"
+                     autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
+                <svg id="edit-pen" class="icon">
+                    <use xlink:href="#edit-pen-icon" />
+                </svg>
+            </div>
+            <div class="discovery-wrapper row">
+                <div class="row center">
+                    <span data-i18n-key="footer.discovery" data-i18n-attrs="text">You can be discovered:</span>
+                </div>
+                <div class="row center">
+                    <span class="badge badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title">on this network</span>
+                    <span class="badge badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden>paired devices</span>
+                    <span class="badge badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
+                </div>
+            </div>
         </div>
     </footer>
+    <!-- Language Select Dialog -->
+    <x-dialog id="language-select-dialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <div class="row center">
+                    <h2 class="center" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text">Select Language</h2>
+                </div>
+                <div class="language-buttons">
+                    <button class="button fw" data-i18n-key="dialogs.system-language" data-i18n-attrs="text">System Language</button>
+                    <button class="button fw" value="en">English</button>
+                    <button class="button fw" value="de">Deutsch (German)</button>
+                    <button class="button fw" value="nb">Norsk (Norwegian)</button>
+                    <button class="button fw" value="ru">Русский язык (Russian)</button>
+                    <button class="button fw" value="zh-CN">中文 (Chinese)</button>
+                </div>
+                <div class="center row-reverse button-row">
+                    <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
     <!-- Pair Device Dialog -->
     <x-dialog id="pair-device-dialog">
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <h2 class="center">Pair Devices</h2>
-                    <div id="room-key-qr-code" class="center"></div>
-                    <h1 id="room-key" class="center">000 000</h1>
-                    <div id="pair-instructions" class="font-subheading center text-center">Input this key on another device<br>or scan the QR-Code.</div>
-                    <hr>
-                    <div id="key-input-container">
-                        <input type="tel" class="textarea center" aria-label="pair-key-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center" aria-label="pair-key-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center" aria-label="pair-key-3" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center" aria-label="pair-key-4" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center" aria-label="pair-key-5" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
-                        <input type="tel" class="textarea center" aria-label="pair-key-6" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                    <div class="row center">
+                        <h2 class="center" data-i18n-key="dialogs.pair-devices-title" data-i18n-attrs="text">Pair Devices</h2>
                     </div>
-                    <div class="font-subheading center text-center">Enter key from another device to continue.</div>
-                    <div class="center row-reverse">
-                        <button class="button" type="submit" disabled>Pair</button>
-                        <button class="button" type="button" close>Cancel</button>
+                    <div class="row center">
+                        <div class="column">
+                            <div class="center key-qr-code"></div>
+                            <h1 class="center key">000 000</h1>
+                            <p class="center text-center key-instructions">
+                                <span class="font-subheading" data-i18n-key="dialogs.input-key-on-this-device" data-i18n-attrs="text">Input this key on another device</span>
+                                <span class="font-subheading" data-i18n-key="dialogs.scan-qr-code" data-i18n-attrs="text">or scan the QR-Code.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="hr-note">
+                        <hr>
+                        <div>
+                            <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text">OR</span>
+                        </div>
+                    </div>
+                    <div class="row center">
+                        <div class="column">
+                            <div class="input-key-container six-chars">
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-3" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-4" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-5" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="tel" class="textarea center" aria-label="pair-key-char-6" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                            </div>
+                            <p class="font-subheading center text-center" data-i18n-key="dialogs.enter-key-from-another-device" data-i18n-attrs="text">Enter key from another device here.</p>
+                        </div>
+                    </div>
+                    <div class="button-row row-reverse">
+                        <button class="button" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled>Pair</button>
+                        <button class="button" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -150,13 +215,70 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <h2 class="center">Edit Paired Devices</h2>
-                    <div class="paired-devices-wrapper"></div>
-                    <div class="font-subheading center">
-                        <p>Activate <u>auto-accept</u> to automatically accept all files sent from that device.</p>
+                    <div class="row center">
+                        <h2 class="center" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text">Edit Paired Devices</h2>
                     </div>
-                    <div class="center row-reverse">
+                    <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-wrapper" data-i18n-attrs="data-empty" data-empty="No paired devices."></div>
+                    <div class="font-subheading center">
+                        <p>
+                            <span  data-i18n-key="dialogs.auto-accept-instructions-1" data-i18n-attrs="text">
+                                Activate
+                            </span>
+                            <u data-i18n-key="dialogs.auto-accept" data-i18n-attrs="text">auto-accept</u>
+                            <span data-i18n-key="dialogs.auto-accept-instructions-2" data-i18n-attrs="text">
+                                to automatically accept all files sent from that device.
+                            </span>
+                        </p>
+                    </div>
+                    <div class="center row-reverse button-row">
+                        <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
+                    </div>
+                </x-paper>
+            </x-background>
+        </form>
+    </x-dialog>
+    <!-- Public Room Dialog -->
+    <x-dialog id="public-room-dialog">
+        <form action="#">
+            <x-background class="full center text-center">
+                <x-paper shadow="2">
+                    <div class="row center">
+                        <div class="column">
+                            <h2 class="center">Temporary Public Room</h2>
+                        </div>
+                    </div>
+                    <div class="row center">
+                        <div class="column">
+                            <div class="center key-qr-code"></div>
+                            <h1 class="center key">IOX9P</h1>
+                            <p class="center text-center key-instructions">
+                                <span class="font-subheading" data-i18n-key="dialogs.input-room-id-on-another-device" data-i18n-attrs="text">Input this room id on another device</span>
+                                <span class="font-subheading" data-i18n-key="dialogs.scan-qr-code" data-i18n-attrs="text">or scan the QR-Code.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="hr-note">
+                        <hr>
+                        <div>
+                            <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text">OR</span>
+                        </div>
+                    </div>
+                    <div class="row center">
+                        <div class="column">
+                            <div class="input-key-container">
+                                <input type="text" class="textarea center" aria-label="room-id-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder="" disabled>
+                                <input type="text" class="textarea center" aria-label="room-id-char-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="text" class="textarea center" aria-label="room-id-char-3" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="text" class="textarea center" aria-label="room-id-char-4" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                                <input type="text" class="textarea center" aria-label="room-id-char-5" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder="" disabled>
+                            </div>
+                            <p class="font-subheading center text-center">Enter room id from another device to join.</p>
+                        </div>
+                    </div>
+                    <div class="center row-reverse button-row">
+                        <button class="button" type="submit" disabled>Join</button>
                         <button class="button" type="button" close>Close</button>
+                        <button class="button leave-room" type="button">Leave</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -166,24 +288,30 @@
     <x-dialog id="receive-request-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 class="center"></h2>
-                <div class="center column file-description">
-                    <div>
-                        <span class="display-name"></span>
-                        <span>would like to share</span>
+                <div class="row center">
+                    <div class="column">
+                        <h2 class="center"></h2>
                     </div>
-                    <div class="row file-name" >
-                        <span class="file-stem"></span>
-                        <span class="file-extension"></span>
+                </div>
+                <div class="row center">
+                    <div class="column center file-description">
+                        <div>
+                            <span class="display-name badge"></span>
+                            <span data-i18n-key="dialogs.would-like-to-share" data-i18n-attrs="text">would like to share</span>
+                        </div>
+                        <div class="row file-name" >
+                            <span class="file-stem"></span>
+                            <span class="file-extension"></span>
+                        </div>
+                        <div class="row file-other">
+                        </div>
+                        <div class="row font-body2 file-size"></div>
                     </div>
-                    <div class="row file-other">
-                    </div>
-                    <div class="row font-body2 file-size"></div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="center row-reverse">
-                    <button id="accept-request" class="button" title="ENTER" autofocus>Accept</button>
-                    <button id="decline-request" class="button" title="ESCAPE">Decline</button>
+                <div class="row-reverse center button-row">
+                    <button id="accept-request" class="button" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus>Accept</button>
+                    <button id="decline-request" class="button" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text">Decline</button>
                 </div>
             </x-paper>
         </x-background>
@@ -192,24 +320,31 @@
     <x-dialog id="receive-file-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 class="center"></h2>
-                <div class="center column file-description">
-                    <div>
-                        <span class="display-name"></span>
-                        <span>has sent</span>
+                <div class="row center">
+                    <div class="column">
+                        <h2 class="center"></h2>
                     </div>
-                    <div class="row file-name" >
-                        <span class="file-stem"></span>
-                        <span class="file-extension"></span>
+                </div>
+                <div class="row center">
+                    <div class="column center file-description">
+                        <div>
+                            <span class="display-name badge"></span>
+                            <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text">has sent</span>
+                        </div>
+                        <div class="row file-name" >
+                            <span class="file-stem"></span>
+                            <span class="file-extension"></span>
+                        </div>
+                        <div class="row file-other">
+                        </div>
+                        <div class="row font-body2 file-size"></div>
                     </div>
-                    <div class="row file-other"></div>
-                    <div class="row font-body2 file-size"></div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="center row-reverse">
-                    <button id="share-btn" class="button" autofocus hidden>Share</button>
-                    <button id="download-btn" class="button" autofocus>Download</button>
-                    <button class="button" close>Close</button>
+                <div class="row-reverse center button-row">
+                    <button id="share-btn" class="button" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden>Share</button>
+                    <button id="download-btn" class="button" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus>Download</button>
+                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
                 </div>
             </x-paper>
         </x-background>
@@ -219,16 +354,27 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <h2 class="text-center">Send Message</h2>
-                    <div class="dialog-subheader text-center">
-                        <span>Send a Message to</span>
-                        <span class="display-name"></span>
+                    <div class="row center">
+                        <div class="column">
+                            <h2 class="center" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text">Send Message</h2>
+                        </div>
                     </div>
-                    <div class="row-separator"></div>
-                    <div id="text-input" title="Message" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
-                    <div class="center row-reverse">
-                        <button class="button" type="submit" title="CTRL/⌘ + ENTER" disabled>Send</button>
-                        <button class="button" type="button" title="ESCAPE" close>Cancel</button>
+                    <div class="row center display-name-wrapper">
+                        <div class="column">
+                            <div class="text-center">
+                                <span data-i18n-key="dialogs.send-message-to" data-i18n-attrs="text">Send a Message to</span>
+                                <span class="display-name badge"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="column fw">
+                            <div id="text-input" title="Message" class="textarea" role="textbox" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
+                        </div>
+                    </div>
+                    <div class="button-row row-reverse">
+                        <button class="button" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled>Send</button>
+                        <button class="button" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close>Cancel</button>
                     </div>
                 </x-paper>
             </x-background>
@@ -238,16 +384,23 @@
     <x-dialog id="receive-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <h2 class="text-center">Message Received</h2>
-                <div class="text-center dialog-subheader">
-                    <span class="display-name"></span>
-                    <span>has sent:</span>
+                <div class="row center">
+                    <h2 class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text">Message Received</h2>
                 </div>
-                <div class="row-separator"></div>
-                <div id="text"></div>
-                <div class="center row-reverse">
-                    <button id="copy" class="button" title="CTRL/⌘ + C">Copy</button>
-                    <button id="close" class="button" title="ESCAPE">Close</button>
+                <div class="row center">
+                    <div class="text-center">
+                        <span class="display-name badge"></span>
+                        <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text">has sent:</span>
+                    </div>
+                </div>
+                <div class="row center">
+                    <div class="column fw">
+                        <div id="text" class="textarea fw"></div>
+                    </div>
+                </div>
+                <div class="row-reverse center button-row">
+                    <button id="copy" class="button" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text">Copy</button>
+                    <button id="close" class="button" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text">Close</button>
                 </div>
             </x-paper>
         </x-background>
@@ -256,20 +409,22 @@
     <x-dialog id="base64-paste-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <button class="button center" id="base64-paste-btn" title="Paste">Tap here to paste files</button>
+                <button class="button center" id="base64-paste-btn" title="Paste"></button>
                 <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
-                <button class="button center" close>Close</button>
+                <div class="row-reverse center button-row">
+                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
+                </div>
             </x-paper>
         </x-background>
     </x-dialog>
     <!-- Toast -->
     <div class="toast-container full center">
-        <x-toast id="toast" class="row" shadow="1"></x-toast>
+        <x-toast id="toast" class="row center" shadow="1"></x-toast>
     </div>
     <!-- About Page -->
     <x-about id="about" class="full center column">
         <header class="row-reverse fade-in">
-            <a href="#" class="close icon-button" aria-label="Close About PairDrop">
+            <a href="#" class="close icon-button" data-i18n-key="about.close-about" data-i18n-attrs="aria-label" aria-label="Close About PairDrop">
                 <svg class="icon">
                     <use xlink:href="#close-icon" />
                 </svg>
@@ -283,24 +438,24 @@
                 <h1>PairDrop</h1>
                 <div class="font-subheading">v1.7.7</div>
             </div>
-            <div class="font-subheading">The easiest way to transfer files across devices</div>
+            <div class="font-subheading" data-i18n-key="about.claim" data-i18n-attrs="text">The easiest way to transfer files across devices</div>
             <div class="row">
-                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop" title="PairDrop on Github" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop" title="PairDrop on Github" rel="noreferrer" data-i18n-key="about.github" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#github" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://www.buymeacoffee.com/pairdrop" title="Buy me a coffee!" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://www.buymeacoffee.com/pairdrop" title="Buy me a coffee!" rel="noreferrer" data-i18n-key="about.buy-me-a-coffee" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#monetarization" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&" title="Tweet about PairDrop" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&" title="Tweet about PairDrop" rel="noreferrer" data-i18n-key="about.tweet" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#twitter" />
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop/blob/master/docs/faq.md" title="Frequently asked questions" rel="noreferrer">
+                <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop/blob/master/docs/faq.md" title="Frequently asked questions" rel="noreferrer" data-i18n-key="about.faq" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#help-outline" />
                     </svg>
@@ -374,8 +529,18 @@
             <!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
             <path d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/>
         </symbol>
+        <symbol id="public-room-icon" viewBox="0 0 640 512">
+            <!--! Font Awesome Pro 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+            <path d="M0 24C0 10.7 10.7 0 24 0H616c13.3 0 24 10.7 24 24s-10.7 24-24 24H24C10.7 48 0 37.3 0 24zM0 488c0-13.3 10.7-24 24-24H616c13.3 0 24 10.7 24 24s-10.7 24-24 24H24c-13.3 0-24-10.7-24-24zM83.2 160a64 64 0 1 1 128 0 64 64 0 1 1 -128 0zM32 320c0-35.3 28.7-64 64-64h96c12.2 0 23.7 3.4 33.4 9.4c-37.2 15.1-65.6 47.2-75.8 86.6H64c-17.7 0-32-14.3-32-32zm461.6 32c-10.3-40.1-39.6-72.6-77.7-87.4c9.4-5.5 20.4-8.6 32.1-8.6h96c35.3 0 64 28.7 64 64c0 17.7-14.3 32-32 32H493.6zM391.2 290.4c32.1 7.4 58.1 30.9 68.9 61.6c3.5 10 5.5 20.8 5.5 32c0 17.7-14.3 32-32 32h-224c-17.7 0-32-14.3-32-32c0-11.2 1.9-22 5.5-32c10.5-29.7 35.3-52.8 66.1-60.9c7.8-2.1 16-3.1 24.5-3.1h96c7.4 0 14.7 .8 21.6 2.4zm44-130.4a64 64 0 1 1 128 0 64 64 0 1 1 -128 0zM321.6 96a80 80 0 1 1 0 160 80 80 0 1 1 0-160z"/>
+        </symbol>
+        <symbol id="icon-language-selector" viewBox="0 0 640 512">
+            <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
+            <path d="M0 128C0 92.7 28.7 64 64 64H256h48 16H576c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H320 304 256 64c-35.3 0-64-28.7-64-64V128zm320 0V384H576V128H320zM178.3 175.9c-3.2-7.2-10.4-11.9-18.3-11.9s-15.1 4.7-18.3 11.9l-64 144c-4.5 10.1 .1 21.9 10.2 26.4s21.9-.1 26.4-10.2l8.9-20.1h73.6l8.9 20.1c4.5 10.1 16.3 14.6 26.4 10.2s14.6-16.3 10.2-26.4l-64-144zM160 233.2L179 276H141l19-42.8zM448 164c11 0 20 9 20 20v4h44 16c11 0 20 9 20 20s-9 20-20 20h-2l-1.6 4.5c-8.9 24.4-22.4 46.6-39.6 65.4c.9 .6 1.8 1.1 2.7 1.6l18.9 11.3c9.5 5.7 12.5 18 6.9 27.4s-18 12.5-27.4 6.9l-18.9-11.3c-4.5-2.7-8.8-5.5-13.1-8.5c-10.6 7.5-21.9 14-34 19.4l-3.6 1.6c-10.1 4.5-21.9-.1-26.4-10.2s.1-21.9 10.2-26.4l3.6-1.6c6.4-2.9 12.6-6.1 18.5-9.8l-12.2-12.2c-7.8-7.8-7.8-20.5 0-28.3s20.5-7.8 28.3 0l14.6 14.6 .5 .5c12.4-13.1 22.5-28.3 29.8-45H448 376c-11 0-20-9-20-20s9-20 20-20h52v-4c0-11 9-20 20-20z"/>
+        </symbol>
+
     </svg>
     <!-- Scripts -->
+    <script src="scripts/localization.js"></script>
     <script src="scripts/theme.js"></script>
     <script src="scripts/network.js"></script>
     <script src="scripts/ui.js"></script>
