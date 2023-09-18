@@ -127,7 +127,8 @@ class Localization {
             if (!useDefault) {
                 translation = this.getTranslation(key, attr, data, true);
                 console.warn(`Missing translation entry for your language ${Localization.locale.toUpperCase()}. Using ${Localization.defaultLocale.toUpperCase()} instead.`, key, attr);
-                console.warn("Help translating PairDrop: https://hosted.weblate.org/projects/pairdrop/pairdrop-spa/");
+                console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${Localization.locale.toLowerCase()}/?q=${key}`)
+                console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
             } else {
                 console.warn("Missing translation in default language:", key, attr);
             }
