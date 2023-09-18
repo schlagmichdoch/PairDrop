@@ -55,8 +55,11 @@
         "system-language": "Systemsprache",
         "language-selector-title": "Sprache auswählen",
         "hr-or": "ODER",
-        "input-room-id-on-another-device": "Gib diese Raum ID auf einem anderen Gerät ein",
-        "unpair": "Entkoppeln"
+        "input-room-id-on-another-device": "Gib diese Raum-ID auf einem anderen Gerät ein",
+        "unpair": "Entkoppeln",
+        "leave": "Verlassen",
+        "join": "Betreten",
+        "enter-room-id-from-another-device": "Gib die Raum-ID von einem anderen Gerät hier ein."
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -119,7 +122,7 @@
         "ios-memory-limit": "Für Übertragungen an iOS Geräte beträgt die maximale Dateigröße 200 MB",
         "public-room-left": "Öffentlichen Raum {{publicRoomId}} verlassen",
         "copied-to-clipboard-error": "Konnte nicht kopieren. Kopiere manuell.",
-        "public-room-id-invalid": "Ungültige Raum ID",
+        "public-room-id-invalid": "Ungültige Raum-ID",
         "online-requirement-pairing": "Du musst online sein, um Geräte zu koppeln.",
         "online-requirement-public-room": "Du musst online sein, um öffentliche Räume erstellen zu können."
     },
