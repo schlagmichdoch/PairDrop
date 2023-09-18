@@ -1,7 +1,7 @@
 class Localization {
     constructor() {
         Localization.defaultLocale = "en";
-        Localization.supportedLocales = ["en", "nb", "ru", "zh-CN"];
+        Localization.supportedLocales = ["en", "nb", "ru", "zh-CN", "de"];
         Localization.translations = {};
         Localization.defaultTranslations = {};
 
