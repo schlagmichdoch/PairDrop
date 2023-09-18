@@ -770,12 +770,13 @@ x-dialog a {
     color: var(--primary-color);
 }
 
-/* Pair Devices Dialog */
+/* Pair Devices Dialog & Public Room Dialog */
 
 .input-key-container {
     width: 100%;
     display: flex;
     justify-content: center;
+    margin-top: 10px;
 }
 
 .input-key-container > input {
@@ -836,7 +837,7 @@ x-dialog hr {
 
 .hr-note {
     margin-top: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
 }
 
 .hr-note hr {
