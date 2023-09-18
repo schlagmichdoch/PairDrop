@@ -1,8 +1,8 @@
 const $ = query => document.getElementById(query);
 const $$ = query => document.body.querySelector(query);
-window.isProductionEnvironment = !window.location.host.startsWith('localhost');
 window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.android = /android/i.test(navigator.userAgent);
+window.isMobile = window.iOS || window.android;
 window.pasteMode = {};
 window.pasteMode.activated = false;
 
@@ -602,7 +602,7 @@ class Dialog {
 
     show() {
         this.$el.setAttribute('show', 1);
-        if (this.$autoFocus) this.$autoFocus.focus();
+        if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
     }
 
     isShown() {
@@ -611,7 +611,7 @@ class Dialog {
 
     hide() {
         this.$el.removeAttribute('show');
-        if (this.$autoFocus) {
+        if (!window.isMobile && this.$autoFocus) {
             document.activeElement.blur();
             window.blur();
         }
