@@ -72,9 +72,7 @@
     "footer": {
         "known-as": "Du wirst angezeigt als:",
         "display-name_title": "Setze einen permanenten Gerätenamen",
-        "discovery-everyone": "Du bist erkennbar von jedem",
         "on-this-network": "in diesem Netzwerk",
-        "and-by": "und von",
         "paired-devices": "für gekoppelte Geräte",
         "traffic": "Datenverkehr wird",
         "display-name_placeholder": "Lade…",

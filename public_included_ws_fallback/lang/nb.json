@@ -12,8 +12,6 @@
         "pair-device_title": "Sammenkoble enhet"
     },
     "footer": {
-        "discovery-everyone": "Du kan oppdages av alle",
-        "and-by": "og av",
         "webrtc": "hvis WebRTC ikke er tilgjengelig.",
         "display-name_data-placeholder": "Laster inn…",
         "display-name_title": "Rediger det vedvarende enhetsnavnet ditt",
