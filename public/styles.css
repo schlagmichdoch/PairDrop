@@ -616,7 +616,6 @@ footer .logo {
 
 .discovery-wrapper {
     font-size: 12px;
-    max-width: 350px;
     margin: 10px auto auto;
     border: 3px solid var(--border-color);
     border-radius: 0.5rem;
