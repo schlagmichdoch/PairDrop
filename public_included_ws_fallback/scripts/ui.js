@@ -1873,11 +1873,11 @@ class Base64ZipDialog extends Dialog {
 
         if (base64Text) {
             this.show();
-            if (base64Text === "paste") {
+            if (base64Text === 'paste') {
                 // ?base64text=paste
                 // base64 encoded string is ready to be pasted from clipboard
-                this.preparePasting(Localization.getTranslation("dialogs.base64-text"));
-            } else if (base64Text === "hash") {
+                this.preparePasting('text');
+            } else if (base64Text === 'hash') {
                 // ?base64text=hash#BASE64ENCODED
                 // base64 encoded string is url hash which is never sent to server and faster (recommended)
                 this.processBase64Text(base64Hash)
@@ -1912,7 +1912,7 @@ class Base64ZipDialog extends Dialog {
                     });
             } else {
                 // ?base64zip=paste || ?base64zip=true
-                this.preparePasting(Localization.getTranslation("dialogs.base64-files"));
+                this.preparePasting('files');
             }
         }
     }
@@ -1923,14 +1923,18 @@ class Base64ZipDialog extends Dialog {
     }
 
     preparePasting(type) {
+        const translateType = type === 'text'
+            ? Localization.getTranslation("dialogs.base64-text")
+            : Localization.getTranslation("dialogs.base64-files");
+
         if (navigator.clipboard.readText) {
-            this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", {type: type});
+            this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", null, {type: translateType});
             this._clickCallback = _ => this.processClipboard(type);
             this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
         } else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
             this.$pasteBtn.setAttribute('hidden', '');
-            this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", {type: type}));
+            this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
             this.$fallbackTextarea.removeAttribute('hidden');
             this._inputCallback = _ => this.processInput(type);
             this.$fallbackTextarea.addEventListener('input', _ => this._inputCallback());
@@ -1964,7 +1968,7 @@ class Base64ZipDialog extends Dialog {
         if (!base64 || !this.isValidBase64(base64)) return;
         this._setPasteBtnToProcessing();
         try {
-            if (type === "text") {
+            if (type === 'text') {
                 await this.processBase64Text(base64);
             } else {
                 await this.processBase64Zip(base64);

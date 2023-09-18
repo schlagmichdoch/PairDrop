@@ -1051,12 +1051,11 @@ x-dialog .dialog-subheader {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
-    text-align: center;
+    border-radius: 8px;
 }
 
 #base64-paste-dialog .textarea {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -1068,21 +1067,9 @@ x-dialog .dialog-subheader {
     color: var(--primary-color);
     font-weight: 700;
     text-transform: uppercase;
-    content: attr(placeholder);
+    white-space: pre-wrap;
 }
 
-#base64-paste-dialog button {
-    margin: auto;
-    border-radius: 8px;
-}
-
-#base64-paste-dialog button[close] {
-    margin-top: 20px;
-}
-
-#base64-paste-dialog button[close]:before {
-    border-radius: 8px;
-}
 
 /* Button */
 

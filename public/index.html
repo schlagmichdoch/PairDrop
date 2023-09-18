@@ -406,7 +406,9 @@
             <x-paper shadow="2">
                 <button class="button center" id="base64-paste-btn" title="Paste"></button>
                 <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
-                <button class="button center" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
+                <div class="row-reverse center button-row">
+                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close>Close</button>
+                </div>
             </x-paper>
         </x-background>
     </x-dialog>
