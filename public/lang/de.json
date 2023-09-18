@@ -17,8 +17,8 @@
         "share": "Teilen",
         "download": "Herunterladen",
         "pair-devices-title": "Geräte dauerhaft koppeln",
-        "input-key-on-this-device": "Gebe diesen Schlüssel auf einem anderen Gerät ein",
-        "enter-key-from-another-device": "Gebe den Schlüssel von einem anderen Gerät hier ein.",
+        "input-key-on-this-device": "Gib diesen Schlüssel auf einem anderen Gerät ein",
+        "enter-key-from-another-device": "Gib den Schlüssel von einem anderen Gerät hier ein.",
         "pair": "Koppeln",
         "cancel": "Abbrechen",
         "edit-paired-devices-title": "Gekoppelte Geräte bearbeiten",
@@ -55,7 +55,7 @@
         "system-language": "Systemsprache",
         "language-selector-title": "Sprache auswählen",
         "hr-or": "ODER",
-        "input-room-id-on-another-device": "Gebe diese Raum ID auf einem anderen Gerät ein",
+        "input-room-id-on-another-device": "Gib diese Raum ID auf einem anderen Gerät ein",
         "unpair": "Entkoppeln"
     },
     "about": {
