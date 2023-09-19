@@ -124,6 +124,14 @@ if (process.argv.includes('--localhost-only')) {
     server.listen(port);
 }
 
+server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+        console.error(err);
+        console.info("Error EADDRINUSE received, exiting process without restarting process...");
+        process.exit(0)
+    }
+});
+
 class PairDropServer {
 
     constructor() {
