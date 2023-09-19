@@ -174,7 +174,7 @@ class PairDropServer {
                 this._onDisconnect(sender);
                 break;
             case 'pong':
-                this._keepAliveTimers[sender.id].lastBeat = Date.now();
+                this._setKeepAliveTimerToNow(sender);
                 break;
             case 'join-ip-room':
                 this._joinIpRoom(sender);
@@ -574,6 +574,12 @@ class PairDropServer {
     _cancelKeepAlive(peer) {
         if (this._keepAliveTimers[peer.id]?.timer) {
             clearTimeout(this._keepAliveTimers[peer.id].timer);
+        }
+    }
+
+    _setKeepAliveTimerToNow(peer) {
+        if (this._keepAliveTimers[peer.id]?.lastBeat) {
+            this._keepAliveTimers[peer.id].lastBeat = Date.now();
         }
     }
 }
