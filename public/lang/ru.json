@@ -69,8 +69,8 @@
         "download-again": "Скачать еще раз",
         "auto-accept-instructions-2": ", чтобы автоматически принимать все файлы, отправленные с того устройства.",
         "enter-key-from-another-device": "Введите сюда ключ с другого устройства.",
-        "pair-devices-title": "Сопрягите устройства навсегда",
-        "input-key-on-this-device": "Введите этот ключ на другом устройстве",
+        "pair-devices-title": "Соединить устройства навсегда",
+        "input-key-on-this-device": "На другом устройстве введите этот ключ",
         "scan-qr-code": "или отсканируйте QR-код.",
         "cancel": "Отменить",
         "pair": "Подключить",
@@ -83,9 +83,12 @@
         "receive-title": "{{descriptor}} получен",
         "system-language": "Язык системы",
         "unpair": "Разорвать сопряжение",
-        "language-selector-title": "Выберите язык",
+        "language-selector-title": "Выбрать язык",
         "hr-or": "ИЛИ",
-        "input-room-id-on-another-device": "Введите этот ID комнаты на другом устройстве"
+        "input-room-id-on-another-device": "На другом устройстве введите этот ID комнаты",
+        "leave": "Покинуть",
+        "join": "Войти",
+        "enter-room-id-from-another-device": "Введите ID комнаты с другого устройства, чтобы войти в нее."
     },
     "about": {
         "close-about-aria-label": "Закрыть страницу \"О сервисе\"",
