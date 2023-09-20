@@ -47,6 +47,7 @@
         "input-key-on-this-device": "Input this key on another device",
         "scan-qr-code": "or scan the QR-code.",
         "enter-key-from-another-device": "Enter key from another device here.",
+        "temporary-public-room-title": "Temporary Public Room",
         "input-room-id-on-another-device": "Input this room ID on another device",
         "enter-room-id-from-another-device": "Enter room ID from another device to join room.",
         "hr-or": "OR",
