@@ -59,7 +59,8 @@
         "unpair": "Entkoppeln",
         "leave": "Verlassen",
         "join": "Betreten",
-        "enter-room-id-from-another-device": "Gib die Raum-ID von einem anderen Gerät hier ein."
+        "enter-room-id-from-another-device": "Gib die Raum-ID von einem anderen Gerät hier ein.",
+        "temporary-public-room-title": "Temporärer Öffentlicher Raum"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -111,7 +112,7 @@
         "pairing-cleared": "Alle Geräte entkoppelt.",
         "click-to-show": "Klicken zum Anzeigen",
         "online-requirement": "Du musst online sein um Geräte zu koppeln.",
-        "display-name-changed-temporarily": "Anzeigename wurde nur für diese Sitzung geändert.",
+        "display-name-changed-temporarily": "Anzeigename wurde nur für diese Session geändert.",
         "request-title": "{{name}} möchte {{count}}{{descriptor}} übertragen",
         "connecting": "Verbindung wird aufgebaut…",
         "files-incorrect": "Dateien sind fehlerhaft.",
