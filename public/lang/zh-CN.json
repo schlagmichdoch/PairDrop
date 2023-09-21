@@ -4,7 +4,7 @@
         "about_aria-label": "打开 关于 PairDrop",
         "theme-light_title": "总是使用明亮主题",
         "install_title": "安装 PairDrop",
-        "pair-device_title": "长久配对您的设备",
+        "pair-device_title": "永久配对您的设备",
         "theme-auto_title": "主题适应系统",
         "theme-dark_title": "总是使用暗黑主题",
         "notification_title": "开启通知",
@@ -16,7 +16,7 @@
     "instructions": {
         "x-instructions_data-drop-peer": "释放以发送到此设备",
         "no-peers_data-drop-bg": "释放来选择接收者",
-        "no-peers-subtitle": "配对新设备 或 加入一个公共房间 使在其他网络上可见",
+        "no-peers-subtitle": "配对新设备 或 加入一个公共房间 以便在其他网络上可见",
         "no-peers-title": "在其他设备上打开 PairDrop 来发送文件",
         "x-instructions_desktop": "点击以发送文件 或 右键来发送信息",
         "x-instructions_mobile": "轻触以发送文件 或 长按来发送信息",
@@ -85,7 +85,11 @@
         "unpair": "取消配对",
         "language-selector-title": "选择语言",
         "hr-or": "或者",
-        "input-room-id-on-another-device": "在另一个设备上输入这串房间号"
+        "input-room-id-on-another-device": "在另一个设备上输入这串房间号",
+        "leave": "离开",
+        "join": "加入",
+        "temporary-public-room-title": "临时公共房间",
+        "enter-room-id-from-another-device": "在另一个设备上输入这串房间号来加入房间。"
     },
     "about": {
         "faq_title": "常见问题",
@@ -96,9 +100,9 @@
         "tweet_title": "关于 PairDrop 的推特"
     },
     "notifications": {
-        "display-name-changed-permanently": "展示的名字已经长久变更。",
-        "display-name-changed-temporarily": "展示的名字已经变更 仅在此会话中。",
-        "display-name-random-again": "展示的名字再次随机生成。",
+        "display-name-changed-permanently": "展示的名字已经永久变更。",
+        "display-name-changed-temporarily": "展示的名字仅在此会话中变更。",
+        "display-name-random-again": "展示的名字已再次随机生成。",
         "download-successful": "{{descriptor}} 已下载",
         "pairing-tabs-error": "无法配对两个浏览器标签页。",
         "pairing-success": "新设备已配对。",
