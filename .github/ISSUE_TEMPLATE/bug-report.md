@@ -36,7 +36,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Bug occurs on official PairDrop instance https://pairdrop.net/**
 No | Yes
-Version: v1.8.1
+Version: v1.8.2
 
 **Bug occurs on self-hosted PairDrop instance**
 No | Yes
@@ -44,7 +44,7 @@ No | Yes
 **Self-Hosted Setup**
 Proxy: Nginx | Apache2
 Deployment: docker run | docker-compose | npm run start:prod
-Version: v1.8.1
+Version: v1.8.2
 
 **Additional context**
 Add any other context about the problem here.
