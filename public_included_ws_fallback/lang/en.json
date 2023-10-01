@@ -143,6 +143,7 @@
         "file-received": "File Received",
         "file-received-plural": "{{count}} Files Received",
         "file-transfer-requested": "File Transfer Requested",
+        "image-transfer-requested": "Image Transfer Requested",
         "message-received": "Message Received",
         "message-received-plural": "{{count}} Messages Received"
     },
