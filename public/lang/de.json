@@ -68,7 +68,7 @@
         "close-about_aria-label": "Schließe Über PairDrop",
         "github_title": "PairDrop auf GitHub",
         "buy-me-a-coffee_title": "Kauf mir einen Kaffee!",
-        "claim": "Der einfachste Weg Dateien zwischen Geräten zu teilen"
+        "claim": "Der einfachste Weg, Dateien zwischen Geräten zu übertragen"
     },
     "footer": {
         "known-as": "Du wirst angezeigt als:",
@@ -116,7 +116,7 @@
         "request-title": "{{name}} möchte {{count}}{{descriptor}} übertragen",
         "connecting": "Verbindung wird aufgebaut…",
         "files-incorrect": "Dateien sind fehlerhaft.",
-        "file-transfer-completed": "Dateiübertragung fertiggestellt.",
+        "file-transfer-completed": "Dateiübertragung abgeschlossen.",
         "message-transfer-completed": "Nachrichtenübertragung fertiggestellt.",
         "rate-limit-join-key": "Rate Limit erreicht. Warte 10 Sekunden und versuche es erneut.",
         "selected-peer-left": "Ausgewählter Peer ist gegangen.",
@@ -128,7 +128,7 @@
         "online-requirement-public-room": "Du musst online sein, um öffentliche Räume erstellen zu können."
     },
     "instructions": {
-        "x-instructions_desktop": "Klicke, um Dateien zu Senden oder klicke mit der rechten Maustaste, um Textnachrichten zu senden",
+        "x-instructions_desktop": "Klicke, um Dateien zu senden oder benutze einen Rechtsklick, um eine Textnachricht zu senden",
         "no-peers-title": "Öffne PairDrop auf anderen Geräten, um Dateien zu senden",
         "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
         "no-peers-subtitle": "Kopple Geräte oder besuche einen öffentlichen Raum, damit du in anderen Netzwerken sichtbar bist",
@@ -136,20 +136,21 @@
         "tap-to-send": "Tippe zum Senden von",
         "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
         "x-instructions_data-drop-bg": "Loslassen um Empfänger auszuwählen",
-        "x-instructions_mobile": "Tippe zum Senden von Dateien oder tippe lange zum Senden von Nachrichten",
+        "x-instructions_mobile": "Tippe, um Dateien zu senden oder tippe lange, um Nachrichten zu senden",
         "activate-paste-mode-base": "Öffne PairDrop auf anderen Geräten zum Senden von",
         "activate-paste-mode-and-other-files": "und {{count}} anderen Dateien",
         "activate-paste-mode-shared-text": "freigegebenem Text"
     },
     "document-titles": {
-        "file-transfer-requested": "Datenübertagung angefordert",
+        "file-transfer-requested": "Dateiübertragung angefordert",
         "file-received": "Datei erhalten",
         "file-received-plural": "{{count}} Dateien erhalten",
         "message-received": "Nachricht erhalten",
-        "message-received-plural": "{{count}} Nachrichten erhalten"
+        "message-received-plural": "{{count}} Nachrichten erhalten",
+        "image-transfer-requested": "Bilder Transfer beantragt"
     },
     "peer-ui": {
-        "click-to-send": "Klicke um Dateien zu senden oder nutze einen Rechtsklick um eine Textnachricht zu senden",
+        "click-to-send": "Klicke, um Dateien zu senden oder benutze einen Rechtsklick, um eine Textnachricht zu senden",
         "connection-hash": "Um die Ende-zu-Ende Verschlüsselung zu verifizieren, vergleiche die Sicherheitsnummer auf beiden Geräten",
         "waiting": "Warte…",
         "click-to-send-paste-mode": "Klicken um {{descriptor}} zu senden",
