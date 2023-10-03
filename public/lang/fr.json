@@ -28,7 +28,7 @@
         "activate-paste-mode-shared-text": "texte partagé"
     },
     "footer": {
-        "known-as": "Vous êtes connu sous le nom de:",
+        "known-as": "Vous êtes connu comme:",
         "display-name_data-placeholder": "Chargement…",
         "display-name_title": "Modifiez le nom de votre appareil de manière permanente",
         "discovery": "Vous pouvez être découvert:",
