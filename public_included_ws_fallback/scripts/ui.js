@@ -1006,9 +1006,13 @@ class ReceiveRequestDialog extends ReceiveDialog {
             this.$previewBox.appendChild(element)
         }
 
-        this.$receiveTitle.innerText = `${request.imagesOnly ? 'Image' : 'File'} Transfer Request`
+        const transferRequestTitle= request.imagesOnly
+            ? Localization.getTranslation('document-titles.image-transfer-requested')
+            : Localization.getTranslation('document-titles.file-transfer-requested');
 
-        document.title = `${ Localization.getTranslation("document-titles.file-transfer-requested") } - PairDrop`;
+        this.$receiveTitle.innerText = transferRequestTitle;
+
+        document.title =  `${transferRequestTitle} - PairDrop`;
         document.changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
