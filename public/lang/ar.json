@@ -79,7 +79,8 @@
         "x-instructions_desktop": "انقر لإرسال الملفات أو انقر بزر الماوس الأيمن لإرسال رسالة",
         "no-peers-title": "افتح PairDrop على الأجهزة الأخرى لإرسال الملفات",
         "x-instructions_data-drop-bg": "حرر لتحديد المستلم",
-        "no-peers_data-drop-bg": "حرر لتحديد المستلم"
+        "no-peers_data-drop-bg": "حرر لتحديد المستلم",
+        "x-instructions_data-drop-peer": "قم بالتحرير لإرسالها إلى النظير"
     },
     "peer-ui": {
         "processing": "مُعالجة …",
@@ -152,6 +153,7 @@
         "message-received-plural": "{{count}} الرسائل المستلمة",
         "message-received": "تم إرسال الرسالة",
         "file-received": "تم استلام الملف",
-        "file-received-plural": "{{count}} الملفات المستلمة"
+        "file-received-plural": "{{count}} الملفات المستلمة",
+        "image-transfer-requested": "طُلب نقل الصور المطلوبة"
     }
 }
