@@ -398,7 +398,7 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <span class="connection-hash font-body2" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
+                    <span class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
                 </div>
             </label>`;
 

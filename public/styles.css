@@ -99,8 +99,7 @@ header {
     right: 0;
 }
 
-header > a,
-header > div {
+header > *:not(:first-child) {
     margin-left: 8px;
 }
 
@@ -673,7 +672,6 @@ footer .logo {
     max-width: 15em;
     text-overflow: ellipsis;
     cursor: text;
-    margin-left: -1rem;
     margin-bottom: -6px;
     padding-bottom: 0.1rem;
     border-radius: 1.3rem/30%;
@@ -687,9 +685,25 @@ footer .logo {
 #edit-pen {
     width: 1rem;
     height: 1rem;
-    margin-left: -1rem;
     margin-bottom: -2px;
     position: relative;
+}
+
+html:not([dir="rtl"]) {
+    #display-name,
+    #edit-pen {
+        margin-left: -1rem;
+    }
+}
+
+html[dir="rtl"] {
+    #display-name,
+    #edit-pen {
+        margin-right: -1rem;
+    }
+    #edit-pen {
+        transform: rotateY(180deg);
+    }
 }
 
 /* Dialog */
@@ -799,8 +813,8 @@ x-dialog a {
     justify-content: center;
 }
 
-.input-key-container > input + * {
-    margin-left: 6px;
+.input-key-container > input {
+    margin: 0 3px;
 }
 
 .input-key-container.six-chars > input:nth-of-type(4) {
@@ -811,11 +825,11 @@ x-dialog a {
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
-    font-size: 50px;
-    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 23px);
     display: inline-block;
-    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 23px)));
-    margin: 15px -15px;
+    font-size: 50px;
+    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 20px);
+    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 28px)));
+    margin: 25px 0;
 }
 
 .key-qr-code {
@@ -971,12 +985,28 @@ x-paper > .button-row > .button {
     width: 100%;
 }
 
-x-paper > .button-row > .button:not(:first-child) {
-    border-right: solid 1.5px var(--border-color);
+html:not([dir="rtl"]) {
+    & x-paper > .button-row > .button:not(:first-child) {
+        border-right: solid 1.5px var(--border-color);
+    }
+
+    & x-paper > .button-row > .button:not(:last-child) {
+        border-left: solid 1.5px var(--border-color);
+    }
 }
 
-x-paper > .button-row > .button:not(:last-child) {
-    border-left: solid 1.5px var(--border-color);
+html[dir="rtl"] {
+    & x-paper > .button-row > .button:not(:first-child) {
+        border-left: solid 1.5px var(--border-color);
+    }
+
+    & x-paper > .button-row > .button:not(:last-child) {
+        border-right: solid 1.5px var(--border-color);
+    }
+}
+
+.language-buttons > button > span {
+    margin: 0 0.3em;
 }
 
 .file-description {
@@ -1241,7 +1271,6 @@ button::-moz-focus-inner {
     --size: max(max(230vw, 230vh), calc(150vh + 150vw));
     --size-half: calc(var(--size)/2);
     top: calc(28px - var(--size-half));
-    right: calc(36px - var(--size-half));
     width: var(--size);
     height: var(--size);
     border-radius: 50%;
@@ -1249,6 +1278,19 @@ button::-moz-focus-inner {
     transform: scale(0);
     z-index: -1;
 }
+
+html:not([dir="rtl"]) {
+    #about x-background {
+        right: calc(36px - var(--size-half));
+    }
+}
+
+html[dir="rtl"] {
+    #about x-background {
+        left: calc(36px - var(--size-half));
+    }
+}
+
 
 /* Hack such that initial scale(0) isn't animated */
 #about x-background {

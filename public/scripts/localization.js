@@ -2,10 +2,12 @@ class Localization {
     constructor() {
         Localization.defaultLocale = "en";
         Localization.supportedLocales = ["en", "nb", "ru", "zh-CN", "de", "ro", "id", "fr"];
+        Localization.supportedLocalesRTL = [];
+
         Localization.translations = {};
         Localization.defaultTranslations = {};
 
-        Localization.systemLocale = Localization.supportedOrDefault(navigator.languages);
+        Localization.systemLocale = Localization.getSupportedOrDefault(navigator.languages);
 
         let storedLanguageCode = localStorage.getItem("language-code");
 
@@ -24,7 +26,11 @@ class Localization {
         return Localization.supportedLocales.indexOf(locale) > -1;
     }
 
-    static supportedOrDefault(locales) {
+    static isRTLLanguage(locale) {
+        return Localization.supportedLocalesRTL.indexOf(locale) > -1;
+    }
+
+    static getSupportedOrDefault(locales) {
         return locales.find(Localization.isSupported) || Localization.defaultLocale;
     }
 
@@ -33,6 +39,17 @@ class Localization {
 
         await Localization.setLocale(locale)
         await Localization.translatePage();
+
+        const htmlRootNode = document.querySelector('html');
+
+        if (Localization.isRTLLanguage(locale)) {
+            htmlRootNode.setAttribute('dir', 'rtl');
+        } else {
+            htmlRootNode.removeAttribute('dir');
+        }
+
+        htmlRootNode.setAttribute('lang', locale);
+
 
         console.log("Page successfully translated",
             `System language: ${Localization.systemLocale}`,
