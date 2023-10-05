@@ -43,7 +43,7 @@
         "on-this-network_title": "Вы можете быть обнаружены кем угодно в этой сети."
     },
     "dialogs": {
-        "edit-paired-devices-title": "Редактировать связанные устройства",
+        "edit-paired-devices-title": "Редактировать Связанные Устройства",
         "auto-accept": "автоприем",
         "close": "Закрыть",
         "decline": "Отклонить",
@@ -83,7 +83,7 @@
         "receive-title": "{{descriptor}} получен",
         "system-language": "Язык системы",
         "unpair": "Отвязать",
-        "language-selector-title": "Выбрать язык",
+        "language-selector-title": "Установить язык",
         "hr-or": "ИЛИ",
         "input-room-id-on-another-device": "На другом устройстве введите этот ID комнаты",
         "leave": "Покинуть",
