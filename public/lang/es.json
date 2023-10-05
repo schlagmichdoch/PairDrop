@@ -1,1 +1,8 @@
-{}
+{
+    "header": {
+        "theme-auto_title": "Adaptar Tema al Sistema",
+        "language-selector_title": "Seleccionar Idioma",
+        "about_title": "Sobre PairDrop",
+        "about_aria-label": "Abrir Sobre PairDrop"
+    }
+}
