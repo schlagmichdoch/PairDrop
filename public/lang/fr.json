@@ -89,7 +89,7 @@
         "title-file-plural": "Fichiers",
         "receive-title": "{{descriptor}} Reçu",
         "download-again": "Télécharger à nouveau",
-        "language-selector-title": "Sélectionnez la langue",
+        "language-selector-title": "Définir la langue",
         "system-language": "Langue du système"
     },
     "about": {
