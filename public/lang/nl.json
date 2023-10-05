@@ -63,13 +63,13 @@
         "join-public-room_title": "Openbare ruimte tijdelijk betreden",
         "notification_title": "Meldingen inschakelen",
         "edit-paired-devices_title": "Gekoppelde apparaten bewerken",
-        "language-selector_title": "Taal selecteren",
+        "language-selector_title": "Taal Selecteren",
         "about_title": "Over PairDrop",
         "about_aria-label": "Open Over PairDrop",
         "theme-light_title": "Altijd lichte modus gebruiken"
     },
     "instructions": {
-        "x-instructions_mobile": "Tik om bestanden te versturen of tik langer om een bericht te sturen",
+        "x-instructions_mobile": "Tik om bestanden te versturen of houdt vast om een bericht te sturen",
         "click-to-send": "Klik om te verzenden",
         "activate-paste-mode-and-other-files": "en {{count}} andere bestanden",
         "tap-to-send": "Tik om te verzenden",
@@ -78,7 +78,7 @@
         "activate-paste-mode-shared-text": "gedeelde tekst",
         "x-instructions_desktop": "Klik om bestanden te versturen of rechtsklik om een bericht te sturen",
         "no-peers-title": "Open PairDrop op andere apparaten om bestanden te versturen",
-        "x-instructions_data-drop-peer": "Laat los om te versturen naar peer",
+        "x-instructions_data-drop-peer": "Laat los om naar peer te versturen",
         "x-instructions_data-drop-bg": "Loslaten om ontvanger te selecteren",
         "no-peers_data-drop-bg": "Loslaten om ontvanger te kiezen"
     },
@@ -123,7 +123,7 @@
         "file-other-description-file-plural": "en {{count}} andere bestanden",
         "would-like-to-share": "zou graag willen delen",
         "send-message-to": "Verstuur een bericht naar",
-        "language-selector-title": "Taal instellen",
+        "language-selector-title": "Taal Instellen",
         "pair": "Koppel",
         "hr-or": "OF",
         "scan-qr-code": "of scan de QR-code.",
