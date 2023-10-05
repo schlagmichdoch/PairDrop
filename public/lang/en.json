@@ -1,16 +1,16 @@
 {
     "header": {
         "about_title": "About PairDrop",
-        "language-selector_title": "Select Language",
+        "language-selector_title": "Set Language",
         "about_aria-label": "Open About PairDrop",
-        "theme-auto_title": "Adapt Theme to System",
-        "theme-light_title": "Always Use Light-Theme",
-        "theme-dark_title": "Always Use Dark-Theme",
-        "notification_title": "Enable Notifications",
+        "theme-auto_title": "Adapt theme to system automatically",
+        "theme-light_title": "Always use light theme",
+        "theme-dark_title": "Always use dark theme",
+        "notification_title": "Enable notifications",
         "install_title": "Install PairDrop",
-        "pair-device_title": "Pair Your Devices Permanently",
-        "edit-paired-devices_title": "Edit Paired Devices",
-        "join-public-room_title": "Join Public Room Temporarily",
+        "pair-device_title": "Pair your devices permanently",
+        "edit-paired-devices_title": "Edit paired devices",
+        "join-public-room_title": "Join public room temporarily",
         "cancel-paste-mode": "Done"
     },
     "instructions": {
@@ -88,7 +88,7 @@
         "title-file-plural": "Files",
         "receive-title": "{{descriptor}} Received",
         "download-again": "Download again",
-        "language-selector-title": "Select Language",
+        "language-selector-title": "Set Language",
         "system-language": "System Language"
     },
     "about": {
@@ -97,7 +97,7 @@
         "github_title": "PairDrop on GitHub",
         "buy-me-a-coffee_title": "Buy me a coffee!",
         "tweet_title": "Tweet about PairDrop",
-        "faq_title": "Frequently Asked Questions"
+        "faq_title": "Frequently asked questions"
     },
     "notifications": {
         "display-name-changed-permanently": "Display name is changed permanently.",
