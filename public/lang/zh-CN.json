@@ -11,7 +11,7 @@
         "edit-paired-devices_title": "管理已配对设备",
         "cancel-paste-mode": "完成",
         "join-public-room_title": "暂时加入公共房间",
-        "language-selector_title": "选择语言"
+        "language-selector_title": "设置语言"
     },
     "instructions": {
         "x-instructions_data-drop-peer": "释放以发送到此设备",
@@ -83,7 +83,7 @@
         "download-again": "再次保存",
         "system-language": "跟随系统语言",
         "unpair": "取消配对",
-        "language-selector-title": "选择语言",
+        "language-selector-title": "设置语言",
         "hr-or": "或者",
         "input-room-id-on-another-device": "在另一个设备上输入这串房间号",
         "leave": "离开",
