@@ -114,7 +114,7 @@
         "online-requirement": "Du musst online sein um Geräte zu koppeln.",
         "display-name-changed-temporarily": "Anzeigename wurde nur für diese Session geändert.",
         "request-title": "{{name}} möchte {{count}}{{descriptor}} übertragen",
-        "connecting": "Verbindung wird aufgebaut…",
+        "connecting": "Verbindung wird hergestellt…",
         "files-incorrect": "Dateien sind fehlerhaft.",
         "file-transfer-completed": "Dateiübertragung abgeschlossen.",
         "message-transfer-completed": "Nachrichtenübertragung fertiggestellt.",
