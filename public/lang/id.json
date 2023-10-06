@@ -56,17 +56,17 @@
     },
     "header": {
         "cancel-paste-mode": "Selesai",
-        "theme-auto_title": "Sesuaikan Tema dengan Sistem",
+        "theme-auto_title": "Sesuaikan tema dengan sistem",
         "install_title": "Instal PairDrop",
-        "theme-dark_title": "Selalu Gunakan Tema Gelap",
-        "pair-device_title": "Pasangkan Perangkat Anda Secara Permanen",
-        "join-public-room_title": "Bergabung dgn. Ruang Publik Sementara",
-        "notification_title": "Aktifkan Notifikasi",
-        "edit-paired-devices_title": "Edit Perangkat yg. Dipasangkan",
+        "theme-dark_title": "Selalu gunakan tema gelap",
+        "pair-device_title": "Pasangkan perangkat anda secara permanen",
+        "join-public-room_title": "Bergabung dgn. ruang publik sementara",
+        "notification_title": "Aktifkan notifikasi",
+        "edit-paired-devices_title": "Edit perangkat yg. dipasangkan",
         "language-selector_title": "Pilih Bahasa",
         "about_title": "Tentang PairDrop",
         "about_aria-label": "Buka Tentang PairDrop",
-        "theme-light_title": "Selalu Gunakan Tema Terang"
+        "theme-light_title": "Selalu gunakan tema terang"
     },
     "instructions": {
         "x-instructions_mobile": "Ketuk untuk mengirim file atau ketuk lama untuk mengirim pesan",
