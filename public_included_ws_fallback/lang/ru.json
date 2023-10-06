@@ -7,7 +7,7 @@
         "edit-paired-devices_title": "Редактировать связанные устройства",
         "notification_title": "Включить уведомления",
         "about_title": "О сервисе",
-        "theme-auto_title": "Адаптировать тему к системной",
+        "theme-auto_title": "Адаптировать тему к системной автоматически",
         "theme-dark_title": "Всегда использовать темную тему",
         "theme-light_title": "Всегда использовать светлую тему",
         "join-public-room_title": "Войти на время в публичную комнату",
@@ -43,7 +43,7 @@
         "on-this-network_title": "Вы можете быть обнаружены кем угодно в этой сети."
     },
     "dialogs": {
-        "edit-paired-devices-title": "Редактировать связанные устройства",
+        "edit-paired-devices-title": "Редактировать Связанные Устройства",
         "auto-accept": "автоприем",
         "close": "Закрыть",
         "decline": "Отклонить",
@@ -83,7 +83,7 @@
         "receive-title": "{{descriptor}} получен",
         "system-language": "Язык системы",
         "unpair": "Отвязать",
-        "language-selector-title": "Выбрать язык",
+        "language-selector-title": "Установить язык",
         "hr-or": "ИЛИ",
         "input-room-id-on-another-device": "На другом устройстве введите этот ID комнаты",
         "leave": "Покинуть",
@@ -155,6 +155,7 @@
         "message-received-plural": "{{count}} сообщений получено",
         "file-received": "Файл получен",
         "file-transfer-requested": "Запрошена передача файлов",
-        "message-received": "Сообщение получено"
+        "message-received": "Сообщение получено",
+        "image-transfer-requested": "Запрошена передача изображений"
     }
 }
