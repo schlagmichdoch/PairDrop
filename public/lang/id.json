@@ -63,7 +63,7 @@
         "join-public-room_title": "Bergabung dgn. ruang publik sementara",
         "notification_title": "Aktifkan notifikasi",
         "edit-paired-devices_title": "Edit perangkat yg. dipasangkan",
-        "language-selector_title": "Pilih Bahasa",
+        "language-selector_title": "Atur Bahasa",
         "about_title": "Tentang PairDrop",
         "about_aria-label": "Buka Tentang PairDrop",
         "theme-light_title": "Selalu gunakan tema terang"
@@ -153,6 +153,7 @@
         "message-received-plural": "{{count}} Pesan Diterima",
         "message-received": "Pesan Diterima",
         "file-received": "File Diterima",
-        "file-received-plural": "{{count}} File Diterima"
+        "file-received-plural": "{{count}} File Diterima",
+        "image-transfer-requested": "Permintaan Transfer Gambar"
     }
 }
