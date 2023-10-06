@@ -231,7 +231,9 @@ class ServerConnection {
 
     _onDisconnect() {
         console.log('WS: server disconnected');
-        Events.fire('notify-user', Localization.getTranslation("notifications.connecting"));
+        setTimeout(() => {
+            Events.fire('notify-user', Localization.getTranslation("notifications.connecting"));
+        }, 100); //delay for 100ms to prevent flickering on page reload
         clearTimeout(this._reconnectTimer);
         this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         Events.fire('ws-disconnected');

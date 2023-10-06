@@ -36,9 +36,24 @@ class PeersUI {
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
 
+        this.$header = document.querySelector('body > header')
         this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
+        this.$center = $$('#center');
+        this.$logo = $$('footer .icon.logo');
+        this.$discoveryWrapper = $$('footer .discovery-wrapper');
+        this.$knownAsWrapper = $$('footer .known-as-wrapper');
+
+        this.$header.style.opacity = "1";
+        this.$xPeers.style.opacity = "1";
+        this.$xNoPeers.style.opacity = "1";
+        this.$xInstructions.style.opacity = "0.5";
+        this.$center.style.opacity = "1";
+        this.$logo.style.opacity = "1";
+        this.$discoveryWrapper.style.opacity = "1";
+        this.$knownAsWrapper.style.opacity = "1";
+
 
         Events.on('peer-added', _ => this.evaluateOverflowing());
         Events.on('bg-resize', _ => this.evaluateOverflowing());
@@ -2050,6 +2065,7 @@ class Notifications {
             this.$button.removeAttribute('hidden');
             this.$button.addEventListener('click', _ => this._requestPermission());
         }
+
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
@@ -2734,6 +2750,7 @@ Events.on('load', () => {
         dw = Math.round(Math.max(w, h, 1000) / 13);
 
         drawCircles(cCtx, dw);
+        c.style.opacity = "1";
     }
 
     Events.on('bg-resize', _ => init());
@@ -2755,7 +2772,7 @@ Events.on('load', () => {
         }
     }
 
-    init();
+    setTimeout(_ => init(), 300);
 });
 
 document.changeFavicon = function (src) {

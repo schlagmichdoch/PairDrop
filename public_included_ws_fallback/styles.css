@@ -420,8 +420,9 @@ x-no-peers {
     display: flex;
     flex-direction: column;
     padding: 8px;
+    height: 137px;
     text-align: center;
-    animation: fade-in 300ms;
+    animation: fade-in 600ms;
     animation-fill-mode: backwards;
     /* prevent flickering on load */
     animation-iteration-count: 0;
@@ -642,6 +643,7 @@ footer .logo {
     margin-bottom: 8px;
     color: var(--primary-color);
     margin-top: -10px;
+    animation: ease-in;
 }
 
 .discovery-wrapper {
@@ -652,6 +654,7 @@ footer .logo {
     padding: 2px;
     background-color: rgb(var(--bg-color));
     transition: background-color 0.5s ease;
+    min-height: 24px;
 }
 
 /*You can be discovered wrapper*/
@@ -1230,15 +1233,22 @@ button::-moz-focus-inner {
     z-index: 1;
 }
 
+#about:not(:target) header.fade-in {
+    transition-delay: 400ms;
+}
+
+#about:target header.fade-in {
+    transition-delay: 100ms;
+}
+
 #about .fade-in {
-    transition: opacity 300ms;
+    transition: opacity 300ms ease 300ms;
     will-change: opacity;
-    transition-delay: 300ms;
     pointer-events: all;
 }
 
 #about:not(:target) .fade-in {
-    opacity: 0;
+    opacity: 0 !important;
     pointer-events: none;
     transition-delay: 0s;
 }
@@ -1286,10 +1296,6 @@ button::-moz-focus-inner {
 
 #about section {
     flex-grow: 1;
-}
-
-#about header {
-    align-self: end;
 }
 
 canvas.circles {
@@ -1375,7 +1381,6 @@ x-toast:not([show]):not(:hover) {
 x-instructions {
     position: relative;
     opacity: 0.5;
-    transition: opacity 300ms;
     text-align: center;
     margin-left: 10px;
     margin-right: 10px;
@@ -1402,7 +1407,7 @@ x-instructions p {
 }
 
 x-peers:empty~x-instructions {
-    opacity: 0;
+    opacity: 0 !important;
 }
 
 @media (hover: none) and (pointer: coarse) {
@@ -1410,6 +1415,21 @@ x-peers:empty~x-instructions {
         transform: scale(0.95);
         padding: 4px;
     }
+}
+
+/* Prevent Cumulative Layout Shift */
+
+body > header,
+canvas,
+#center,
+x-no-peers,
+x-peers,
+x-instructions,
+footer > .icon.logo,
+.discovery-wrapper,
+.known-as-wrapper {
+    transition: opacity 0.5s ease 0.1s;
+    opacity: 0; /* will be set to 1 after initial translation is loaded */
 }
 
 /* Responsive Styles */
