@@ -145,7 +145,8 @@
         "message-received-plural": "收到 {{count}} 条信息",
         "file-transfer-requested": "文件传输请求",
         "file-received-plural": "收到 {{count}} 个文件",
-        "file-received": "收到文件"
+        "file-received": "收到文件",
+        "image-transfer-requested": "图片传输请求"
     },
     "peer-ui": {
         "click-to-send-paste-mode": "点击发送 {{descriptor}}",
