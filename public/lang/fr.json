@@ -1,8 +1,8 @@
 {
     "header": {
-        "about_title": "A propos de",
+        "about_title": "À propos de PairDrop",
         "language-selector_title": "Choix de la langue",
-        "about_aria-label": "Ouvrir à propos de",
+        "about_aria-label": "Ouvrir à propos de PairDrop",
         "theme-auto_title": "Adapter le thème au système",
         "theme-light_title": "Toujours utiliser le thème clair",
         "theme-dark_title": "Toujours utiliser le thème sombre",
@@ -28,10 +28,10 @@
         "activate-paste-mode-shared-text": "texte partagé"
     },
     "footer": {
-        "known-as": "Vous êtes connu comme:",
+        "known-as": "Vous êtes connu comme :",
         "display-name_data-placeholder": "Chargement…",
         "display-name_title": "Modifiez le nom de votre appareil de manière permanente",
-        "discovery": "Vous pouvez être découvert:",
+        "discovery": "Vous pouvez être découvert :",
         "on-this-network": "sur ce réseau",
         "on-this-network_title": "Vous pouvez être découvert par tout le monde sur ce réseau.",
         "paired-devices": "par les appareils couplés",
@@ -66,7 +66,7 @@
         "would-like-to-share": "aimerait partager",
         "accept": "Accepter",
         "decline": "Refuser",
-        "has-sent": "a envoyé:",
+        "has-sent": "a envoyé :",
         "share": "Partage",
         "download": "Télécharger",
         "send-message-title": "Envoyer un message",
@@ -96,7 +96,7 @@
         "close-about_aria-label": "Fermer à propos de PairDrop",
         "claim": "Le moyen le plus simple de transférer des fichiers entre appareils",
         "github_title": "PairDrop sur GitHub",
-        "buy-me-a-coffee_title": "Achete-moi un café!",
+        "buy-me-a-coffee_title": "Acheté-moi un café !",
         "tweet_title": "Tweet à propos de PairDrop",
         "faq_title": "Questions fréquemment posées"
     },
@@ -125,7 +125,7 @@
         "request-title": "{{name}} souhaite transférer {{count}} {{descriptor}}",
         "click-to-show": "Cliquez pour afficher",
         "copied-text": "Texte copié dans le presse-papiers",
-        "copied-text-error": "L'écriture dans le presse-papiers a échoué. Copiez manuellement!",
+        "copied-text-error": "L'écriture dans le presse-papiers a échoué. Copiez manuellement !",
         "offline": "Vous êtes hors ligne",
         "online": "Vous êtes de nouveau en ligne",
         "connected": "Connecté.",
@@ -136,9 +136,9 @@
         "file-transfer-completed": "Transfert de fichier terminé.",
         "ios-memory-limit": "L'envoi de fichiers vers iOS n'est possible que jusqu'à 200 Mo à la fois",
         "message-transfer-completed": "Transfert de message terminé.",
-        "unfinished-transfers-warning": "Il y a des transferts inachevés. Etes-vous sûr de vouloir fermer PairDrop?",
+        "unfinished-transfers-warning": "Il y a des transferts inachevés. Êtes-vous sûr de vouloir fermer PairDrop ?",
         "rate-limit-join-key": "Limite de débit atteinte. Attendez 10 secondes et réessayez.",
-        "selected-peer-left": "Appareils selectionnés restants."
+        "selected-peer-left": "Appareils sélectionnés restants."
     },
     "document-titles": {
         "file-received": "Fichier reçu",
