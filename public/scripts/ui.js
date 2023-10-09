@@ -1724,7 +1724,7 @@ class SendTextDialog extends Dialog {
     constructor() {
         super('send-text-dialog');
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
-        this.$text = this.$el.querySelector('#text-input');
+        this.$text = this.$el.querySelector('.textarea');
         this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
@@ -1745,7 +1745,7 @@ class SendTextDialog extends Dialog {
     }
 
     _textInputEmpty() {
-        return !this.$text.innerText || this.$text.innerText === "\n";
+        return !this.$text.value || this.$text.value === "\n";
     }
 
     _onChange(e) {
@@ -1767,7 +1767,6 @@ class SendTextDialog extends Dialog {
         const range = document.createRange();
         const sel = window.getSelection();
 
-        this.$text.focus();
         range.selectNodeContents(this.$text);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -1781,7 +1780,7 @@ class SendTextDialog extends Dialog {
     _send() {
         Events.fire('send-text', {
             to: this.correspondingPeerId,
-            text: this.$text.innerText
+            text: this.$text.value
         });
         this.$text.value = "";
         this.hide();
