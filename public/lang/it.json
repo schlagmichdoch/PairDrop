@@ -1,1 +1,63 @@
-{}
+{
+    "footer": {
+        "webrtc": "se WebRTC non è disponibile.",
+        "public-room-devices_title": "Puoi essere rilevato dai dispositivi presenti in questa stanza pubblica indipendentemente dalla rete.",
+        "display-name_data-placeholder": "Caricamento…",
+        "display-name_title": "Modifica il nome del tuo dispositivo permanentemente",
+        "traffic": "Il traffico è",
+        "paired-devices_title": "Puoi essere rilevato dai dispositivi abbinati in ogni momento, indipendentemente dalla rete.",
+        "public-room-devices": "nella stanza {{roomId}}",
+        "paired-devices": "da dispositivi abbinati",
+        "on-this-network": "su questa rete",
+        "routed": "instradato attraverso il server",
+        "discovery": "Puoi essere rilevato:",
+        "on-this-network_title": "puoi essere rilevato da chiunque su questa rete.",
+        "known-as": "Sei visibile come:"
+    },
+    "header": {
+        "cancel-paste-mode": "Fatto",
+        "theme-auto_title": "Adatta il tema al sistema automaticamente",
+        "install_title": "Installa PairDrop",
+        "theme-dark_title": "Usa sempre il tema scuro",
+        "pair-device_title": "Abbina i tuoi dispositivi permanentemente",
+        "join-public-room_title": "Unisciti ad una stanza pubblica temporaneamente",
+        "notification_title": "Attiva notifiche",
+        "edit-paired-devices_title": "Modifica i dispositivi abbinati",
+        "language-selector_title": "Imposta Lingua",
+        "about_title": "Informazioni su PairDrop",
+        "about_aria-label": "Apri Informazioni su PairDrop",
+        "theme-light_title": "Usa sempre il tema chiaro"
+    },
+    "instructions": {
+        "x-instructions_mobile": "Tocca per inviare file o tocco prolungato per inviare un messaggio",
+        "click-to-send": "Clicca per inviare",
+        "activate-paste-mode-and-other-files": "e altri {{count}} files",
+        "tap-to-send": "Tocca per inviare",
+        "activate-paste-mode-base": "Apri PairDrop su altri dispositivi per inviare",
+        "no-peers-subtitle": "Abbina dispositivi o entra in una stanza pubblica per essere rilevabile su altre reti",
+        "activate-paste-mode-shared-text": "testo condiviso",
+        "x-instructions_desktop": "Clicca per inviare files o usa il tasto destro per inviare un messaggio",
+        "no-peers-title": "Apri PairDrop su altri dispositivi per inviare files",
+        "x-instructions_data-drop-peer": "Rilascia per inviare al peer",
+        "x-instructions_data-drop-bg": "Rilascia per selezionare il destinatario",
+        "no-peers_data-drop-bg": "Rilascia per selezionare il destinatario"
+    },
+    "dialogs": {
+        "auto-accept-instructions-2": "per accettare automaticamente tutti i files inviati da quel dispositivo.",
+        "edit-paired-devices-title": "Modifica Dispositivi Abbinati",
+        "cancel": "Annulla",
+        "auto-accept-instructions-1": "Attiva",
+        "pair-devices-title": "Abbina Dispositivi Permanentemente",
+        "temporary-public-room-title": "Stanza Pubblica Temporanea",
+        "close": "Chiudi",
+        "unpair": "Dissocia",
+        "pair": "Abbina",
+        "scan-qr-code": "o scannerizza il codice QR.",
+        "input-key-on-this-device": "Inserisci questo codice su un altro dispositivo",
+        "paired-devices-wrapper_data-empty": "Nessun dispositivo abbinato.",
+        "enter-key-from-another-device": "Inserisci il codice dell'altro dispositivo qui.",
+        "auto-accept": "accetta-automaticamente",
+        "input-room-id-on-another-device": "Inserisci l'ID di questa stanza su un altro dispositivo",
+        "enter-room-id-from-another-device": "Inserisci l'ID stanza da un altro dispositivo per accedere alla stanza."
+    }
+}
