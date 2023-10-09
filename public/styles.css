@@ -1011,7 +1011,7 @@ x-dialog .dialog-subheader {
     padding-bottom: 0;
 }
 
-#text-input {
+#send-text-dialog .textarea {
     min-height: 200px;
     width: 100%;
 }
