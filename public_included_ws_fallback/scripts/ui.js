@@ -2073,11 +2073,11 @@ class Notifications {
     _requestPermission() {
         Notification.requestPermission(permission => {
             if (permission !== 'granted') {
-                Events.fire('notify-user', Notifications.PERMISSION_ERROR || 'Error');
+                Events.fire('notify-user', Localization.getTranslation("notifications.notifications-permissions-error"));
                 return;
             }
             Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
-            this.$button.setAttribute('hidden', 1);
+            this.$button.setAttribute('hidden', "");
         });
     }
 
@@ -2784,9 +2784,3 @@ window.addEventListener("keydown", (e) => {
         window.location.hash = '#';
     }
 });
-
-Notifications.PERMISSION_ERROR = `
-Notifications permission has been blocked
-as the user has dismissed the permission prompt several times.
-This can be reset in Page Info
-which can be accessed by clicking the lock icon next to the URL.`;
