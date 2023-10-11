@@ -831,6 +831,8 @@ x-dialog a {
 
 .key-qr-code {
     margin: 16px;
+    width: fit-content;
+    align-self: center;
 }
 
 .key-instructions {

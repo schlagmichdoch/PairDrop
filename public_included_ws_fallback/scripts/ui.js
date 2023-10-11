@@ -1217,6 +1217,7 @@ class PairDeviceDialog extends Dialog {
         Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         this.$el.addEventListener('paste', e => this._onPaste(e));
+        this.$qrCode.addEventListener('click', _ => this._copyPairUrl());
 
         this.evaluateUrlAttributes();
 
@@ -1257,7 +1258,7 @@ class PairDeviceDialog extends Dialog {
         this.$key.innerText = `${this.pairKey.substring(0,3)} ${this.pairKey.substring(3,6)}`
         // Display the QR code for the url
         const qr = new QRCode({
-            content: this._getPairURL(),
+            content: this._getPairUrl(),
             width: 150,
             height: 150,
             padding: 0,
@@ -1271,10 +1272,20 @@ class PairDeviceDialog extends Dialog {
         this.show();
     }
 
-    _getPairURL() {
+    _getPairUrl() {
         let url = new URL(location.href);
         url.searchParams.append('pair_key', this.pairKey)
         return url.href;
+    }
+
+    _copyPairUrl() {
+        navigator.clipboard.writeText(this._getPairUrl())
+            .then(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.pair-url-copied-to-clipboard"));
+            })
+            .catch(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard-error"));
+            })
     }
 
     _onSubmit(e) {
@@ -1548,6 +1559,7 @@ class PublicRoomDialog extends Dialog {
         Events.on('public-room-id-invalid', e => this._onPublicRoomIdInvalid(e.detail));
         Events.on('public-room-left', _ => this._onPublicRoomLeft());
         this.$el.addEventListener('paste', e => this._onPaste(e));
+        this.$qrCode.addEventListener('click', _ => this._copyShareRoomUrl());
 
         this.evaluateUrlAttributes();
 
@@ -1596,7 +1608,7 @@ class PublicRoomDialog extends Dialog {
 
         // Display the QR code for the url
         const qr = new QRCode({
-            content: this._getShareRoomURL(),
+            content: this._getShareRoomUrl(),
             width: 150,
             height: 150,
             padding: 0,
@@ -1621,16 +1633,26 @@ class PublicRoomDialog extends Dialog {
         Events.fire('evaluate-footer-badges');
     }
 
-    _getShareRoomURL() {
+    _getShareRoomUrl() {
         let url = new URL(location.href);
-        url.searchParams.append('room_key', this.roomId)
+        url.searchParams.append('room_id', this.roomId)
         return url.href;
+    }
+
+    _copyShareRoomUrl() {
+        navigator.clipboard.writeText(this._getShareRoomUrl())
+            .then(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.room-url-copied-to-clipboard"));
+            })
+            .catch(_ => {
+                Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard-error"));
+            })
     }
 
     evaluateUrlAttributes() {
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('room_key')) {
-            this._joinPublicRoom(urlParams.get('room_key'));
+        if (urlParams.has('room_id')) {
+            this._joinPublicRoom(urlParams.get('room_id'));
             const url = getUrlWithoutArguments();
             window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
         }

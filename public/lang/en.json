@@ -90,7 +90,9 @@
         "receive-title": "{{descriptor}} Received",
         "download-again": "Download again",
         "language-selector-title": "Set Language",
-        "system-language": "System Language"
+        "system-language": "System Language",
+        "public-room-qr-code_title": "Click to copy link to public room",
+        "pair-devices-qr-code_title": "Click to copy link to pair this device"
     },
     "about": {
         "close-about_aria-label": "Close About PairDrop",
@@ -114,6 +116,8 @@
         "public-room-id-invalid": "Invalid room ID",
         "public-room-left": "Left public room {{publicRoomId}}",
         "copied-to-clipboard": "Copied to clipboard",
+        "pair-url-copied-to-clipboard": "Link to pair this device copied to clipboard",
+        "room-url-copied-to-clipboard": "Link to public room copied to clipboard",
         "copied-to-clipboard-error": "Copying not possible. Copy manually.",
         "text-content-incorrect": "Text content is incorrect.",
         "file-content-incorrect": "File content is incorrect.",
