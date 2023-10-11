@@ -608,9 +608,9 @@ class Dialog {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
         this.$autoFocus = this.$el.querySelector('[autofocus]');
-        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
-
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
+
+        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
 
     show() {
@@ -2751,6 +2751,7 @@ Events.on('load', () => {
         c.style.opacity = "1";
     }
 
+    Events.on('translation-loaded', _ => init());
     Events.on('bg-resize', _ => init());
     window.onresize = _ => Events.fire('bg-resize');
 
@@ -2769,8 +2770,6 @@ Events.on('load', () => {
             drawCircle(ctx, dw * i + frame + 33);
         }
     }
-
-    setTimeout(_ => init(), 300);
 });
 
 document.changeFavicon = function (src) {
