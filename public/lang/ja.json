@@ -1,6 +1,6 @@
 {
     "footer": {
-        "webrtc": "(WebRTCが利用できない場合)",
+        "webrtc": "WebRTCが利用できない場合。",
         "public-room-devices_title": "このデバイスはネットワークと関係なく、このパブリックルームのデバイスにより発見される可能性があります。",
         "display-name_data-placeholder": "読み込み中…",
         "display-name_title": "恒久的なデバイス名を編集する",
