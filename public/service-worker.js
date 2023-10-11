@@ -19,6 +19,19 @@ const urlsToCache = [
     'images/android-chrome-512x512.png',
     'images/android-chrome-512x512-maskable.png',
     'images/apple-touch-icon.png',
+    'lang/ar.json',
+    'lang/de.json',
+    'lang/en.json',
+    'lang/es.json',
+    'lang/fr.json',
+    'lang/id.json',
+    'lang/it.json',
+    'lang/ja.json',
+    'lang/nb.json',
+    'lang/nl.json',
+    'lang/ro.json',
+    'lang/ru.json',
+    'lang/zh-CN.json'
 ];
 
 self.addEventListener('install', function(event) {
