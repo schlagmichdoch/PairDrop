@@ -1767,7 +1767,6 @@ class SendTextDialog extends Dialog {
         const range = document.createRange();
         const sel = window.getSelection();
 
-        this.$text.focus();
         range.selectNodeContents(this.$text);
         sel.removeAllRanges();
         sel.addRange(range);
@@ -1783,7 +1782,7 @@ class SendTextDialog extends Dialog {
             to: this.correspondingPeerId,
             text: this.$text.innerText
         });
-        this.$text.value = "";
+        this.$text.innerText = "";
         this.hide();
     }
 }

@@ -1619,3 +1619,10 @@ x-dialog x-paper {
     color: black;
     background: var(--primary-color);
 }
+
+/* make elements with attribute contenteditable editable on older iOS devices.
+See note here: https://developer.mozilla.org/en-US/docs/Web/CSS/user-select */
+[contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}
