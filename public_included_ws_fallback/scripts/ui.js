@@ -36,27 +36,15 @@ class PeersUI {
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
 
-        this.$header = document.querySelector('body > header')
         this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
         this.$center = $$('#center');
-        this.$logo = $$('footer .icon.logo');
+        this.$footer = $$('footer');
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
-        this.$knownAsWrapper = $$('footer .known-as-wrapper');
 
-        this.$header.style.opacity = "1";
-        this.$xPeers.style.opacity = "1";
-        this.$xNoPeers.style.opacity = "1";
-        this.$xInstructions.style.opacity = "0.5";
-        this.$center.style.opacity = "1";
-        this.$logo.style.opacity = "1";
-        this.$discoveryWrapper.style.opacity = "1";
-        this.$knownAsWrapper.style.opacity = "1";
-
-
-        Events.on('peer-added', _ => this.evaluateOverflowing());
-        Events.on('bg-resize', _ => this.evaluateOverflowing());
+        Events.on('peer-added', _ => this._evaluateOverflowing());
+        Events.on('bg-resize', _ => this._evaluateOverflowing());
 
         this.$displayName = $('display-name');
 
@@ -75,11 +63,45 @@ class PeersUI {
             if (displayName) Events.fire('self-display-name-changed', displayName);
         });
 
+        Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges())
 
-        /* prevent animation on load */
+        this.fadedIn = false;
+
+        this.$header = document.querySelector('header.opacity-0');
+        Events.on('header-evaluated', () => this._fadeInHeader());
+    }
+
+    _fadeInHeader() {
+        //prevent flickering
+        setTimeout(() => this.$header.classList.remove('opacity-0'), 50);
+    }
+
+    _fadeInUI() {
+        if (this.fadedIn) return;
+
+        this.fadedIn = true;
+
+        this.$center.classList.remove('opacity-0');
+        this.$footer.classList.remove('opacity-0');
+
+        // Prevent flickering on load
         setTimeout(_ => {
-            this.$xNoPeers.style.animationIterationCount = "1";
-        }, 300);
+            this.$xNoPeers.classList.remove('no-animation-on-load');
+        }, 600);
+
+        Events.fire('ui-faded-in');
+    }
+
+    _evaluateFooterBadges() {
+        if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
+            this.$discoveryWrapper.classList.remove('row');
+            this.$discoveryWrapper.classList.add('column');
+        } else {
+            this.$discoveryWrapper.classList.remove('column');
+            this.$discoveryWrapper.classList.add('row');
+        }
+        Events.fire('redraw-canvas');
+        this._fadeInUI();
     }
 
     _insertDisplayName(displayName) {
@@ -162,6 +184,11 @@ class PeersUI {
         if (document.querySelectorAll('x-dialog[show]').length === 0 && window.pasteMode.activated && e.code === "Escape") {
             Events.fire('deactivate-paste-mode');
         }
+
+        // close About PairDrop page on Escape
+        if (e.key === "Escape") {
+            window.location.hash = '#';
+        }
     }
 
     _onPeerJoined(msg) {
@@ -207,7 +234,7 @@ class PeersUI {
         Object.keys(peer._roomIds).forEach(roomType => peerNode.classList.add(`type-${roomType}`));
     }
 
-    evaluateOverflowing() {
+    _evaluateOverflowing() {
         if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
             this.$xPeers.classList.add('overflowing');
         } else {
@@ -223,7 +250,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
-        this.evaluateOverflowing();
+        this._evaluateOverflowing();
     }
 
     _onRoomTypeRemoved(peerId, roomType) {
@@ -610,7 +637,6 @@ class Dialog {
         this.$el = $(id);
         this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
         this.$autoFocus = this.$el.querySelector('[autofocus]');
-        this.$discoveryWrapper = $$('footer .discovery-wrapper');
 
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
@@ -631,7 +657,7 @@ class Dialog {
             window.blur();
         }
         document.title = 'PairDrop';
-        document.changeFavicon("images/favicon-96x96.png");
+        changeFavicon("images/favicon-96x96.png");
         this.correspondingPeerId = undefined;
     }
 
@@ -640,17 +666,6 @@ class Dialog {
             this.hide();
             Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
         }
-    }
-
-    evaluateFooterBadges() {
-        if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
-            this.$discoveryWrapper.classList.remove('row');
-            this.$discoveryWrapper.classList.add('column');
-        } else {
-            this.$discoveryWrapper.classList.remove('column');
-            this.$discoveryWrapper.classList.add('row');
-        }
-        Events.fire('bg-resize');
     }
 }
 
@@ -931,7 +946,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         document.title = files.length === 1
             ? `${ Localization.getTranslation("document-titles.file-received") } - PairDrop`
             : `${ Localization.getTranslation("document-titles.file-received-plural", null, {count: files.length}) } - PairDrop`;
-        document.changeFavicon("images/favicon-96x96-notification.png");
+        changeFavicon("images/favicon-96x96-notification.png");
 
         Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
         this.show();
@@ -1028,7 +1043,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.$receiveTitle.innerText = transferRequestTitle;
 
         document.title =  `${transferRequestTitle} - PairDrop`;
-        document.changeFavicon("images/favicon-96x96-notification.png");
+        changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
 
@@ -1192,7 +1207,6 @@ class PairDeviceDialog extends Dialog {
         this.$closeBtn.addEventListener('click', _ => this._close());
 
         Events.on('keydown', e => this._onKeyDown(e));
-        Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._onPairDeviceInitiated(e.detail));
         Events.on('pair-device-joined', e => this._onPairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
@@ -1207,6 +1221,8 @@ class PairDeviceDialog extends Dialog {
         this.evaluateUrlAttributes();
 
         this.pairPeer = {};
+
+        this._evaluateNumberRoomSecrets();
     }
 
     _onKeyDown(e) {
@@ -1229,10 +1245,6 @@ class PairDeviceDialog extends Dialog {
             const url = getUrlWithoutArguments();
             window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
         }
-    }
-
-    _onWsConnected() {
-        this._evaluateNumberRoomSecrets();
     }
 
     _pairDeviceInitiate() {
@@ -1382,16 +1394,17 @@ class PairDeviceDialog extends Dialog {
     }
 
     _evaluateNumberRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
-            if (roomSecrets.length > 0) {
-                this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
-                this.$footerInstructionsPairedDevices.removeAttribute('hidden');
-            } else {
-                this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
-                this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
-            }
-            super.evaluateFooterBadges();
-        });
+        PersistentStorage.getAllRoomSecrets()
+            .then(roomSecrets => {
+                if (roomSecrets.length > 0) {
+                    this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
+                    this.$footerInstructionsPairedDevices.removeAttribute('hidden');
+                } else {
+                    this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
+                    this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
+                }
+                Events.fire('evaluate-footer-badges');
+            });
     }
 }
 
@@ -1399,10 +1412,10 @@ class EditPairedDevicesDialog extends Dialog {
     constructor() {
         super('edit-paired-devices-dialog');
         this.$pairedDevicesWrapper = this.$el.querySelector('.paired-devices-wrapper');
-        this.$footerInstructionsPairedDevices = $$('.discovery-wrapper .badge-room-secret');
+        this.$footerBadgePairedDevices = $$('.discovery-wrapper .badge-room-secret');
 
         $('edit-paired-devices').addEventListener('click', _ => this._onEditPairedDevices());
-        this.$footerInstructionsPairedDevices.addEventListener('click', _ => this._onEditPairedDevices());
+        this.$footerBadgePairedDevices.addEventListener('click', _ => this._onEditPairedDevices());
 
         Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
         Events.on('keydown', e => this._onKeyDown(e));
@@ -1510,7 +1523,7 @@ class PublicRoomDialog extends Dialog {
         this.$leaveBtn = this.$el.querySelector('.leave-room');
         this.$joinSubmitBtn = this.$el.querySelector('button[type="submit"]');
         this.$headerBtnJoinPublicRoom = $('join-public-room');
-        this.$footerInstructionsPublicRoomDevices = $$('.discovery-wrapper .badge-room-public-id');
+        this.$footerBadgePublicRoomDevices = $$('.discovery-wrapper .badge-room-public-id');
 
 
         this.$form.addEventListener('submit', e => this._onSubmit(e));
@@ -1518,7 +1531,7 @@ class PublicRoomDialog extends Dialog {
         this.$leaveBtn.addEventListener('click', _ => this._leavePublicRoom())
 
         this.$headerBtnJoinPublicRoom.addEventListener('click', _ => this._onHeaderBtnClick());
-        this.$footerInstructionsPublicRoomDevices.addEventListener('click', _ => this._onHeaderBtnClick());
+        this.$footerBadgePublicRoomDevices.addEventListener('click', _ => this._onHeaderBtnClick());
 
         this.inputKeyContainer = new InputKeyContainer(
             this.$el.querySelector('.input-key-container'),
@@ -1600,12 +1613,12 @@ class PublicRoomDialog extends Dialog {
     setFooterBadge() {
         if (!this.roomId) return;
 
-        this.$footerInstructionsPublicRoomDevices.innerText = Localization.getTranslation("footer.public-room-devices", null, {
+        this.$footerBadgePublicRoomDevices.innerText = Localization.getTranslation("footer.public-room-devices", null, {
             roomId: this.roomId.toUpperCase()
         });
-        this.$footerInstructionsPublicRoomDevices.removeAttribute('hidden');
+        this.$footerBadgePublicRoomDevices.removeAttribute('hidden');
 
-        super.evaluateFooterBadges();
+        Events.fire('evaluate-footer-badges');
     }
 
     _getShareRoomURL() {
@@ -1717,8 +1730,8 @@ class PublicRoomDialog extends Dialog {
         this.roomId = null;
         this.inputKeyContainer._cleanUp();
         sessionStorage.removeItem('public_room_id');
-        this.$footerInstructionsPublicRoomDevices.setAttribute('hidden', '');
-        super.evaluateFooterBadges();
+        this.$footerBadgePublicRoomDevices.setAttribute('hidden', '');
+        Events.fire('evaluate-footer-badges');
     }
 }
 
@@ -1849,7 +1862,7 @@ class ReceiveTextDialog extends Dialog {
 
         this._setDocumentTitleMessages();
 
-        document.changeFavicon("images/favicon-96x96-notification.png");
+        changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
 
@@ -2059,14 +2072,19 @@ class Notifications {
 
     constructor() {
         // Check if the browser supports notifications
-        if (!('Notification' in window)) return;
+        if (!('Notification' in window)) {
+            Events.fire('header-evaluated');
+            return;
+        }
 
         // Check whether notification permissions have already been granted
         if (Notification.permission !== 'granted') {
-            this.$button = $('notification');
-            this.$button.removeAttribute('hidden');
-            this.$button.addEventListener('click', _ => this._requestPermission());
+            this.$headerNotificationButton = $('notification');
+            this.$headerNotificationButton.removeAttribute('hidden');
+            this.$headerNotificationButton.addEventListener('click', _ => this._requestPermission());
         }
+
+        Events.fire('header-evaluated');
 
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
@@ -2080,7 +2098,7 @@ class Notifications {
                 return;
             }
             Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
-            this.$button.setAttribute('hidden', "");
+            this.$headerNotificationButton.setAttribute('hidden', "");
         });
     }
 
@@ -2462,7 +2480,7 @@ class PersistentStorage {
             return(secrets);
         } catch (e) {
             this.logBrowserNotCapable();
-            return false;
+            return 0;
         }
     }
 
@@ -2680,12 +2698,71 @@ class BrowserTabsConnector {
     }
 }
 
+class BackgroundCanvas {
+    constructor() {
+        this.c = $$('canvas');
+        this.cCtx = this.c.getContext('2d');
+        this.$footer = $$('footer');
+
+        Events.on('bg-resize', _ => this.init());
+        Events.on('redraw-canvas', _ => this.init());
+        Events.on('translation-loaded', _ => this.init());
+
+        //fade-in on load
+        Events.on('ui-faded-in', _ => this._fadeIn());
+
+        window.onresize = _ => Events.fire('bg-resize');
+    }
+
+    _fadeIn() {
+        this.c.classList.remove('opacity-0');
+    }
+
+    init() {
+        let oldW = this.w;
+        let oldH = this.h;
+        let oldOffset = this.offset
+        this.w = document.documentElement.clientWidth;
+        this.h = document.documentElement.clientHeight;
+        this.offset = this.$footer.offsetHeight - 27;
+        if (this.h >= 800) this.offset += 10;
+
+        if (oldW === this.w && oldH === this.h && oldOffset === this.offset) return; // nothing has changed
+
+        this.c.width = this.w;
+        this.c.height = this.h;
+        this.x0 = this.w / 2;
+        this.y0 = this.h - this.offset;
+        this.dw = Math.round(Math.max(this.w, this.h, 1000) / 13);
+
+        this.drawCircles(this.cCtx);
+    }
+
+
+    drawCircle(ctx, radius) {
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        let opacity = Math.max(0, 0.3 * (1 - 1 * radius / Math.max(this.w, this.h)));
+        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
+        ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+    }
+
+    drawCircles(ctx) {
+        ctx.clearRect(0, 0, this.w, this.h);
+        for (let i = 0; i < 13; i++) {
+            this.drawCircle(ctx, this.dw * i + 33 + 66);
+        }
+    }
+}
+
 class PairDrop {
     constructor() {
         Events.on('initial-translation-loaded', _ => {
             const server = new ServerConnection();
             const peers = new PeersManager(server);
             const peersUI = new PeersUI();
+            const backgroundCanvas = new BackgroundCanvas();
             const languageSelectDialog = new LanguageSelectDialog();
             const receiveFileDialog = new ReceiveFileDialog();
             const receiveRequestDialog = new ReceiveRequestDialog();
@@ -2710,7 +2787,6 @@ const persistentStorage = new PersistentStorage();
 const pairDrop = new PairDrop();
 const localization = new Localization();
 
-
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/service-worker.js')
         .then(serviceWorker => {
@@ -2727,63 +2803,4 @@ window.addEventListener('beforeinstallprompt', e => {
         btn.onclick = _ => e.prompt();
     }
     return e.preventDefault();
-});
-
-// Background Circles
-Events.on('load', () => {
-    let c = $$('canvas');
-    let cCtx = c.getContext('2d');
-    let x0, y0, w, h, dw, offset;
-
-    function init() {
-        let oldW = w;
-        let oldH = h;
-        let oldOffset = offset
-        w = document.documentElement.clientWidth;
-        h = document.documentElement.clientHeight;
-        offset = $$('footer').offsetHeight - 27;
-
-        if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
-
-        c.width = w;
-        c.height = h;
-        x0 = w / 2;
-        y0 = h - offset;
-        dw = Math.round(Math.max(w, h, 1000) / 13);
-
-        drawCircles(cCtx, dw);
-        c.style.opacity = "1";
-    }
-
-    Events.on('translation-loaded', _ => init());
-    Events.on('bg-resize', _ => init());
-    window.onresize = _ => Events.fire('bg-resize');
-
-    function drawCircle(ctx, radius) {
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        let opacity = 0.3 * (1 - 1.2 * radius / Math.max(w, h));
-        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
-        ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-
-    function drawCircles(ctx, frame) {
-        ctx.clearRect(0, 0, w, h);
-        for (let i = 0; i < 13; i++) {
-            drawCircle(ctx, dw * i + frame + 33);
-        }
-    }
-});
-
-document.changeFavicon = function (src) {
-    document.querySelector('[rel="icon"]').href = src;
-    document.querySelector('[rel="shortcut icon"]').href = src;
-}
-
-// close About PairDrop page on Escape
-window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-        window.location.hash = '#';
-    }
 });

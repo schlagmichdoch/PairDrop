@@ -407,6 +407,11 @@ function getUrlWithoutArguments() {
     return `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
 }
 
+function changeFavicon(src) {
+    document.querySelector('[rel="icon"]').href = src;
+    document.querySelector('[rel="shortcut icon"]').href = src;
+}
+
 function arrayBufferToBase64(buffer) {
     var binary = '';
     var bytes = new Uint8Array(buffer);

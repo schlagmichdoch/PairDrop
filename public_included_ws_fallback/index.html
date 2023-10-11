@@ -38,7 +38,7 @@
 </head>
 
 <body translate="no">
-    <header class="row-reverse">
+    <header class="row-reverse opacity-0">
         <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label">
             <svg class="icon">
                 <use xlink:href="#info-outline"></use>
@@ -96,11 +96,11 @@
         <div id="cancel-paste-mode" class="button" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden></div>
     </header>
     <!-- Center -->
-    <div id="center">
+    <div id="center" class="opacity-0">
         <!-- Peers -->
         <div class="x-peers-filler"></div>
         <x-peers class="center"></x-peers>
-        <x-no-peers data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg">
+        <x-no-peers class="no-animation-on-load" data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg">
             <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text"></h2>
             <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text"></div>
         </x-no-peers>
@@ -114,7 +114,7 @@
         </div>
     </div>
     <!-- Footer -->
-    <footer class="column">
+    <footer class="column opacity-0">
         <svg class="icon logo">
             <use xlink:href="#wifi-tethering"></use>
         </svg>
@@ -471,14 +471,14 @@
     </div>
     <!-- About Page -->
     <x-about id="about" class="full center column">
-        <header class="row-reverse fade-in">
+        <header class="row-reverse">
             <a href="#" class="close icon-button" data-i18n-key="about.close-about" data-i18n-attrs="aria-label">
                 <svg class="icon">
                     <use xlink:href="#close-icon"></use>
                 </svg>
             </a>
         </header>
-        <section class="center column fade-in">
+        <section class="center column">
             <svg class="icon logo">
                 <use xlink:href="#wifi-tethering"></use>
             </svg>
@@ -512,7 +512,7 @@
         </section>
         <x-background></x-background>
     </x-about>
-    <canvas class="circles"></canvas>
+    <canvas class="circles opacity-0"></canvas>
     <!-- SVG Icon Library -->
     <svg style="display: none;">
         <symbol id="wifi-tethering" viewBox="0 0 24 24">
@@ -592,7 +592,7 @@
     <script src="scripts/theme.js"></script>
     <script src="scripts/network.js"></script>
     <script src="scripts/ui.js"></script>
-    <script src="scripts/util.js" async></script>
+    <script src="scripts/util.js"></script>
     <script src="scripts/QRCode.min.js" async></script>
     <script src="scripts/zip.min.js" async></script>
     <script src="scripts/NoSleep.min.js" async></script>

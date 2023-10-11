@@ -406,3 +406,8 @@ function onlyUnique (value, index, array) {
 function getUrlWithoutArguments() {
     return `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
 }
+
+function changeFavicon(src) {
+    document.querySelector('[rel="icon"]').href = src;
+    document.querySelector('[rel="shortcut icon"]').href = src;
+}

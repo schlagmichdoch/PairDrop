@@ -273,6 +273,9 @@ x-noscript {
     0% {
         opacity: 0;
     }
+    100% {
+        opacity: 1;
+    }
 }
 
 #center {
@@ -417,10 +420,6 @@ x-no-peers {
     padding: 8px;
     height: 137px;
     text-align: center;
-    animation: fade-in 600ms;
-    animation-fill-mode: backwards;
-    /* prevent flickering on load */
-    animation-iteration-count: 0;
 }
 
 x-no-peers h2,
@@ -613,7 +612,6 @@ footer .logo {
     margin-bottom: 8px;
     color: var(--primary-color);
     margin-top: -10px;
-    animation: ease-in;
 }
 
 .discovery-wrapper {
@@ -1228,22 +1226,23 @@ button::-moz-focus-inner {
     z-index: 1;
 }
 
-#about:not(:target) header.fade-in {
+#about:not(:target) header {
     transition-delay: 400ms;
 }
 
-#about:target header.fade-in {
+#about:target header {
     transition-delay: 100ms;
 }
 
-#about .fade-in {
+#about > * {
     transition: opacity 300ms ease 300ms;
     will-change: opacity;
     pointer-events: all;
 }
 
-#about:not(:target) .fade-in {
-    opacity: 0 !important;
+#about:not(:target) > header,
+#about:not(:target) > section {
+    opacity: 0;
     pointer-events: none;
     transition-delay: 0s;
 }
@@ -1422,17 +1421,17 @@ x-peers:empty~x-instructions {
 
 /* Prevent Cumulative Layout Shift */
 
-body > header,
-canvas,
-#center,
-x-no-peers,
-x-peers,
-x-instructions,
-footer > .icon.logo,
-.discovery-wrapper,
-.known-as-wrapper {
-    transition: opacity 0.5s ease 0.1s;
-    opacity: 0; /* will be set to 1 after initial translation is loaded */
+.fade-in {
+    animation: fade-in 600ms;
+    animation-fill-mode: backwards;
+}
+
+.no-animation-on-load {
+    animation-iteration-count: 0;
+}
+
+.opacity-0 {
+    opacity: 0;
 }
 
 /* Responsive Styles */
