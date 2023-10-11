@@ -748,15 +748,26 @@ x-dialog x-background {
 }
 
 x-dialog x-paper {
+    display: flex;
+    flex-direction: column;
+    width: calc(100vw - 10px);
     z-index: 3;
     background: white;
     border-radius: 8px;
-    width: 100%;
     max-width: 400px;
     overflow: hidden;
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
+}
+
+#pair-device-dialog x-paper,
+#edit-paired-devices-dialog x-paper,
+#public-room-dialog x-paper,
+#language-select-dialog x-paper {
+    position: absolute;
+    top: max(50%, 350px);
+    margin-top: -328.5px;
 }
 
 x-paper > .row:first-of-type {
@@ -776,16 +787,6 @@ x-paper > .row:first-of-type h2 {
 
 #public-room-dialog {
     --accent-color: var(--public-room-color);
-}
-
-#pair-device-dialog x-paper,
-#public-room-dialog x-paper {
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: max(50%, 350px);
-    margin-top: -328.5px;
-    width: calc(100vw - 20px);
 }
 
 #pair-device-dialog ::-moz-selection,
