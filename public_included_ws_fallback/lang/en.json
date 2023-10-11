@@ -70,6 +70,7 @@
         "download": "Download",
         "send-message-title": "Send Message",
         "send-message-to": "Send a Message to",
+        "message_title": "Insert message to send",
         "send": "Send",
         "receive-text-title": "Message Received",
         "copy": "Copy",
