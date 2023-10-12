@@ -68,12 +68,25 @@ class PeersUI {
         this.fadedIn = false;
 
         this.$header = document.querySelector('header.opacity-0');
-        Events.on('header-evaluated', () => this._fadeInHeader());
+        Events.on('header-evaluated', e => this._fadeInHeader(e.detail));
+
+        // wait for evaluation of notification, install and edit-paired-devices buttons
+        this.evaluateHeaderCount = 3;
+        if (!('Notification' in window)) this.evaluateHeaderCount -= 1;
+        if (
+            !('BeforeInstallPromptEvent' in window) ||
+            ('BeforeInstallPromptEvent' in window && window.matchMedia('(display-mode: minimal-ui)').matches)
+        ) {
+            this.evaluateHeaderCount -= 1;
+        }
     }
 
-    _fadeInHeader() {
-        //prevent flickering
-        setTimeout(() => this.$header.classList.remove('opacity-0'), 50);
+    _fadeInHeader(id) {
+        this.evaluateHeaderCount -= 1;
+        console.log(`Header btn ${id} evaluated. ${this.evaluateHeaderCount} to go.`);
+        if (this.evaluateHeaderCount !== 0) return;
+
+        this.$header.classList.remove('opacity-0');
     }
 
     _fadeInUI() {
@@ -1415,6 +1428,7 @@ class PairDeviceDialog extends Dialog {
                     this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
                 }
                 Events.fire('evaluate-footer-badges');
+                Events.fire('header-evaluated', 'edit-paired-devices');
             });
     }
 }
@@ -2094,10 +2108,7 @@ class Notifications {
 
     constructor() {
         // Check if the browser supports notifications
-        if (!('Notification' in window)) {
-            Events.fire('header-evaluated');
-            return;
-        }
+        if (!('Notification' in window)) return;
 
         // Check whether notification permissions have already been granted
         if (Notification.permission !== 'granted') {
@@ -2106,7 +2117,7 @@ class Notifications {
             this.$headerNotificationButton.addEventListener('click', _ => this._requestPermission());
         }
 
-        Events.fire('header-evaluated');
+        Events.fire('header-evaluated', 'notification');
 
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
@@ -2820,12 +2831,16 @@ if ('serviceWorker' in navigator) {
         });
 }
 
-window.addEventListener('beforeinstallprompt', e => {
+window.addEventListener('beforeinstallprompt', installEvent => {
     if (!window.matchMedia('(display-mode: minimal-ui)').matches) {
-        // only display install btn when installed
-        const btn = document.querySelector('#install')
-        btn.hidden = false;
-        btn.onclick = _ => e.prompt();
+        // only display install btn when not installed
+        const installBtn = document.querySelector('#install')
+        installBtn.removeAttribute('hidden');
+        installBtn.addEventListener('click', () => {
+            installBtn.setAttribute('hidden', '');
+            installEvent.prompt();
+        });
+        Events.fire('header-evaluated', 'install');
     }
-    return e.preventDefault();
+    return installEvent.preventDefault();
 });
