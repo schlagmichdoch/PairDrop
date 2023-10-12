@@ -35,7 +35,7 @@ class ServerConnection {
 
     _connect() {
         clearTimeout(this._reconnectTimer);
-        if (this._isConnected() || this._isConnecting()) return;
+        if (this._isConnected() || this._isConnecting() || this._isOffline()) return;
         if (this._isReconnect) {
             Events.fire('notify-user', {
                 message: Localization.getTranslation("notifications.connecting"),
@@ -255,6 +255,10 @@ class ServerConnection {
 
     _isConnecting() {
         return this._socket && this._socket.readyState === this._socket.CONNECTING;
+    }
+
+    _isOffline() {
+        return !navigator.onLine;
     }
 
     _onError(e) {

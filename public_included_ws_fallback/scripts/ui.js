@@ -2260,7 +2260,10 @@ class NetworkStatusUI {
     }
 
     _showOfflineMessage() {
-        Events.fire('notify-user', Localization.getTranslation("notifications.offline"));
+        Events.fire('notify-user', {
+            message: Localization.getTranslation("notifications.offline"),
+            persistent: true
+        });
     }
 
     _showOnlineMessage() {

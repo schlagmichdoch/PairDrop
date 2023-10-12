@@ -1,16 +1,18 @@
 const cacheVersion = 'v1.9.0';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const urlsToCache = [
-    'index.html',
     './',
+    'index.html',
+    'manifest.json',
     'styles.css',
+    'scripts/localization.js',
     'scripts/network.js',
+    'scripts/NoSleep.min.js',
+    'scripts/QRCode.min.js',
+    'scripts/theme.js',
     'scripts/ui.js',
     'scripts/util.js',
-    'scripts/qrcode.js',
     'scripts/zip.min.js',
-    'scripts/NoSleep.min.js',
-    'scripts/theme.js',
     'sounds/blop.mp3',
     'images/favicon-96x96.png',
     'images/favicon-96x96-notification.png',
@@ -53,7 +55,7 @@ const fromNetwork = (request, timeout) =>
         fetch(request).then(response => {
             clearTimeout(timeoutId);
             fulfill(response);
-            update(request);
+            update(request).then(() => console.log("Cache successfully updated for", request.url));
         }, reject);
     });
 
@@ -62,9 +64,7 @@ const fromCache = request =>
     caches
         .open(cacheTitle)
         .then(cache =>
-            cache
-                .match(request)
-                .then(matching => matching || cache.match('/offline/'))
+            cache.match(request)
         );
 
 // cache the current page to make it available for offline
@@ -72,15 +72,16 @@ const update = request =>
     caches
         .open(cacheTitle)
         .then(cache =>
-            fetch(request).then(response => {
-                cache.put(request, response).then(_ => {
-                    console.log("Page successfully cached.")
+            fetch(request)
+                .then(async response => {
+                    await cache.put(request, response);
                 })
-            })
+                .catch(() => console.log(`Cache could not be updated. ${request.url}`))
         );
 
 // general strategy when making a request (eg if online try to fetch it
-// from the network with a timeout, if something fails serve from cache)
+// from cache, if something fails fetch from network. Update cache everytime files are fetched.
+// This way files should only be fetched if cacheVersion is changed
 self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
@@ -90,27 +91,33 @@ self.addEventListener('fetch', function(event) {
         })());
     } else {
         // Regular requests not related to Web Share Target.
+
+        // FOR DEVELOPMENT: Comment in next line to always update assets instead of using cached versions
+        // event.respondWith(fromNetwork(event.request, 10000));return;
         event.respondWith(
-            fromNetwork(event.request, 10000).catch(() => fromCache(event.request))
+            fromCache(event.request).then(rsp => {
+                // if fromCache resolves to undefined fetch from network instead
+                return rsp || fromNetwork(event.request, 10000);
+            })
         );
-        event.waitUntil(update(event.request));
     }
 });
 
 
 // on activation, we clean up the previously registered service workers
-self.addEventListener('activate', evt =>
-    evt.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== cacheTitle) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    )
+self.addEventListener('activate', evt => {
+        return evt.waitUntil(
+            caches.keys().then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== cacheTitle) {
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+        )
+    }
 );
 
 const evaluateRequestData = function (request) {
