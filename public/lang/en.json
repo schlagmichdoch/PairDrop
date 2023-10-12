@@ -123,7 +123,7 @@
         "file-content-incorrect": "File content is incorrect.",
         "clipboard-content-incorrect": "Clipboard content is incorrect.",
         "notifications-enabled": "Notifications enabled.",
-        "notifications-permissions-error": "Notifications permission has been blocked as the user has dismissed the permission prompt several times. This can be reset in Page Info which can be accessed by clicking the lock icon next to the URL.",
+        "notifications-permissions-error": "Notifications permission has been blocked as the user has dismissed the permission prompt several times. This can be reset in Page Info which can be accessed by clicking the lock icon next to the URL bar.",
         "link-received": "Link received by {{name}} - Click to open",
         "message-received": "Message received by {{name}} - Click to copy",
         "click-to-download": "Click to download",
