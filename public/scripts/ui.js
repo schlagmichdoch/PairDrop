@@ -919,19 +919,21 @@ class ReceiveDialog extends Dialog {
     }
 
     _formatFileSize(bytes) {
-        // 1 GB = 1024 MB = 1024^2 KB = 1024^3 B
-        // 1024^2 = 104876; 1024^3 = 1073741824
-        if (bytes >= 1073741824) {
-            return Math.round(10 * bytes / 1073741824) / 10 + ' GB';
+        // 1 GB = 1e3 MB = 1e6 KB = 1e9 B
+        if (bytes >= 1e9) {
+            const rndGigabytes = Math.round(10 * bytes / 1e9) / 10;
+            return `${rndGigabytes} GB`;
         }
-        else if (bytes >= 1048576) {
-            return Math.round(bytes / 1048576) + ' MB';
+        else if (bytes >= 1e6) {
+            const rndMegabytes = Math.round(10 * bytes / 1e6) / 10;
+            return `${rndMegabytes} MB`;
         }
-        else if (bytes > 1024) {
-            return Math.round(bytes / 1024) + ' KB';
+        else if (bytes >= (1e3)) {
+            const rndKilobytes = Math.round(10 * bytes / 1e3) / 10;
+            return `${rndKilobytes} KB`;
         }
         else {
-            return bytes + ' Bytes';
+            return `${bytes} bytes`;
         }
     }
 
