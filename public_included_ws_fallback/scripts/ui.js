@@ -750,14 +750,14 @@ class ReceiveDialog extends Dialog {
     _formatFileSize(bytes) {
         // 1 GB = 1024 MB = 1024^2 KB = 1024^3 B
         // 1024^2 = 104876; 1024^3 = 1073741824
-        if (bytes >= 1073741824) {
-            return Math.round(10 * bytes / 1073741824) / 10 + ' GB';
-        } else if (bytes >= 1048576) {
-            return Math.round(bytes / 1048576) + ' MB';
-        } else if (bytes > 1024) {
-            return Math.round(bytes / 1024) + ' KB';
+        if (bytes >= 1000000000) {
+            return Math.round(10 * bytes / 1000000000) / 10 + ' GB';
+        } else if (bytes >= 1000000) {
+            return Math.round(10 * bytes / 1000000) / 10 + ' MB';
+        } else if (bytes >= (1000)) {
+            return Math.round(10 * bytes / 1000) / 10 + ' KB';
         } else {
-            return bytes + ' Bytes';
+            return bytes + ' bytes';
         }
     }
 
