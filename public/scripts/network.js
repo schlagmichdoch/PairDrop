@@ -38,6 +38,12 @@ class ServerConnection {
     _connect() {
         clearTimeout(this._reconnectTimer);
         if (this._isConnected() || this._isConnecting()) return;
+        if (this._isReconnect) {
+            Events.fire('notify-user', {
+                message: Localization.getTranslation("notifications.connecting"),
+                persistent: true
+            });
+        }
         const ws = new WebSocket(this._endpoint());
         ws.binaryType = 'arraybuffer';
         ws.onopen = _ => this._onOpen();
@@ -221,12 +227,10 @@ class ServerConnection {
     _onDisconnect() {
         console.log('WS: server disconnected');
         setTimeout(() => {
-            Events.fire('notify-user', Localization.getTranslation("notifications.connecting"));
+            this._isReconnect = true;
+            Events.fire('ws-disconnected');
+            this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
         }, 100); //delay for 100ms to prevent flickering on page reload
-        clearTimeout(this._reconnectTimer);
-        this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
-        Events.fire('ws-disconnected');
-        this._isReconnect = true;
     }
 
     _onVisibilityChange() {

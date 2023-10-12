@@ -2046,9 +2046,12 @@ class Toast extends Dialog {
 
     _onNotify(message) {
         if (this.hideTimeout) clearTimeout(this.hideTimeout);
-        this.$el.innerText = message;
+        this.$el.innerText = typeof message === "object" ? message.message : message;
         this.show();
-        this.hideTimeout = setTimeout(_ => this.hide(), 5000);
+
+        if (typeof message === "object" && message.persistent) return;
+
+        this.hideTimeout = setTimeout(() => this.hide(), 5000);
     }
 }
 
