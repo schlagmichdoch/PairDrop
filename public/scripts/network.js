@@ -550,7 +550,7 @@ class Peer {
                 this._onFileTransferRequestResponded(message);
                 break;
             case 'file-transfer-complete':
-                this._onFileTransferCompleted();
+                this._onFileTransferCompleted(message);
                 break;
             case 'message-transfer-complete':
                 this._onMessageTransferCompleted();
@@ -608,6 +608,7 @@ class Peer {
     _onFileHeader(header) {
         if (this._requestAccepted && this._requestAccepted.header.length) {
             this._lastProgress = 0;
+            this._timeStart = Date.now();
             this._addFileDigester(header);
         }
     }
@@ -665,7 +666,13 @@ class Peer {
         const acceptedHeader = this._requestAccepted.header.shift();
         this._totalBytesReceived += fileBlob.size;
 
-        this._sendMessage({type: 'file-transfer-complete'});
+        let duration = (Date.now() - this._timeStart) / 1000;
+        let size = Math.round(10 * fileBlob.size / 1000000) / 10;
+        let speed = Math.round(100 * fileBlob.size / 1000000 / duration) / 100;
+
+        console.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
+
+        this._sendMessage({type: 'file-transfer-complete', size: size, duration: duration, speed: speed});
 
         const sameSize = fileBlob.size === acceptedHeader.size;
         const sameName = fileBlob.name === acceptedHeader.name
@@ -693,8 +700,11 @@ class Peer {
         this._requestAccepted = null;
     }
 
-    _onFileTransferCompleted() {
+    _onFileTransferCompleted(message) {
         this._chunker = null;
+
+        console.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
+
         if (this._filesQueue.length) {
             this._dequeueFile();
             return;
