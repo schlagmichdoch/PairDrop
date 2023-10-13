@@ -81,7 +81,11 @@ class Localization {
     }
 
     static async fetchTranslationsFor(newLocale) {
-        const response = await fetch(`lang/${newLocale}.json`)
+        const response = await fetch(`lang/${newLocale}.json`, {
+            method: 'GET',
+            credentials: 'include',
+            mode: 'no-cors',
+        });
 
         if (response.redirected === true || response.status !== 200) return false;
 
