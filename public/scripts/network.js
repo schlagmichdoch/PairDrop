@@ -496,7 +496,7 @@ class Peer {
                 this._onFileTransferRequestResponded(messageJSON);
                 break;
             case 'file-transfer-complete':
-                this._onFileTransferCompleted();
+                this._onFileTransferCompleted(messageJSON);
                 break;
             case 'message-transfer-complete':
                 this._onMessageTransferCompleted();
@@ -552,6 +552,7 @@ class Peer {
     _onFileHeader(header) {
         if (this._requestAccepted && this._requestAccepted.header.length) {
             this._lastProgress = 0;
+            this._timeStart = Date.now();
             this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
                 this._requestAccepted.totalSize,
                 this._totalBytesReceived,
@@ -595,7 +596,13 @@ class Peer {
         const acceptedHeader = this._requestAccepted.header.shift();
         this._totalBytesReceived += fileBlob.size;
 
-        this.sendJSON({type: 'file-transfer-complete'});
+        let duration = (Date.now() - this._timeStart) / 1000;
+        let size = Math.round(10 * fileBlob.size / 1000000) / 10;
+        let speed = Math.round(100 * fileBlob.size / 1000000 / duration) / 100;
+
+        console.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
+
+        this.sendJSON({type: 'file-transfer-complete', size: size, duration: duration, speed: speed});
 
         const sameSize = fileBlob.size === acceptedHeader.size;
         const sameName = fileBlob.name === acceptedHeader.name
@@ -616,8 +623,10 @@ class Peer {
         }
     }
 
-    _onFileTransferCompleted() {
-        this._chunker = null;
+    _onFileTransferCompleted(message) {
+        console.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
+
+
         if (!this._filesQueue.length) {
             this._busy = false;
             Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
