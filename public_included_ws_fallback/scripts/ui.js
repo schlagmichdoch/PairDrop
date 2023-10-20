@@ -70,21 +70,17 @@ class PeersUI {
         this.$header = document.querySelector('header.opacity-0');
         Events.on('header-evaluated', e => this._fadeInHeader(e.detail));
 
-        // wait for evaluation of notification, install and edit-paired-devices buttons
-        this.evaluateHeaderCount = 3;
-        if (!('Notification' in window)) this.evaluateHeaderCount -= 1;
-        if (
-            !('BeforeInstallPromptEvent' in window) ||
-            ('BeforeInstallPromptEvent' in window && window.matchMedia('(display-mode: minimal-ui)').matches)
-        ) {
-            this.evaluateHeaderCount -= 1;
-        }
+        // wait for evaluation of notification and edit-paired-devices buttons
+        this.evaluateHeader = ["notification", "edit-paired-devices"];
+
+        if (!('Notification' in window)) this.evaluateHeader.splice(this.evaluateHeader.indexOf("notification"), 1);
     }
 
     _fadeInHeader(id) {
-        this.evaluateHeaderCount -= 1;
-        console.log(`Header btn ${id} evaluated. ${this.evaluateHeaderCount} to go.`);
-        if (this.evaluateHeaderCount !== 0) return;
+        this.evaluateHeader.splice(this.evaluateHeader.indexOf(id), 1);
+        console.log(`Header btn ${id} evaluated. ${this.evaluateHeader.length} to go.`);
+
+        if (this.evaluateHeader.length !== 0) return;
 
         this.$header.classList.remove('opacity-0');
     }
@@ -2840,7 +2836,6 @@ window.addEventListener('beforeinstallprompt', installEvent => {
             installBtn.setAttribute('hidden', '');
             installEvent.prompt();
         });
-        Events.fire('header-evaluated', 'install');
     }
     return installEvent.preventDefault();
 });
