@@ -38,7 +38,7 @@
         "file-other-description-image-plural": "und {{count}} andere Bilder",
         "file-other-description-file-plural": "und {{count}} andere Dateien",
         "auto-accept-instructions-1": "Aktiviere",
-        "auto-accept": "auto-accept",
+        "auto-accept": "automatisch-akzeptieren",
         "auto-accept-instructions-2": "um automatisch alle Dateien von diesem Gerät zu akzeptieren.",
         "has-sent": "hat Folgendes gesendet:",
         "send-message-title": "Textnachricht Senden",
@@ -60,7 +60,10 @@
         "leave": "Verlassen",
         "join": "Betreten",
         "enter-room-id-from-another-device": "Gib die Raum-ID von einem anderen Gerät hier ein.",
-        "temporary-public-room-title": "Temporärer Öffentlicher Raum"
+        "temporary-public-room-title": "Temporärer Öffentlicher Raum",
+        "message_title": "Nachricht zum Senden hier einfügen",
+        "pair-devices-qr-code_title": "Klicke, um Link zum Koppeln mit diesem Gerät zu kopieren",
+        "public-room-qr-code_title": "Klicke, um Link zu diesem öffentlichen Raum zu kopieren"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -125,7 +128,10 @@
         "copied-to-clipboard-error": "Konnte nicht kopieren. Kopiere manuell.",
         "public-room-id-invalid": "Ungültige Raum-ID",
         "online-requirement-pairing": "Du musst online sein, um Geräte zu koppeln.",
-        "online-requirement-public-room": "Du musst online sein, um öffentliche Räume erstellen zu können."
+        "online-requirement-public-room": "Du musst online sein, um öffentliche Räume erstellen zu können.",
+        "notifications-permissions-error": "Benachrichtigungen wurden blockiert, weil der Nutzer die Berechtigungsanfrage mehrfach abgelehnt hat. Dies kann in den Einstellungen der Website zurückgesetzt werden, welche durch Klick auf das Schloss Symbol neben der URL Leiste erreicht werden können.",
+        "pair-url-copied-to-clipboard": "Link zum Koppeln mit diesem Gerät in Zwischenablage kopiert",
+        "room-url-copied-to-clipboard": "Link zu diesem öffentlichen Raum in Zwischenablage kopiert"
     },
     "instructions": {
         "x-instructions_desktop": "Klicke, um Dateien zu senden oder benutze einen Rechtsklick, um eine Textnachricht zu senden",
