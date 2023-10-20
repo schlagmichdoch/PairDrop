@@ -89,7 +89,10 @@
         "share": "Condividi",
         "title-file-plural": "Files",
         "send-message-title": "Invia Messaggio",
-        "file-other-description-image-plural": "e {{count}} altre immagini"
+        "file-other-description-image-plural": "e {{count}} altre immagini",
+        "message_title": "Inserisci il messaggio da inviare",
+        "pair-devices-qr-code_title": "Clicca per copiare il link di abbinamento di questo dispositivo",
+        "public-room-qr-code_title": "Clicca per copirare il link della stanza pubblica"
     },
     "notifications": {
         "request-title": "{{name}} vorrebbe trasferire {{count}} {{descriptor}}",
@@ -129,7 +132,10 @@
         "online-requirement-public-room": "Devi essere online per creare una stanza pubblica.",
         "copied-text-error": "Scrittura negli appunti fallita. Copia manualmente!",
         "download-successful": "{{descriptor}} scaricato",
-        "click-to-show": "Clicca per mostrare"
+        "click-to-show": "Clicca per mostrare",
+        "notifications-permissions-error": "Il permesso all'invio delle notifiche è stato negato poiché l'utente ha ignorato varie volte le richieste di permesso. Ciò può essere ripristinato nelle \"informazioni sito\" cliccando sull'icona a forma di lucchetto vicino alla barra degli indirizzi.",
+        "pair-url-copied-to-clipboard": "Link di abbinamento copiato negli appunti",
+        "room-url-copied-to-clipboard": "Link della stanza copiato negli appunti"
     },
     "peer-ui": {
         "processing": "Elaborazione…",

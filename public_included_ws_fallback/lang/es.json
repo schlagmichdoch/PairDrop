@@ -66,7 +66,10 @@
         "online-requirement-public-room": "Debes estar en línea para crear una sala pública.",
         "copied-text-error": "Error al escribir en el portapapeles. ¡Cópielo manualmente!",
         "download-successful": "{{descriptor}} descargado",
-        "click-to-show": "Click para mostrar"
+        "click-to-show": "Click para mostrar",
+        "notifications-permissions-error": "Las notificaciones se bloquearon porque el usuario rechazó la solicitud del permiso varias veces. Esto se puede restablecer en la configuración de la página web, a la que se quiere acceder haciendo clic en el icono del candado al lado de la barra con la URL.",
+        "pair-url-copied-to-clipboard": "El enlace para emparejar este dispositivo se copió en el portapapeles",
+        "room-url-copied-to-clipboard": "El enlace a la sala pública se copió en el portapapeles"
     },
     "instructions": {
         "x-instructions_mobile": "Toque para enviar archivos o toque prologádamente para enviar un mensaje",
@@ -138,7 +141,10 @@
         "send-message-title": "Enviar Mensaje",
         "input-room-id-on-another-device": "Ingrese el ID de esta sala en otro dispositivo",
         "file-other-description-image-plural": "y {{count}} imágenes más",
-        "enter-room-id-from-another-device": "Ingresa el ID de la sala desde otro dispositivo para unirte a la sala."
+        "enter-room-id-from-another-device": "Ingresa el ID de la sala desde otro dispositivo para unirte a la sala.",
+        "message_title": "Insertar el mensaje a enviar",
+        "pair-devices-qr-code_title": "Haz clic para copiar el enlace para emparejar este dispositivo",
+        "public-room-qr-code_title": "Haz clic para copiar el enlace a la sala pública"
     },
     "about": {
         "claim": "La forma más sencilla de transferir archivos entre dispositivos",

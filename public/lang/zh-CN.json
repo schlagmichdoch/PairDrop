@@ -89,7 +89,10 @@
         "leave": "离开",
         "join": "加入",
         "temporary-public-room-title": "临时公共房间",
-        "enter-room-id-from-another-device": "在另一个设备上输入这串房间号来加入房间。"
+        "enter-room-id-from-another-device": "在另一个设备上输入这串房间号来加入房间。",
+        "message_title": "插入要发送的消息",
+        "pair-devices-qr-code_title": "单击复制和此设备配对的链接",
+        "public-room-qr-code_title": "单击复制公共房间链接"
     },
     "about": {
         "faq_title": "常见问题",
@@ -138,7 +141,10 @@
         "copied-to-clipboard-error": "无法复制。请手动复制。",
         "public-room-id-invalid": "无效的房间号",
         "online-requirement-pairing": "您需要连接到互联网来配对新设备。",
-        "online-requirement-public-room": "您需要连接到互联网来创建一个公共房间。"
+        "online-requirement-public-room": "您需要连接到互联网来创建一个公共房间。",
+        "notifications-permissions-error": "因用户数次拒绝了权限授予提示，通知权限已被拦截。可以在“页面信息”中重置它，要访问“页面信息”请单击地址栏旁的挂锁图标。",
+        "pair-url-copied-to-clipboard": "已将和此设备配对的链接复制到剪贴板",
+        "room-url-copied-to-clipboard": "已将公共房间的链接复制到剪贴板"
     },
     "document-titles": {
         "message-received": "收到信息",
