@@ -1,5 +1,6 @@
 const cacheVersion = 'v1.9.1';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
+const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
 const urlsToCache = [
     './',
     'index.html',
@@ -91,15 +92,16 @@ self.addEventListener('fetch', function(event) {
         })());
     } else {
         // Regular requests not related to Web Share Target.
-
-        // FOR DEVELOPMENT: Comment in next line to always update assets instead of using cached versions
-        // event.respondWith(fromNetwork(event.request, 10000));return;
-        event.respondWith(
-            fromCache(event.request).then(rsp => {
-                // if fromCache resolves to undefined fetch from network instead
-                return rsp || fromNetwork(event.request, 10000);
-            })
-        );
+        if (forceFetch) {
+            event.respondWith(fromNetwork(event.request, 10000));
+        } else {
+            event.respondWith(
+                fromCache(event.request).then(rsp => {
+                    // if fromCache resolves to undefined fetch from network instead
+                    return rsp || fromNetwork(event.request, 10000);
+                })
+            );
+        }
     }
 });
 
