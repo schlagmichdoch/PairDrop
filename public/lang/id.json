@@ -52,7 +52,10 @@
         "online-requirement-public-room": "Anda harus online untuk membuat ruang publik.",
         "copied-text-error": "Menyalin ke papan klip gagal. Salinlah secara manual!",
         "download-successful": "{{descriptor}} diunduh",
-        "click-to-show": "Klik untuk menampilkan"
+        "click-to-show": "Klik untuk menampilkan",
+        "notifications-permissions-error": "Izin pemberitahuan telah diblokir karena pengguna telah mengabaikan permintaan izin beberapa kali. Hal ini dapat diatur ulang di Info Halaman yang dapat diakses dengan mengeklik ikon kunci di sebelah bar URL.",
+        "pair-url-copied-to-clipboard": "Tautan untuk memasangkan perangkat ini disalin ke papan klip",
+        "room-url-copied-to-clipboard": "Tautan ke ruang publik disalin ke papan klip"
     },
     "header": {
         "cancel-paste-mode": "Selesai",
@@ -138,7 +141,10 @@
         "send-message-title": "Kirim Pesan",
         "input-room-id-on-another-device": "Masukkan room ID ini pada perangkat lain",
         "file-other-description-image-plural": "dan {{count}} gambar lainnya",
-        "enter-room-id-from-another-device": "Masukkan room ID dari perangkat lain untuk bergabung dengan room."
+        "enter-room-id-from-another-device": "Masukkan room ID dari perangkat lain untuk bergabung dengan room.",
+        "message_title": "Masukkan pesan untuk dikirim",
+        "pair-devices-qr-code_title": "Klik untuk menyalin tautan untuk memasangkan perangkat ini",
+        "public-room-qr-code_title": "Klik untuk menyalin tautan ke ruang publik"
     },
     "about": {
         "claim": "Cara termudah untuk mentransfer file lintas perangkat",
