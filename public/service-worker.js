@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.9.3';
+const cacheVersion = 'v1.9.4';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
 const urlsToCache = [
