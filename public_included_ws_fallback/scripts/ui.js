@@ -1271,7 +1271,7 @@ class PairDeviceDialog extends Dialog {
             width: 150,
             height: 150,
             padding: 1,
-            background: 'rgb(238,238,238)',
+            background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
@@ -1622,7 +1622,7 @@ class PublicRoomDialog extends Dialog {
             width: 150,
             height: 150,
             padding: 1,
-            background: 'rgb(238,238,238)',
+            background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
