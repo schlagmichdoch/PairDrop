@@ -6,6 +6,8 @@ Beware that you have to host your own TURN server to enable transfers between di
 
 Follow [this guide](https://gabrieltanner.org/blog/turn-server/) to either install coturn directly on your system (Step 1) 
 or deploy it via Docker (Step 5).
+
+You can use the `docker-compose-coturn.yml` in this repository. See [Coturn and PairDrop via Docker Compose](#coturn-and-pairdrop-via-docker-compose).
  
 Alternatively, use a free, pre-configured TURN server like [OpenRelay](https://www.metered.ca/tools/openrelay/)
 
@@ -543,6 +545,54 @@ a2ensite pairdrop
 ```bash
 service apache2 reload
 ```
+
+<br>
+
+## Coturn and PairDrop via Docker Compose
+
+### Setup container
+To run coturn and PairDrop at once by using the `docker-compose-coturn.yml` with TURN over TLS enabled
+you need to follow these steps:
+
+1. Generate or retrieve certificates for your `<DOMAIN>` (e.g. letsencrypt / certbot)
+2. Create `./ssl` folder: `mkdir ssl`
+3. Copy your ssl-certificates and the privkey to `./ssl` 
+4. Restrict access to `./ssl`: `chown -R nobody:nogroup ./ssl`
+5. Create a dh-params file: `openssl dhparam -out ./ssl/dhparams.pem 4096` 
+6. Copy `rtc_config_example.json` to `rtc_config.json`
+7. Copy `turnserver_example.conf` to `turnserver.conf`
+8. Change `<DOMAIN>` in both files to the domain where your PairDrop instance is running 
+9. Change `username` and `password` in `turnserver.conf` and `rtc-config.json`
+10. To start the container including coturn run: \
+  `docker compose -f docker-compose-coturn.yml up -d`
+
+<br>
+
+#### Setup container
+To restart the container including coturn run: \
+  `docker compose -f docker-compose-coturn.yml restart`
+
+<br>
+
+#### Setup container
+To stop the container including coturn run: \
+  `docker compose -f docker-compose-coturn.yml stop`
+
+<br>
+
+### Firewall
+To run PairDrop including its own coturn-server you need to punch holes in the firewall. These ports must be opened additionally:
+- 3478 tcp/udp
+- 5349 tcp/udp
+- 10000:20000 tcp/udp
+
+<br>
+
+### Firewall
+To run PairDrop including its own coturn-server you need to punch holes in the firewall. These ports must be opened additionally:
+- 3478 tcp/udp
+- 5349 tcp/udp
+- 10000:20000 tcp/udp
 
 <br>
 
