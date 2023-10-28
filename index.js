@@ -35,7 +35,53 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log(reason)
 })
 
-if (process.argv.includes('--auto-restart')) {
+// Arguments for deployment with Docker and Node.js
+const DEBUG_MODE = process.env.DEBUG_MODE === "true";
+const PORT = process.env.PORT || 3000;
+const WS_FALLBACK = process.argv.includes('--include-ws-fallback') || process.env.WS_FALLBACK === "true";
+const IPV6_LOCALIZE = parseInt(process.env.IPV6_LOCALIZE) || false;
+const RTC_CONFIG = process.env.RTC_CONFIG
+    ? JSON.parse(fs.readFileSync(process.env.RTC_CONFIG, 'utf8'))
+    : {
+        "sdpSemantics": "unified-plan",
+        "iceServers": [
+            {
+                "urls": "stun:stun.l.google.com:19302"
+            }
+        ]
+    };
+
+let rateLimit = false;
+if (process.argv.includes('--rate-limit') || process.env.RATE_LIMIT === "true") {
+    rateLimit = 5;
+} else {
+    let envRateLimit = parseInt(process.env.RATE_LIMIT);
+    if (!isNaN(envRateLimit)) {
+        rateLimit = envRateLimit;
+    }
+}
+const RATE_LIMIT = rateLimit;
+
+// Arguments for deployment with Node.js only
+const AUTO_START = process.argv.includes('--auto-restart');
+const LOCALHOST_ONLY = process.argv.includes('--localhost-only');
+
+if (DEBUG_MODE) {
+    console.log("DEBUG_MODE is active. To protect privacy, do not use in production.");
+    console.debug("\n");
+    console.debug("----DEBUG ENVIRONMENT VARIABLES----")
+    console.debug("DEBUG_MODE", DEBUG_MODE);
+    console.debug("PORT", PORT);
+    console.debug("WS_FALLBACK", WS_FALLBACK);
+    console.debug("IPV6_LOCALIZE", IPV6_LOCALIZE);
+    console.debug("RTC_CONFIG", RTC_CONFIG);
+    console.debug("RATE_LIMIT", RATE_LIMIT);
+    console.debug("AUTO_START", AUTO_START);
+    console.debug("LOCALHOST_ONLY", LOCALHOST_ONLY);
+    console.debug("\n");
+}
+
+if (AUTO_START) {
     process.on(
         'uncaughtException',
         () => {
@@ -56,20 +102,9 @@ if (process.argv.includes('--auto-restart')) {
     );
 }
 
-const rtcConfig = process.env.RTC_CONFIG
-    ? JSON.parse(fs.readFileSync(process.env.RTC_CONFIG, 'utf8'))
-    : {
-        "sdpSemantics": "unified-plan",
-        "iceServers": [
-            {
-                "urls": "stun:stun.l.google.com:19302"
-            }
-        ]
-    };
-
 const app = express();
 
-if (process.argv.includes('--rate-limit')) {
+if (RATE_LIMIT) {
     const limiter = RateLimit({
         windowMs: 5 * 60 * 1000, // 5 minutes
         max: 1000, // Limit each IP to 1000 requests per `window` (here, per 5 minutes)
@@ -79,35 +114,40 @@ if (process.argv.includes('--rate-limit')) {
     })
 
     app.use(limiter);
-    // ensure correct client ip and not the ip of the reverse proxy is used for rate limiting on render.com
-    // see https://github.com/express-rate-limit/express-rate-limit#troubleshooting-proxy-issues
-    app.set('trust proxy', 5);
+
+    // ensure correct client ip and not the ip of the reverse proxy is used for rate limiting
+    // see https://express-rate-limit.mintlify.app/guides/troubleshooting-proxy-issues
+    app.set('trust proxy', RATE_LIMIT);
+
+    if (!DEBUG_MODE) {
+        console.log("Use DEBUG_MODE=true to find correct number for RATE_LIMIT.");
+    }
 }
 
-if (process.argv.includes('--include-ws-fallback')) {
+if (WS_FALLBACK) {
     app.use(express.static('public_included_ws_fallback'));
 } else {
     app.use(express.static('public'));
 }
 
-const debugMode = process.env.DEBUG_MODE === "true";
-
-if (debugMode) {
-    console.log("DEBUG_MODE is active. To protect privacy, do not use in production.")
-}
-
-let ipv6_lcl;
-if (process.env.IPV6_LOCALIZE) {
-    ipv6_lcl = parseInt(process.env.IPV6_LOCALIZE);
-    if (!ipv6_lcl || !(0 < ipv6_lcl && ipv6_lcl < 8)) {
+if (IPV6_LOCALIZE) {
+    if (!(0 < IPV6_LOCALIZE && IPV6_LOCALIZE < 8)) {
         console.error("IPV6_LOCALIZE must be an integer between 1 and 7");
         return;
     }
 
-    console.log("IPv6 client IPs will be localized to", ipv6_lcl, ipv6_lcl === 1 ? "segment" : "segments");
+    console.log("IPv6 client IPs will be localized to", IPV6_LOCALIZE, IPV6_LOCALIZE === 1 ? "segment" : "segments");
 }
 
 app.use(function(req, res) {
+    if (DEBUG_MODE && RATE_LIMIT && req.path === "/ip") {
+        console.debug("----DEBUG RATE_LIMIT----")
+        console.debug("To find out the correct value for RATE_LIMIT go to '/ip' and ensure the returned IP-address is the IP-address of your client.")
+        console.debug("See https://github.com/express-rate-limit/express-rate-limit#troubleshooting-proxy-issues for more info")
+        console.debug("\n");
+        res.send(req.ip);
+    }
+
     res.redirect('/');
 });
 
@@ -116,12 +156,11 @@ app.get('/', (req, res) => {
 });
 
 const server = http.createServer(app);
-const port = process.env.PORT || 3000;
 
-if (process.argv.includes('--localhost-only')) {
-    server.listen(port, '127.0.0.1');
+if (LOCALHOST_ONLY) {
+    server.listen(PORT, '127.0.0.1');
 } else {
-    server.listen(port);
+    server.listen(PORT);
 }
 
 server.on('error', (err) => {
@@ -143,7 +182,7 @@ class PairDropServer {
 
         this._keepAliveTimers = {};
 
-        console.log('PairDrop is running on port', port);
+        console.log('PairDrop is running on port', PORT);
     }
 
     _onConnection(peer) {
@@ -154,7 +193,7 @@ class PairDropServer {
 
         this._send(peer, {
             type: 'rtc-config',
-            config: rtcConfig
+            config: RTC_CONFIG
         });
 
         // send displayName
@@ -644,18 +683,19 @@ class Peer {
             this.ip = this.ip.substring(7);
 
         let ipv6_was_localized = false;
-        if (ipv6_lcl && this.ip.includes(':')) {
-            this.ip = this.ip.split(':',ipv6_lcl).join(':');
+        if (IPV6_LOCALIZE && this.ip.includes(':')) {
+            this.ip = this.ip.split(':',IPV6_LOCALIZE).join(':');
             ipv6_was_localized = true;
         }
 
-        if (debugMode) {
+        if (DEBUG_MODE) {
             console.debug("----DEBUGGING-PEER-IP-START----");
             console.debug("remoteAddress:", request.connection.remoteAddress);
             console.debug("x-forwarded-for:", request.headers['x-forwarded-for']);
             console.debug("cf-connecting-ip:", request.headers['cf-connecting-ip']);
-            if (ipv6_was_localized)
-                console.debug("IPv6 client IP was localized to", ipv6_lcl, ipv6_lcl > 1 ? "segments" : "segment");
+            if (ipv6_was_localized) {
+                console.debug("IPv6 client IP was localized to", IPV6_LOCALIZE, IPV6_LOCALIZE > 1 ? "segments" : "segment");
+            }
             console.debug("PairDrop uses:", this.ip);
             console.debug("IP is private:", this.ipIsPrivate(this.ip));
             console.debug("if IP is private, '127.0.0.1' is used instead");
