@@ -6,48 +6,46 @@ window.isMobile = window.iOS || window.android;
 window.pasteMode = {};
 window.pasteMode.activated = false;
 
-// set display name
-Events.on('display-name', e => {
-    const me = e.detail.message;
-    const $displayName = $('display-name');
-    $displayName.setAttribute('placeholder', me.displayName);
-});
-
 class PeersUI {
 
     constructor() {
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
-        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
-        Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('set-progress', e => this._onSetProgress(e.detail));
-        Events.on('paste', e => this._onPaste(e));
-        Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
-        Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
-        this.peers = {};
-
         this.$cancelPasteModeBtn = $('cancel-paste-mode');
-        this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
-
-        Events.on('dragover', e => this._onDragOver(e));
-        Events.on('dragleave', _ => this._onDragEnd());
-        Events.on('dragend', _ => this._onDragEnd());
-
-        Events.on('drop', e => this._onDrop(e));
-        Events.on('keydown', e => this._onKeyDown(e));
-
         this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
         this.$center = $$('#center');
         this.$footer = $$('footer');
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
+        this.$displayName = $('display-name');
+        this.$header = $$('header.opacity-0');
 
+        this.evaluateHeader = ["notification", "edit-paired-devices"];
+        this.fadedIn = false;
+        this.peers = {};
+
+        Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-added', _ => this._evaluateOverflowing());
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
+        Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
+        Events.on('peers', e => this._onPeers(e.detail));
+        Events.on('set-progress', e => this._onSetProgress(e.detail));
+
+        Events.on('drop', e => this._onDrop(e));
+        Events.on('keydown', e => this._onKeyDown(e));
+        Events.on('dragover', e => this._onDragOver(e));
+        Events.on('dragleave', _ => this._onDragEnd());
+        Events.on('dragend', _ => this._onDragEnd());
         Events.on('bg-resize', _ => this._evaluateOverflowing());
 
-        this.$displayName = $('display-name');
+        Events.on('paste', e => this._onPaste(e));
+        Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
+        Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
 
+
+        this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
+
+        // Show "Loading…"
         this.$displayName.setAttribute("placeholder", this.$displayName.dataset.placeholder);
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
@@ -56,24 +54,27 @@ class PeersUI {
 
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
         Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
+        Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges())
+
+        if (!('Notification' in window)) this.evaluateHeader.splice(this.evaluateHeader.indexOf("notification"), 1);
+
+        // wait for evaluation of notification and edit-paired-devices buttons
+        Events.on('header-evaluated', e => this._fadeInHeader(e.detail));
 
         // Load saved display name on page load
+        Events.on('ws-connected', _ => this._loadSavedDisplayName());
+    }
+
+    _loadSavedDisplayName() {
         this._getSavedDisplayName().then(displayName => {
             console.log("Retrieved edited display name:", displayName)
             if (displayName) Events.fire('self-display-name-changed', displayName);
         });
+    }
 
-        Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges())
-
-        this.fadedIn = false;
-
-        this.$header = document.querySelector('header.opacity-0');
-        Events.on('header-evaluated', e => this._fadeInHeader(e.detail));
-
-        // wait for evaluation of notification and edit-paired-devices buttons
-        this.evaluateHeader = ["notification", "edit-paired-devices"];
-
-        if (!('Notification' in window)) this.evaluateHeader.splice(this.evaluateHeader.indexOf("notification"), 1);
+    _onDisplayName(displayName){
+        // set display name
+        this.$displayName.setAttribute('placeholder', displayName);
     }
 
     _fadeInHeader(id) {
@@ -2789,8 +2790,6 @@ class BackgroundCanvas {
 class PairDrop {
     constructor() {
         Events.on('initial-translation-loaded', _ => {
-            const server = new ServerConnection();
-            const peers = new PeersManager(server);
             const peersUI = new PeersUI();
             const backgroundCanvas = new BackgroundCanvas();
             const languageSelectDialog = new LanguageSelectDialog();
@@ -2809,6 +2808,8 @@ class PairDrop {
             const webFileHandlersUI = new WebFileHandlersUI();
             const noSleepUI = new NoSleepUI();
             const broadCast = new BrowserTabsConnector();
+            const server = new ServerConnection();
+            const peers = new PeersManager(server);
         });
     }
 }

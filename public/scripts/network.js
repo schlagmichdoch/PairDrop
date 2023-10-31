@@ -175,8 +175,8 @@ class ServerConnection {
 
     _onDisplayName(msg) {
         // Add peerId and peerIdHash to sessionStorage to authenticate as the same device on page reload
-        sessionStorage.setItem('peer_id', msg.message.peerId);
-        sessionStorage.setItem('peer_id_hash', msg.message.peerIdHash);
+        sessionStorage.setItem('peer_id', msg.peerId);
+        sessionStorage.setItem('peer_id_hash', msg.peerIdHash);
 
         // Add peerId to localStorage to mark it for other PairDrop tabs on the same browser
         BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
@@ -902,7 +902,7 @@ class PeersManager {
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
 
         Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
-        Events.on('display-name', e => this._onDisplayName(e.detail.message.displayName));
+        Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
         Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
         Events.on('auto-accept-updated', e => this._onAutoAcceptUpdated(e.detail.roomSecret, e.detail.autoAccept));

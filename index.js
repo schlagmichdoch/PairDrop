@@ -199,12 +199,10 @@ class PairDropServer {
         // send displayName
         this._send(peer, {
             type: 'display-name',
-            message: {
-                displayName: peer.name.displayName,
-                deviceName: peer.name.deviceName,
-                peerId: peer.id,
-                peerIdHash: hasher.hashCodeSalted(peer.id)
-            }
+            displayName: peer.name.displayName,
+            deviceName: peer.name.deviceName,
+            peerId: peer.id,
+            peerIdHash: hasher.hashCodeSalted(peer.id)
         });
     }
 
