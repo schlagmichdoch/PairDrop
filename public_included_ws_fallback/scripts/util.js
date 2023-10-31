@@ -37,6 +37,9 @@ if (!navigator.clipboard) {
     }
 }
 
+const $ = query => document.getElementById(query);
+const $$ = query => document.querySelector(query);
+
 const zipper = (() => {
 
     let zipWriter;

@@ -1,22 +1,34 @@
 window.URL = window.URL || window.webkitURL;
 window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
 
-window.hiddenProperty = 'hidden' in document ? 'hidden' :
-    'webkitHidden' in document ? 'webkitHidden' :
-        'mozHidden' in document ? 'mozHidden' :
-            null;
-window.visibilityChangeEvent = 'visibilitychange' in document ? 'visibilitychange' :
-    'webkitvisibilitychange' in document ? 'webkitvisibilitychange' :
-        'mozvisibilitychange' in document ? 'mozvisibilitychange' :
-            null;
+if (!window.isRtcSupported) alert("WebRTC must be enabled for PairDrop to work");
+
+window.hiddenProperty = 'hidden' in document
+    ? 'hidden'
+    : 'webkitHidden' in document
+        ? 'webkitHidden'
+        : 'mozHidden' in document
+            ? 'mozHidden'
+            : null;
+
+window.visibilityChangeEvent = 'visibilitychange' in document
+    ? 'visibilitychange'
+    : 'webkitvisibilitychange' in document
+        ? 'webkitvisibilitychange'
+        : 'mozvisibilitychange' in document
+            ? 'mozvisibilitychange'
+            : null;
 
 class ServerConnection {
 
     constructor() {
-        this._connect();
         Events.on('pagehide', _ => this._disconnect());
-        document.addEventListener(window.visibilityChangeEvent, _ => this._onVisibilityChange());
-        if (navigator.connection) navigator.connection.addEventListener('change', _ => this._reconnect());
+        Events.on(window.visibilityChangeEvent, _ => this._onVisibilityChange());
+
+        if (navigator.connection) {
+            navigator.connection.addEventListener('change', _ => this._reconnect());
+        }
+
         Events.on('room-secrets', e => this.send({ type: 'room-secrets', roomSecrets: e.detail }));
         Events.on('join-ip-room', e => this.send({ type: 'join-ip-room'}));
         Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
@@ -31,6 +43,8 @@ class ServerConnection {
 
         Events.on('offline', _ => clearTimeout(this._reconnectTimer));
         Events.on('online', _ => this._connect());
+
+        this._connect();
     }
 
     _connect() {
