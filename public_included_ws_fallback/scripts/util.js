@@ -55,7 +55,8 @@ const zipper = (() => {
                 const blobURL = URL.createObjectURL(await zipWriter.close());
                 zipWriter = null;
                 return blobURL;
-            } else {
+            }
+            else {
                 throw new Error("Zip file closed");
             }
         },
@@ -64,7 +65,8 @@ const zipper = (() => {
                 const file = new File([await zipWriter.close()], filename, {type: "application/zip"});
                 zipWriter = null;
                 return file;
-            } else {
+            }
+            else {
                 throw new Error("Zip file closed");
             }
         },

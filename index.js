@@ -54,7 +54,8 @@ const RTC_CONFIG = process.env.RTC_CONFIG
 let rateLimit = false;
 if (process.argv.includes('--rate-limit') || process.env.RATE_LIMIT === "true") {
     rateLimit = 5;
-} else {
+}
+else {
     let envRateLimit = parseInt(process.env.RATE_LIMIT);
     if (!isNaN(envRateLimit)) {
         rateLimit = envRateLimit;
@@ -126,7 +127,8 @@ if (RATE_LIMIT) {
 
 if (WS_FALLBACK) {
     app.use(express.static('public_included_ws_fallback'));
-} else {
+}
+else {
     app.use(express.static('public'));
 }
 
@@ -159,7 +161,8 @@ const server = http.createServer(app);
 
 if (LOCALHOST_ONLY) {
     server.listen(PORT, '127.0.0.1');
-} else {
+}
+else {
     server.listen(PORT);
 }
 
@@ -670,9 +673,11 @@ class Peer {
     _setIP(request) {
         if (request.headers['cf-connecting-ip']) {
             this.ip = request.headers['cf-connecting-ip'].split(/\s*,\s*/)[0];
-        } else if (request.headers['x-forwarded-for']) {
+        }
+        else if (request.headers['x-forwarded-for']) {
             this.ip = request.headers['x-forwarded-for'].split(/\s*,\s*/)[0];
-        } else {
+        }
+        else {
             this.ip = request.connection.remoteAddress;
         }
 
@@ -748,7 +753,8 @@ class Peer {
         let peerIdHash = searchParams.get("peer_id_hash");
         if (peerId && Peer.isValidUuid(peerId) && this.isPeerIdHashValid(peerId, peerIdHash)) {
             this.id = peerId;
-        } else {
+        }
+        else {
             this.id = crypto.randomUUID();
         }
     }
@@ -769,7 +775,8 @@ class Peer {
 
         if (ua.device.model) {
             deviceName += ua.device.model;
-        } else {
+        }
+        else {
             deviceName += ua.browser.name;
         }
 

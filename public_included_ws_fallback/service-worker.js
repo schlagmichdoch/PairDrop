@@ -90,16 +90,19 @@ self.addEventListener('fetch', function(event) {
             const share_url = await evaluateRequestData(event.request);
             return Response.redirect(encodeURI(share_url), 302);
         })());
-    } else {
+    }
+    else {
         // Regular requests not related to Web Share Target.
         if (forceFetch) {
             event.respondWith(fromNetwork(event.request, 10000));
-        } else {
+        }
+        else {
             event.respondWith(
-                fromCache(event.request).then(rsp => {
-                    // if fromCache resolves to undefined fetch from network instead
-                    return rsp || fromNetwork(event.request, 10000);
-                })
+                fromCache(event.request)
+                    .then(rsp => {
+                        // if fromCache resolves to undefined fetch from network instead
+                        return rsp || fromNetwork(event.request, 10000);
+                    })
             );
         }
     }
@@ -109,15 +112,16 @@ self.addEventListener('fetch', function(event) {
 // on activation, we clean up the previously registered service workers
 self.addEventListener('activate', evt => {
         return evt.waitUntil(
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheName !== cacheTitle) {
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
+            caches.keys()
+                .then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => {
+                            if (cacheName !== cacheTitle) {
+                                return caches.delete(cacheName);
+                            }
+                        })
+                    );
+                })
         )
     }
 );
@@ -157,7 +161,8 @@ const evaluateRequestData = function (request) {
             DBOpenRequest.onerror = _ => {
                 resolve(pairDropUrl);
             }
-        } else {
+        }
+        else {
             let urlArgument = '?share-target=text';
 
             if (title) urlArgument += `&title=${title}`;

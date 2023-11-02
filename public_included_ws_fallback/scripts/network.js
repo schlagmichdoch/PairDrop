@@ -204,16 +204,19 @@ class ServerConnection {
         sessionStorage.setItem('peer_id_hash', msg.peerIdHash);
 
         // Add peerId to localStorage to mark it for other PairDrop tabs on the same browser
-        BrowserTabsConnector.addPeerIdToLocalStorage().then(peerId => {
-            if (!peerId) return;
-            console.log("successfully added peerId to localStorage");
+        BrowserTabsConnector
+            .addPeerIdToLocalStorage()
+            .then(peerId => {
+                if (!peerId) return;
+                console.log("successfully added peerId to localStorage");
 
-            // Only now join rooms
-            Events.fire('join-ip-room');
-            PersistentStorage.getAllRoomSecrets().then(roomSecrets => {
-                Events.fire('room-secrets', roomSecrets);
+                // Only now join rooms
+                Events.fire('join-ip-room');
+                PersistentStorage.getAllRoomSecrets()
+                    .then(roomSecrets => {
+                        Events.fire('room-secrets', roomSecrets);
+                    });
             });
-        });
 
         Events.fire('display-name', msg);
     }
@@ -236,9 +239,11 @@ class ServerConnection {
         this.send({ type: 'disconnect' });
 
         const peerId = sessionStorage.getItem('peer_id');
-        BrowserTabsConnector.removePeerIdFromLocalStorage(peerId).then(_ => {
-            console.log("successfully removed peerId from localStorage");
-        });
+        BrowserTabsConnector
+            .removePeerIdFromLocalStorage(peerId)
+            .then(_ => {
+                console.log("successfully removed peerId from localStorage");
+            });
 
         if (!this._socket) return;
 
@@ -331,7 +336,8 @@ class Peer {
         // -> do not delete duplicates and do not regenerate room secrets
         if (!this._isSameBrowser() && roomType === "secret" && this._isPaired() && this._getPairSecret() !== roomId) {
             // multiple roomSecrets with same peer -> delete old roomSecret
-            PersistentStorage.deleteRoomSecret(this._getPairSecret())
+            PersistentStorage
+                .deleteRoomSecret(this._getPairSecret())
                 .then(deletedRoomSecret => {
                     if (deletedRoomSecret) console.log("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
                 });
@@ -361,7 +367,8 @@ class Peer {
             return;
         }
 
-        PersistentStorage.getRoomSecretEntry(this._getPairSecret())
+        PersistentStorage
+            .getRoomSecretEntry(this._getPairSecret())
             .then(roomSecretEntry => {
                 const autoAccept = roomSecretEntry
                     ? roomSecretEntry.entry.auto_accept
@@ -392,13 +399,16 @@ class Peer {
                 if (width && height) {
                     canvas.width = width;
                     canvas.height = height;
-                } else if (width) {
+                }
+                else if (width) {
                     canvas.width = width;
                     canvas.height = Math.floor(imageHeight * width / imageWidth)
-                } else if (height) {
+                }
+                else if (height) {
                     canvas.width = Math.floor(imageWidth * height / imageHeight);
                     canvas.height = height;
-                } else {
+                }
+                else {
                     canvas.width = imageWidth;
                     canvas.height = imageHeight
                 }
@@ -410,9 +420,11 @@ class Peer {
                 resolve(dataUrl);
             }
             image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
-        }).then(dataUrl => {
+        })
+        .then(dataUrl => {
             return dataUrl;
-        }).catch(e => console.error(e));
+        })
+        .catch(e => console.error(e));
     }
 
     async requestFileTransfer(files) {
@@ -647,7 +659,8 @@ class Peer {
             this._busy = false;
             Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
             Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
-        } else {
+        }
+        else {
             this._dequeueFile();
         }
     }
@@ -710,7 +723,8 @@ class RTCPeer extends Peer {
 
         if (this._isCaller) {
             this._openChannel();
-        } else {
+        }
+        else {
             this._conn.ondatachannel = e => this._onChannelOpened(e);
         }
     }
@@ -740,7 +754,8 @@ class RTCPeer extends Peer {
 
     _onDescription(description) {
         // description.sdp = description.sdp.replace('b=AS:30', 'b=AS:1638400');
-        this._conn.setLocalDescription(description)
+        this._conn
+            .setLocalDescription(description)
             .then(_ => this._sendSignal({ sdp: description }))
             .catch(e => this._onError(e));
     }
@@ -754,16 +769,20 @@ class RTCPeer extends Peer {
         if (!this._conn) this._connect();
 
         if (message.sdp) {
-            this._conn.setRemoteDescription(message.sdp)
+            this._conn
+                .setRemoteDescription(message.sdp)
                 .then(_ => {
                     if (message.sdp.type === 'offer') {
-                        return this._conn.createAnswer()
+                        return this._conn
+                            .createAnswer()
                             .then(d => this._onDescription(d));
                     }
                 })
                 .catch(e => this._onError(e));
-        } else if (message.ice) {
-            this._conn.addIceCandidate(new RTCIceCandidate(message.ice))
+        }
+        else if (message.ice) {
+            this._conn
+                .addIceCandidate(new RTCIceCandidate(message.ice))
                 .catch(e => this._onError(e));
         }
     }
@@ -1007,7 +1026,8 @@ class PeersManager {
 
         if (window.isRtcSupported && rtcSupported) {
             this.peers[peerId] = new RTCPeer(this._server,isCaller, peerId, roomType, roomId);
-        } else {
+        }
+        else {
             this.peers[peerId] = new WSPeer(this._server, isCaller, peerId, roomType, roomId);
         }
     }
@@ -1063,10 +1083,11 @@ class PeersManager {
             // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
             // Tidy up peerIds in localStorage
             if (Object.keys(this.peers).length === 0) {
-                BrowserTabsConnector.removeOtherPeerIdsFromLocalStorage().then(peerIds => {
-                    if (!peerIds) return;
-                    console.log("successfully removed other peerIds from localStorage");
-                });
+                BrowserTabsConnector.removeOtherPeerIdsFromLocalStorage()
+                    .then(peerIds => {
+                        if (!peerIds) return;
+                        console.log("successfully removed other peerIds from localStorage");
+                    });
             }
         }
     }
@@ -1124,16 +1145,19 @@ class PeersManager {
 
         if (peer._getRoomTypes().length > 1) {
             peer._removeRoomType(roomType);
-        } else {
+        }
+        else {
             Events.fire('peer-disconnected', peerId);
         }
     }
 
     _onRoomSecretRegenerated(message) {
-        PersistentStorage.updateRoomSecret(message.oldRoomSecret, message.newRoomSecret).then(_ => {
-            console.log("successfully regenerated room secret");
-            Events.fire("room-secrets", [message.newRoomSecret]);
-        })
+        PersistentStorage
+            .updateRoomSecret(message.oldRoomSecret, message.newRoomSecret)
+            .then(_ => {
+                console.log("successfully regenerated room secret");
+                Events.fire("room-secrets", [message.newRoomSecret]);
+            })
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {

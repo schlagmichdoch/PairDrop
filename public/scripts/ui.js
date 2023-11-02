@@ -64,10 +64,13 @@ class PeersUI {
     }
 
     _loadSavedDisplayName() {
-        this._getSavedDisplayName().then(displayName => {
-            console.log("Retrieved edited display name:", displayName)
-            if (displayName) Events.fire('self-display-name-changed', displayName);
-        });
+        this._getSavedDisplayName()
+            .then(displayName => {
+                console.log("Retrieved edited display name:", displayName)
+                if (displayName) {
+                    Events.fire('self-display-name-changed', displayName);
+                }
+            });
     }
 
     _onDisplayName(displayName){
@@ -104,7 +107,8 @@ class PeersUI {
         if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
             this.$discoveryWrapper.classList.remove('row');
             this.$discoveryWrapper.classList.add('column');
-        } else {
+        }
+        else {
             this.$discoveryWrapper.classList.remove('column');
             this.$discoveryWrapper.classList.add('row');
         }
@@ -147,7 +151,8 @@ class PeersUI {
                     Events.fire('self-display-name-changed', newDisplayName);
                     Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
                 });
-        } else {
+        }
+        else {
             PersistentStorage.delete('editedDisplayName')
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.")
@@ -188,8 +193,12 @@ class PeersUI {
         this._changePeerDisplayName(e.detail.peerId, e.detail.displayName);
     }
 
+    _noDialogShown() {
+        return document.querySelectorAll('x-dialog[show]').length === 0;
+    }
+
     _onKeyDown(e) {
-        if (document.querySelectorAll('x-dialog[show]').length === 0 && window.pasteMode.activated && e.code === "Escape") {
+        if (this._noDialogShown() && window.pasteMode.activated && e.code === "Escape") {
             Events.fire('deactivate-paste-mode');
         }
 
@@ -245,7 +254,8 @@ class PeersUI {
     _evaluateOverflowing() {
         if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
             this.$xPeers.classList.add('overflowing');
-        } else {
+        }
+        else {
             this.$xPeers.classList.remove('overflowing');
         }
     }
@@ -319,9 +329,11 @@ class PeersUI {
 
             if (files.length === 1) {
                 descriptor = `<i>${files[0].name}</i>`;
-            } else if (files.length > 1) {
+            }
+            else if (files.length > 1) {
                 descriptor = `<i>${files[0].name}</i><br>${andOtherFiles}`;
-            } else {
+            }
+            else {
                 descriptor = sharedText;
             }
 
@@ -380,7 +392,8 @@ class PeersUI {
                 files: files,
                 to: peerId
             });
-        } else if (text.length > 0) {
+        }
+        else if (text.length > 0) {
             Events.fire('send-text', {
                 text: text,
                 to: peerId
@@ -408,7 +421,8 @@ class PeerUI {
         let input = '';
         if (window.pasteMode.activated) {
             title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: window.pasteMode.descriptor});
-        } else {
+        }
+        else {
             title = Localization.getTranslation("peer-ui.click-to-send");
             input = '<input type="file" multiple>';
         }
@@ -498,7 +512,8 @@ class PeerUI {
             this.$el.addEventListener('contextmenu', this._callbackContextMenu);
             this.$el.addEventListener('touchstart', this._callbackTouchStart);
             this.$el.addEventListener('touchend', this._callbackTouchEnd);
-        } else {
+        }
+        else {
             // Remove Events Normal Mode
             this.$el.removeEventListener('click', this._callbackClickSleep);
             this.$el.removeEventListener('touchstart', this._callbackTouchStartSleep);
@@ -566,7 +581,8 @@ class PeerUI {
         const $progress = this.$el.querySelector('.progress');
         if (0.5 < progress && progress < 1) {
             $progress.classList.add('over50');
-        } else {
+        }
+        else {
             $progress.classList.remove('over50');
         }
         if (progress < 1) {
@@ -582,7 +598,8 @@ class PeerUI {
                 this.$el.querySelector('.status').innerText = statusName;
                 this.currentStatus = status;
             }
-        } else {
+        }
+        else {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
             progress = 0;
@@ -627,7 +644,8 @@ class PeerUI {
     _onTouchEnd(e) {
         if (Date.now() - this._touchStart < 500) {
             clearTimeout(this._touchTimer);
-        } else if (this._touchTimer) { // this was a long tap
+        }
+        else if (this._touchTimer) { // this was a long tap
             e.preventDefault();
             Events.fire('text-recipient', {
                 peerId: this._peer.id,
@@ -641,7 +659,9 @@ class PeerUI {
 class Dialog {
     constructor(id) {
         this.$el = $(id);
-        this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
+        this.$el.querySelectorAll('[close]').forEach(el => {
+            el.addEventListener('click', _ => this.hide())
+        });
         this.$autoFocus = this.$el.querySelector('[autofocus]');
 
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
@@ -699,7 +719,8 @@ class LanguageSelectDialog extends Dialog {
     show() {
         if (Localization.isSystemLocale()) {
             this.$languageButtons[0].focus();
-        } else {
+        }
+        else {
             let locale = Localization.getLocale();
             for (let i=0; i<this.$languageButtons.length; i++) {
                 const $btn = this.$languageButtons[i];
@@ -718,7 +739,8 @@ class LanguageSelectDialog extends Dialog {
 
         if (languageCode) {
             localStorage.setItem('language-code', languageCode);
-        } else {
+        }
+        else {
             localStorage.removeItem('language-code');
         }
 
@@ -745,11 +767,14 @@ class ReceiveDialog extends Dialog {
         // 1024^2 = 104876; 1024^3 = 1073741824
         if (bytes >= 1073741824) {
             return Math.round(10 * bytes / 1073741824) / 10 + ' GB';
-        } else if (bytes >= 1048576) {
+        }
+        else if (bytes >= 1048576) {
             return Math.round(bytes / 1048576) + ' MB';
-        } else if (bytes > 1024) {
+        }
+        else if (bytes > 1024) {
             return Math.round(bytes / 1024) + ' KB';
-        } else {
+        }
+        else {
             return bytes + ' Bytes';
         }
     }
@@ -761,7 +786,8 @@ class ReceiveDialog extends Dialog {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image")
                 : Localization.getTranslation("dialogs.file-other-description-file");
-        } else if (files.length >= 2) {
+        }
+        else if (files.length >= 2) {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
                 : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
@@ -845,7 +871,8 @@ class ReceiveFileDialog extends ReceiveDialog {
 
                 if (Object.keys(previewElement).indexOf(mime) === -1) {
                     resolve(false);
-                } else {
+                }
+                else {
                     let element = document.createElement(previewElement[mime]);
                     element.controls = true;
                     element.onload = _ => {
@@ -875,7 +902,8 @@ class ReceiveFileDialog extends ReceiveDialog {
             descriptor = imagesOnly
                 ? Localization.getTranslation("dialogs.title-image")
                 : Localization.getTranslation("dialogs.title-file");
-        } else {
+        }
+        else {
             descriptor = imagesOnly
                 ? Localization.getTranslation("dialogs.title-image-plural")
                 : Localization.getTranslation("dialogs.title-file-plural");
@@ -937,7 +965,8 @@ class ReceiveFileDialog extends ReceiveDialog {
                 tmpZipBtn.download = filenameDownload;
                 tmpZipBtn.href = url;
                 tmpZipBtn.click();
-            } else {
+            }
+            else {
                 this._downloadFilesIndividually(files);
             }
 
@@ -960,7 +989,8 @@ class ReceiveFileDialog extends ReceiveDialog {
         setTimeout(() => {
             if (canShare) {
                 this.$shareBtn.click();
-            } else {
+            }
+            else {
                 this.$downloadBtn.click();
             }
         }, 500);
@@ -969,7 +999,8 @@ class ReceiveFileDialog extends ReceiveDialog {
             .then(canPreview => {
                 if (canPreview) {
                     console.log('the file is able to preview');
-                } else {
+                }
+                else {
                     console.log('the file is not able to preview');
                 }
             })
@@ -1132,10 +1163,12 @@ class InputKeyContainer {
         if (e.key === "Backspace" && previousSibling && !e.target.value) {
             previousSibling.value = '';
             previousSibling.focus();
-        } else if (e.key === "ArrowRight" && nextSibling) {
+        }
+        else if (e.key === "ArrowRight" && nextSibling) {
             e.preventDefault();
             nextSibling.focus();
-        } else if (e.key === "ArrowLeft" && previousSibling) {
+        }
+        else if (e.key === "ArrowLeft" && previousSibling) {
             e.preventDefault();
             previousSibling.focus();
         }
@@ -1171,7 +1204,8 @@ class InputKeyContainer {
     _evaluateKeyChars() {
         if (this.$inputKeyContainer.querySelectorAll('input:placeholder-shown').length > 0) {
             this._onNotAllCharsFilled();
-        } else {
+        }
+        else {
             this._onAllCharsFilled();
 
             const lastCharFocused = document.activeElement === this.$inputKeyChars[this.$inputKeyChars.length - 1];
@@ -1241,7 +1275,10 @@ class PairDeviceDialog extends Dialog {
 
     _onPaste(e) {
         e.preventDefault();
-        let pastedKey = e.clipboardData.getData("Text").replace(/\D/g,'').substring(0, 6);
+        let pastedKey = e.clipboardData
+            .getData("Text")
+            .replace(/\D/g,'')
+            .substring(0, 6);
         this.inputKeyContainer._onPaste(pastedKey);
     }
 
@@ -1364,7 +1401,8 @@ class PairDeviceDialog extends Dialog {
             deviceName = $peer.ui._peer.name.deviceName;
         }
 
-        PersistentStorage.addRoomSecret(roomSecret, displayName, deviceName)
+        PersistentStorage
+            .addRoomSecret(roomSecret, displayName, deviceName)
             .then(_ => {
                 Events.fire('notify-user', Localization.getTranslation("notifications.pairing-success"));
                 this._evaluateNumberRoomSecrets();
@@ -1405,18 +1443,22 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onSecretRoomDeleted(roomSecret) {
-        PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
-            this._evaluateNumberRoomSecrets();
-        });
+        PersistentStorage
+            .deleteRoomSecret(roomSecret)
+            .then(_ => {
+                this._evaluateNumberRoomSecrets();
+            });
     }
 
     _evaluateNumberRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets()
+        PersistentStorage
+            .getAllRoomSecrets()
             .then(roomSecrets => {
                 if (roomSecrets.length > 0) {
                     this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
                     this.$footerInstructionsPairedDevices.removeAttribute('hidden');
-                } else {
+                }
+                else {
                     this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
                     this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
                 }
@@ -1450,45 +1492,51 @@ class EditPairedDevicesDialog extends Dialog {
         const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
 
-        roomSecretsEntries.forEach(roomSecretsEntry => {
-            let $pairedDevice = document.createElement('div');
-            $pairedDevice.classList = ["paired-device"];
+        roomSecretsEntries
+            .forEach(roomSecretsEntry => {
+                let $pairedDevice = document.createElement('div');
+                $pairedDevice.classList = ["paired-device"];
 
-            $pairedDevice.innerHTML = `
-            <div class="display-name">
-                <span>${roomSecretsEntry.display_name}</span>
-            </div>
-            <div class="device-name">
-                <span>${roomSecretsEntry.device_name}</span>
-            </div>
-            <div class="button-wrapper">
-                <label class="auto-accept pointer">${autoAcceptString}
-                    <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
-                </label>
-                <button class="button" type="button">${unpairString}</button>
-            </div>`
+                $pairedDevice.innerHTML = `
+                <div class="display-name">
+                    <span>${roomSecretsEntry.display_name}</span>
+                </div>
+                <div class="device-name">
+                    <span>${roomSecretsEntry.device_name}</span>
+                </div>
+                <div class="button-wrapper">
+                    <label class="auto-accept pointer">${autoAcceptString}
+                        <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
+                    </label>
+                    <button class="button" type="button">${unpairString}</button>
+                </div>`
 
-            $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
-                PersistentStorage.updateRoomSecretAutoAccept(roomSecretsEntry.secret, e.target.checked).then(roomSecretsEntry => {
-                    Events.fire('auto-accept-updated', {
-                        'roomSecret': roomSecretsEntry.entry.secret,
-                        'autoAccept': e.target.checked
+                $pairedDevice
+                    .querySelector('input[type="checkbox"]')
+                    .addEventListener('click', e => {
+                        PersistentStorage.updateRoomSecretAutoAccept(roomSecretsEntry.secret, e.target.checked)
+                            .then(roomSecretsEntry => {
+                                Events.fire('auto-accept-updated', {
+                                    'roomSecret': roomSecretsEntry.entry.secret,
+                                    'autoAccept': e.target.checked
+                                });
+                            });
                     });
-                });
-            });
 
-            $pairedDevice.querySelector('button').addEventListener('click', e => {
-                PersistentStorage.deleteRoomSecret(roomSecretsEntry.secret).then(roomSecret => {
-                    Events.fire('room-secrets-deleted', [roomSecret]);
-                    Events.fire('evaluate-number-room-secrets');
-                    e.target.parentNode.parentNode.remove();
-                });
+                $pairedDevice
+                    .querySelector('button')
+                    .addEventListener('click', e => {
+                        PersistentStorage.deleteRoomSecret(roomSecretsEntry.secret)
+                            .then(roomSecret => {
+                                Events.fire('room-secrets-deleted', [roomSecret]);
+                                Events.fire('evaluate-number-room-secrets');
+                                e.target.parentNode.parentNode.remove();
+                            });
+                    })
+
+                this.$pairedDevicesWrapper.html = "";
+                this.$pairedDevicesWrapper.appendChild($pairedDevice)
             })
-
-            this.$pairedDevicesWrapper.html = "";
-            this.$pairedDevicesWrapper.appendChild($pairedDevice)
-        })
-
     }
 
     hide() {
@@ -1503,14 +1551,17 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _clearRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets()
+        PersistentStorage
+            .getAllRoomSecrets()
             .then(roomSecrets => {
-                PersistentStorage.clearRoomSecrets().finally(() => {
-                    Events.fire('room-secrets-deleted', roomSecrets);
-                    Events.fire('evaluate-number-room-secrets');
-                    Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
-                    this.hide();
-                })
+                PersistentStorage
+                    .clearRoomSecrets()
+                    .finally(() => {
+                        Events.fire('room-secrets-deleted', roomSecrets);
+                        Events.fire('evaluate-number-room-secrets');
+                        Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
+                        this.hide();
+                    })
             });
     }
 
@@ -1524,9 +1575,11 @@ class EditPairedDevicesDialog extends Dialog {
 
         if (!peer || !peer._roomIds["secret"]) return;
 
-        PersistentStorage.updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName).then(roomSecretEntry => {
-            console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
-        })
+        PersistentStorage
+            .updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName)
+            .then(roomSecretEntry => {
+                console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
+            })
     }
 }
 
@@ -1589,7 +1642,8 @@ class PublicRoomDialog extends Dialog {
     _onHeaderBtnClick() {
         if (this.roomId) {
             this.show();
-        } else {
+        }
+        else {
             this._createPublicRoom();
         }
     }
@@ -1782,7 +1836,8 @@ class SendTextDialog extends Dialog {
 
         if (e.code === "Escape") {
             this.hide();
-        } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+        }
+        else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
             if (this._textInputEmpty()) return;
             this._send();
         }
@@ -1795,7 +1850,8 @@ class SendTextDialog extends Dialog {
     _onChange(e) {
         if (this._textInputEmpty()) {
             this.$submit.setAttribute('disabled', '');
-        } else {
+        }
+        else {
             this.$submit.removeAttribute('disabled');
         }
     }
@@ -1853,7 +1909,8 @@ class ReceiveTextDialog extends Dialog {
             if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
                 await this._onCopy()
                 this.hide();
-            } else if (e.code === "Escape") {
+            }
+            else if (e.code === "Escape") {
                 this.hide();
             }
         }
@@ -1903,7 +1960,8 @@ class ReceiveTextDialog extends Dialog {
 
     async _onCopy() {
         const sanitizedText = this.$text.innerText.replace(/\u00A0/gm, ' ');
-        navigator.clipboard.writeText(sanitizedText)
+        navigator.clipboard
+            .writeText(sanitizedText)
             .then(_ => {
                 Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard"));
                 this.hide();
@@ -1937,7 +1995,8 @@ class Base64ZipDialog extends Dialog {
                 // ?base64text=paste
                 // base64 encoded string is ready to be pasted from clipboard
                 this.preparePasting('text');
-            } else if (base64Text === 'hash') {
+            }
+            else if (base64Text === 'hash') {
                 // ?base64text=hash#BASE64ENCODED
                 // base64 encoded string is url hash which is never sent to server and faster (recommended)
                 this.processBase64Text(base64Hash)
@@ -1947,7 +2006,8 @@ class Base64ZipDialog extends Dialog {
                     }).finally(() => {
                         this.hide();
                     });
-            } else {
+            }
+            else {
                 // ?base64text=BASE64ENCODED
                 // base64 encoded string was part of url param (not recommended)
                 this.processBase64Text(base64Text)
@@ -1958,7 +2018,8 @@ class Base64ZipDialog extends Dialog {
                         this.hide();
                     });
             }
-        } else if (base64Zip) {
+        }
+        else if (base64Zip) {
             this.show();
             if (base64Zip === "hash") {
                 // ?base64zip=hash#BASE64ENCODED
@@ -1970,7 +2031,8 @@ class Base64ZipDialog extends Dialog {
                     }).finally(() => {
                         this.hide();
                     });
-            } else {
+            }
+            else {
                 // ?base64zip=paste || ?base64zip=true
                 this.preparePasting('files');
             }
@@ -1991,7 +2053,8 @@ class Base64ZipDialog extends Dialog {
             this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", null, {type: translateType});
             this._clickCallback = _ => this.processClipboard(type);
             this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
-        } else {
+        }
+        else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
             this.$pasteBtn.setAttribute('hidden', '');
             this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
@@ -2030,7 +2093,8 @@ class Base64ZipDialog extends Dialog {
         try {
             if (type === 'text') {
                 await this.processBase64Text(base64);
-            } else {
+            }
+            else {
                 await this.processBase64Zip(base64);
             }
         } catch(_) {
@@ -2161,7 +2225,8 @@ class Notifications {
             if (/^((https?:\/\/|www)[abcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)$/.test(message.toLowerCase())) {
                 const notification = this._notify(Localization.getTranslation("notifications.link-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => window.open(message, '_blank', "noreferrer"));
-            } else {
+            }
+            else {
                 const notification = this._notify(Localization.getTranslation("notifications.message-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => this._copyText(message, notification));
             }
@@ -2180,13 +2245,15 @@ class Notifications {
             let title;
             if (files.length === 1) {
                 title = `${files[0].name}`;
-            } else {
+            }
+            else {
                 let fileOther;
                 if (files.length === 2) {
                     fileOther = imagesOnly
                         ? Localization.getTranslation("dialogs.file-other-description-image")
                         : Localization.getTranslation("dialogs.file-other-description-file");
-                } else {
+                }
+                else {
                     fileOther = imagesOnly
                         ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
                         : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
@@ -2215,17 +2282,19 @@ class Notifications {
                 descriptor = imagesOnly
                     ? Localization.getTranslation("dialogs.title-image")
                     : Localization.getTranslation("dialogs.title-file");
-            } else {
+            }
+            else {
                 descriptor = imagesOnly
                     ? Localization.getTranslation("dialogs.title-image-plural")
                     : Localization.getTranslation("dialogs.title-file-plural");
             }
 
-            let title = Localization.getTranslation("notifications.request-title", null, {
-                name: displayName,
-                count: request.header.length,
-                descriptor: descriptor.toLowerCase()
-            });
+            let title = Localization
+                .getTranslation("notifications.request-title", null, {
+                    name: displayName,
+                    count: request.header.length,
+                    descriptor: descriptor.toLowerCase()
+                });
 
             const notification = this._notify(title, Localization.getTranslation("notifications.click-to-show"));
         }
@@ -2240,17 +2309,23 @@ class Notifications {
         if (await navigator.clipboard.writeText(message)) {
             notification.close();
             this._notify(Localization.getTranslation("notifications.copied-text"));
-        } else {
+        }
+        else {
             this._notify(Localization.getTranslation("notifications.copied-text-error"));
         }
     }
 
     _bind(notification, handler) {
         if (notification.then) {
-            notification.then(_ => serviceWorker.getNotifications().then(_ => {
-                serviceWorker.addEventListener('notificationclick', handler);
-            }));
-        } else {
+            notification.then(_ => {
+                serviceWorker
+                    .getNotifications()
+                    .then(_ => {
+                        serviceWorker.addEventListener('notificationclick', handler);
+                    })
+            });
+        }
+        else {
             notification.onclick = handler;
         }
     }
@@ -2289,14 +2364,17 @@ class WebShareTargetUI {
 
                 if (url) {
                     shareTargetText = url; // we share only the link - no text.
-                } else if (title && text) {
+                }
+                else if (title && text) {
                     shareTargetText = title + '\r\n' + text;
-                } else {
+                }
+                else {
                     shareTargetText = title + text;
                 }
 
                 Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
-            } else if (share_target_type === "files") {
+            }
+            else if (share_target_type === "files") {
                 let openRequest = window.indexedDB.open('pairdrop_store')
                 openRequest.onsuccess = e => {
                     const db = e.target.result;
@@ -2818,7 +2896,8 @@ const pairDrop = new PairDrop();
 const localization = new Localization();
 
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
+    navigator.serviceWorker
+        .register('/service-worker.js')
         .then(serviceWorker => {
             console.log('Service Worker registered');
             window.serviceWorker = serviceWorker
