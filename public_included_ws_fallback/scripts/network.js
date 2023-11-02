@@ -30,7 +30,7 @@ class ServerConnection {
         }
 
         Events.on('room-secrets', e => this.send({ type: 'room-secrets', roomSecrets: e.detail }));
-        Events.on('join-ip-room', e => this.send({ type: 'join-ip-room'}));
+        Events.on('join-ip-room', _ => this.send({ type: 'join-ip-room'}));
         Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
         Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
         Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
@@ -81,7 +81,7 @@ class ServerConnection {
 
     _onPairDeviceJoin(pairKey) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onPairDeviceJoin(pairKey), 1000);
+            setTimeout(() => this._onPairDeviceJoin(pairKey), 1000);
             return;
         }
         this.send({ type: 'pair-device-join', pairKey: pairKey });
@@ -97,7 +97,7 @@ class ServerConnection {
 
     _onJoinPublicRoom(roomId, createIfInvalid) {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onJoinPublicRoom(roomId), 1000);
+            setTimeout(() => this._onJoinPublicRoom(roomId), 1000);
             return;
         }
         this.send({ type: 'join-public-room', publicRoomId: roomId, createIfInvalid: createIfInvalid });
@@ -105,7 +105,7 @@ class ServerConnection {
 
     _onLeavePublicRoom() {
         if (!this._isConnected()) {
-            setTimeout(_ => this._onLeavePublicRoom(), 1000);
+            setTimeout(() => this._onLeavePublicRoom(), 1000);
             return;
         }
         this.send({ type: 'leave-public-room' });
@@ -254,7 +254,7 @@ class ServerConnection {
         setTimeout(() => {
             this._isReconnect = true;
             Events.fire('ws-disconnected');
-            this._reconnectTimer = setTimeout(_ => this._connect(), 1000);
+            this._reconnectTimer = setTimeout(() => this._connect(), 1000);
         }, 100); //delay for 100ms to prevent flickering on page reload
     }
 
@@ -755,7 +755,7 @@ class RTCPeer extends Peer {
 
         if (message.sdp) {
             this._conn.setRemoteDescription(message.sdp)
-                .then( _ => {
+                .then(_ => {
                     if (message.sdp.type === 'offer') {
                         return this._conn.createAnswer()
                             .then(d => this._onDescription(d));

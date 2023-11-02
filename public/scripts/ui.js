@@ -93,7 +93,7 @@ class PeersUI {
         this.$footer.classList.remove('opacity-0');
 
         // Prevent flickering on load
-        setTimeout(_ => {
+        setTimeout(() => {
             this.$xNoPeers.classList.remove('no-animation-on-load');
         }, 600);
 
@@ -143,7 +143,7 @@ class PeersUI {
                     localStorage.setItem('editedDisplayName', newDisplayName);
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
-                .finally(_ => {
+                .finally(() => {
                     Events.fire('self-display-name-changed', newDisplayName);
                     Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
                 });
@@ -153,7 +153,7 @@ class PeersUI {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.")
                     localStorage.removeItem('editedDisplayName');
                 })
-                .finally(_ => {
+                .finally(() => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
                     Events.fire('self-display-name-changed', '');
                     Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
@@ -212,7 +212,7 @@ class PeersUI {
             return;
         }
 
-        peer._isSameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
+        peer._isSameBrowser = () => BrowserTabsConnector.peerIsSameBrowser(peer.id);
         peer._roomIds = {};
 
         peer._roomIds[roomType] = roomId;
@@ -621,7 +621,7 @@ class PeerUI {
 
     _onTouchStart(e) {
         this._touchStart = Date.now();
-        this._touchTimer = setTimeout(_ => this._onTouchEnd(e), 610);
+        this._touchTimer = setTimeout(() => this._onTouchEnd(e), 610);
     }
 
     _onTouchEnd(e) {
@@ -827,7 +827,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             return;
         }
         // dequeue next file
-        setTimeout(_ => {
+        setTimeout(() => {
             this._busy = false;
             this._nextFiles();
         }, 300);
@@ -946,7 +946,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             }
             Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
             this.$downloadBtn.style.pointerEvents = "none";
-            setTimeout(_ => this.$downloadBtn.style.pointerEvents = "unset", 2000);
+            setTimeout(() => this.$downloadBtn.style.pointerEvents = "unset", 2000);
         };
 
         document.title = files.length === 1
@@ -957,7 +957,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
         this.show();
 
-        setTimeout(_ => {
+        setTimeout(() => {
             if (canShare) {
                 this.$shareBtn.click();
             } else {
@@ -1067,12 +1067,12 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     hide() {
         // clear previewBox after dialog is closed
-        setTimeout(_ => this.$previewBox.innerHTML = '', 300);
+        setTimeout(() => this.$previewBox.innerHTML = '', 300);
 
         super.hide();
 
         // show next request
-        setTimeout(_ => this._dequeueRequests(), 500);
+        setTimeout(() => this._dequeueRequests(), 500);
     }
 }
 
@@ -1235,7 +1235,7 @@ class PairDeviceDialog extends Dialog {
     _onKeyDown(e) {
         if (this.isShown() && e.code === "Escape") {
             // Timeout to prevent paste mode from getting cancelled simultaneously
-            setTimeout(_ => this._close(), 50);
+            setTimeout(() => this._close(), 50);
         }
     }
 
@@ -1369,7 +1369,7 @@ class PairDeviceDialog extends Dialog {
                 Events.fire('notify-user', Localization.getTranslation("notifications.pairing-success"));
                 this._evaluateNumberRoomSecrets();
             })
-            .finally(_ => {
+            .finally(() => {
                 this._cleanUp();
                 this.hide();
             })
@@ -1493,7 +1493,7 @@ class EditPairedDevicesDialog extends Dialog {
 
     hide() {
         super.hide();
-        setTimeout(_ => {
+        setTimeout(() => {
             this.$pairedDevicesWrapper.innerHTML = ""
         }, 300);
     }
@@ -1505,7 +1505,7 @@ class EditPairedDevicesDialog extends Dialog {
     _clearRoomSecrets() {
         PersistentStorage.getAllRoomSecrets()
             .then(roomSecrets => {
-                PersistentStorage.clearRoomSecrets().finally(_ => {
+                PersistentStorage.clearRoomSecrets().finally(() => {
                     Events.fire('room-secrets-deleted', roomSecrets);
                     Events.fire('evaluate-number-room-secrets');
                     Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
@@ -1915,7 +1915,7 @@ class ReceiveTextDialog extends Dialog {
 
     hide() {
         super.hide();
-        setTimeout(_ => this._dequeueRequests(), 500);
+        setTimeout(() => this._dequeueRequests(), 500);
     }
 }
 
@@ -1944,7 +1944,7 @@ class Base64ZipDialog extends Dialog {
                     .catch(_ => {
                         Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
                         console.log("Text content incorrect.");
-                    }).finally(_ => {
+                    }).finally(() => {
                         this.hide();
                     });
             } else {
@@ -1954,7 +1954,7 @@ class Base64ZipDialog extends Dialog {
                     .catch(_ => {
                         Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
                         console.log("Text content incorrect.");
-                    }).finally(_ => {
+                    }).finally(() => {
                         this.hide();
                     });
             }
@@ -1967,7 +1967,7 @@ class Base64ZipDialog extends Dialog {
                     .catch(_ => {
                         Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
                         console.log("File content incorrect.");
-                    }).finally(_ => {
+                    }).finally(() => {
                         this.hide();
                     });
             } else {
@@ -2354,7 +2354,7 @@ class NoSleepUI {
     static enable() {
         if (!this._interval) {
             NoSleepUI._nosleep.enable();
-            NoSleepUI._interval = setInterval(_ => NoSleepUI.disable(), 10000);
+            NoSleepUI._interval = setInterval(() => NoSleepUI.disable(), 10000);
         }
     }
 
@@ -2373,15 +2373,15 @@ class PersistentStorage {
             return;
         }
         const DBOpenRequest = window.indexedDB.open('pairdrop_store', 4);
-        DBOpenRequest.onerror = (e) => {
+        DBOpenRequest.onerror = e => {
             PersistentStorage.logBrowserNotCapable();
             console.log('Error initializing database: ');
             console.log(e)
         };
-        DBOpenRequest.onsuccess = () => {
+        DBOpenRequest.onsuccess = _ => {
             console.log('Database initialised.');
         };
-        DBOpenRequest.onupgradeneeded = (e) => {
+        DBOpenRequest.onupgradeneeded = e => {
             const db = e.target.result;
             const txn = e.target.transaction;
 
@@ -2420,7 +2420,7 @@ class PersistentStorage {
     static set(key, value) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
                 const objectStore = transaction.objectStore('keyval');
@@ -2430,7 +2430,7 @@ class PersistentStorage {
                     resolve(value);
                 };
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         })
@@ -2439,7 +2439,7 @@ class PersistentStorage {
     static get(key) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readonly');
                 const objectStore = transaction.objectStore('keyval');
@@ -2449,7 +2449,7 @@ class PersistentStorage {
                     resolve(objectStoreRequest.result);
                 }
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         });
@@ -2458,7 +2458,7 @@ class PersistentStorage {
     static delete(key) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction('keyval', 'readwrite');
                 const objectStore = transaction.objectStore('keyval');
@@ -2468,7 +2468,7 @@ class PersistentStorage {
                     resolve();
                 };
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         })
@@ -2477,7 +2477,7 @@ class PersistentStorage {
     static addRoomSecret(roomSecret, displayName, deviceName) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readwrite');
                 const objectStore = transaction.objectStore('room_secrets');
@@ -2492,7 +2492,7 @@ class PersistentStorage {
                     resolve();
                 }
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         })
@@ -2534,7 +2534,7 @@ class PersistentStorage {
     static getRoomSecretEntry(roomSecret) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 const transaction = db.transaction('room_secrets', 'readonly');
                 const objectStore = transaction.objectStore('room_secrets');
@@ -2585,12 +2585,12 @@ class PersistentStorage {
                         console.log(`Request successful. Deleted room_secret: ${key}`);
                         resolve(roomSecret);
                     }
-                    objectStoreRequestDeletion.onerror = (e) => {
+                    objectStoreRequestDeletion.onerror = e => {
                         reject(e);
                     }
                 };
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         })
@@ -2609,7 +2609,7 @@ class PersistentStorage {
                     resolve();
                 };
             }
-            DBOpenRequest.onerror = (e) => {
+            DBOpenRequest.onerror = e => {
                 reject(e);
             }
         })
@@ -2626,7 +2626,7 @@ class PersistentStorage {
     static updateRoomSecret(roomSecret, updatedRoomSecret = undefined, updatedDisplayName = undefined, updatedDeviceName = undefined, updatedAutoAccept = undefined) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
+            DBOpenRequest.onsuccess = e => {
                 const db = e.target.result;
                 this.getRoomSecretEntry(roomSecret)
                     .then(roomSecretEntry => {

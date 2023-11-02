@@ -56,7 +56,7 @@ const fromNetwork = (request, timeout) =>
         fetch(request).then(response => {
             clearTimeout(timeoutId);
             fulfill(response);
-            update(request).then(() => console.log("Cache successfully updated for", request.url));
+            update(request).then(_ => console.log("Cache successfully updated for", request.url));
         }, reject);
     });
 
@@ -77,7 +77,7 @@ const update = request =>
                 .then(async response => {
                     await cache.put(request, response);
                 })
-                .catch(() => console.log(`Cache could not be updated. ${request.url}`))
+                .catch(_ => console.log(`Cache could not be updated. ${request.url}`))
         );
 
 // general strategy when making a request (eg if online try to fetch it
