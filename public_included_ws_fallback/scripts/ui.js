@@ -2119,15 +2119,16 @@ class Notifications {
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
     }
 
-    _requestPermission() {
-        Notification.requestPermission(permission => {
-            if (permission !== 'granted') {
-                Events.fire('notify-user', Localization.getTranslation("notifications.notifications-permissions-error"));
-                return;
-            }
-            Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
-            this.$headerNotificationButton.setAttribute('hidden', "");
-        });
+    async _requestPermission() {
+        await Notification.
+            requestPermission(permission => {
+                if (permission !== 'granted') {
+                    Events.fire('notify-user', Localization.getTranslation("notifications.notifications-permissions-error"));
+                    return;
+                }
+                Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
+                this.$headerNotificationButton.setAttribute('hidden', "");
+            });
     }
 
     _notify(title, body) {
@@ -2161,7 +2162,7 @@ class Notifications {
             const peerDisplayName = $(peerId).ui._displayName();
             if (/^((https?:\/\/|www)[abcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)$/.test(message.toLowerCase())) {
                 const notification = this._notify(Localization.getTranslation("notifications.link-received", null, {name: peerDisplayName}), message);
-                this._bind(notification, _ => window.open(message, '_blank', null, true));
+                this._bind(notification, _ => window.open(message, '_blank', "noreferrer"));
             } else {
                 const notification = this._notify(Localization.getTranslation("notifications.message-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => this._copyText(message, notification));
@@ -2237,8 +2238,8 @@ class Notifications {
         notification.close();
     }
 
-    _copyText(message, notification) {
-        if (navigator.clipboard.writeText(message)) {
+    async _copyText(message, notification) {
+        if (await navigator.clipboard.writeText(message)) {
             notification.close();
             this._notify(Localization.getTranslation("notifications.copied-text"));
         } else {
