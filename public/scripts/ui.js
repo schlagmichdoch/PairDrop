@@ -43,7 +43,7 @@ class PeersUI {
         this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
 
         // Show "Loading…"
-        this.$displayName.setAttribute("placeholder", this.$displayName.dataset.placeholder);
+        this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
@@ -310,12 +310,12 @@ class PeersUI {
 
     _onDragOver(e) {
         e.preventDefault();
-        this.$xInstructions.setAttribute('drop-bg', 1);
-        this.$xNoPeers.setAttribute('drop-bg', 1);
+        this.$xInstructions.setAttribute('drop-bg', true);
+        this.$xNoPeers.setAttribute('drop-bg', true);
     }
 
     _onDragEnd() {
-        this.$xInstructions.removeAttribute('drop-bg', 1);
+        this.$xInstructions.removeAttribute('drop-bg');
         this.$xNoPeers.removeAttribute('drop-bg');
     }
 
@@ -392,7 +392,7 @@ class PeersUI {
 
             this.$xNoPeers.querySelector('h2').innerHTML =  Localization.getTranslation("instructions.no-peers-title");
 
-            this.$cancelPasteModeBtn.setAttribute('hidden', "");
+            this.$cancelPasteModeBtn.setAttribute('hidden', true);
 
             console.log('Paste mode deactivated.')
             Events.fire('paste-mode-changed', {
@@ -649,13 +649,13 @@ class PeerUI {
     }
 
     _onDragOver() {
-        this.$el.setAttribute('drop', 1);
-        this.$xInstructions.setAttribute('drop-peer', 1);
+        this.$el.setAttribute('drop', true);
+        this.$xInstructions.setAttribute('drop-peer', true);
     }
 
     _onDragEnd() {
         this.$el.removeAttribute('drop');
-        this.$xInstructions.removeAttribute('drop-peer', 1);
+        this.$xInstructions.removeAttribute('drop-peer');
     }
 
     _onRightClick(e) {
@@ -698,7 +698,7 @@ class Dialog {
     }
 
     show() {
-        this.$el.setAttribute('show', 1);
+        this.$el.setAttribute('show', true);
         if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
     }
 
@@ -1047,7 +1047,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     hide() {
-        this.$shareBtn.setAttribute('hidden', '');
+        this.$shareBtn.setAttribute('hidden', true);
         this.$previewBox.innerHTML = '';
         super.hide();
         this._dequeueFile();
@@ -1157,11 +1157,11 @@ class InputKeyContainer {
     }
 
     _enableChars() {
-        this.$inputKeyChars.forEach(char => char.removeAttribute("disabled"));
+        this.$inputKeyChars.forEach(char => char.removeAttribute('disabled'));
     }
 
     _disableChars() {
-        this.$inputKeyChars.forEach(char => char.setAttribute("disabled", ""));
+        this.$inputKeyChars.forEach(char => char.setAttribute('disabled', true));
     }
 
     _clearChars() {
@@ -1267,8 +1267,8 @@ class PairDeviceDialog extends Dialog {
         this.inputKeyContainer = new InputKeyContainer(
             this.$el.querySelector('.input-key-container'),
             /\d/,
-            () => this.$pairSubmitBtn.removeAttribute("disabled"),
-            () => this.$pairSubmitBtn.setAttribute("disabled", ""),
+            () => this.$pairSubmitBtn.removeAttribute('disabled'),
+            () => this.$pairSubmitBtn.setAttribute('disabled', true),
             () => this._submit()
         );
 
@@ -1489,8 +1489,8 @@ class PairDeviceDialog extends Dialog {
                     this.$footerInstructionsPairedDevices.removeAttribute('hidden');
                 }
                 else {
-                    this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
-                    this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
+                    this.$editPairedDevicesHeaderBtn.setAttribute('hidden', true);
+                    this.$footerInstructionsPairedDevices.setAttribute('hidden', true);
                 }
                 Events.fire('evaluate-footer-badges');
                 Events.fire('header-evaluated', 'edit-paired-devices');
@@ -1637,8 +1637,8 @@ class PublicRoomDialog extends Dialog {
         this.inputKeyContainer = new InputKeyContainer(
             this.$el.querySelector('.input-key-container'),
             /[a-z|A-Z]/,
-            () => this.$joinSubmitBtn.removeAttribute("disabled"),
-            () => this.$joinSubmitBtn.setAttribute("disabled", ""),
+            () => this.$joinSubmitBtn.removeAttribute('disabled'),
+            () => this.$joinSubmitBtn.setAttribute('disabled', true),
             () => this._submit()
         );
 
@@ -1843,7 +1843,7 @@ class PublicRoomDialog extends Dialog {
         this.roomId = null;
         this.inputKeyContainer._cleanUp();
         sessionStorage.removeItem('public_room_id');
-        this.$footerBadgePublicRoomDevices.setAttribute('hidden', '');
+        this.$footerBadgePublicRoomDevices.setAttribute('hidden', true);
         Events.fire('evaluate-footer-badges');
     }
 }
@@ -1879,7 +1879,7 @@ class SendTextDialog extends Dialog {
 
     _onChange() {
         if (this._textInputEmpty()) {
-            this.$submit.setAttribute('disabled', '');
+            this.$submit.setAttribute('disabled', true);
         }
         else {
             this.$submit.removeAttribute('disabled');
@@ -2086,7 +2086,7 @@ class Base64ZipDialog extends Dialog {
         }
         else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
-            this.$pasteBtn.setAttribute('hidden', '');
+            this.$pasteBtn.setAttribute('hidden', true);
             this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
             this.$fallbackTextarea.removeAttribute('hidden');
             this._inputCallback = _ => this.processInput(type);
@@ -2219,7 +2219,7 @@ class Notifications {
                     return;
                 }
                 Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
-                this.$headerNotificationButton.setAttribute('hidden', "");
+                this.$headerNotificationButton.setAttribute('hidden', true);
             });
     }
 
@@ -2940,7 +2940,7 @@ window.addEventListener('beforeinstallprompt', installEvent => {
         const installBtn = document.querySelector('#install')
         installBtn.removeAttribute('hidden');
         installBtn.addEventListener('click', () => {
-            installBtn.setAttribute('hidden', '');
+            installBtn.setAttribute('hidden', true);
             installEvent.prompt();
         });
     }

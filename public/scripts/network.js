@@ -782,7 +782,8 @@ class RTCPeer extends Peer {
         channel.onopen = e => this._onChannelOpened(e);
         channel.onerror = e => this._onError(e);
 
-        this._conn.createOffer()
+        this._conn
+            .createOffer()
             .then(d => this._onDescription(d))
             .catch(e => this._onError(e));
     }
@@ -1133,7 +1134,8 @@ class PeersManager {
             // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
             // Tidy up peerIds in localStorage
             if (Object.keys(this.peers).length === 0) {
-                BrowserTabsConnector.removeOtherPeerIdsFromLocalStorage()
+                BrowserTabsConnector
+                    .removeOtherPeerIdsFromLocalStorage()
                     .then(peerIds => {
                         if (!peerIds) return;
                         console.log("successfully removed other peerIds from localStorage");
@@ -1349,11 +1351,11 @@ class Events {
         window.dispatchEvent(new CustomEvent(type, { detail: detail }));
     }
 
-    static on(type, callback, options = false) {
+    static on(type, callback, options) {
         return window.addEventListener(type, callback, options);
     }
 
-    static off(type, callback, options = false) {
+    static off(type, callback, options) {
         return window.removeEventListener(type, callback, options);
     }
 }
