@@ -27,23 +27,38 @@ class ServerConnection {
     }
 
     _getConfig() {
+        console.log("Loading config...")
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
-            xhr.open('GET', 'config', true);
             xhr.addEventListener("load", () => {
                 if (xhr.status === 200) {
                     // Config received
                     let config = JSON.parse(xhr.responseText);
+                    console.log("Config loaded:", config)
                     this._config = config;
                     Events.fire('config', config);
                     resolve()
-                } else if (xhr.status !== 200) {
-                    // Handle errors
-                    console.error('Error:', xhr.status, xhr.statusText);
-                    reject();
+                } else if (xhr.status < 200 || xhr.status >= 300) {
+                    retry(xhr);
                 }
+            })
+
+            xhr.addEventListener("error", _ => {
+                retry(xhr);
             });
-            xhr.send();
+
+            function retry(request) {
+                setTimeout(function () {
+                    openAndSend(request)
+                }, 1000)
+            }
+
+            function openAndSend() {
+                xhr.open('GET', 'config');
+                xhr.send();
+            }
+
+            openAndSend(xhr);
         })
     }
 
