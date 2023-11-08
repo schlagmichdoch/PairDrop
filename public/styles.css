@@ -7,6 +7,7 @@
     --public-room-color: #db8500;
     --accent-color: var(--primary-color);
     --peer-width: 120px;
+    --ws-peer-color: #ff6b6b;
     color-scheme: light dark;
 }
 
@@ -338,8 +339,9 @@ x-peers:has(> x-peer) {
     --peers-per-row: 10;
 }
 
-@media screen and (min-height: 505px) and (max-height: 649px) and (max-width: 426px),
-screen and (min-height: 486px) and (max-height: 631px) and (min-width: 426px) {
+/* peers-per-row if height is too small for 2 rows */
+@media screen and (min-height: 538px) and (max-height: 683px) and (max-width: 402px),
+screen and (min-height: 517px) and (max-height: 664px) and (min-width: 426px) {
     x-peers:has(> x-peer) {
         --peers-per-row: 3;
     }
@@ -373,8 +375,9 @@ screen and (min-height: 486px) and (max-height: 631px) and (min-width: 426px) {
     }
 }
 
-@media screen and (min-height: 649px) and (max-width: 425px),
-screen and (min-height: 631px) and (min-width: 426px) {
+/* peers-per-row if height is too small for 3 rows */
+@media screen and (min-height: 683px) and (max-width: 402px),
+screen and (min-height: 664px) and (min-width: 426px) {
     x-peers:has(> x-peer) {
         --peers-per-row: 3;
     }
@@ -536,6 +539,31 @@ x-peer[status] x-icon {
     box-shadow: none;
     opacity: 0.8;
     transform: scale(1);
+}
+
+
+x-peer.ws-peer {
+    margin-top: -1.5px;
+}
+
+x-peer.ws-peer .progress {
+    margin-top: 3px;
+}
+
+x-peer.ws-peer .icon-wrapper{
+    border: solid 3px var(--ws-peer-color);
+}
+
+x-peer.ws-peer .highlight-wrapper {
+    margin-top: 3px;
+}
+
+#websocket-fallback {
+    opacity: 0.5;
+}
+
+#websocket-fallback > span:nth-of-type(2) {
+    border-bottom: solid 2px var(--ws-peer-color);
 }
 
 .device-descriptor {

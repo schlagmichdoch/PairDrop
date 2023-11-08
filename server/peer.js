@@ -17,8 +17,8 @@ export default class Peer {
         // set peer id
         this._setPeerId(request);
 
-        // is WebRTC supported ?
-        this.rtcSupported = request.url.indexOf('webrtc') > -1;
+        // is WebRTC supported
+        this._setRtcSupported(request);
 
         // set name
         this._setName(request);
@@ -131,6 +131,11 @@ export default class Peer {
         } else {
             this.id = crypto.randomUUID();
         }
+    }
+
+    _setRtcSupported(request) {
+        const searchParams = new URL(request.url, "http://server").searchParams;
+        this.rtcSupported = searchParams.get("webrtc_supported") === "true";
     }
 
     _setName(req) {

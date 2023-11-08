@@ -32,21 +32,28 @@ export default class PairDropServer {
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
 
-        const publicPathAbs = conf.wsFallback
-            ? path.join(__dirname, '../public_included_ws_fallback')
-            : path.join(__dirname, '../public');
-
+        const publicPathAbs = path.join(__dirname, '../public');
         app.use(express.static(publicPathAbs));
 
-        app.use((req, res) => {
-            if (conf.debugMode && conf.rateLimit && req.path === "/ip") {
-                console.debug("\n");
-                console.debug("----DEBUG RATE_LIMIT----")
-                console.debug("To find out the correct value for RATE_LIMIT go to '/ip' and ensure the returned IP-address is the IP-address of your client.")
-                console.debug("See https://github.com/express-rate-limit/express-rate-limit#troubleshooting-proxy-issues for more info")
+        if (conf.debugMode && conf.rateLimit) {
+            console.debug("\n");
+            console.debug("----DEBUG RATE_LIMIT----")
+            console.debug("To find out the correct value for RATE_LIMIT go to '/ip' and ensure the returned IP-address is the IP-address of your client.")
+            console.debug("See https://github.com/express-rate-limit/express-rate-limit#troubleshooting-proxy-issues for more info")
+            app.get('/ip', (req, res) => {
                 res.send(req.ip);
-            }
+            })
+        }
 
+        // By default, clients connecting to your instance use the signaling server of your instance to connect to other devices.
+        // By using `WS_SERVER`, you can host an instance that uses another signaling server.
+        app.get('/config', (req, res) => {
+            res.send({
+                signalingServer: conf.signalingServer
+            });
+        });
+
+        app.use((req, res) => {
             res.redirect(301, '/');
         });
 

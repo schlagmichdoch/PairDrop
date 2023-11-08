@@ -16,7 +16,6 @@ export default class PairDropWsServer {
 
         this._wss = new WebSocketServer({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request, conf)));
-        console.log('\nPairDrop is running on port', this._conf.port);
     }
 
     _onConnection(peer) {
@@ -26,8 +25,11 @@ export default class PairDropWsServer {
         this._keepAlive(peer);
 
         this._send(peer, {
-            type: 'rtc-config',
-            config: this._conf.rtcConfig
+            type: 'ws-config',
+            wsConfig: {
+                rtcConfig: this._conf.rtcConfig,
+                wsFallback: this._conf.wsFallback
+            }
         });
 
         // send displayName
@@ -87,8 +89,26 @@ export default class PairDropWsServer {
                 this._onLeavePublicRoom(sender);
                 break;
             case 'signal':
-            default:
                 this._signalAndRelay(sender, message);
+                break;
+            case 'request':
+            case 'header':
+            case 'partition':
+            case 'partition-received':
+            case 'progress':
+            case 'files-transfer-response':
+            case 'file-transfer-complete':
+            case 'message-transfer-complete':
+            case 'text':
+            case 'display-name-changed':
+            case 'ws-chunk':
+                // relay ws-fallback
+                if (this._conf.wsFallback) {
+                    this._signalAndRelay(sender, message);
+                }
+                else {
+                    console.log("Websocket fallback is not activated on this instance.")
+                }
         }
     }
 

@@ -107,6 +107,7 @@ docker run -d \
     -p 127.0.0.1:3000:3000 \
     -e PUID=1000 \
     -e PGID=1000 \
+    -e WS_SERVER=false \
     -e WS_FALLBACK=false \
     -e RTC_CONFIG=false \
     -e RATE_LIMIT=false \
@@ -394,6 +395,30 @@ RTC_CONFIG="rtc_config.json"
 > }
 > ```
 
+<br>
+
+You can host an instance that uses another signaling server
+This can be useful if you don't want to trust the client files that are hosted on another instance but still want to connect to devices that use https://pairdrop.net.
+### Host Websocket Server (for VPN)
+
+```bash
+SIGNALING_SERVER="pairdrop.net"
+```
+
+> Default: `false`
+>
+> By default, clients connecting to your instance use the signaling server of your instance to connect to other devices.
+> 
+> By using `SIGNALING_SERVER`, you can host an instance that uses another signaling server.
+> 
+> This can be useful if you want to ensure the integrity of the client files and don't want to trust the client files that are hosted on another PairDrop instance but still want to connect to devices that use the other instance.
+> E.g. host your own client files under *pairdrop.your-domain.com* but use the official signaling server under *pairdrop.net*
+> This way devices connecting to *pairdrop.your-domain.com* and *pairdrop.net* can discover each other.
+> 
+> Beware that the version of your PairDrop server is compatible with the version of the signaling server. 
+>
+> `WS_SERVER` must be a valid url without the protocol prefix. 
+> Examples of valid values: `pairdrop.net`, `pairdrop.your-domain.com:3000`, `your-domain.com/pairdrop`
 <br>
 
 ## Healthcheck

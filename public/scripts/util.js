@@ -37,9 +37,34 @@ if (!navigator.clipboard) {
     }
 }
 
+// Polyfills
+window.isRtcSupported = !!(window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection);
+
+window.hiddenProperty = 'hidden' in document
+    ? 'hidden'
+    : 'webkitHidden' in document
+        ? 'webkitHidden'
+        : 'mozHidden' in document
+            ? 'mozHidden'
+            : null;
+
+window.visibilityChangeEvent = 'visibilitychange' in document
+    ? 'visibilitychange'
+    : 'webkitvisibilitychange' in document
+        ? 'webkitvisibilitychange'
+        : 'mozvisibilitychange' in document
+            ? 'mozvisibilitychange'
+            : null;
+
+window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+window.android = /android/i.test(navigator.userAgent);
+window.isMobile = window.iOS || window.android;
+
+// Selector shortcuts
 const $ = query => document.getElementById(query);
 const $$ = query => document.querySelector(query);
 
+// Helper functions
 const zipper = (() => {
 
     let zipWriter;
@@ -415,4 +440,24 @@ function getUrlWithoutArguments() {
 function changeFavicon(src) {
     document.querySelector('[rel="icon"]').href = src;
     document.querySelector('[rel="shortcut icon"]').href = src;
+}
+
+function arrayBufferToBase64(buffer) {
+    let binary = '';
+    let bytes = new Uint8Array(buffer);
+    let len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa( binary );
+}
+
+function base64ToArrayBuffer(base64) {
+    let binary_string = window.atob(base64);
+    let len = binary_string.length;
+    let bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
 }

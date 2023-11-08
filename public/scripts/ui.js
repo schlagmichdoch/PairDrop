@@ -1,9 +1,3 @@
-window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-window.android = /android/i.test(navigator.userAgent);
-window.isMobile = window.iOS || window.android;
-window.pasteMode = {};
-window.pasteMode.activated = false;
-
 class PeersUI {
 
     constructor() {
@@ -16,10 +10,15 @@ class PeersUI {
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
         this.$displayName = $('display-name');
         this.$header = $$('header.opacity-0');
+        this.$wsFallbackWarning = $('websocket-fallback');
 
         this.evaluateHeader = ["notification", "edit-paired-devices"];
         this.fadedIn = false;
         this.peers = {};
+
+        this.pasteMode = {};
+        this.pasteMode.activated = false;
+        this.pasteMode.descriptor = "";
 
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
@@ -61,6 +60,20 @@ class PeersUI {
 
         // Load saved display name on page load
         Events.on('ws-connected', _ => this._loadSavedDisplayName());
+
+        Events.on('ws-config', e => this._evaluateRtcSupport(e.detail))
+    }
+
+    _evaluateRtcSupport(wsConfig) {
+        if (wsConfig.wsFallback) {
+            this.$wsFallbackWarning.hidden = false;
+        }
+        else {
+            this.$wsFallbackWarning.hidden = true;
+            if (!window.isRtcSupported) {
+                alert(Localization.getTranslation("instructions.webrtc-requirement"));
+            }
+        }
     }
 
     _loadSavedDisplayName() {
@@ -198,7 +211,7 @@ class PeersUI {
     }
 
     _onKeyDown(e) {
-        if (this._noDialogShown() && window.pasteMode.activated && e.code === "Escape") {
+        if (this._noDialogShown() && this.pasteMode.activated && e.code === "Escape") {
             Events.fire('deactivate-paste-mode');
         }
 
@@ -318,7 +331,7 @@ class PeersUI {
     }
 
     _activatePasteMode(files, text) {
-        if (!window.pasteMode.activated && (files.length > 0 || text.length > 0)) {
+        if (!this.pasteMode.activated && (files.length > 0 || text.length > 0)) {
             const openPairDrop = Localization.getTranslation("instructions.activate-paste-mode-base");
             const andOtherFiles = Localization.getTranslation("instructions.activate-paste-mode-and-other-files", null, {count: files.length-1});
             const sharedText = Localization.getTranslation("instructions.activate-paste-mode-shared-text");
@@ -344,17 +357,20 @@ class PeersUI {
 
             this.$xNoPeers.querySelector('h2').innerHTML = `${openPairDrop}<br>${descriptor}`;
 
-            const _callback = (e) => this._sendClipboardData(e, files, text);
+            this.pasteMode.descriptor = descriptor;
+
+            const _callback = e => this._sendClipboardData(e, files, text);
             Events.on('paste-pointerdown', _callback);
             Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback), { once: true });
 
             this.$cancelPasteModeBtn.removeAttribute('hidden');
 
-            window.pasteMode.descriptor = descriptor;
-            window.pasteMode.activated = true;
 
             console.log('Paste mode activated.');
-            Events.fire('paste-mode-changed');
+            Events.fire('paste-mode-changed', {
+                active: true,
+                descriptor: descriptor
+            });
         }
     }
 
@@ -363,9 +379,9 @@ class PeersUI {
     }
 
     _deactivatePasteMode(_callback) {
-        if (window.pasteMode.activated) {
-            window.pasteMode.descriptor = undefined;
-            window.pasteMode.activated = false;
+        if (this.pasteMode.activated) {
+            this.pasteMode.activated = false;
+            this.pasteMode.descriptor = "";
             Events.off('paste-pointerdown', _callback);
 
             this.$xInstructions.querySelector('p').innerText = '';
@@ -379,7 +395,10 @@ class PeersUI {
             this.$cancelPasteModeBtn.setAttribute('hidden', "");
 
             console.log('Paste mode deactivated.')
-            Events.fire('paste-mode-changed');
+            Events.fire('paste-mode-changed', {
+                active: false,
+                descriptor: null
+            });
         }
     }
 
@@ -405,22 +424,29 @@ class PeersUI {
 class PeerUI {
 
     constructor(peer, connectionHash) {
+        this.$xInstructions = $$('x-instructions');
+        this.$xPeers = $$('x-peers');
+
         this._peer = peer;
         this._connectionHash =
             `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
+
+        this.pasteMode = {};
+        this.pasteMode.activated = false;
+        this.pasteMode.descriptor = "";
+
         this._initDom();
         this._bindListeners();
 
-        $$('x-peers').appendChild(this.$el)
+        this.$xPeers.appendChild(this.$el);
         Events.fire('peer-added');
-        this.$xInstructions = $$('x-instructions');
     }
 
     html() {
         let title;
         let input = '';
-        if (window.pasteMode.activated) {
-            title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: window.pasteMode.descriptor});
+        if (this.pasteMode.activated) {
+            title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: this.pasteMode.descriptor});
         }
         else {
             title = Localization.getTranslation("peer-ui.click-to-send");
@@ -463,6 +489,8 @@ class PeerUI {
         }
 
         Object.keys(this._peer._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+
+        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer');
     }
 
     _initDom() {
@@ -488,16 +516,18 @@ class PeerUI {
         this._callbackPointerDown = e => this._onPointerDown(e)
 
         // PasteMode
-        Events.on('paste-mode-changed', _ => this._onPasteModeChanged());
+        Events.on('paste-mode-changed', e => this._onPasteModeChanged(e.detail.active, e.detail.descriptor));
     }
 
-    _onPasteModeChanged() {
+    _onPasteModeChanged(active, descriptor) {
+        this.pasteMode.active = active
+        this.pasteMode.descriptor = descriptor
         this.html();
         this._bindListeners();
     }
 
     _bindListeners() {
-        if(!window.pasteMode.activated) {
+        if(!this.pasteMode.activated) {
             // Remove Events Paste Mode
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
@@ -1827,7 +1857,7 @@ class SendTextDialog extends Dialog {
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
-        this.$text.addEventListener('input', e => this._onChange(e));
+        this.$text.addEventListener('input', _ => this._onChange());
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
@@ -1847,7 +1877,7 @@ class SendTextDialog extends Dialog {
         return !this.$text.innerText || this.$text.innerText === "\n";
     }
 
-    _onChange(e) {
+    _onChange() {
         if (this._textInputEmpty()) {
             this.$submit.setAttribute('disabled', '');
         }

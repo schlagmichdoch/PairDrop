@@ -46,18 +46,9 @@ conf.rtcConfig = process.env.RTC_CONFIG
         ]
     };
 
-let ipv6Localize = parseInt(process.env.IPV6_LOCALIZE) || false;
-if (ipv6Localize) {
-    if (!(0 < ipv6Localize && ipv6Localize < 8)) {
-        console.error("ipv6Localize must be an integer between 1 and 7");
-        process.exit(1);
-    }
 
-    console.log("IPv6 client IPs will be localized to",
-        ipv6Localize,
-        ipv6Localize === 1 ? "segment" : "segments");
-}
-conf.ipv6Localize = ipv6Localize;
+conf.signalingServer = process.env.SIGNALING_SERVER || false;
+conf.ipv6Localize = parseInt(process.env.IPV6_LOCALIZE) || false;
 
 let rateLimit = false;
 if (process.argv.includes('--rate-limit') || process.env.RATE_LIMIT === "true") {
@@ -74,6 +65,40 @@ conf.rateLimit = rateLimit;
 // Evaluate arguments for deployment with Node.js only
 conf.autoStart = process.argv.includes('--auto-restart');
 conf.localhostOnly = process.argv.includes('--localhost-only');
+
+// Validate configuration
+if (conf.ipv6Localize) {
+    if (!(0 < conf.ipv6Localize && conf.ipv6Localize < 8)) {
+        console.error("ipv6Localize must be an integer between 1 and 7");
+        process.exit(1);
+    }
+
+    console.log("IPv6 client IPs will be localized to",
+        conf.ipv6Localize,
+        conf.ipv6Localize === 1 ? "segment" : "segments");
+}
+
+if (conf.signalingServer) {
+    const isValidUrl = /[a-z|0-9|\-._~:\/?#\[\]@!$&'()*+,;=]+$/.test(conf.signalingServer);
+    const containsProtocol = /:\/\//.test(conf.signalingServer)
+    const endsWithSlash = /\/$/.test(conf.signalingServer)
+    if (!isValidUrl || containsProtocol) {
+        console.error("SIGNALING_SERVER must be a valid url without the protocol prefix.\n" +
+            "Examples of valid values: `pairdrop.net`, `pairdrop.example.com:3000`, `example.com/pairdrop`");
+        process.exit(1);
+    }
+
+    if (!endsWithSlash) {
+        conf.signalingServer += "/";
+    }
+
+    if (process.env.RTC_CONFIG || conf.wsFallback || conf.ipv6Localize) {
+        console.error("SIGNALING_SERVER cannot be used alongside WS_FALLBACK, RTC_CONFIG or IPV6_LOCALIZE as these " +
+            "configurations are specified by the signaling server.\n" +
+            "To use this instance as the signaling server do not set SIGNALING_SERVER");
+        process.exit(1);
+    }
+}
 
 // Logs for debugging
 if (conf.debugMode) {
@@ -109,6 +134,11 @@ if (conf.autoStart) {
 // Start server to serve client files
 const pairDropServer = new PairDropServer(conf);
 
-// Start websocket Server
-const pairDropWsServer = new PairDropWsServer(pairDropServer.server, conf);
+if (!conf.signalingServer) {
+    // Start websocket server if SIGNALING_SERVER is not set
+    new PairDropWsServer(pairDropServer.server, conf);
+} else {
+    console.log("This instance does not include a signaling server. Clients on this instance connect to the following signaling server:", conf.signalingServer);
+}
 
+console.log('\nPairDrop is running on port', conf.port);
