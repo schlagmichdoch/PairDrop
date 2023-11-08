@@ -116,12 +116,7 @@ class Localization {
                 element.innerText = Localization.getTranslation(key);
             }
             else {
-                if (attr.startsWith("data-")) {
-                    let dataAttr = attr.substring(5);
-                    element.dataset.dataAttr = Localization.getTranslation(key, attr);
-                } {
-                    element.setAttribute(attr, Localization.getTranslation(key, attr));
-                }
+                element.setAttribute(attr, Localization.getTranslation(key, attr));
             }
         }
     }
