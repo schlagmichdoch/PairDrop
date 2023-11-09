@@ -1,0 +1,896 @@
+/* All styles in this sheet are needed on page load */
+
+/* Constants */
+
+:root {
+    --icon-size: 24px;
+    --primary-color: #4285f4;
+    --paired-device-color: #00a69c;
+    --public-room-color: #db8500;
+    --accent-color: var(--primary-color);
+    --peer-width: 120px;
+    --ws-peer-color: #ff6b6b;
+    color-scheme: light dark;
+}
+
+/* Layout */
+
+html,
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+    overflow-y: hidden;
+    /* Only allow selection on message and pair key */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    transition: color 300ms;
+}
+
+body {
+    height: 100%;
+}
+
+html {
+    height: 100%;
+}
+
+.fw {
+    width: 100%;
+}
+
+.row-reverse {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.space-between {
+    justify-content: space-between;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grow {
+    flex-grow: 1;
+}
+
+.full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+header {
+    position: absolute;
+    align-items: baseline;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    width: 100vw;
+    z-index: 2;
+    top: 0;
+    right: 0;
+}
+
+header > * {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+
+header > div {
+    display: flex;
+    flex-direction: column;
+    align-self: flex-start;
+    touch-action: manipulation;
+}
+
+header > div .icon-button {
+    height: 40px;
+    transition: all 300ms;
+}
+
+header > div > div {
+    display: flex;
+    flex-direction: column;
+}
+
+header > div:not(:hover) .icon-button:not(.selected) {
+    height: 0;
+    opacity: 0;
+}
+
+#theme-wrapper:hover::before {
+    border-radius: 20px;
+    background: currentColor;
+    opacity: 0.1;
+    transition: opacity 300ms;
+    content: '';
+    position: absolute;
+    width: 40px;
+    top: 0;
+    bottom: 0;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+header > div:hover .icon-button.selected::before {
+    opacity: 0.1;
+}
+
+@media (pointer: coarse) {
+    header > div:hover .icon-button.selected:hover::before {
+        opacity: 0.2;
+    }
+
+    header > div .icon-button:not(.selected) {
+        height: 0;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    header > div > div {
+        flex-direction: column-reverse;
+    }
+}
+
+[hidden] {
+    display: none !important;
+}
+
+
+/* Typography */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+    font-size: 34px;
+    font-weight: 400;
+    letter-spacing: -.01em;
+    line-height: 40px;
+    margin: 8px 0 0;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -.012em;
+    line-height: 32px;
+    color: var(--primary-color);}
+
+h3 {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 16px 0;
+    color: var(--primary-color);
+}
+
+.font-subheading {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 18px;
+    word-break: normal;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.font-body1,
+body {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+}
+
+.font-body2 {
+    font-size: 12px;
+    line-height: 18px;
+}
+
+a,
+.icon-button {
+    text-decoration: none;
+    color: currentColor;
+    cursor: pointer;
+}
+
+input {
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    min-width: 13px;
+}
+
+x-noscript {
+    background: var(--primary-color);
+    color: white;
+    z-index: 2;
+}
+
+
+/* Icons */
+
+.icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    fill: currentColor;
+}
+
+
+
+/* Shadows */
+
+[shadow="1"] {
+    box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+        0 1px 8px 0 rgba(0, 0, 0, 0.12),
+        0 3px 3px -2px rgba(0, 0, 0, 0.4);
+}
+
+[shadow="2"] {
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14),
+        0 1px 10px 0 rgba(0, 0, 0, 0.12),
+        0 2px 4px -1px rgba(0, 0, 0, 0.4);
+}
+
+
+
+
+/* Animations */
+
+@keyframes fade-in {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+#center {
+    position: relative;
+    display: flex;
+    margin-top: 56px;
+    flex-direction: column-reverse;
+    flex-grow: 1;
+    justify-content: space-around;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    overscroll-behavior-x: none;
+}
+
+
+/* Peers  */
+
+#x-peers-filler {
+    display: flex;
+    flex-grow: 1;
+}
+
+/* Empty Peers List */
+
+x-no-peers {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    height: 137px;
+    text-align: center;
+}
+
+x-no-peers h2,
+x-no-peers a {
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+x-peers:not(:empty)+x-no-peers {
+    display: none;
+}
+
+x-no-peers::before {
+    color: var(--primary-color);
+    font-size: 24px;
+    font-weight: 400;
+    letter-spacing: -.012em;
+    line-height: 32px;
+}
+
+x-no-peers[drop-bg]::before {
+    content: attr(data-drop-bg);
+}
+
+x-no-peers[drop-bg] * {
+    display: none;
+}
+
+
+input[type="file"] {
+    visibility: hidden;
+    position: absolute;
+}
+
+x-peers {
+    position: relative;
+    display: flex;
+    flex-flow: row wrap;
+    flex-grow: 1;
+    align-items: start !important;
+    justify-content: center;
+
+    z-index: 2;
+    transition: --bg-color 0.5s ease;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    overscroll-behavior-x: none;
+    scrollbar-width: none;
+
+    --peers-per-row: 6; /* default if browser does not support :has selector */
+    --x-peers-width: min(100vw, calc(var(--peers-per-row) * (var(--peer-width) + 25px) - 16px));
+    width: var(--x-peers-width);
+    margin-right: 20px;
+    margin-left: 20px;
+}
+
+/* Footer */
+
+footer {
+    position: relative;
+    z-index: 2;
+    align-items: center;
+    text-align: center;
+    cursor: default;
+    margin: auto 5px 5px;
+}
+
+footer .logo {
+    --icon-size: 80px;
+    margin-bottom: 8px;
+    color: var(--primary-color);
+    margin-top: -10px;
+}
+
+.discovery-wrapper {
+    font-size: 12px;
+    margin: 10px auto auto;
+    border: 3px solid var(--border-color);
+    border-radius: 0.5rem;
+    padding: 2px;
+    background-color: rgb(var(--bg-color));
+    transition: background-color 0.5s ease;
+    min-height: 24px;
+}
+
+/*You can be discovered wrapper*/
+.discovery-wrapper > div:first-of-type {
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+
+.discovery-wrapper .badge {
+    word-break: keep-all;
+    margin: 2px;
+}
+
+.badge {
+    border-radius: 0.3rem/0.3rem;
+    padding-right: 0.3rem;
+    padding-left: 0.3em;
+    background-color: var(--badge-color);
+    color: white;
+    transition: background-color 0.5s ease;
+    white-space: nowrap;
+}
+
+.badge-room-ip {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.badge-room-secret {
+    background-color: var(--paired-device-color);
+    border-color: var(--paired-device-color);
+}
+
+.badge-room-public-id {
+    background-color: var(--public-room-color);
+    border-color: var(--public-room-color);
+}
+
+#display-name {
+    position: relative;
+    display: inline-block;
+    text-align: left;
+    border: none;
+    outline: none;
+    max-width: 15em;
+    text-overflow: ellipsis;
+    cursor: text;
+    margin-bottom: -6px;
+    padding-bottom: 0.1rem;
+    border-radius: 1.3rem/30%;
+    border-right: solid 1rem transparent;
+    border-left: solid 1rem transparent;
+    background-clip: padding-box;
+    overflow: hidden;
+    z-index: 1;
+}
+
+#edit-pen {
+    width: 1rem;
+    height: 1rem;
+    margin-bottom: -2px;
+    position: relative;
+}
+
+html:not([dir="rtl"]) #display-name,
+html:not([dir="rtl"]) #edit-pen {
+    margin-left: -1rem;
+}
+
+html[dir="rtl"] #display-name,
+html[dir="rtl"] #edit-pen {
+    margin-right: -1rem;
+}
+
+html[dir="rtl"] #edit-pen {
+    transform: rotateY(180deg);
+}
+
+/* Dialogs needed on page load */
+x-dialog:not([show]) x-background {
+    opacity: 0;
+}
+
+
+/* Button */
+
+.button {
+    padding: 2px 16px 0;
+    box-sizing: border-box;
+    min-height: 36px;
+    font-size: 14px;
+    line-height: 24px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    background: inherit;
+    color: var(--accent-color);
+    overflow: hidden;
+}
+
+.button[disabled] {
+    color: #5B5B66;
+    cursor: not-allowed;
+}
+
+
+.button,
+.icon-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    touch-action: manipulation;
+    border: none;
+    outline: none;
+}
+
+.button:before,
+.icon-button:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 300ms;
+}
+
+.button:not([disabled]):hover:before,
+.icon-button:hover:before {
+    opacity: 0.1;
+}
+
+.button[selected],
+.icon-button[selected] {
+    opacity: 0.1;
+}
+
+#cancel-paste-mode {
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100vw;
+    height: 56px;
+    background-color: var(--primary-color);
+    color: rgb(238, 238, 238);
+}
+
+.button:focus:before,
+.icon-button:focus:before {
+    opacity: 0.2;
+}
+
+
+
+button::-moz-focus-inner {
+    border: 0;
+}
+
+
+/* Icon Button */
+.icon-button {
+    width: 40px;
+    height: 40px;
+}
+
+.icon-button:before {
+    border-radius: 50%;
+}
+
+/* Text Input */
+.textarea {
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    padding: 16px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #f1f3f4;
+    display: block;
+    overflow: auto;
+    resize: none;
+    line-height: 16px;
+    max-height: calc(100vh - 254px);
+    white-space: pre;
+}
+
+
+/* Info Animation */
+
+#about {
+    color: white;
+    z-index: 11;
+    overflow: hidden;
+    pointer-events: none;
+    text-align: center;
+}
+
+#about header {
+    z-index: 1;
+}
+
+#about:not(:target) header {
+    transition-delay: 400ms;
+}
+
+#about:target header {
+    transition-delay: 100ms;
+}
+
+#about > * {
+    transition: opacity 300ms ease 300ms;
+    will-change: opacity;
+    pointer-events: all;
+}
+
+#about:not(:target) > header,
+#about:not(:target) > section {
+    opacity: 0;
+    pointer-events: none;
+    transition-delay: 0s;
+}
+
+#about .logo {
+    --icon-size: 96px;
+}
+
+#about .title-wrapper {
+    display: flex;
+    align-items: baseline;
+}
+
+#about .title-wrapper > div {
+    margin-left: 0.5em;
+}
+
+#about x-background {
+    position: absolute;
+    --size: max(max(230vw, 230vh), calc(150vh + 150vw));
+    --size-half: calc(var(--size)/2);
+    top: calc(28px - var(--size-half));
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: var(--primary-color);
+    transform: scale(0);
+    z-index: -1;
+}
+
+html:not([dir="rtl"]) #about x-background {
+    right: calc(36px - var(--size-half));
+}
+
+html[dir="rtl"] #about x-background {
+    left: calc(36px - var(--size-half));
+}
+
+
+/* Hack such that initial scale(0) isn't animated */
+#about x-background {
+    will-change: transform;
+    transition: transform 800ms cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+#about:target x-background {
+    transform: scale(1);
+}
+
+#about .row a {
+    margin: 8px 8px -16px;
+}
+
+#about section {
+    flex-grow: 1;
+}
+
+canvas.circles {
+    width: 100vw;
+    position: absolute;
+    z-index: -10;
+    top: 0;
+    left: 0;
+}
+
+/* Generic placeholder */
+[placeholder]:empty:before {
+    content: attr(placeholder);
+}
+
+/* Instructions */
+
+x-instructions {
+    position: relative;
+    opacity: 0.5;
+    text-align: center;
+    margin-left: 10px;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    justify-content: center;
+}
+
+x-instructions:not([drop-peer]):not([drop-bg]):before {
+    content: attr(mobile);
+}
+
+x-instructions[drop-peer]:before {
+    content: attr(data-drop-peer);
+}
+
+x-instructions[drop-bg]:not([drop-peer]):before {
+    content: attr(data-drop-bg);
+}
+
+x-instructions p {
+    display: none;
+}
+
+x-peers:empty~x-instructions {
+    opacity: 0 !important;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    x-peer {
+        transform: scale(0.95);
+        padding: 4px;
+    }
+}
+
+/* Prevent Cumulative Layout Shift */
+
+.fade-in {
+    animation: fade-in 600ms;
+    animation-fill-mode: backwards;
+}
+
+.no-animation-on-load {
+    animation-iteration-count: 0;
+}
+
+.opacity-0 {
+    opacity: 0;
+}
+
+/* Responsive Styles */
+
+@media screen and (min-height: 800px) {
+    footer {
+        margin-bottom: 16px;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    x-instructions:not([drop-peer]):not([drop-bg]):before {
+        content: attr(desktop);
+    }
+}
+
+/* Toast */
+
+.toast-container {
+    padding: 0 8px 24px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+x-toast {
+    position: absolute;
+    min-height: 48px;
+    top: 50px;
+    width: 100%;
+    max-width: 344px;
+    background-color: rgb(var(--text-color));
+    color: rgb(var(--bg-color));
+    align-items: center;
+    box-sizing: border-box;
+    padding: 8px 24px;
+    z-index: 20;
+    transition: opacity 200ms, transform 300ms ease-out;
+    cursor: default;
+    line-height: 24px;
+    border-radius: 8px;
+    pointer-events: all;
+}
+
+x-toast:not([show]):not(:hover) {
+    opacity: 0;
+    transform: translateY(-100px);
+}
+
+/*
+    Color Themes
+*/
+
+/* Default colors */
+body {
+    --text-color: 51,51,51;
+    --bg-color: 250,250,250; /*rgb code*/
+    --bg-color-test: 18,18,18;
+    --bg-color-secondary: #e4e4e4;
+    --border-color: rgb(169, 169, 169);
+    --badge-color: #a5a5a5;
+}
+
+/* Dark theme colors */
+body.dark-theme {
+    --text-color: 238,238,238;
+    --bg-color: 18,18,18; /*rgb code*/
+    --bg-color-secondary: #333;
+    --border-color: rgb(238,238,238);
+    --badge-color: #717171;
+}
+
+/* Colored Elements */
+body {
+    color: rgb(var(--text-color));
+    background-color: rgb(var(--bg-color));
+    transition: background-color 0.5s ease;
+}
+
+/* Styles for users who prefer dark mode at the OS level */
+@media (prefers-color-scheme: dark) {
+
+    /* defaults to dark theme */
+    body {
+        --text-color: 238,238,238;
+        --bg-color: 18,18,18; /*rgb code*/
+        --bg-color-secondary: #333;
+        --border-color: rgb(238,238,238);
+        --badge-color: #717171;
+    }
+
+    /* Override dark mode with light mode styles if the user decides to swap */
+    body.light-theme {
+        --text-color: 51,51,51;
+        --bg-color: 250,250,250; /*rgb code*/
+        --bg-color-secondary: #e4e4e4;
+        --border-color: rgb(169, 169, 169);
+        --badge-color: #a5a5a5;
+   }
+}
+
+
+/*
+    Edge specific styles
+*/
+@supports (-ms-ime-align: auto) {
+
+    html,
+    body {
+        overflow: hidden;
+    }
+}
+
+/*
+    Browser specific styles
+*/
+
+body {
+    /* mobile viewport bug fix */
+    min-height: -moz-available;          /* WebKit-based browsers will ignore this. */
+    min-height: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    min-height: fill-available;
+}
+
+html {
+    min-height: -moz-available;          /* WebKit-based browsers will ignore this. */
+    min-height: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    min-height: fill-available;
+}
+
+/* webkit scrollbar style*/
+
+::-webkit-scrollbar{
+    width: 4px;
+    height: 4px;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #bfbfbf;
+    border-radius: 4px;
+}
+
+::-moz-selection,
+::selection {
+    color: black;
+    background: var(--primary-color);
+}
+
+/* make elements with attribute contenteditable editable on older iOS devices.
+See note here: https://developer.mozilla.org/en-US/docs/Web/CSS/user-select */
+[contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+}

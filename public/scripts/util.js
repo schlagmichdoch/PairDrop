@@ -60,9 +60,6 @@ window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 window.android = /android/i.test(navigator.userAgent);
 window.isMobile = window.iOS || window.android;
 
-// Selector shortcuts
-const $ = query => document.getElementById(query);
-const $$ = query => document.querySelector(query);
 
 // Helper functions
 const zipper = (() => {
