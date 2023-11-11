@@ -1,3 +1,116 @@
+// Selector shortcuts
+const $ = query => document.getElementById(query);
+const $$ = query => document.querySelector(query);
+
+// Event listener shortcuts
+class Events {
+    static fire(type, detail = {}) {
+        window.dispatchEvent(new CustomEvent(type, { detail: detail }));
+    }
+
+    static on(type, callback, options) {
+        return window.addEventListener(type, callback, options);
+    }
+
+    static off(type, callback, options) {
+        return window.removeEventListener(type, callback, options);
+    }
+}
+
+// UIs needed on start
+class ThemeUI {
+
+    constructor() {
+        this.prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        this.prefersLightTheme = window.matchMedia('(prefers-color-scheme: light)').matches;
+
+        this.$themeAutoBtn = document.getElementById('theme-auto');
+        this.$themeLightBtn = document.getElementById('theme-light');
+        this.$themeDarkBtn = document.getElementById('theme-dark');
+
+        let currentTheme = this.getCurrentTheme();
+        if (currentTheme === 'dark') {
+            this.setModeToDark();
+        } else if (currentTheme === 'light') {
+            this.setModeToLight();
+        }
+
+        this.$themeAutoBtn.addEventListener('click', _ => this.onClickAuto());
+        this.$themeLightBtn.addEventListener('click', _ => this.onClickLight());
+        this.$themeDarkBtn.addEventListener('click', _ => this.onClickDark());
+    }
+
+    getCurrentTheme() {
+        return localStorage.getItem('theme');
+    }
+
+    setCurrentTheme(theme) {
+        localStorage.setItem('theme', theme);
+    }
+
+    onClickAuto() {
+        if (this.getCurrentTheme()) {
+            this.setModeToAuto();
+        } else {
+            this.setModeToDark();
+        }
+    }
+
+    onClickLight() {
+        if (this.getCurrentTheme() !== 'light') {
+            this.setModeToLight();
+        } else {
+            this.setModeToAuto();
+        }
+    }
+
+    onClickDark() {
+        if (this.getCurrentTheme() !== 'dark') {
+            this.setModeToDark();
+        } else {
+            this.setModeToLight();
+        }
+    }
+
+    setModeToDark() {
+        document.body.classList.remove('light-theme');
+        document.body.classList.add('dark-theme');
+
+        this.setCurrentTheme('dark');
+
+        this.$themeAutoBtn.classList.remove("selected");
+        this.$themeLightBtn.classList.remove("selected");
+        this.$themeDarkBtn.classList.add("selected");
+    }
+
+    setModeToLight() {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.add('light-theme');
+
+        this.setCurrentTheme('light');
+
+        this.$themeAutoBtn.classList.remove("selected");
+        this.$themeLightBtn.classList.add("selected");
+        this.$themeDarkBtn.classList.remove("selected");
+    }
+
+    setModeToAuto() {
+        document.body.classList.remove('dark-theme');
+        document.body.classList.remove('light-theme');
+        if (this.prefersDarkTheme) {
+            document.body.classList.add('dark-theme');
+        }
+        else if (this.prefersLightTheme) {
+            document.body.classList.add('light-theme');
+        }
+        localStorage.removeItem('theme');
+
+        this.$themeAutoBtn.classList.add("selected");
+        this.$themeLightBtn.classList.remove("selected");
+        this.$themeDarkBtn.classList.remove("selected");
+    }
+}
+
 class FooterUI {
 
     constructor() {

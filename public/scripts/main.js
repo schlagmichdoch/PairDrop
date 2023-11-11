@@ -7,17 +7,19 @@ class PairDrop {
         this.$headerNotificationButton = $('notification');
         this.$editPairedDevicesHeaderBtn = $('edit-paired-devices');
         this.$footerInstructionsPairedDevices = $$('.discovery-wrapper .badge-room-secret');
-
         this.$head = $$('head');
-
         this.$installBtn = $('install');
 
         this.registerServiceWorker();
 
         Events.on('beforeinstallprompt', e => this.onPwaInstallable(e));
 
+        const persistentStorage = new PersistentStorage();
+        const themeUI = new ThemeUI();
+        const backgroundCanvas = new BackgroundCanvas();
+
         Events.on('initial-translation-loaded', _ => {
-            const backgroundCanvas = new BackgroundCanvas();
+            // FooterUI needs translations
             const footerUI = new FooterUI();
 
             Events.on('fade-in-ui', _ => this.fadeInUI())
@@ -29,6 +31,9 @@ class PairDrop {
             // Load deferred assets
             this.loadDeferredAssets();
         });
+
+        // Translate page -> fires 'initial-translation-loaded' on finish
+        const localization = new Localization();
     }
 
     registerServiceWorker() {
@@ -171,6 +176,4 @@ class PairDrop {
     }
 }
 
-const persistentStorage = new PersistentStorage();
 const pairDrop = new PairDrop();
-const localization = new Localization();
