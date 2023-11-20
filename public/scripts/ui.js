@@ -665,7 +665,7 @@ class Dialog {
             document.activeElement.blur();
             window.blur();
         }
-        document.title = 'PairDrop';
+        document.title = 'PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.';
         changeFavicon("images/favicon-96x96.png");
         this.correspondingPeerId = undefined;
     }
