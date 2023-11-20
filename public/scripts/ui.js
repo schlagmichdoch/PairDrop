@@ -434,7 +434,7 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <span class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
+                    <div class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></div>
                 </div>
             </label>`;
 
@@ -1796,6 +1796,8 @@ class SendTextDialog extends Dialog {
     _onChange(e) {
         if (this._textInputEmpty()) {
             this.$submit.setAttribute('disabled', '');
+            // remove remaining whitespace on Firefox on text deletion
+            this.$text.innerText = "";
         } else {
             this.$submit.removeAttribute('disabled');
         }

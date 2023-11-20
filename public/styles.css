@@ -558,12 +558,10 @@ x-peer[status] x-icon {
 }
 
 .device-name {
-    font-size: 14px;
     white-space: nowrap;
 }
 
 .connection-hash {
-    font-size: 12px;
     white-space: nowrap;
 }
 
@@ -615,7 +613,7 @@ footer .logo {
 }
 
 .discovery-wrapper {
-    font-size: 12px;
+    font-size: 14px;
     margin: 10px auto auto;
     border: 3px solid var(--border-color);
     border-radius: 0.5rem;
@@ -660,6 +658,10 @@ footer .logo {
 .badge-room-public-id {
     background-color: var(--public-room-color);
     border-color: var(--public-room-color);
+}
+
+.known-as-wrapper {
+    font-size: 16px; /* prevents auto-zoom on edit */
 }
 
 #display-name {
@@ -1036,23 +1038,25 @@ x-dialog .dialog-subheader {
     padding-bottom: 0;
 }
 
-#text-input {
-    min-height: 200px;
-    width: 100%;
+#send-text-dialog,
+#receive-text-dialog {
+    font-size: 16px;  /* prevents auto-zoom on edit */
+}
+
+#text-input:before {
+    opacity: 0.5;
 }
 
 /* Receive Text Dialog */
 
 #receive-text-dialog #text {
-    width: 100%;
     word-break: break-all;
-    max-height: calc(100vh - 393px);
+    max-height: 400px;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
-    white-space: pre-wrap;
 }
 
 #receive-text-dialog #text a {
@@ -1202,7 +1206,7 @@ button::-moz-focus-inner {
     outline: none;
     padding: 16px 24px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: inherit;
     font-family: inherit;
     background: #f1f3f4;
     display: block;

@@ -71,6 +71,7 @@
         "send-message-title": "Send Message",
         "send-message-to": "Send a Message to",
         "message_title": "Insert message to send",
+        "message_placeholder": "Message",
         "send": "Send",
         "receive-text-title": "Message Received",
         "copy": "Copy",
