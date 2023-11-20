@@ -392,6 +392,8 @@ class PeersUI {
 
 class PeerUI {
 
+    static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
+
     constructor(peer, connectionHash) {
         this._peer = peer;
         this._connectionHash =
@@ -1266,8 +1268,8 @@ class PairDeviceDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getPairUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
             background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
@@ -1466,7 +1468,7 @@ class EditPairedDevicesDialog extends Dialog {
                 <label class="auto-accept pointer">${autoAcceptString}
                     <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                 </label>
-                <button class="button" type="button">${unpairString}</button>
+                <button class="btn" type="button">${unpairString}</button>
             </div>`
 
             $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
@@ -1500,7 +1502,19 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _onEditPairedDevices() {
-        this._initDOM().then(_ => this.show());
+        this._initDOM()
+            .then(_ => {
+                this._evaluateOverflowing();
+                this.show();
+            });
+    }
+
+    _evaluateOverflowing() {
+        if (this.$pairedDevicesWrapper.clientHeight < this.$pairedDevicesWrapper.scrollHeight) {
+            this.$pairedDevicesWrapper.classList.add('overflowing');
+        } else {
+            this.$pairedDevicesWrapper.classList.remove('overflowing');
+        }
     }
 
     _clearRoomSecrets() {
@@ -1617,8 +1631,8 @@ class PublicRoomDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getShareRoomUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
             background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
@@ -1801,12 +1815,21 @@ class SendTextDialog extends Dialog {
         } else {
             this.$submit.removeAttribute('disabled');
         }
+        this._evaluateOverflowing();
+    }
+
+    _evaluateOverflowing() {
+        if (this.$text.clientHeight < this.$text.scrollHeight) {
+            this.$text.classList.add('overflowing');
+        } else {
+            this.$text.classList.remove('overflowing');
+        }
     }
 
     _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
         this.$peerDisplayName.innerText = deviceName;
-        this.$peerDisplayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$peerDisplayName.classList.remove(...PeerUI._badgeClassNames);
         this.$peerDisplayName.classList.add($(peerId).ui._badgeClassName());
 
         this.show();
@@ -1878,7 +1901,7 @@ class ReceiveTextDialog extends Dialog {
 
     _showReceiveTextDialog(text, peerId) {
         this.$displayName.innerText = $(peerId).ui._displayName();
-        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$displayName.classList.remove(...PeerUI._badgeClassNames);
         this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;
@@ -1892,10 +1915,20 @@ class ReceiveTextDialog extends Dialog {
             });
         }
 
+        this._evaluateOverflowing();
+
         this._setDocumentTitleMessages();
 
         changeFavicon("images/favicon-96x96-notification.png");
         this.show();
+    }
+
+    _evaluateOverflowing() {
+        if (this.$text.clientHeight < this.$text.scrollHeight) {
+            this.$text.classList.add('overflowing');
+        } else {
+            this.$text.classList.remove('overflowing');
+        }
     }
 
     _setDocumentTitleMessages() {
@@ -2774,8 +2807,8 @@ class BackgroundCanvas {
     drawCircle(ctx, radius) {
         ctx.beginPath();
         ctx.lineWidth = 2;
-        let opacity = Math.max(0, 0.3 * (1 - 1 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
+        let opacity = Math.max(0, 0.3 * (1 - 1.2 * radius / Math.max(this.w, this.h)));
+        ctx.strokeStyle = `rgba(165,165,165, ${opacity})`;
         ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }
