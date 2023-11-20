@@ -558,18 +558,11 @@ x-peer[status] x-icon {
 }
 
 .status,
-.device-name,
-.connection-hash {
-    opacity: 0.7;
-}
-
 .device-name {
+    opacity: 0.7;
     white-space: nowrap;
 }
 
-.connection-hash {
-    white-space: nowrap;
-}
 
 x-peer:not([status]) .status,
 x-peer[status] .device-name {

@@ -436,14 +436,12 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <div class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></div>
                 </div>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
-        this.$el.querySelector('.connection-hash').textContent = this._connectionHash;
     }
 
     addTypesToClassList() {
@@ -1852,8 +1850,8 @@ class SendTextDialog extends Dialog {
             to: this.correspondingPeerId,
             text: this.$text.innerText
         });
-        this.$text.innerText = "";
         this.hide();
+        setTimeout(() => this.$text.innerText = "", 300);
     }
 }
 
