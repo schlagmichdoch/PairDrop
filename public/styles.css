@@ -159,10 +159,18 @@ header > div:hover .icon-button.selected::before {
 
 /* Typography */
 
+@font-face {
+    font-family: "Open Sans";
+    src: url('fonts/OpenSans/static/OpenSans-Medium.ttf') format('truetype');
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, Roboto, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-variant-ligatures: common-ligatures;
+    font-kerning: normal;
 }
 
 h1 {
@@ -170,7 +178,7 @@ h1 {
     font-weight: 400;
     letter-spacing: -.01em;
     line-height: 40px;
-    margin: 8px 0 0;
+    margin: 0 0 4px;
 }
 
 h2 {
@@ -1101,6 +1109,7 @@ x-dialog .dialog-subheader {
 /* Button */
 
 .btn {
+    font-family: "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
     padding: 2px 16px 0;
     box-sizing: border-box;
     font-size: 14px;
@@ -1264,7 +1273,7 @@ button::-moz-focus-inner {
 }
 
 #about .title-wrapper > div {
-    margin-left: 0.5em;
+    margin-left: 0.4em;
 }
 
 #about x-background {
