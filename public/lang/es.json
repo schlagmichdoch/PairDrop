@@ -43,7 +43,7 @@
         "file-transfer-completed": "Transferencia de archivos completada",
         "file-content-incorrect": "El contenido del archivo es incorrecto",
         "files-incorrect": "Los archivos son incorrectos",
-        "selected-peer-left": "El dispositivo seleccionado se fue.",
+        "selected-peer-left": "Dispositivos seleccionados restantes",
         "link-received": "Link recibido por {{name}} - Haga clic para abrir",
         "online": "Estás de nuevo en línea",
         "public-room-left": "Salió de la sala pública {{publicRoomId}}",
