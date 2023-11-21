@@ -144,7 +144,7 @@
         "selected-peer-left": "Appareils sélectionnés restants",
         "pair-url-copied-to-clipboard": "Lien de couplage de cet appareil copié dans le presse-papier",
         "room-url-copied-to-clipboard": "Lien vers la salle publique copié dans le presse-papier",
-        "notifications-permissions-error": "Permission de notification bloquées car l'utilisateur a plusieurs fois rejeté la demande d'autorisation. Cela peut être réinitialisé via la Page d'Information en cliquant l’icône de cadenas à coté de l'URL"
+        "notifications-permissions-error": "Permission de notification bloquées car l'utilisateur a plusieurs fois rejeté la demande d'autorisation. Cela peut être réinitialisé via la Page d'Information en cliquant l’icône de cadenas à coté de l'URL."
     },
     "document-titles": {
         "file-received": "Fichier reçu",
