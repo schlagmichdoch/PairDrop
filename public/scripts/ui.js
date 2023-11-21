@@ -1268,9 +1268,9 @@ class PairDeviceDialog extends Dialog {
             content: this._getPairUrl(),
             width: 150,
             height: 150,
-            padding: 0,
-            background: "transparent",
-            color: `rgb(var(--text-color))`,
+            padding: 1,
+            background: 'rgb(250,250,250)',
+            color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
         });
@@ -1619,9 +1619,9 @@ class PublicRoomDialog extends Dialog {
             content: this._getShareRoomUrl(),
             width: 150,
             height: 150,
-            padding: 0,
-            background: "transparent",
-            color: `rgb(var(--text-color))`,
+            padding: 1,
+            background: 'rgb(250,250,250)',
+            color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
         });

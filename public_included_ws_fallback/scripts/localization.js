@@ -1,7 +1,7 @@
 class Localization {
     constructor() {
         Localization.defaultLocale = "en";
-        Localization.supportedLocales = ["ar", "de", "en", "es", "fr", "id", "it", "ja", "nb", "nl", "ro", "ru", "tr", "zh-CN"];
+        Localization.supportedLocales = ["ar", "de", "en", "es", "fr", "id", "it", "ja", "nb", "nl", "ro", "ru", "tr", "zh-CN","pt-BR"];
         Localization.supportedLocalesRTL = ["ar"];
 
         Localization.translations = {};
@@ -31,7 +31,13 @@ class Localization {
     }
 
     static getSupportedOrDefault(locales) {
-        return locales.find(Localization.isSupported) || Localization.defaultLocale;
+        let localesGeneric = locales
+            .map(locale => locale.split("-")[0])
+            .filter(locale => locales.indexOf(locale) === -1);
+
+        return locales.find(Localization.isSupported)
+            || localesGeneric.find(Localization.isSupported)
+            || Localization.defaultLocale;
     }
 
     static async setTranslation(locale) {
