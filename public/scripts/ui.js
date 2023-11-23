@@ -2315,6 +2315,7 @@ class WebShareTargetUI {
     }
 }
 
+// Keep for legacy reasons even though this is removed from new PWA installations
 class WebFileHandlersUI {
     constructor() {
         const urlParams = new URL(window.location).searchParams;
