@@ -14,13 +14,6 @@ class Localization {
         Localization.initialLocale = storedLanguageCode && Localization.isSupported(storedLanguageCode)
             ? storedLanguageCode
             : Localization.systemLocale;
-
-        Localization
-            .setTranslation(Localization.initialLocale)
-            .then(_ => {
-                console.log("Initial translation successful.");
-                Events.fire("initial-translation-loaded");
-            });
     }
 
     static isSupported(locale) {
@@ -39,6 +32,10 @@ class Localization {
         return locales.find(Localization.isSupported)
             || localesGeneric.find(Localization.isSupported)
             || Localization.defaultLocale;
+    }
+
+    async setInitialTranslation() {
+        await Localization.setTranslation(Localization.initialLocale)
     }
 
     static async setTranslation(locale) {

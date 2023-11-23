@@ -18,22 +18,25 @@ class PairDrop {
         const themeUI = new ThemeUI();
         const backgroundCanvas = new BackgroundCanvas();
 
-        Events.on('initial-translation-loaded', _ => {
-            // FooterUI needs translations
-            const footerUI = new FooterUI();
-
-            Events.on('fade-in-ui', _ => this.fadeInUI())
-            Events.on('fade-in-header', _ => this.fadeInHeader())
-
-            // Evaluate UI elements and fade in UI
-            this.evaluateUI();
-
-            // Load deferred assets
-            this.loadDeferredAssets();
-        });
-
-        // Translate page -> fires 'initial-translation-loaded' on finish
+        // Translate page before fading in
         const localization = new Localization();
+        localization
+            .setInitialTranslation()
+            .then(() => {
+                console.log("Initial translation successful.");
+
+                // FooterUI needs translations
+                const footerUI = new FooterUI();
+
+                Events.on('fade-in-ui', _ => this.fadeInUI())
+                Events.on('fade-in-header', _ => this.fadeInHeader())
+
+                // Evaluate UI elements and fade in UI
+                this.evaluateUI();
+
+                // Load deferred assets
+                this.loadDeferredAssets();
+            })
     }
 
     registerServiceWorker() {
