@@ -1,20 +1,24 @@
 const cacheVersion = 'v1.9.4';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
-const urlsToCache = [
+const relativePathsToCache = [
     './',
     'index.html',
     'manifest.json',
-    'styles.css',
+    'styles/styles-main.css',
+    'styles/deferred-styles.css',
     'scripts/localization.js',
+    'scripts/main.js',
     'scripts/network.js',
-    'scripts/NoSleep.min.js',
-    'scripts/QRCode.min.js',
-    'scripts/theme.js',
+    'scripts/no-sleep.min.js',
+    'scripts/persistent-storage.js',
+    'scripts/qr-code.min.js',
     'scripts/ui.js',
+    'scripts/ui-main.js',
     'scripts/util.js',
     'scripts/zip.min.js',
     'sounds/blop.mp3',
+    'sounds/blop.ogg',
     'images/favicon-96x96.png',
     'images/favicon-96x96-notification.png',
     'images/android-chrome-192x192.png',
@@ -32,32 +36,49 @@ const urlsToCache = [
     'lang/ja.json',
     'lang/nb.json',
     'lang/nl.json',
+    'lang/tr.json',
     'lang/ro.json',
     'lang/ru.json',
     'lang/zh-CN.json'
 ];
+const relativePathsNotToCache = [
+    'config'
+]
 
 self.addEventListener('install', function(event) {
   // Perform install steps
     event.waitUntil(
         caches.open(cacheTitle)
             .then(function(cache) {
-                return cache.addAll(urlsToCache).then(_ => {
-                    console.log('All files cached.');
-                });
+                return cache
+                    .addAll(relativePathsToCache)
+                    .then(_ => {
+                        console.log('All files cached.');
+                    });
             })
     );
 });
 
 // fetch the resource from the network
 const fromNetwork = (request, timeout) =>
-    new Promise((fulfill, reject) => {
+    new Promise((resolve, reject) => {
         const timeoutId = setTimeout(reject, timeout);
-        fetch(request).then(response => {
-            clearTimeout(timeoutId);
-            fulfill(response);
-            update(request).then(() => console.log("Cache successfully updated for", request.url));
-        }, reject);
+        fetch(request)
+            .then(response => {
+                clearTimeout(timeoutId);
+                resolve(response);
+
+                if (doNotCacheRequest(request)) return;
+
+                update(request)
+                    .then(() => console.log("Cache successfully updated for", request.url))
+                    .catch(reason => console.log("Cache could not be updated for", request.url, "Reason:", reason));
+            })
+            .catch(error => {
+                // Handle any errors that occurred during the fetch
+                console.error(`Could not fetch ${request.url}. Are you online?`);
+                reject(error);
+            });
     });
 
 // fetch the resource from the browser cache
@@ -68,17 +89,32 @@ const fromCache = request =>
             cache.match(request)
         );
 
+const rootUrl = location.href.substring(0, location.href.length - "service-worker.js".length);
+const rootUrlLength = rootUrl.length;
+
+const doNotCacheRequest = request => {
+    const requestRelativePath = request.url.substring(rootUrlLength);
+    return relativePathsNotToCache.indexOf(requestRelativePath) !== -1
+};
+
 // cache the current page to make it available for offline
-const update = request =>
+const update = request => new Promise((resolve, reject) => {
+    if (doNotCacheRequest(request)) {
+        reject("Url is specifically prevented from being cached in the serviceworker.");
+        return;
+    }
     caches
         .open(cacheTitle)
         .then(cache =>
-            fetch(request)
-                .then(async response => {
-                    await cache.put(request, response);
+            fetch(request, {cache: "no-store"})
+                .then(response => {
+                    cache
+                        .put(request, response)
+                        .then(() => resolve());
                 })
-                .catch(() => console.log(`Cache could not be updated. ${request.url}`))
+                .catch(reason => reject(reason))
         );
+});
 
 // general strategy when making a request (eg if online try to fetch it
 // from cache, if something fails fetch from network. Update cache everytime files are fetched.
@@ -90,16 +126,19 @@ self.addEventListener('fetch', function(event) {
             const share_url = await evaluateRequestData(event.request);
             return Response.redirect(encodeURI(share_url), 302);
         })());
-    } else {
+    }
+    else {
         // Regular requests not related to Web Share Target.
         if (forceFetch) {
             event.respondWith(fromNetwork(event.request, 10000));
-        } else {
+        }
+        else {
             event.respondWith(
-                fromCache(event.request).then(rsp => {
-                    // if fromCache resolves to undefined fetch from network instead
-                    return rsp || fromNetwork(event.request, 10000);
-                })
+                fromCache(event.request)
+                    .then(rsp => {
+                        // if fromCache resolves to undefined fetch from network instead
+                        return rsp || fromNetwork(event.request, 10000);
+                    })
             );
         }
     }
@@ -109,15 +148,16 @@ self.addEventListener('fetch', function(event) {
 // on activation, we clean up the previously registered service workers
 self.addEventListener('activate', evt => {
         return evt.waitUntil(
-            caches.keys().then(cacheNames => {
-                return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheName !== cacheTitle) {
-                            return caches.delete(cacheName);
-                        }
-                    })
-                );
-            })
+            caches.keys()
+                .then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => {
+                            if (cacheName !== cacheTitle) {
+                                return caches.delete(cacheName);
+                            }
+                        })
+                    );
+                })
         )
     }
 );
@@ -157,7 +197,8 @@ const evaluateRequestData = function (request) {
             DBOpenRequest.onerror = _ => {
                 resolve(pairDropUrl);
             }
-        } else {
+        }
+        else {
             let urlArgument = '?share-target=text';
 
             if (title) urlArgument += `&title=${title}`;

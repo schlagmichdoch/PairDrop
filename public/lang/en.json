@@ -25,7 +25,8 @@
         "tap-to-send": "Tap to send",
         "activate-paste-mode-base": "Open PairDrop on other devices to send",
         "activate-paste-mode-and-other-files": "and {{count}} other files",
-        "activate-paste-mode-shared-text": "shared text"
+        "activate-paste-mode-shared-text": "shared text",
+        "webrtc-requirement": "To use PairDrop on this instance, WebRTC must be enabled!"
     },
     "footer": {
         "known-as": "You are known as:",

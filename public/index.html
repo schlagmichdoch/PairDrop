@@ -9,13 +9,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3367d6">
     <meta name="color-scheme" content="dark light">
-    <meta name="apple-mobile-web-app-capable" content="no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="PairDrop">
     <meta name="application-name" content="PairDrop">
     <!-- Descriptions -->
     <meta name="description" content="Instantly share images, videos, PDFs, and links with people nearby. Peer2Peer and Open Source. No Setup, No Signup.">
     <meta name="keywords" content="File, Transfer, Share, Peer2Peer">
-    <meta name="author" content="RobinLinus">
+    <meta name="author" content="schlagmichdoch">
     <meta property="og:title" content="PairDrop">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://pairdrop.net/">
@@ -28,13 +28,14 @@
     <link rel="icon" sizes="96x96" href="images/favicon-96x96.png">
     <link rel="shortcut icon" href="images/favicon-96x96.png">
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="images/apple-touch-icon.png">
     <meta name="msapplication-TileImage" content="images/mstile-150x150.png">
     <link rel="fluid-icon" type="image/png" href="images/android-chrome-192x192.png">
     <meta name="twitter:image" content="images/logo_transparent_512x512.png">
     <meta property="og:image" content="images/logo_transparent_512x512.png">
     <!-- Resources -->
     <link rel="preload" href="lang/en.json" as="fetch">
-    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="styles/styles-main.css">
     <link rel="manifest" href="manifest.json">
 </head>
 
@@ -108,6 +109,11 @@
         <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg">
             <p id="paste-filename"></p>
         </x-instructions>
+        <div id="websocket-fallback" hidden>
+            <span data-i18n-key="footer.traffic" data-i18n-attrs="text"></span>
+            <span data-i18n-key="footer.routed" data-i18n-attrs="text"></span>
+            <span data-i18n-key="footer.webrtc" data-i18n-attrs="text"></span>
+        </div>
     </div>
     <!-- Footer -->
     <footer class="column opacity-0">
@@ -596,13 +602,9 @@
     </svg>
     <!-- Scripts -->
     <script src="scripts/localization.js"></script>
-    <script src="scripts/theme.js"></script>
-    <script src="scripts/network.js"></script>
-    <script src="scripts/ui.js"></script>
-    <script src="scripts/util.js"></script>
-    <script src="scripts/QRCode.min.js" async></script>
-    <script src="scripts/zip.min.js" async></script>
-    <script src="scripts/NoSleep.min.js" async></script>
+    <script src="scripts/persistent-storage.js"></script>
+    <script src="scripts/ui-main.js"></script>
+    <script src="scripts/main.js"></script>
     <!-- Sounds -->
     <audio id="blop" autobuffer="true">
         <source src="sounds/blop.mp3" type="audio/mpeg">
