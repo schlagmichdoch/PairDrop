@@ -280,6 +280,8 @@ class PeersUI {
 
 class PeerUI {
 
+    static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
+
     constructor(peer, connectionHash) {
         this.$xInstructions = $$('x-instructions');
         this.$xPeers = $$('x-peers');
@@ -330,14 +332,12 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <span class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
                 </div>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
-        this.$el.querySelector('.connection-hash').textContent = this._connectionHash;
     }
 
     addTypesToClassList() {
@@ -569,7 +569,7 @@ class Dialog {
             document.activeElement.blur();
             window.blur();
         }
-        document.title = 'PairDrop';
+        document.title = 'PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.';
         changeFavicon("images/favicon-96x96.png");
         this.correspondingPeerId = undefined;
     }
@@ -1187,8 +1187,8 @@ class PairDeviceDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getPairUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
             background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
@@ -1392,7 +1392,7 @@ class EditPairedDevicesDialog extends Dialog {
                     <label class="auto-accept pointer">${autoAcceptString}
                         <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                     </label>
-                    <button class="button" type="button">${unpairString}</button>
+                    <button class="btn" type="button">${unpairString}</button>
                 </div>`
 
                 $pairedDevice
@@ -1433,7 +1433,19 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _onEditPairedDevices() {
-        this._initDOM().then(_ => this.show());
+        this._initDOM()
+            .then(_ => {
+                this._evaluateOverflowing();
+                this.show();
+            });
+    }
+
+    _evaluateOverflowing() {
+        if (this.$pairedDevicesWrapper.clientHeight < this.$pairedDevicesWrapper.scrollHeight) {
+            this.$pairedDevicesWrapper.classList.add('overflowing');
+        } else {
+            this.$pairedDevicesWrapper.classList.remove('overflowing');
+        }
     }
 
     _clearRoomSecrets() {
@@ -1556,8 +1568,8 @@ class PublicRoomDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getShareRoomUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
             background: 'rgb(250,250,250)',
             color: 'rgb(18, 18, 18)',
@@ -1736,16 +1748,27 @@ class SendTextDialog extends Dialog {
     _onChange() {
         if (this._textInputEmpty()) {
             this.$submit.setAttribute('disabled', true);
+            // remove remaining whitespace on Firefox on text deletion
+            this.$text.innerText = "";
         }
         else {
             this.$submit.removeAttribute('disabled');
+        }
+        this._evaluateOverflowing();
+    }
+
+    _evaluateOverflowing() {
+        if (this.$text.clientHeight < this.$text.scrollHeight) {
+            this.$text.classList.add('overflowing');
+        } else {
+            this.$text.classList.remove('overflowing');
         }
     }
 
     _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
         this.$peerDisplayName.innerText = deviceName;
-        this.$peerDisplayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$peerDisplayName.classList.remove(...PeerUI._badgeClassNames);
         this.$peerDisplayName.classList.add($(peerId).ui._badgeClassName());
 
         this.show();
@@ -1768,8 +1791,8 @@ class SendTextDialog extends Dialog {
             to: this.correspondingPeerId,
             text: this.$text.innerText
         });
-        this.$text.innerText = "";
         this.hide();
+        setTimeout(() => this.$text.innerText = "", 300);
     }
 }
 
@@ -1818,7 +1841,7 @@ class ReceiveTextDialog extends Dialog {
 
     _showReceiveTextDialog(text, peerId) {
         this.$displayName.innerText = $(peerId).ui._displayName();
-        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$displayName.classList.remove(...PeerUI._badgeClassNames);
         this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;
@@ -1832,10 +1855,20 @@ class ReceiveTextDialog extends Dialog {
             });
         }
 
+        this._evaluateOverflowing();
+
         this._setDocumentTitleMessages();
 
         changeFavicon("images/favicon-96x96-notification.png");
         this.show();
+    }
+
+    _evaluateOverflowing() {
+        if (this.$text.clientHeight < this.$text.scrollHeight) {
+            this.$text.classList.add('overflowing');
+        } else {
+            this.$text.classList.remove('overflowing');
+        }
     }
 
     _setDocumentTitleMessages() {
@@ -2324,66 +2357,5 @@ class NoSleepUI {
             clearInterval(NoSleepUI._interval);
             NoSleepUI._nosleep.disable();
         }
-    }
-}
-
-class BrowserTabsConnector {
-    constructor() {
-        this.bc = new BroadcastChannel('pairdrop');
-        this.bc.addEventListener('message', e => this._onMessage(e));
-        Events.on('broadcast-send', e => this._broadcastSend(e.detail));
-    }
-
-    _broadcastSend(message) {
-        this.bc.postMessage(message);
-    }
-
-    _onMessage(e) {
-        console.log('Broadcast:', e.data)
-        switch (e.data.type) {
-            case 'self-display-name-changed':
-                Events.fire('self-display-name-changed', e.data.detail);
-                break;
-        }
-    }
-
-    static peerIsSameBrowser(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
-        return peerIdsBrowser
-            ? peerIdsBrowser.indexOf(peerId) !== -1
-            : false;
-    }
-
-    static async addPeerIdToLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
-        if (!peerId) return false;
-
-        let peerIdsBrowser = [];
-        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peer_ids_browser"));
-
-        if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
-        peerIdsBrowser.push(peerId);
-        peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-
-        return peerIdsBrowser;
-    }
-
-    static async removePeerIdFromLocalStorage(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
-        const index = peerIdsBrowser.indexOf(peerId);
-        peerIdsBrowser.splice(index, 1);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-        return peerId;
-    }
-
-
-    static async removeOtherPeerIdsFromLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
-        if (!peerId) return false;
-
-        let peerIdsBrowser = [peerId];
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-        return peerIdsBrowser;
     }
 }

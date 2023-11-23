@@ -1,27 +1,46 @@
 /* All styles in this sheet are not needed on page load and deferred */
 
-/* Peers */
-
-x-peers.overflowing {
-    background: /* Shadow covers */ linear-gradient(rgb(var(--bg-color)) 30%, rgba(var(--bg-color), 0)),
-    linear-gradient(rgba(var(--bg-color), 0), rgb(var(--bg-color)) 70%) 0 100%,
-        /* Shadows */ radial-gradient(farthest-side at 50% 0, rgba(var(--text-color), .2), rgba(var(--text-color), 0)),
-    radial-gradient(farthest-side at 50% 100%, rgba(var(--text-color), .2), rgba(var(--text-color), 0)) 0 100%;
-
-    background-repeat: no-repeat;
-    background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
-
-    /* Opera doesn't support this in the shorthand */
-    background-attachment: local, local, scroll, scroll;
+/* Paste mode */
+#cancel-paste-mode {
+    z-index: 21;
+    margin: 0;
+    padding: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    width: 100vw;
+    height: 56px;
+    background-color: var(--primary-color);
+    color: rgb(238, 238, 238);
 }
+
+/* Text Input */
+.textarea {
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: inherit;
+    font-family: inherit;
+    display: block;
+    overflow: auto;
+    resize: none;
+    line-height: 16px;
+    max-height: 300px;
+    word-break: break-word;
+    word-wrap: anywhere;
+}
+
+/* Peers */
 
 x-peers:has(> x-peer) {
     --peers-per-row: 10;
 }
 
-/* peers-per-row if height is too small for 2 rows */
-@media screen and (min-height: 538px) and (max-height: 683px) and (max-width: 402px),
-screen and (min-height: 517px) and (max-height: 664px) and (min-width: 426px) {
+@media screen and (min-height: 505px) and (max-height: 649px) and (max-width: 426px),
+screen and (min-height: 486px) and (max-height: 631px) and (min-width: 426px) {
     x-peers:has(> x-peer) {
         --peers-per-row: 3;
     }
@@ -55,9 +74,8 @@ screen and (min-height: 517px) and (max-height: 664px) and (min-width: 426px) {
     }
 }
 
-/* peers-per-row if height is too small for 3 rows */
-@media screen and (min-height: 683px) and (max-width: 402px),
-screen and (min-height: 664px) and (min-width: 426px) {
+@media screen and (min-height: 649px) and (max-width: 425px),
+screen and (min-height: 631px) and (min-width: 426px) {
     x-peers:has(> x-peer) {
         --peers-per-row: 3;
     }
@@ -99,6 +117,11 @@ x-peer {
     flex-wrap: wrap;
 }
 
+x-peer input[type="file"] {
+    visibility: hidden;
+    position: absolute;
+}
+
 x-peer label {
     width: var(--peer-width);
     touch-action: manipulation;
@@ -119,48 +142,60 @@ x-peer .icon-wrapper {
     width: var(--icon-size);
     padding: 12px;
     border-radius: 50%;
-    background: var(--primary-color);
+    background: var(--accent-color);
+    background-image: linear-gradient(45deg, var(--accent-color) 40%, color-mix(in srgb, var(--accent-color) 70%, white) 100%);
     color: white;
     display: flex;
 }
 
 x-peer.type-secret .icon-wrapper {
-    background: var(--paired-device-color);
+    --accent-color: var(--paired-device-color);
 }
 
 x-peer:not(.type-ip):not(.type-secret).type-public-id .icon-wrapper {
-    background: var(--public-room-color);
+    --accent-color: var(--public-room-color);
 }
 
-x-peer x-icon > .highlight-wrapper {
+.highlight-wrapper {
     align-self: center;
     align-items: center;
     margin: 7px auto 0;
     height: 6px;
 }
 
-x-peer x-icon > .highlight-wrapper > .highlight {
+.highlight {
     width: 15px;
     height: 6px;
     border-radius: 4px;
     margin-left: 1px;
     margin-right: 1px;
+    --highlight-color: var(--badge-color);
+    background-color: var(--highlight-color);
+    background-image: linear-gradient(180deg, var(--highlight-color) 0%, color-mix(in srgb, var(--highlight-color) 90%, black));
+}
+
+.highlight-room-ip {
+    --highlight-color: var(--primary-color);
+}
+
+.highlight-room-secret {
+    --highlight-color: var(--paired-device-color);
+}
+
+.highlight-room-public-id {
+    --highlight-color: var(--public-room-color);
+}
+
+x-peer:not(.type-ip) .highlight-room-ip {
     display: none;
 }
 
-x-peer.type-ip x-icon > .highlight-wrapper > .highlight.highlight-room-ip {
-    background-color: var(--primary-color);
-    display: inline;
+x-peer:not(.type-secret) .highlight-room-secret {
+    display: none;
 }
 
-x-peer.type-secret x-icon > .highlight-wrapper > .highlight.highlight-room-secret {
-    background-color: var(--paired-device-color);
-    display: inline;
-}
-
-x-peer.type-public-id x-icon > .highlight-wrapper > .highlight.highlight-room-public-id {
-    background-color: var(--public-room-color);
-    display: inline;
+x-peer:not(.type-public-id) .highlight-room-public-id {
+    display: none;
 }
 
 x-peer:not([status]):hover x-icon,
@@ -173,7 +208,6 @@ x-peer[status] x-icon {
     opacity: 0.8;
     transform: scale(1);
 }
-
 
 x-peer.ws-peer {
     margin-top: -1.5px;
@@ -213,18 +247,8 @@ x-peer.ws-peer .highlight-wrapper {
 }
 
 .status,
-.device-name,
-.connection-hash {
-    opacity: 0.7;
-}
-
 .device-name {
-    font-size: 14px;
-    white-space: nowrap;
-}
-
-.connection-hash {
-    font-size: 12px;
+    opacity: 0.7;
     white-space: nowrap;
 }
 
@@ -256,14 +280,13 @@ x-peer[drop] x-icon {
 }
 
 
- Dialog
+/* Dialog */
 
 x-dialog x-background {
-    background: rgba(0, 0, 0, 0.61);
-    z-index: 10;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 30;
     transition: opacity 300ms;
     will-change: opacity;
-    padding: 15px;
     overflow: overlay;
 }
 
@@ -272,8 +295,7 @@ x-dialog x-paper {
     flex-direction: column;
     width: calc(100vw - 10px);
     z-index: 3;
-    background: white;
-    border-radius: 8px;
+    border-radius: 30px;
     max-width: 400px;
     overflow: hidden;
     box-sizing: border-box;
@@ -292,8 +314,8 @@ x-dialog x-paper {
 
 x-paper > .row:first-of-type {
     background-color: var(--accent-color);
-    border-bottom: solid 4px var(--border-color);
-    margin-bottom: 10px;
+    padding: 10px;
+    margin-bottom: 5px;
 }
 
 x-paper > .row:first-of-type h2 {
@@ -339,7 +361,6 @@ x-dialog a {
     width: 100%;
     display: flex;
     justify-content: center;
-    margin-top: 10px;
 }
 
 .input-key-container > input {
@@ -372,20 +393,22 @@ x-dialog a {
     -moz-user-select: text;
     user-select: text;
     display: inline-block;
-    font-size: 50px;
+    font-size: 45px;
     letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 20px);
     text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 28px)));
-    margin: 25px 0;
+    margin: 10px 0;
 }
 
 .key-qr-code {
-    margin: 16px;
     width: fit-content;
     align-self: center;
+    margin-top: 15px;
+    margin-bottom: 10px;
 }
 
 .key-instructions {
     flex-direction: column;
+    margin: 0;
 }
 
 x-dialog h2 {
@@ -394,19 +417,19 @@ x-dialog h2 {
 }
 
 x-dialog hr {
-    height: 3px;
+    height: 1px;
     border: none;
     width: 100%;
     background-color: var(--border-color);
 }
 
 .hr-note {
-    margin-top: 10px;
-    margin-bottom: 20px;
+    margin-top: 23px;
+    margin-bottom: 31px;
 }
 
 .hr-note hr {
-    margin-bottom: -2px;
+    margin-bottom: -1px;
 }
 
 .hr-note > div {
@@ -417,9 +440,9 @@ x-dialog hr {
 
 .hr-note > div > span {
     padding: 3px 10px;
-    border-radius: 10px;
+    border-radius: 20px;
     color: rgb(var(--text-color));
-    background-color: rgb(var(--bg-color));
+    background-color: var(--dialog-bg-color);
     border: var(--border-color) solid 3px;
     text-transform: uppercase;
 }
@@ -438,20 +461,10 @@ x-dialog hr {
 }
 
 .paired-devices-wrapper {
-    border-top: solid 4px var(--paired-device-color);
+    margin-top: -5px;
     border-bottom: solid 4px var(--paired-device-color);
     max-height: 65vh;
     overflow: scroll;
-    background: /* Shadow covers */ linear-gradient(rgb(var(--bg-color)) 30%, rgba(var(--bg-color), 0)),
-    linear-gradient(rgba(var(--bg-color), 0), rgb(var(--bg-color)) 70%) 0 100%,
-        /* Shadows */ radial-gradient(farthest-side at 50% 0, rgba(var(--text-color), .3), rgba(var(--text-color), 0)),
-    radial-gradient(farthest-side at 50% 100%, rgba(var(--text-color), .3), rgba(var(--text-color), 0)) 0 100%;
-
-    background-repeat: no-repeat;
-    background-size: 100% 80px, 100% 80px, 100% 24px, 100% 24px;
-
-    /* Opera doesn't support this in the shorthand */
-    background-attachment: local, local, scroll, scroll;
 }
 
 .paired-device {
@@ -515,42 +528,39 @@ x-dialog hr {
     text-overflow: ellipsis;
 }
 
-/* Receive Dialog */
-
-x-paper > .row {
-    padding: 10px;
-}
-
 /* button row*/
 x-paper > .button-row {
-    border-top: solid 3px var(--border-color);
     height: 50px;
-    margin-top: 10px;
+    margin: 5px 10px 10px;
 }
 
-x-paper > .button-row > .button {
+x-paper > .button-row > .btn {
     height: 100%;
     width: 100%;
 }
 
-html:not([dir="rtl"]) x-paper > .button-row > .button:not(:first-child) {
-    border-right: solid 1.5px var(--border-color);
+html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:first-child) {
+    margin-right: 5px;
 }
 
-html:not([dir="rtl"]) x-paper > .button-row > .button:not(:last-child) {
-    border-left: solid 1.5px var(--border-color);
+html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:last-child) {
+    margin-left: 5px;
 }
 
-html[dir="rtl"] x-paper > .button-row > .button:not(:first-child) {
-    border-left: solid 1.5px var(--border-color);
+html[dir="rtl"] x-paper > .button-row > .btn:not(:first-child) {
+    margin-right: 5px;
 }
 
-html[dir="rtl"] x-paper > .button-row > .button:not(:last-child) {
-    border-right: solid 1.5px var(--border-color);
+html[dir="rtl"] x-paper > .button-row > .btn:not(:last-child) {
+    margin-left: 5px;
 }
 
 .language-buttons > button > span {
     margin: 0 0.3em;
+}
+
+.language-buttons > button {
+    min-height: 36px;
 }
 
 .file-description {
@@ -581,31 +591,37 @@ x-dialog .dialog-subheader {
     padding-bottom: 16px;
 }
 
-#send-text-dialog .display-name-wrapper {
+.display-name-wrapper {
     padding-bottom: 0;
 }
 
-#text-input {
-    min-height: 200px;
-    width: 100%;
+#send-text-dialog,
+#receive-text-dialog {
+    font-size: 16px;  /* prevents auto-zoom on edit */
+    --shadow-color-rgb: var(--shadow-color-secondary-rgb);
+    --shadow-color-cover-rgb: var(--shadow-color-secondary-cover-rgb);
+}
+
+#edit-paired-devices-dialog {
+    --shadow-color-rgb: var(--shadow-color-dialog-rgb);
+    --shadow-color-cover-rgb: var(--shadow-color-dialog-cover-rgb);
+}
+
+#text-input:before {
+    opacity: 0.5;
 }
 
 /* Receive Text Dialog */
 
 #receive-text-dialog #text {
-    width: 100%;
     word-break: break-all;
-    max-height: calc(100vh - 393px);
+    max-height: 400px;
+    padding: 10px;
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: scroll;
     -webkit-user-select: text;
     -moz-user-select: text;
     user-select: text;
-    white-space: pre-wrap;
-}
-
-#receive-text-dialog #text a {
-    cursor: pointer;
 }
 
 #receive-text-dialog #text a:hover {
@@ -618,17 +634,11 @@ x-dialog .dialog-subheader {
     pointer-events: none;
 }
 
-.row-separator {
-    border-bottom: solid 2.5px var(--border-color);
-    margin: auto -24px;
-}
-
 #base64-paste-btn,
 #base64-paste-dialog .textarea {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
-    border-radius: 8px;
 }
 
 #base64-paste-dialog .textarea {
@@ -639,14 +649,13 @@ x-dialog .dialog-subheader {
 }
 
 #base64-paste-dialog .textarea::before {
-    font-size: 15px;
+    font-size: 14px;
     letter-spacing: 0.12em;
     color: var(--primary-color);
     font-weight: 700;
     text-transform: uppercase;
     white-space: pre-wrap;
 }
-
 
 /* Peer loading Indicator */
 
@@ -679,7 +688,6 @@ x-dialog .dialog-subheader {
     transform: rotate(180deg);
 }
 
-
 /*
     Color Themes
 */
@@ -687,7 +695,7 @@ x-dialog .dialog-subheader {
 /* Colored Elements */
 
 x-dialog x-paper {
-    background-color: rgb(var(--bg-color));
+    background-color: var(--dialog-bg-color);
 }
 
 .textarea {

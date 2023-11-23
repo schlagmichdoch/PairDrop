@@ -271,8 +271,8 @@ class BackgroundCanvas {
     drawCircle(ctx, radius) {
         ctx.beginPath();
         ctx.lineWidth = 2;
-        let opacity = Math.max(0, 0.3 * (1 - 1 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
+        let opacity = Math.max(0, 0.3 * (1 - 1.2 * radius / Math.max(this.w, this.h)));
+        ctx.strokeStyle = `rgba(165, 165, 165, ${opacity})`;
         ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }

@@ -39,7 +39,7 @@ class PairDrop {
     registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker
-                .register('/service-worker.js')
+                .register('service-worker.js')
                 .then(serviceWorker => {
                     console.log('Service Worker registered');
                     window.serviceWorker = serviceWorker
@@ -99,6 +99,7 @@ class PairDrop {
             "styles/deferred-styles.css"
         ];
         this.deferredScripts = [
+            "scripts/browser-tabs-connector.js",
             "scripts/util.js",
             "scripts/network.js",
             "scripts/ui.js",
