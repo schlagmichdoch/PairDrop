@@ -42,7 +42,7 @@
         "auto-accept-instructions-2": "um automatisch alle Dateien von diesem Gerät zu akzeptieren.",
         "has-sent": "hat Folgendes gesendet:",
         "send-message-title": "Nachricht Senden",
-        "send-message-to": "Sende eine Nachricht an",
+        "send-message-to": "An:",
         "base64-tap-to-paste": "Hier tippen, um {{type}} einzufügen",
         "base64-paste-to-send": "Hier einfügen, um {{type}} zu versenden",
         "base64-text": "Text",
@@ -63,7 +63,8 @@
         "temporary-public-room-title": "Temporärer Öffentlicher Raum",
         "message_title": "Nachricht zum Senden hier einfügen",
         "pair-devices-qr-code_title": "Klicke, um Link zum Koppeln mit diesem Gerät zu kopieren",
-        "public-room-qr-code_title": "Klicke, um Link zu diesem öffentlichen Raum zu kopieren"
+        "public-room-qr-code_title": "Klicke, um Link zu diesem öffentlichen Raum zu kopieren",
+        "message_placeholder": "Text"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -145,7 +146,8 @@
         "x-instructions_mobile": "Tippe, um Dateien zu senden oder tippe lange, um Nachrichten zu senden",
         "activate-share-mode-base": "Öffne PairDrop auf anderen Geräten zum Senden von",
         "activate-share-mode-and-other-files-plural": "und {{count}} anderen Dateien",
-        "activate-share-mode-shared-text": "freigegebenem Text"
+        "activate-share-mode-shared-text": "freigegebenem Text",
+        "webrtc-requirement": "Um diese PairDrop Instanz zu verwenden, WebRTC muss aktiviert sein!"
     },
     "document-titles": {
         "file-transfer-requested": "Dateiübertragung angefordert",
