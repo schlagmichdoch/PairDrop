@@ -30,7 +30,7 @@
         "activate-share-mode-shared-text": "shared text",
         "activate-share-mode-shared-file": "shared file",
         "activate-share-mode-shared-files-plural": "{{count}} shared files",
-        "webrtc-requirement": "To use PairDrop on this instance, WebRTC must be enabled!"
+        "webrtc-requirement": "To use this PairDrop instance, WebRTC must be enabled!"
     },
     "footer": {
         "known-as": "You are known as:",
