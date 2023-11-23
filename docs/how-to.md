@@ -1,5 +1,7 @@
 # How-To
 ## Send files directly from context menu on Windows
+
+[//]: # (Todo: Change documentation!)
 ### Registering to open files with PairDrop
 The [File Handling API](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/handle-files) is implemented
 
