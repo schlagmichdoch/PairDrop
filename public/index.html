@@ -5,17 +5,17 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <!-- Web App Config -->
-    <title>PairDrop</title>
+    <title>PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#3367d6">
     <meta name="color-scheme" content="dark light">
-    <meta name="apple-mobile-web-app-capable" content="no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="PairDrop">
     <meta name="application-name" content="PairDrop">
     <!-- Descriptions -->
     <meta name="description" content="Instantly share images, videos, PDFs, and links with people nearby. Peer2Peer and Open Source. No Setup, No Signup.">
     <meta name="keywords" content="File, Transfer, Share, Peer2Peer">
-    <meta name="author" content="RobinLinus">
+    <meta name="author" content="schlagmichdoch">
     <meta property="og:title" content="PairDrop">
     <meta property="og:type" content="article">
     <meta property="og:url" content="https://pairdrop.net/">
@@ -28,13 +28,14 @@
     <link rel="icon" sizes="96x96" href="images/favicon-96x96.png">
     <link rel="shortcut icon" href="images/favicon-96x96.png">
     <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+    <link rel="apple-touch-icon-precomposed" href="images/apple-touch-icon.png">
     <meta name="msapplication-TileImage" content="images/mstile-150x150.png">
     <link rel="fluid-icon" type="image/png" href="images/android-chrome-192x192.png">
     <meta name="twitter:image" content="images/logo_transparent_512x512.png">
     <meta property="og:image" content="images/logo_transparent_512x512.png">
     <!-- Resources -->
     <link rel="preload" href="lang/en.json" as="fetch">
-    <link rel="stylesheet" type="text/css" href="styles.css">
+    <link rel="stylesheet" type="text/css" href="styles/styles-main.css">
     <link rel="manifest" href="manifest.json">
 </head>
 
@@ -94,7 +95,7 @@
                 <use xlink:href="#public-room-icon"></use>
             </svg>
         </div>
-        <div id="cancel-paste-mode" class="button" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden></div>
+        <div id="cancel-paste-mode" class="btn" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden></div>
     </header>
     <!-- Center -->
     <div id="center" class="opacity-0">
@@ -108,11 +109,22 @@
         <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg">
             <p id="paste-filename"></p>
         </x-instructions>
+        <div id="websocket-fallback" hidden>
+            <span data-i18n-key="footer.traffic" data-i18n-attrs="text"></span>
+            <span data-i18n-key="footer.routed" data-i18n-attrs="text"></span>
+            <span data-i18n-key="footer.webrtc" data-i18n-attrs="text"></span>
+        </div>
     </div>
     <!-- Footer -->
     <footer class="column opacity-0">
         <svg class="icon logo">
-            <use xlink:href="#wifi-tethering"></use>
+            <defs>
+                <linearGradient id="primaryGradient" gradientTransform="rotate(90)">
+                    <stop offset="0%" class="start-color" />
+                    <stop offset="100%" class="stop-color" />
+                </linearGradient>
+            </defs>
+            <use xlink:href="#wifi-tethering" style="fill: url(#primaryGradient);"></use>
         </svg>
         <div class="column">
             <div class="known-as-wrapper">
@@ -127,9 +139,9 @@
                     <span data-i18n-key="footer.discovery" data-i18n-attrs="text"></span>
                 </div>
                 <div class="row center">
-                    <span class="badge badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title"></span>
-                    <span class="badge badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden></span>
-                    <span class="badge badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
+                    <span class="badge badge-gradient badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title"></span>
+                    <span class="badge badge-gradient badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden></span>
+                    <span class="badge badge-gradient badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
                 </div>
             </div>
         </div>
@@ -142,83 +154,83 @@
                     <h2 class="center" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text"></h2>
                 </div>
                 <div class="language-buttons">
-                    <button class="button fw" data-i18n-key="dialogs.system-language" data-i18n-attrs="text"></button>
-                    <button class="button fw" value="ar">
+                    <button class="btn fw" data-i18n-key="dialogs.system-language" data-i18n-attrs="text"></button>
+                    <button class="btn fw" value="ar">
                         <span>العربية</span>
                         <span>-</span>
                         <span>(Arabic)</span>
                     </button>
-                    <button class="button fw" value="de">
+                    <button class="btn fw" value="de">
                         <span>Deutsch</span>
                         <span>-</span>
                         <span>(German)</span>
                     </button>
-                    <button class="button fw" value="en">
+                    <button class="btn fw" value="en">
                         <span>English</span>
                     </button>
-                    <button class="button fw" value="es">
+                    <button class="btn fw" value="es">
                         <span>Español</span>
                         <span>-</span>
                         <span>(Spanish)</span>
                     </button>
-                    <button class="button fw" value="fr">
+                    <button class="btn fw" value="fr">
                         <span>Français</span>
                         <span>-</span>
                         <span>(French)</span>
                     </button>
-                    <button class="button fw" value="id">
+                    <button class="btn fw" value="id">
                         <span>Bahasa Indonesia</span>
                         <span>-</span>
                         <span>(Indonesian)</span>
                     </button>
-                    <button class="button fw" value="it">
+                    <button class="btn fw" value="it">
                         <span>Italiano</span>
                         <span>-</span>
                         <span>(Italian)</span>
                     </button>
-                    <button class="button fw" value="nl">
+                    <button class="btn fw" value="nl">
                         <span>Nederlands</span>
                         <span>-</span>
                         <span>(Dutch)</span>
                     </button>
-                    <button class="button fw" value="nb">
+                    <button class="btn fw" value="nb">
                         <span>Norsk</span>
                         <span>-</span>
                         <span>(Norwegian)</span>
                     </button>
-                    <button class="button fw" value="pt-BR">
+                    <button class="btn fw" value="pt-BR">
                         <span>Português do Brasil</span>
                         <span>-</span>
                         <span>(Brazilian Portuguese)</span>
                     </button>
-                    <button class="button fw" value="ro">
+                    <button class="btn fw" value="ro">
                         <span>Română</span>
                         <span>-</span>
                         <span>(Romanian)</span>
                     </button>
-                    <button class="button fw" value="ru">
+                    <button class="btn fw" value="ru">
                         <span>Русский язык</span>
                         <span>-</span>
                         <span>(Russian)</span>
                     </button>
-                    <button class="button fw" value="tr">
+                    <button class="btn fw" value="tr">
                         <span>Türkçe</span>
                         <span>-</span>
                         <span>(Turkish)</span>
                     </button>
-                    <button class="button fw" value="zh-CN">
+                    <button class="btn fw" value="zh-CN">
                         <span>中文</span>
                         <span>-</span>
                         <span>(Chinese)</span>
                     </button>
-                    <button class="button fw" value="ja">
+                    <button class="btn fw" value="ja">
                         <span>日本語</span>
                         <span>-</span>
                         <span>(Japanese)</span>
                     </button>
                 </div>
                 <div class="center row-reverse button-row">
-                    <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
+                    <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
         </x-background>
@@ -248,7 +260,7 @@
                         </div>
                     </div>
                     <div class="row center">
-                        <div class="column">
+                        <div class="column fw">
                             <div class="input-key-container six-chars" dir="ltr">
                                 <input type="tel" class="textarea center" aria-label="pair-key-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
                                 <input type="tel" class="textarea center" aria-label="pair-key-char-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder disabled>
@@ -261,8 +273,8 @@
                         </div>
                     </div>
                     <div class="button-row row-reverse">
-                        <button class="button" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled></button>
-                        <button class="button" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
+                        <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled></button>
+                        <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
                 </x-paper>
             </x-background>
@@ -285,7 +297,7 @@
                         </p>
                     </div>
                     <div class="center row-reverse button-row">
-                        <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
+                        <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                     </div>
                 </x-paper>
             </x-background>
@@ -318,7 +330,7 @@
                         </div>
                     </div>
                     <div class="row center">
-                        <div class="column">
+                        <div class="column fw">
                             <div class="input-key-container" dir="ltr">
                                 <input type="text" class="textarea center" aria-label="room-id-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
                                 <input type="text" class="textarea center" aria-label="room-id-char-2" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable placeholder disabled>
@@ -330,9 +342,9 @@
                         </div>
                     </div>
                     <div class="center row-reverse button-row">
-                        <button class="button" type="submit" data-i18n-key="dialogs.join" data-i18n-attrs="text" disabled></button>
-                        <button class="button" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
-                        <button class="button leave-room" type="button" data-i18n-key="dialogs.leave" data-i18n-attrs="text"></button>
+                        <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.join" data-i18n-attrs="text" disabled></button>
+                        <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
+                        <button class="btn btn-rounded btn-grey leave-room" type="button" data-i18n-key="dialogs.leave" data-i18n-attrs="text"></button>
                     </div>
                 </x-paper>
             </x-background>
@@ -347,10 +359,10 @@
                         <h2 class="center"></h2>
                     </div>
                 </div>
-                <div class="row center">
+                <div class="row center p1">
                     <div class="column center file-description">
                         <div>
-                            <span class="display-name badge"></span>
+                            <span class="display-name badge badge-gradient"></span>
                             <span data-i18n-key="dialogs.would-like-to-share" data-i18n-attrs="text"></span>
                         </div>
                         <div class="row file-name">
@@ -364,8 +376,8 @@
                 </div>
                 <div class="center file-preview"></div>
                 <div class="row-reverse center button-row">
-                    <button id="accept-request" class="button" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus></button>
-                    <button id="decline-request" class="button" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text"></button>
+                    <button id="accept-request" class="btn btn-rounded btn-grey" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus></button>
+                    <button id="decline-request" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text"></button>
                 </div>
             </x-paper>
         </x-background>
@@ -379,10 +391,10 @@
                         <h2 class="center"></h2>
                     </div>
                 </div>
-                <div class="row center">
+                <div class="row center p1">
                     <div class="column center file-description">
                         <div>
-                            <span class="display-name badge"></span>
+                            <span class="display-name badge badge-gradient"></span>
                             <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text"></span>
                         </div>
                         <div class="row file-name">
@@ -396,9 +408,9 @@
                 </div>
                 <div class="center file-preview"></div>
                 <div class="row-reverse center button-row">
-                    <button id="share-btn" class="button" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden></button>
-                    <button id="download-btn" class="button" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus></button>
-                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
+                    <button id="share-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden></button>
+                    <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus></button>
+                    <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
         </x-background>
@@ -413,22 +425,22 @@
                             <h2 class="center" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text"></h2>
                         </div>
                     </div>
-                    <div class="row center display-name-wrapper">
+                    <div class="row center p1 display-name-wrapper">
                         <div class="column">
                             <div class="text-center">
                                 <span data-i18n-key="dialogs.send-message-to" data-i18n-attrs="text"></span>
-                                <span class="display-name badge"></span>
+                                <span class="display-name badge badge-gradient"></span>
                             </div>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row p1">
                         <div class="column fw">
-                            <div id="text-input" class="textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title" autocapitalize="none" spellcheck="false" autofocus contenteditable></div>
+                            <div id="text-input" class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" autofocus contenteditable></div>
                         </div>
                     </div>
                     <div class="button-row row-reverse">
-                        <button class="button" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled></button>
-                        <button class="button" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
+                        <button class="btn btn-rounded btn-grey" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled></button>
+                        <button class="btn btn-rounded btn-grey" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
                 </x-paper>
             </x-background>
@@ -441,20 +453,20 @@
                 <div class="row center">
                     <h2 class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text"></h2>
                 </div>
-                <div class="row center">
+                <div class="row center p1 display-name-wrapper">
                     <div class="text-center">
-                        <span class="display-name badge"></span>
+                        <span class="display-name badge badge-gradient"></span>
                         <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text"></span>
                     </div>
                 </div>
-                <div class="row center">
+                <div class="row center p1">
                     <div class="column fw">
-                        <div id="text" class="textarea fw"></div>
+                        <div id="text" class="textarea"></div>
                     </div>
                 </div>
                 <div class="row-reverse center button-row">
-                    <button id="copy" class="button" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text"></button>
-                    <button id="close" class="button" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text"></button>
+                    <button id="copy" class="btn btn-rounded btn-grey" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text"></button>
+                    <button id="close" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text"></button>
                 </div>
             </x-paper>
         </x-background>
@@ -463,10 +475,10 @@
     <x-dialog id="base64-paste-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <button class="button center" id="base64-paste-btn" title="Paste"></button>
+                <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
                 <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
                 <div class="row-reverse center button-row">
-                    <button class="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
+                    <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
         </x-background>
@@ -595,13 +607,9 @@
     </svg>
     <!-- Scripts -->
     <script src="scripts/localization.js"></script>
-    <script src="scripts/theme.js"></script>
-    <script src="scripts/network.js"></script>
-    <script src="scripts/ui.js"></script>
-    <script src="scripts/util.js"></script>
-    <script src="scripts/QRCode.min.js" async></script>
-    <script src="scripts/zip.min.js" async></script>
-    <script src="scripts/NoSleep.min.js" async></script>
+    <script src="scripts/persistent-storage.js"></script>
+    <script src="scripts/ui-main.js"></script>
+    <script src="scripts/main.js"></script>
     <!-- Sounds -->
     <audio id="blop" autobuffer="true">
         <source src="sounds/blop.mp3" type="audio/mpeg">
