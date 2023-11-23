@@ -43,7 +43,7 @@ No | Yes
 
 **Self-Hosted Setup**
 Proxy: Nginx | Apache2
-Deployment: docker run | docker-compose | npm run start:prod
+Deployment: docker run | docker compose | npm run start:prod
 Version: v1.9.4
 
 **Additional context**

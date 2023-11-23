@@ -15,7 +15,8 @@ class Localization {
             ? storedLanguageCode
             : Localization.systemLocale;
 
-        Localization.setTranslation(Localization.initialLocale)
+        Localization
+            .setTranslation(Localization.initialLocale)
             .then(_ => {
                 console.log("Initial translation successful.");
                 Events.fire("initial-translation-loaded");
@@ -50,7 +51,8 @@ class Localization {
 
         if (Localization.isRTLLanguage(locale)) {
             htmlRootNode.setAttribute('dir', 'rtl');
-        } else {
+        }
+        else {
             htmlRootNode.removeAttribute('dir');
         }
 
@@ -112,13 +114,9 @@ class Localization {
             let attr = attrs[i];
             if (attr === "text") {
                 element.innerText = Localization.getTranslation(key);
-            } else {
-                if (attr.startsWith("data-")) {
-                    let dataAttr = attr.substring(5);
-                    element.dataset.dataAttr = Localization.getTranslation(key, attr);
-                } {
-                    element.setAttribute(attr, Localization.getTranslation(key, attr));
-                }
+            }
+            else {
+                element.setAttribute(attr, Localization.getTranslation(key, attr));
             }
         }
     }
@@ -156,7 +154,8 @@ class Localization {
                 console.warn(`Missing translation entry for your language ${Localization.locale.toUpperCase()}. Using ${Localization.defaultLocale.toUpperCase()} instead.`, key, attr);
                 console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${Localization.locale.toLowerCase()}/?q=${key}`)
                 console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
-            } else {
+            }
+            else {
                 console.warn("Missing translation in default language:", key, attr);
             }
         }

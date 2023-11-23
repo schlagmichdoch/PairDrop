@@ -1,11 +1,12 @@
 {
   "name": "pairdrop",
   "version": "1.9.4",
+  "type": "module",
   "description": "",
-  "main": "index.js",
+  "main": "server/index.js",
   "scripts": {
-    "start": "node index.js",
-    "start:prod": "node index.js --rate-limit --auto-restart"
+    "start": "node server/index.js",
+    "start:prod": "node server/index.js --rate-limit --auto-restart"
   },
   "author": "",
   "license": "ISC",

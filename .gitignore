@@ -3,3 +3,6 @@ node_modules
 fqdn.env
 /docker/certs
 qrcode-svg/
+turnserver.conf
+rtc_config.json
+ssl/
