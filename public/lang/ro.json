@@ -58,7 +58,7 @@
         "room-url-copied-to-clipboard": "Link către sala publică copiat în clipboard"
     },
     "header": {
-        "cancel-paste-mode": "Gata",
+        "cancel-share-mode": "Gata",
         "theme-auto_title": "Adaptează tema la sistem",
         "install_title": "Instalează PairDrop",
         "theme-dark_title": "Utilizați mereu tema întunecoasă",
@@ -73,12 +73,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "Atingeți pentru a trimite fișiere sau atingeți lung pentru a trimite un mesaj",
-        "click-to-send": "Clic pentru a trimite",
-        "activate-paste-mode-and-other-files": "și {{count}} alte fișiere",
-        "tap-to-send": "Atinge pentru a trimite",
-        "activate-paste-mode-base": "Deschideți PairDrop pe alte dispozitive pentru a trimite",
+        "x-instructions-share-mode_desktop": "Clic pentru a trimite",
+        "activate-share-mode-and-other-files-plural": "și {{count}} alte fișiere",
+        "x-instructions-share-mode_mobile": "Atinge pentru a trimite",
+        "activate-share-mode-base": "Deschideți PairDrop pe alte dispozitive pentru a trimite",
         "no-peers-subtitle": "Împerecheați dispozitive sau intrați într-o cameră publică pentru a fi descoperit în alte rețele",
-        "activate-paste-mode-shared-text": "text partajat",
+        "activate-share-mode-shared-text": "text partajat",
         "x-instructions_desktop": "Dați clic pentru a trimite fișiere sau dați clic dreapta pentru a trimite un mesaj",
         "no-peers-title": "Deschideți PairDrop pe alte dispozitive pentru a trimite fișiere",
         "x-instructions_data-drop-peer": "Eliberare pentru a trimite la peer",
@@ -87,7 +87,7 @@
     },
     "peer-ui": {
         "processing": "Procesarea…",
-        "click-to-send-paste-mode": "Apasă pentru a trimite {{descriptor}}",
+        "click-to-send-share-mode": "Apasă pentru a trimite {{descriptor}}",
         "click-to-send": "Apasă pentru a trimite fișiere sau apasă cu butonul din dreapta pentru a trimite un mesaj",
         "waiting": "Așteptând…",
         "connection-hash": "Pentru a verifica securitatea criptării end-to-end, comparați acest număr de securitate pe ambele dispozitive",

@@ -167,6 +167,7 @@ class PairDrop {
         const clearDevicesDialog = new EditPairedDevicesDialog();
         const publicRoomDialog = new PublicRoomDialog();
         const base64ZipDialog = new Base64ZipDialog();
+        const shareTextDialog = new ShareTextDialog();
         const toast = new Toast();
         const notifications = new Notifications();
         const networkStatusUI = new NetworkStatusUI();

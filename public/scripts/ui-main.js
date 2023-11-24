@@ -241,6 +241,9 @@ class BackgroundCanvas {
         Events.on('resize', _ => this.init());
         Events.on('redraw-canvas', _ => this.init());
         Events.on('translation-loaded', _ => this.init());
+
+        // ShareMode
+        Events.on('share-mode-changed', e => this.onShareModeChanged(e.detail.active));
     }
 
     _fadeIn() {
@@ -263,7 +266,15 @@ class BackgroundCanvas {
         this.x0 = this.w / 2;
         this.y0 = this.h - this.offset;
         this.dw = Math.round(Math.max(this.w, this.h, 1000) / 13);
+        this.baseColor = '165, 165, 165';
+        this.baseOpacity = 0.3;
 
+        this.drawCircles(this.cCtx);
+    }
+
+    onShareModeChanged(active) {
+        this.baseColor = active ? '165, 165, 255' : '165, 165, 165';
+        this.baseOpacity = active ? 0.5 : 0.3;
         this.drawCircles(this.cCtx);
     }
 
@@ -271,8 +282,8 @@ class BackgroundCanvas {
     drawCircle(ctx, radius) {
         ctx.beginPath();
         ctx.lineWidth = 2;
-        let opacity = Math.max(0, 0.3 * (1 - 1.2 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(165, 165, 165, ${opacity})`;
+        let opacity = Math.max(0, this.baseOpacity * (1 - 1.2 * radius / Math.max(this.w, this.h)));
+        ctx.strokeStyle = `rgba(${this.baseColor}, ${opacity})`;
         ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }

@@ -34,6 +34,10 @@ html {
     padding: 10px;
 }
 
+.cursive {
+    font-style: italic;
+}
+
 .row-reverse {
     display: flex;
     flex-direction: row-reverse;
@@ -86,29 +90,29 @@ header {
     right: 0;
 }
 
-header > * {
+header > .row-reverse > * {
     margin-left: 4px;
     margin-right: 4px;
 }
 
-header > div {
+header > .row-reverse > div {
     display: flex;
     flex-direction: column;
     align-self: flex-start;
     touch-action: manipulation;
 }
 
-header > div .icon-button {
+header > .row-reverse > div .icon-button {
     height: 40px;
     transition: all 300ms;
 }
 
-header > div > div {
+header > .row-reverse > div > div {
     display: flex;
     flex-direction: column;
 }
 
-header > div:not(:hover) .icon-button:not(.selected) {
+header > .row-reverse > div:not(:hover) .icon-button:not(.selected) {
     height: 0;
     opacity: 0;
 }
@@ -127,22 +131,22 @@ header > div:not(:hover) .icon-button:not(.selected) {
     margin-bottom: 8px;
 }
 
-header > div:hover .icon-button.selected::before {
+header > .row-reverse > div:hover .icon-button.selected::before {
     opacity: 0.1;
 }
 
 @media (pointer: coarse) {
-    header > div:hover .icon-button.selected:hover::before {
+    header > .row-reverse > div:hover .icon-button.selected:hover::before {
         opacity: 0.2;
     }
 
-    header > div .icon-button:not(.selected) {
+    header > .row-reverse > div .icon-button:not(.selected) {
         height: 0;
         opacity: 0;
         pointer-events: none;
     }
 
-    header > div > div {
+    header > .row-reverse > div > div {
         flex-direction: column-reverse;
     }
 }
@@ -199,6 +203,10 @@ h3 {
 
 .text-center {
     text-align: center;
+}
+
+.text-white {
+    color: white !important;
 }
 
 .font-body1,
@@ -382,30 +390,35 @@ footer .logo {
     margin-top: -10px;
 }
 
-.discovery-wrapper {
-    font-size: 14px;
-    margin: 15px auto auto;
+.border {
     border: 2px solid var(--border-color);
+}
+
+.panel {
+    font-size: 14px;
     padding: 2px;
     background-color: rgb(var(--bg-color));
     transition: background-color 0.5s ease;
     min-height: 24px;
 }
 
-.discovery-wrapper.column {
+.panel.column {
     border-radius: 16px;
 }
 
-.discovery-wrapper.row {
+.panel.row {
     border-radius: 12px;
 }
 
-/*You can be discovered wrapper*/
-.discovery-wrapper > div:first-of-type {
+.panel > div:first-of-type {
     padding-left: 4px;
     padding-right: 4px;
 }
 
+/* You can be discovered wrapper */
+.discovery-wrapper {
+    margin: 15px auto auto;
+}
 
 .discovery-wrapper .badge {
     word-break: keep-all;
@@ -447,8 +460,11 @@ footer .logo {
     text-align: left;
     border: none;
     outline: none;
+    height: 20px;
     max-width: 15em;
     text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
     cursor: text;
     margin-bottom: -6px;
     padding-bottom: 0.1rem;
@@ -456,11 +472,10 @@ footer .logo {
     border-right: solid 1rem transparent;
     border-left: solid 1rem transparent;
     background-clip: padding-box;
-    overflow: hidden;
     z-index: 1;
 }
 
-#edit-pen {
+.edit-pen {
     width: 1rem;
     height: 1rem;
     margin-bottom: -2px;
@@ -468,16 +483,16 @@ footer .logo {
 }
 
 html:not([dir="rtl"]) #display-name,
-html:not([dir="rtl"]) #edit-pen {
+html:not([dir="rtl"]) .edit-pen {
     margin-left: -1rem;
 }
 
 html[dir="rtl"] #display-name,
-html[dir="rtl"] #edit-pen {
+html[dir="rtl"] .edit-pen {
     margin-right: -1rem;
 }
 
-html[dir="rtl"] #edit-pen {
+html[dir="rtl"] .edit-pen {
     transform: rotateY(180deg);
 }
 
@@ -503,6 +518,11 @@ x-dialog:not([show]) x-background {
     background: inherit;
     color: var(--accent-color);
     overflow: hidden;
+}
+
+.btn-small {
+    font-size: 12px;
+    line-height: 22px;
 }
 
 .btn[disabled] {
@@ -551,12 +571,29 @@ x-dialog:not([show]) x-background {
     opacity: 0.2;
 }
 
+.btn-round {
+    border-radius: 50%;
+}
+
 .btn-rounded {
     border-radius: 12px;
 }
 
+.btn-small.btn-rounded {
+    border-radius: 6px;
+}
+
 .btn-grey {
     background-color: var(--bg-color-secondary);
+}
+
+.btn-dark {
+    background-color: #262628;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: rgb(var(--bg-color));
 }
 
 button::-moz-focus-inner {
@@ -686,6 +723,8 @@ canvas.circles {
 }
 
 x-toast {
+    display: flex;
+    justify-content: space-between;
     position: absolute;
     min-height: 48px;
     top: 50px;
@@ -695,7 +734,7 @@ x-toast {
     color: var(--dialog-bg-color);
     align-items: center;
     box-sizing: border-box;
-    padding: 8px 24px;
+    padding: 8px;
     z-index: 40;
     transition: opacity 200ms, transform 300ms ease-out;
     cursor: default;
@@ -704,9 +743,17 @@ x-toast {
     pointer-events: all;
 }
 
-x-toast:not([show]):not(:hover) {
+x-toast.top-row {
+    top: 3px;
+}
+
+x-toast:not([show]) {
     opacity: 0;
-    transform: translateY(-100px);
+    transform: translateY(calc(-100% + -55px));
+}
+
+x-toast span {
+    flex-grow: 1;
 }
 
 /* Instructions */
@@ -735,9 +782,6 @@ x-instructions[drop-bg]:not([drop-peer]):before {
     content: attr(data-drop-bg);
 }
 
-x-instructions p {
-    display: none;
-}
 
 x-peers:empty~x-instructions {
     opacity: 0 !important;
@@ -864,7 +908,7 @@ body.dark-theme {
         --badge-color: #a5a5a5;
 
         --shadow-color-secondary-rgb: 0,0,0;
-        --shadow-color-secondary-cover-rgb: 242,242,242;
+        --shadow-color-secondary-cover-rgb: 255,255,255;
         --shadow-color-dialog-rgb: 0,0,0;
         --shadow-color-dialog-cover-rgb: 242,242,242;
     }
@@ -875,28 +919,6 @@ body {
     color: rgb(var(--text-color));
     background-color: rgb(var(--bg-color));
     transition: background-color 0.5s ease;
-}
-
-x-dialog x-paper {
-    background-color: var(--dialog-bg-color);
-}
-
-.textarea {
-    color: rgb(var(--text-color)) !important;
-    background-color: var(--bg-color-secondary) !important;
-}
-
-.textarea * {
-    margin: 0 !important;
-    padding: 0 !important;
-    color: unset !important;
-    background: unset !important;
-    border: unset !important;
-    opacity: unset !important;
-    font-family: inherit !important;
-    font-size: inherit !important;
-    font-style: unset !important;
-    font-weight: unset !important;
 }
 
 /* Gradient for wifi-tether icon */
@@ -946,8 +968,8 @@ html {
 /* webkit scrollbar style*/
 
 ::-webkit-scrollbar{
-    width: 4px;
-    height: 4px;
+    width: 0;
+    height: 0;
 }
 
 ::-webkit-scrollbar-thumb{

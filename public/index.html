@@ -41,61 +41,62 @@
 
 <body translate="no">
     <header class="row-reverse opacity-0">
-        <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label">
-            <svg class="icon">
-                <use xlink:href="#info-outline"></use>
-            </svg>
-        </a>
-        <div id="language-selector" class="icon-button" data-i18n-key="header.language-selector" data-i18n-attrs="title">
-            <svg class="icon">
-                <use xlink:href="#icon-language-selector"></use>
-            </svg>
-        </div>
-        <div id="theme-wrapper">
-            <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title">
+        <div class="row-reverse">
+            <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label">
                 <svg class="icon">
-                    <use xlink:href="#icon-theme-auto"></use>
+                    <use xlink:href="#info-outline"></use>
+                </svg>
+            </a>
+            <div id="language-selector" class="icon-button" data-i18n-key="header.language-selector" data-i18n-attrs="title">
+                <svg class="icon">
+                    <use xlink:href="#icon-language-selector"></use>
                 </svg>
             </div>
-            <div>
-                <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title">
+            <div id="theme-wrapper">
+                <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title">
                     <svg class="icon">
-                        <use xlink:href="#icon-theme-light"></use>
+                        <use xlink:href="#icon-theme-auto"></use>
                     </svg>
                 </div>
-                <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title">
-                    <svg class="icon">
-                        <use xlink:href="#icon-theme-dark"></use>
-                    </svg>
+                <div>
+                    <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title">
+                        <svg class="icon">
+                            <use xlink:href="#icon-theme-light"></use>
+                        </svg>
+                    </div>
+                    <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title">
+                        <svg class="icon">
+                            <use xlink:href="#icon-theme-dark"></use>
+                        </svg>
+                    </div>
                 </div>
             </div>
+            <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" hidden>
+                <svg class="icon">
+                    <use xlink:href="#notifications"></use>
+                </svg>
+            </div>
+            <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" hidden>
+                <svg class="icon">
+                    <use xlink:href="#homescreen"></use>
+                </svg>
+            </div>
+            <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title">
+                <svg class="icon">
+                    <use xlink:href="#pair-device-icon"></use>
+                </svg>
+            </div>
+            <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" hidden>
+                <svg class="icon">
+                    <use xlink:href="#edit-pair-devices-icon"></use>
+                </svg>
+            </div>
+            <div id="join-public-room" class="icon-button" data-i18n-key="header.join-public-room" data-i18n-attrs="title">
+                <svg class="icon">
+                    <use xlink:href="#public-room-icon"></use>
+                </svg>
+            </div>
         </div>
-        <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" hidden>
-            <svg class="icon">
-                <use xlink:href="#notifications"></use>
-            </svg>
-        </div>
-        <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" hidden>
-            <svg class="icon">
-                <use xlink:href="#homescreen"></use>
-            </svg>
-        </div>
-        <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title">
-            <svg class="icon">
-                <use xlink:href="#pair-device-icon"></use>
-            </svg>
-        </div>
-        <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" hidden>
-            <svg class="icon">
-                <use xlink:href="#edit-pair-devices-icon"></use>
-            </svg>
-        </div>
-        <div id="join-public-room" class="icon-button" data-i18n-key="header.join-public-room" data-i18n-attrs="title">
-            <svg class="icon">
-                <use xlink:href="#public-room-icon"></use>
-            </svg>
-        </div>
-        <div id="cancel-paste-mode" class="btn" data-i18n-key="header.cancel-paste-mode" data-i18n-attrs="text" hidden></div>
     </header>
     <!-- Center -->
     <div id="center" class="opacity-0">
@@ -106,9 +107,35 @@
             <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text"></h2>
             <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text"></div>
         </x-no-peers>
-        <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg">
-            <p id="paste-filename"></p>
-        </x-instructions>
+        <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"></x-instructions>
+        <div class="share-panel panel column" hidden>
+            <div class="row">
+                <div class="thumb center">
+                    <div class="text-thumb row" hidden>
+                        <svg>
+                            <use xlink:href="#font"></use>
+                        </svg>
+                        <svg>
+                            <use xlink:href="#i-cursor"></use>
+                        </svg>
+                    </div>
+                    <div class="file-thumb" hidden>
+                        <svg>
+                            <use xlink:href="#file"></use>
+                        </svg>
+                    </div>
+                    <div class="image-thumb" hidden></div>
+                </div>
+                <div class="share-descriptor column p1">
+                    <span class="descriptor-item"></span>
+                    <span class="descriptor-other" hidden></span>
+                </div>
+            </div>
+            <div class="center btn-row">
+                <div class="cancel-btn btn btn-small btn-rounded btn-dark text-white" data-i18n-key="header.cancel-share-mode" data-i18n-attrs="text"></div>
+                <div class="edit-btn btn btn-small btn-rounded btn-dark text-white" data-i18n-key="header.edit-share-mode" data-i18n-attrs="text" hidden></div>
+            </div>
+        </div>
         <div id="websocket-fallback" hidden>
             <span data-i18n-key="footer.traffic" data-i18n-attrs="text"></span>
             <span data-i18n-key="footer.routed" data-i18n-attrs="text"></span>
@@ -130,11 +157,11 @@
             <div class="known-as-wrapper">
                 <span data-i18n-key="footer.known-as" data-i18n-attrs="text"></span>
                 <div id="display-name" class="badge" data-i18n-key="footer.display-name" data-i18n-attrs="data-placeholder title" placeholder="Loading..." autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" contenteditable></div>
-                <svg id="edit-pen" class="icon">
+                <svg class="icon edit-pen">
                     <use xlink:href="#edit-pen-icon"></use>
                 </svg>
             </div>
-            <div class="discovery-wrapper row">
+            <div class="discovery-wrapper panel border row">
                 <div class="row center">
                     <span data-i18n-key="footer.discovery" data-i18n-attrs="text"></span>
                 </div>
@@ -224,7 +251,7 @@
                         <span>(Japanese)</span>
                     </button>
                 </div>
-                <div class="center row-reverse button-row">
+                <div class="center row-reverse btn-row">
                     <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
@@ -267,7 +294,7 @@
                             <p class="font-subheading center text-center" data-i18n-key="dialogs.enter-key-from-another-device" data-i18n-attrs="text"></p>
                         </div>
                     </div>
-                    <div class="button-row row-reverse">
+                    <div class="btn-row row-reverse">
                         <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled></button>
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
@@ -291,7 +318,7 @@
                             <span data-i18n-key="dialogs.auto-accept-instructions-2" data-i18n-attrs="text"></span>
                         </p>
                     </div>
-                    <div class="center row-reverse button-row">
+                    <div class="center row-reverse btn-row">
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                     </div>
                 </x-paper>
@@ -336,7 +363,7 @@
                             <p class="font-subheading center text-center" data-i18n-key="dialogs.enter-room-id-from-another-device" data-i18n-attrs="text"></p>
                         </div>
                     </div>
-                    <div class="center row-reverse button-row">
+                    <div class="center row-reverse btn-row">
                         <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.join" data-i18n-attrs="text" disabled></button>
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                         <button class="btn btn-rounded btn-grey leave-room" type="button" data-i18n-key="dialogs.leave" data-i18n-attrs="text"></button>
@@ -370,8 +397,8 @@
                     </div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse center button-row">
-                    <button id="accept-request" class="btn btn-rounded btn-grey" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus></button>
+                <div class="row-reverse center btn-row">
+                    <button id="accept-request" class="btn btn-rounded btn-grey" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus disabled></button>
                     <button id="decline-request" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text"></button>
                 </div>
             </x-paper>
@@ -402,9 +429,9 @@
                     </div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse center button-row">
+                <div class="row-reverse center btn-row">
                     <button id="share-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden></button>
-                    <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus></button>
+                    <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus disabled></button>
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
@@ -430,10 +457,10 @@
                     </div>
                     <div class="row p1">
                         <div class="column fw">
-                            <div id="text-input" class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" autofocus contenteditable></div>
+                            <div class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" autofocus contenteditable></div>
                         </div>
                     </div>
-                    <div class="button-row row-reverse">
+                    <div class="btn-row row-reverse">
                         <button class="btn btn-rounded btn-grey" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled></button>
                         <button class="btn btn-rounded btn-grey" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
@@ -459,9 +486,42 @@
                         <div id="text" class="textarea"></div>
                     </div>
                 </div>
-                <div class="row-reverse center button-row">
+                <div class="row-reverse center btn-row">
                     <button id="copy" class="btn btn-rounded btn-grey" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text"></button>
                     <button id="close" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text"></button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
+    <!-- Share Text Dialog -->
+    <x-dialog id="share-text-dialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <div class="row center">
+                    <div class="column">
+                        <h2 class="center" data-i18n-key="dialogs.share-text-title" data-i18n-attrs="text"></h2>
+                    </div>
+                </div>
+                <div class="row center p1">
+                    <div class="column">
+                        <div class="text-center">
+                            <span data-i18n-key="dialogs.share-text-subtitle" data-i18n-attrs="text"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row p1">
+                    <div class="column fw">
+                        <div class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" contenteditable></div>
+                    </div>
+                </div>
+                <div class="row center p1">
+                    <label class="auto-accept pointer">
+                        <span data-i18n-key="dialogs.share-text-checkbox" data-i18n-attrs="text"></span>
+                        <input type="checkbox">
+                    </label>
+                </div>
+                <div class="btn-row row-reverse">
+                    <button class="btn btn-rounded btn-grey" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.approve" data-i18n-attrs="text" autofocus disabled></button>
                 </div>
             </x-paper>
         </x-background>
@@ -472,7 +532,7 @@
             <x-paper shadow="2">
                 <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
                 <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
-                <div class="row-reverse center button-row">
+                <div class="row-reverse center btn-row">
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
@@ -480,7 +540,14 @@
     </x-dialog>
     <!-- Toast -->
     <div class="toast-container full center">
-        <x-toast id="toast" class="row center" shadow="1"></x-toast>
+        <x-toast id="toast" shadow="1">
+            <span class="center"></span>
+            <div class="icon-button" data-i18n-key="dialogs.close-toast" data-i18n-attrs="title">
+                <svg class="icon">
+                    <use xlink:href="#close-icon"></use>
+                </svg>
+            </div>
+        </x-toast>
     </div>
     <!-- About Page -->
     <x-about id="about" class="full center column">
@@ -555,9 +622,9 @@
         <symbol id="github">
             <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"></path>
         </symbol>
-        <g id="notifications">
+        <symbol id="notifications">
             <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"></path>
-        </g>
+        </symbol>
         <symbol id="homescreen">
             <path fill="none" d="M0 0h24v24H0V0z"></path>
             <path d="M18 1.01L8 1c-1.1 0-2 .9-2 2v3h2V5h10v14H8v-1H6v3c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM10 15h2V8H5v2h3.59L3 15.59 4.41 17 10 11.41z"></path>
@@ -597,6 +664,18 @@
         <symbol id="icon-language-selector" viewBox="0 0 640 512">
             <!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. -->
             <path d="M0 128C0 92.7 28.7 64 64 64H256h48 16H576c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H320 304 256 64c-35.3 0-64-28.7-64-64V128zm320 0V384H576V128H320zM178.3 175.9c-3.2-7.2-10.4-11.9-18.3-11.9s-15.1 4.7-18.3 11.9l-64 144c-4.5 10.1 .1 21.9 10.2 26.4s21.9-.1 26.4-10.2l8.9-20.1h73.6l8.9 20.1c4.5 10.1 16.3 14.6 26.4 10.2s14.6-16.3 10.2-26.4l-64-144zM160 233.2L179 276H141l19-42.8zM448 164c11 0 20 9 20 20v4h44 16c11 0 20 9 20 20s-9 20-20 20h-2l-1.6 4.5c-8.9 24.4-22.4 46.6-39.6 65.4c.9 .6 1.8 1.1 2.7 1.6l18.9 11.3c9.5 5.7 12.5 18 6.9 27.4s-18 12.5-27.4 6.9l-18.9-11.3c-4.5-2.7-8.8-5.5-13.1-8.5c-10.6 7.5-21.9 14-34 19.4l-3.6 1.6c-10.1 4.5-21.9-.1-26.4-10.2s.1-21.9 10.2-26.4l3.6-1.6c6.4-2.9 12.6-6.1 18.5-9.8l-12.2-12.2c-7.8-7.8-7.8-20.5 0-28.3s20.5-7.8 28.3 0l14.6 14.6 .5 .5c12.4-13.1 22.5-28.3 29.8-45H448 376c-11 0-20-9-20-20s9-20 20-20h52v-4c0-11 9-20 20-20z"></path>
+        </symbol>
+        <symbol id="i-cursor" viewBox="-180 0 640 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M.1 29.3C-1.4 47 11.7 62.4 29.3 63.9l8 .7C70.5 67.3 96 95 96 128.3V224H64c-17.7 0-32 14.3-32 32s14.3 32 32 32H96v95.7c0 33.3-25.5 61-58.7 63.8l-8 .7C11.7 449.6-1.4 465 .1 482.7s16.9 30.7 34.5 29.2l8-.7c34.1-2.8 64.2-18.9 85.4-42.9c21.2 24 51.2 40.1 85.4 42.9l8 .7c17.6 1.5 33.1-11.6 34.5-29.2s-11.6-33.1-29.2-34.5l-8-.7C185.5 444.7 160 417 160 383.7V288h32c17.7 0 32-14.3 32-32s-14.3-32-32-32H160V128.3c0-33.3 25.5-61 58.7-63.8l8-.7c17.6-1.5 30.7-16.9 29.2-34.5S239-1.4 221.3 .1l-8 .7C179.2 3.6 149.2 19.7 128 43.7c-21.2-24-51.2-40-85.4-42.9l-8-.7C17-1.4 1.6 11.7 .1 29.3z"/>
+        </symbol>
+        <symbol id="font" viewBox="-100 0 640 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M254 52.8C249.3 40.3 237.3 32 224 32s-25.3 8.3-30 20.8L57.8 416H32c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32h-1.8l18-48H303.8l18 48H320c-17.7 0-32 14.3-32 32s14.3 32 32 32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H390.2L254 52.8zM279.8 304H168.2L224 155.1 279.8 304z"></path>
+        </symbol>
+        <symbol id="file" viewBox="-130 0 650 530">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"/>
         </symbol>
 
     </svg>

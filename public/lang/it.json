@@ -15,7 +15,7 @@
         "known-as": "Sei visibile come:"
     },
     "header": {
-        "cancel-paste-mode": "Fatto",
+        "cancel-share-mode": "Fatto",
         "theme-auto_title": "Adatta il tema al sistema automaticamente",
         "install_title": "Installa PairDrop",
         "theme-dark_title": "Usa sempre il tema scuro",
@@ -30,12 +30,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "Tocca per inviare file o tocco prolungato per inviare un messaggio",
-        "click-to-send": "Clicca per inviare",
-        "activate-paste-mode-and-other-files": "e altri {{count}} files",
-        "tap-to-send": "Tocca per inviare",
-        "activate-paste-mode-base": "Apri PairDrop su altri dispositivi per inviare",
+        "x-instructions-share-mode_desktop": "Clicca per inviare",
+        "activate-share-mode-and-other-files-plural": "e altri {{count}} files",
+        "x-instructions-share-mode_mobile": "Tocca per inviare",
+        "activate-share-mode-base": "Apri PairDrop su altri dispositivi per inviare",
         "no-peers-subtitle": "Abbina dispositivi o entra in una stanza pubblica per essere rilevabile su altre reti",
-        "activate-paste-mode-shared-text": "testo condiviso",
+        "activate-share-mode-shared-text": "testo condiviso",
         "x-instructions_desktop": "Clicca per inviare files o usa il tasto destro per inviare un messaggio",
         "no-peers-title": "Apri PairDrop su altri dispositivi per inviare files",
         "x-instructions_data-drop-peer": "Rilascia per inviare al peer",
@@ -139,7 +139,7 @@
     },
     "peer-ui": {
         "processing": "Elaborazione…",
-        "click-to-send-paste-mode": "Clicca per inviare {{descriptor}}",
+        "click-to-send-share-mode": "Clicca per inviare {{descriptor}}",
         "click-to-send": "Clicca per inviare files o tasto destro per inviare un messaggio",
         "waiting": "In attesa…",
         "connection-hash": "Per verificare la sicurezza della crittografia end-to-end, confronta questo numero di sicurezza su entrambi i dispositivi",

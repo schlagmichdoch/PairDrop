@@ -9,7 +9,7 @@
         "theme-auto_title": "Systemstil verwenden",
         "theme-dark_title": "Immer dunklen Stil verwenden",
         "theme-light_title": "Immer hellen Stil verwenden",
-        "cancel-paste-mode": "Fertig",
+        "cancel-share-mode": "Fertig",
         "language-selector_title": "Sprache Wählen",
         "join-public-room_title": "Öffentlichen Raum temporär betreten"
     },
@@ -138,14 +138,14 @@
         "no-peers-title": "Öffne PairDrop auf anderen Geräten, um Dateien zu senden",
         "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
         "no-peers-subtitle": "Kopple Geräte oder besuche einen öffentlichen Raum, damit du in anderen Netzwerken sichtbar bist",
-        "click-to-send": "Klicke zum Senden von",
-        "tap-to-send": "Tippe zum Senden von",
+        "x-instructions-share-mode_desktop": "Klicke zum Senden von",
+        "x-instructions-share-mode_mobile": "Tippe zum Senden von",
         "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
         "x-instructions_data-drop-bg": "Loslassen um Empfänger auszuwählen",
         "x-instructions_mobile": "Tippe, um Dateien zu senden oder tippe lange, um Nachrichten zu senden",
-        "activate-paste-mode-base": "Öffne PairDrop auf anderen Geräten zum Senden von",
-        "activate-paste-mode-and-other-files": "und {{count}} anderen Dateien",
-        "activate-paste-mode-shared-text": "freigegebenem Text"
+        "activate-share-mode-base": "Öffne PairDrop auf anderen Geräten zum Senden von",
+        "activate-share-mode-and-other-files-plural": "und {{count}} anderen Dateien",
+        "activate-share-mode-shared-text": "freigegebenem Text"
     },
     "document-titles": {
         "file-transfer-requested": "Dateiübertragung angefordert",
@@ -159,7 +159,7 @@
         "click-to-send": "Klicke, um Dateien zu senden oder benutze einen Rechtsklick, um eine Textnachricht zu senden",
         "connection-hash": "Um die Ende-zu-Ende Verschlüsselung zu verifizieren, vergleiche die Sicherheitsnummer auf beiden Geräten",
         "waiting": "Warte…",
-        "click-to-send-paste-mode": "Klicken um {{descriptor}} zu senden",
+        "click-to-send-share-mode": "Klicken um {{descriptor}} zu senden",
         "transferring": "Übertragung läuft…",
         "processing": "Bearbeitung läuft…",
         "preparing": "Vorbereitung läuft…"

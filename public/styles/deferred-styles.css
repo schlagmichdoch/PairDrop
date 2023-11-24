@@ -1,20 +1,5 @@
 /* All styles in this sheet are not needed on page load and deferred */
 
-/* Paste mode */
-#cancel-paste-mode {
-    z-index: 21;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    width: 100vw;
-    height: 56px;
-    background-color: var(--primary-color);
-    color: rgb(238, 238, 238);
-}
-
 /* Text Input */
 .textarea {
     box-sizing: border-box;
@@ -22,7 +7,7 @@
     outline: none;
     padding: 16px 24px;
     border-radius: 12px;
-    font-size: inherit;
+    font-size: 16px;
     font-family: inherit;
     display: block;
     overflow: auto;
@@ -31,6 +16,10 @@
     max-height: 300px;
     word-break: break-word;
     word-wrap: anywhere;
+}
+
+.textarea:before {
+    opacity: 0.5;
 }
 
 /* Peers */
@@ -529,30 +518,19 @@ x-dialog hr {
 }
 
 /* button row*/
-x-paper > .button-row {
-    height: 50px;
-    margin: 5px 10px 10px;
-}
-
-x-paper > .button-row > .btn {
+.btn-row > .btn {
     height: 100%;
     width: 100%;
 }
 
-html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:first-child) {
+.btn-row > .btn {
     margin-right: 5px;
-}
-
-html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:last-child) {
     margin-left: 5px;
 }
 
-html[dir="rtl"] x-paper > .button-row > .btn:not(:first-child) {
-    margin-right: 5px;
-}
-
-html[dir="rtl"] x-paper > .button-row > .btn:not(:last-child) {
-    margin-left: 5px;
+x-paper > .btn-row {
+    height: 50px;
+    margin: 5px 10px 10px;
 }
 
 .language-buttons > button > span {
@@ -597,7 +575,10 @@ x-dialog .dialog-subheader {
 
 #send-text-dialog,
 #receive-text-dialog {
-    font-size: 16px;  /* prevents auto-zoom on edit */
+    font-size: 16px; /* prevents auto-zoom on edit */
+}
+
+.textarea.overflowing {
     --shadow-color-rgb: var(--shadow-color-secondary-rgb);
     --shadow-color-cover-rgb: var(--shadow-color-secondary-cover-rgb);
 }
@@ -605,10 +586,6 @@ x-dialog .dialog-subheader {
 #edit-paired-devices-dialog {
     --shadow-color-rgb: var(--shadow-color-dialog-rgb);
     --shadow-color-cover-rgb: var(--shadow-color-dialog-cover-rgb);
-}
-
-#text-input:before {
-    opacity: 0.5;
 }
 
 /* Receive Text Dialog */
@@ -632,6 +609,69 @@ x-dialog .dialog-subheader {
     /* Select the received text when double-clicking the dialog */
     user-select: none;
     pointer-events: none;
+}
+
+.share-panel {
+    max-width: calc(100vw - 20px);
+    overflow: hidden;
+    background-color: var(--primary-color);
+    color: white;
+    background-image: linear-gradient(225deg, var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 60%, black) 100%);
+}
+
+.share-panel > div {
+    margin: 4px 2px;
+}
+
+.share-panel > div:not(:first-child) {
+    margin-top: 2px;
+}
+
+.share-panel .thumb > div {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 6px;
+    margin-right: 6px;
+}
+
+.share-panel .text-thumb svg {
+    width: 18px;
+    height: 36px;
+}
+
+.share-panel .file-thumb svg {
+    width: 36px;
+    height: 36px;
+}
+
+.share-panel .thumb .image-thumb {
+    background-size: cover;
+    border-radius: 6px;
+    background-position: center;
+}
+
+.share-descriptor {
+    justify-content: center;
+}
+
+.share-descriptor > span {
+    display: inline;
+    margin-bottom: 0;
+    margin-top: 0;
+    height: 20px;
+    max-width: 15rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.share-descriptor > span:first-child {
+    font-weight: bold;
+}
+
+.share-descriptor > span:not(:first-child) {
+    font-size: small;
 }
 
 #base64-paste-btn,

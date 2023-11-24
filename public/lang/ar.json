@@ -55,7 +55,7 @@
         "click-to-show": "اضغط للعرض"
     },
     "header": {
-        "cancel-paste-mode": "تمّ",
+        "cancel-share-mode": "تمّ",
         "theme-auto_title": "تكيٌف المظهر مع النظام",
         "install_title": "تثبيت PairDrop",
         "theme-dark_title": "إستخدام دائما المظهر المظلم",
@@ -70,12 +70,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "انقر لإرسال الملفات أو انقر لفترة طويلة لإرسال رسالة",
-        "click-to-send": "انقر للإرسال",
-        "activate-paste-mode-and-other-files": "و{{count}} ملفات أخرى",
-        "tap-to-send": "انقر للإرسال",
-        "activate-paste-mode-base": "افتح PairDrop على الأجهزة الأخرى للإرسال",
+        "x-instructions-share-mode_desktop": "انقر للإرسال",
+        "activate-share-mode-and-other-files-plural": "و{{count}} ملفات أخرى",
+        "x-instructions-share-mode_mobile": "انقر للإرسال",
+        "activate-share-mode-base": "افتح PairDrop على الأجهزة الأخرى للإرسال",
         "no-peers-subtitle": "قم بإقران الأجهزة أو ادخل إلى غرفة عامة لتتمكن من إكتشافها على الشبكات الأخرى",
-        "activate-paste-mode-shared-text": "النص المشترك",
+        "activate-share-mode-shared-text": "النص المشترك",
         "x-instructions_desktop": "انقر لإرسال الملفات أو انقر بزر الماوس الأيمن لإرسال رسالة",
         "no-peers-title": "افتح PairDrop على الأجهزة الأخرى لإرسال الملفات",
         "x-instructions_data-drop-bg": "حرر لتحديد المستلم",
@@ -84,7 +84,7 @@
     },
     "peer-ui": {
         "processing": "مُعالجة …",
-        "click-to-send-paste-mode": "انقر للإرسال {{descriptor}}",
+        "click-to-send-share-mode": "انقر للإرسال {{descriptor}}",
         "click-to-send": "انقر لإرسال الملفات أو انقر بزر الماوس الأيمن لإرسال رسالة",
         "waiting": "يُرجى الإنتظار…",
         "connection-hash": "للتحقق من أمان التشفير الشامل، قم بمقارنة رقم الأمان هذا على كلا الجهازين",

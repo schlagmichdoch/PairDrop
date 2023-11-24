@@ -433,47 +433,6 @@ class Peer {
             : false;
     }
 
-    getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
-        return new Promise((resolve, reject) => {
-            let image = new Image();
-            image.src = URL.createObjectURL(file);
-            image.onload = _ => {
-                let imageWidth = image.width;
-                let imageHeight = image.height;
-                let canvas = document.createElement('canvas');
-
-                // resize the canvas and draw the image data into it
-                if (width && height) {
-                    canvas.width = width;
-                    canvas.height = height;
-                }
-                else if (width) {
-                    canvas.width = width;
-                    canvas.height = Math.floor(imageHeight * width / imageWidth)
-                }
-                else if (height) {
-                    canvas.width = Math.floor(imageWidth * height / imageHeight);
-                    canvas.height = height;
-                }
-                else {
-                    canvas.width = imageWidth;
-                    canvas.height = imageHeight
-                }
-
-                var ctx = canvas.getContext("2d");
-                ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-                let dataUrl = canvas.toDataURL("image/jpeg", quality);
-                resolve(dataUrl);
-            }
-            image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
-        })
-        .then(dataUrl => {
-            return dataUrl;
-        })
-        .catch(e => console.error(e));
-    }
-
     async requestFileTransfer(files) {
         let header = [];
         let totalSize = 0;
@@ -491,9 +450,14 @@ class Peer {
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 0.8, status: 'prepare'})
 
-        let dataUrl = '';
+        let dataUrl;
+
         if (files[0].type.split('/')[0] === 'image') {
-            dataUrl = await this.getResizedImageDataUrl(files[0], 400, null, 0.9);
+            try {
+                dataUrl = await getResizedImageDataUrl(files[0], 400, null, 0.9);
+            } catch (e) {
+                dataUrl = '';
+            }
         }
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'prepare'})

@@ -458,3 +458,40 @@ function base64ToArrayBuffer(base64) {
     }
     return bytes.buffer;
 }
+
+function getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        let image = new Image();
+        image.src = URL.createObjectURL(file);
+        image.onload = _ => {
+            let imageWidth = image.width;
+            let imageHeight = image.height;
+            let canvas = document.createElement('canvas');
+
+            // resize the canvas and draw the image data into it
+            if (width && height) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+            else if (width) {
+                canvas.width = width;
+                canvas.height = Math.floor(imageHeight * width / imageWidth)
+            }
+            else if (height) {
+                canvas.width = Math.floor(imageWidth * height / imageHeight);
+                canvas.height = height;
+            }
+            else {
+                canvas.width = imageWidth;
+                canvas.height = imageHeight
+            }
+
+            let ctx = canvas.getContext("2d");
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            let dataUrl = canvas.toDataURL("image/jpeg", quality);
+            resolve(dataUrl);
+        }
+        image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
+    })
+}
