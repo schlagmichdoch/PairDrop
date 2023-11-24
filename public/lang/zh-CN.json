@@ -25,7 +25,8 @@
         "x-instructions-share-mode_mobile": "轻触发送",
         "activate-share-mode-base": "在其他设备上打开 PairDrop 来发送",
         "activate-share-mode-and-other-files-plural": "和 {{count}} 个其他的文件",
-        "activate-share-mode-shared-text": "分享文本"
+        "activate-share-mode-shared-text": "分享文本",
+        "webrtc-requirement": "要使用此 PairDrop 示例。必须开启 WebRTC！"
     },
     "footer": {
         "routed": "途径服务器",
@@ -68,7 +69,7 @@
         "receive-text-title": "收到信息",
         "copy": "复制",
         "send-message-title": "发送信息",
-        "send-message-to": "发了一条信息给",
+        "send-message-to": "发给：",
         "has-sent": "发送了：",
         "base64-files": "文件",
         "file-other-description-file": "和 1 个其他的文件",
@@ -92,7 +93,8 @@
         "enter-room-id-from-another-device": "在另一个设备上输入这串房间号来加入房间。",
         "message_title": "插入要发送的消息",
         "pair-devices-qr-code_title": "单击复制和此设备配对的链接",
-        "public-room-qr-code_title": "单击复制公共房间链接"
+        "public-room-qr-code_title": "单击复制公共房间链接",
+        "message_placeholder": "文本"
     },
     "about": {
         "faq_title": "常见问题",
