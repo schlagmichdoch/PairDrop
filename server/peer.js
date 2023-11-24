@@ -124,8 +124,8 @@ export default class Peer {
 
     _setPeerId(request) {
         const searchParams = new URL(request.url, "http://server").searchParams;
-        let peerId = searchParams.get("peer_id");
-        let peerIdHash = searchParams.get("peer_id_hash");
+        let peerId = searchParams.get('peer_id');
+        let peerIdHash = searchParams.get('peer_id_hash');
         if (peerId && Peer.isValidUuid(peerId) && this.isPeerIdHashValid(peerId, peerIdHash)) {
             this.id = peerId;
         } else {
@@ -135,7 +135,7 @@ export default class Peer {
 
     _setRtcSupported(request) {
         const searchParams = new URL(request.url, "http://server").searchParams;
-        this.rtcSupported = searchParams.get("webrtc_supported") === "true";
+        this.rtcSupported = searchParams.get('webrtc_supported') === "true";
     }
 
     _setName(req) {

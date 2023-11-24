@@ -184,13 +184,13 @@ class FooterUI {
         if (newDisplayName === savedDisplayName) return;
 
         if (newDisplayName) {
-            PersistentStorage.set('editedDisplayName', newDisplayName)
+            PersistentStorage.set('edited_display_name', newDisplayName)
                 .then(_ => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-permanently"));
                 })
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.");
-                    localStorage.setItem('editedDisplayName', newDisplayName);
+                    localStorage.setItem('edited_display_name', newDisplayName);
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
                 .finally(() => {
@@ -199,10 +199,10 @@ class FooterUI {
                 });
         }
         else {
-            PersistentStorage.delete('editedDisplayName')
+            PersistentStorage.delete('edited_display_name')
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.")
-                    localStorage.removeItem('editedDisplayName');
+                    localStorage.removeItem('edited_display_name');
                 })
                 .finally(() => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
@@ -214,13 +214,13 @@ class FooterUI {
 
     _getSavedDisplayName() {
         return new Promise((resolve) => {
-            PersistentStorage.get('editedDisplayName')
+            PersistentStorage.get('edited_display_name')
                 .then(displayName => {
                     if (!displayName) displayName = "";
                     resolve(displayName);
                 })
                 .catch(_ => {
-                    let displayName = localStorage.getItem('editedDisplayName');
+                    let displayName = localStorage.getItem('edited_display_name');
                     if (!displayName) displayName = "";
                     resolve(displayName);
                 })

@@ -782,10 +782,10 @@ class LanguageSelectDialog extends Dialog {
         let languageCode = e.target.value;
 
         if (languageCode) {
-            localStorage.setItem('language-code', languageCode);
+            localStorage.setItem('language_code', languageCode);
         }
         else {
-            localStorage.removeItem('language-code');
+            localStorage.removeItem('language_code');
         }
 
         Localization.setTranslation(languageCode)
@@ -2052,7 +2052,7 @@ class ShareTextDialog extends Dialog {
         this.$approveMsgBtn.addEventListener('click', _ => this._approveShareText());
 
         // Only show this per default if user sets checkmark
-        this.$checkbox.checked = localStorage.getItem("approve_share_text")
+        this.$checkbox.checked = localStorage.getItem('approve-share-text')
             ? ShareTextDialog.isApproveShareTextSet()
             : false;
 
@@ -2065,11 +2065,11 @@ class ShareTextDialog extends Dialog {
     }
 
     static isApproveShareTextSet() {
-        return localStorage.getItem("approve_share_text") === "true";
+        return localStorage.getItem('approve-share-text') === "true";
     }
 
     _setCheckboxValueToLocalStorage() {
-        localStorage.setItem("approve_share_text", this.$checkbox.checked ? "true" : "false");
+        localStorage.setItem('approve-share-text', this.$checkbox.checked ? "true" : "false");
     }
 
     _onKeyDown(e) {

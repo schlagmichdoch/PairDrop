@@ -9,7 +9,7 @@ class Localization {
 
         Localization.systemLocale = Localization.getSupportedOrDefault(navigator.languages);
 
-        let storedLanguageCode = localStorage.getItem("language-code");
+        let storedLanguageCode = localStorage.getItem('language_code');
 
         Localization.initialLocale = storedLanguageCode && Localization.isSupported(storedLanguageCode)
             ? storedLanguageCode
@@ -82,7 +82,7 @@ class Localization {
     }
 
     static isSystemLocale() {
-        return !localStorage.getItem('language-code');
+        return !localStorage.getItem('language_code');
     }
 
     static async fetchTranslationsFor(newLocale) {
