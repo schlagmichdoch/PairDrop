@@ -83,7 +83,8 @@
         "no-peers-title": "Abra PairDrop en otros dispositivos para enviar archivos",
         "x-instructions_data-drop-peer": "Liberar para enviar a un par",
         "x-instructions_data-drop-bg": "Liberar para seleccionar destinatario",
-        "no-peers_data-drop-bg": "Liberar para seleccionar destinatario"
+        "no-peers_data-drop-bg": "Liberar para seleccionar destinatario",
+        "webrtc-requirement": "Para utilizar esta instancia de PairDrop, ¡WebRTC debe estar activado!"
     },
     "peer-ui": {
         "processing": "Procesando…",
@@ -125,7 +126,7 @@
         "title-image": "Imagen",
         "file-other-description-file-plural": "y {{count}} archivos más",
         "would-like-to-share": "quisiera compartir",
-        "send-message-to": "Enviar un Mensaje a",
+        "send-message-to": "Para:",
         "language-selector-title": "Configurar Idioma",
         "pair": "Emparejar",
         "hr-or": "O",
@@ -144,7 +145,8 @@
         "enter-room-id-from-another-device": "Ingresa el ID de la sala desde otro dispositivo para unirte a la sala.",
         "message_title": "Insertar el mensaje a enviar",
         "pair-devices-qr-code_title": "Haz clic para copiar el enlace para emparejar este dispositivo",
-        "public-room-qr-code_title": "Haz clic para copiar el enlace a la sala pública"
+        "public-room-qr-code_title": "Haz clic para copiar el enlace a la sala pública",
+        "message_placeholder": "Texto"
     },
     "about": {
         "claim": "La forma más sencilla de transferir archivos entre dispositivos",
