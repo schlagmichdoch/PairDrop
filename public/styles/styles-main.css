@@ -724,8 +724,7 @@ x-toast {
     position: absolute;
     min-height: 48px;
     top: 50px;
-    width: 100%;
-    max-width: 344px;
+    max-width: 400px;
     background-color: rgb(var(--text-color));
     color: var(--dialog-bg-color);
     align-items: center;
@@ -750,6 +749,12 @@ x-toast:not([show]) {
 
 x-toast span {
     flex-grow: 1;
+    margin: auto 4px auto 10px
+}
+
+x-dialog[show] ~ div x-toast {
+    background-color: var(--lt-dialog-bg-color);
+    color: rgb(var(--lt-text-color));
 }
 
 /* Instructions */
@@ -840,39 +845,66 @@ body {
     --accent-color: var(--primary-color);
     --ws-peer-color: #ff6b6b;
     --btn-disabled-color: #5B5B66;
+
     /* shadows */
     --shadow-color-rgb: var(--text-color);
     --shadow-color-cover-rgb: var(--bg-color);
+
+    /* Light theme colors */
+    --lt-text-color: 51,51,51;
+    --lt-dialog-bg-color: #fff;
+    --lt-bg-color: 255,255,255;
+    --lt-bg-color-secondary: #f2f2f2;
+    --lt-border-color: #a9a9a9;
+    --lt-badge-color: #a5a5a5;
+
+    --lt-shadow-color-secondary-rgb: 0,0,0;
+    --lt-shadow-color-secondary-cover-rgb: 242,242,242;
+    --lt-shadow-color-dialog-rgb: 0,0,0;
+    --lt-shadow-color-dialog-cover-rgb: 242,242,242;
+
+    /* Dark theme colors */
+    --dt-text-color: 238,238,238;
+    --dt-dialog-bg-color: #141414;
+    --dt-bg-color: 0,0,0;
+    --dt-bg-color-secondary: #262628;
+    --dt-border-color: #919191;
+    --dt-badge-color: #717171;
+
+    --dt-shadow-color-secondary-rgb: 255,255,255;
+    --dt-shadow-color-secondary-cover-rgb: 38,38,38;
+    --dt-shadow-color-dialog-rgb: 255,255,255;
+    --dt-shadow-color-dialog-cover-rgb: 38,38,38;
 }
 
 /* Light theme colors */
 body {
-    --text-color: 51,51,51;
-    --dialog-bg-color: #fff;
-    --bg-color: 255,255,255;
-    --bg-color-secondary: #f2f2f2;
-    --border-color: rgb(169, 169, 169);
-    --badge-color: #a5a5a5;
+    --text-color: var(--lt-text-color);
+    --dialog-bg-color: var(--lt-dialog-bg-color);
+    --bg-color: var(--lt-bg-color);
+    --bg-color-secondary: var(--lt-bg-color-secondary);
+    --border-color: var(--lt-border-color);
+    --badge-color: var(--lt-badge-color);
 
-    --shadow-color-secondary-rgb: 0,0,0;
-    --shadow-color-secondary-cover-rgb: 242,242,242;
-    --shadow-color-dialog-rgb: 0,0,0;
-    --shadow-color-dialog-cover-rgb: 242,242,242;
+    --shadow-color-secondary-rgb: var(--lt-shadow-color-secondary-rgb);
+    --shadow-color-secondary-cover-rgb: var(--lt-shadow-color-secondary-cover-rgb);
+    --shadow-color-dialog-rgb: var(--lt-shadow-color-dialog-rgb);
+    --shadow-color-dialog-cover-rgb: var(--lt-shadow-color-dialog-cover-rgb);
 }
 
 /* Dark theme colors */
 body.dark-theme {
-    --text-color: 238,238,238;
-    --dialog-bg-color: #141414;
-    --bg-color: 0,0,0;
-    --bg-color-secondary: #262628;
-    --border-color: rgb(91, 91, 91);
-    --badge-color: #717171;
+    --text-color: var(--dt-text-color);
+    --dialog-bg-color: var(--dt-dialog-bg-color);
+    --bg-color: var(--dt-bg-color);
+    --bg-color-secondary: var(--dt-bg-color-secondary);
+    --border-color: var(--dt-border-color);
+    --badge-color: var(--dt-badge-color);
 
-    --shadow-color-secondary-rgb: 255,255,255;
-    --shadow-color-secondary-cover-rgb: 38,38,38;
-    --shadow-color-dialog-rgb: 255,255,255;
-    --shadow-color-dialog-cover-rgb: 38,38,38;
+    --shadow-color-secondary-rgb: var(--dt-shadow-color-secondary-rgb);
+    --shadow-color-secondary-cover-rgb: var(--dt-shadow-color-secondary-cover-rgb);
+    --shadow-color-dialog-rgb: var(--dt-shadow-color-dialog-rgb);
+    --shadow-color-dialog-cover-rgb: var(--dt-shadow-color-dialog-cover-rgb);
 }
 
 /* Styles for users who prefer dark mode at the OS level */
@@ -880,33 +912,33 @@ body.dark-theme {
 
     /* defaults to dark theme */
     body {
-        --text-color: 238,238,238;
-        --dialog-bg-color: #141414;
-        --bg-color-secondary: #262628;
-        --bg-color: 0,0,0;
-        --border-color: rgb(91, 91, 91);
-        --badge-color: #717171;
+        --text-color: var(--dt-text-color);
+        --dialog-bg-color: var(--dt-dialog-bg-color);
+        --bg-color: var(--dt-bg-color);
+        --bg-color-secondary: var(--dt-bg-color-secondary);
+        --border-color: var(--dt-border-color);
+        --badge-color: var(--dt-badge-color);
 
-        --shadow-color-secondary-rgb: 255,255,255;
-        --shadow-color-secondary-cover-rgb: 38,38,38;
-        --shadow-color-dialog-rgb: 255,255,255;
-        --shadow-color-dialog-cover-rgb: 38,38,38;
+        --shadow-color-secondary-rgb: var(--dt-shadow-color-secondary-rgb);
+        --shadow-color-secondary-cover-rgb: var(--dt-shadow-color-secondary-cover-rgb);
+        --shadow-color-dialog-rgb: var(--dt-shadow-color-dialog-rgb);
+        --shadow-color-dialog-cover-rgb: var(--dt-shadow-color-dialog-cover-rgb);
     }
 
 
     /* Override dark mode with light mode styles if the user decides to swap */
     body.light-theme {
-        --text-color: 51,51,51;
-        --dialog-bg-color: #fff;
-        --bg-color: 255,255,255;
-        --bg-color-secondary: #f2f2f2;
-        --border-color: rgb(169, 169, 169);
-        --badge-color: #a5a5a5;
+        --text-color: var(--lt-text-color);
+        --dialog-bg-color: var(--lt-dialog-bg-color);
+        --bg-color: var(--lt-bg-color);
+        --bg-color-secondary: var(--lt-bg-color-secondary);
+        --border-color: var(--lt-border-color);
+        --badge-color: var(--lt-badge-color);
 
-        --shadow-color-secondary-rgb: 0,0,0;
-        --shadow-color-secondary-cover-rgb: 255,255,255;
-        --shadow-color-dialog-rgb: 0,0,0;
-        --shadow-color-dialog-cover-rgb: 242,242,242;
+        --shadow-color-secondary-rgb: var(--lt-shadow-color-secondary-rgb);
+        --shadow-color-secondary-cover-rgb: var(--lt-shadow-color-secondary-cover-rgb);
+        --shadow-color-dialog-rgb: var(--lt-shadow-color-dialog-rgb);
+        --shadow-color-dialog-cover-rgb: var(--lt-shadow-color-dialog-cover-rgb);
     }
 }
 
