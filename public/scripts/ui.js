@@ -1553,21 +1553,31 @@ class EditPairedDevicesDialog extends Dialog {
         roomSecretsEntries
             .forEach(roomSecretsEntry => {
                 let $pairedDevice = document.createElement('div');
-                $pairedDevice.classList = ["paired-device"];
+                $pairedDevice.classList.add("paired-device");
 
                 $pairedDevice.innerHTML = `
-                <div class="display-name">
-                    <span>${roomSecretsEntry.display_name}</span>
-                </div>
-                <div class="device-name">
-                    <span>${roomSecretsEntry.device_name}</span>
-                </div>
-                <div class="button-wrapper">
-                    <label class="auto-accept pointer">${autoAcceptString}
-                        <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
-                    </label>
-                    <button class="btn" type="button">${unpairString}</button>
-                </div>`
+                    <div class="display-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.display_name}
+                        </span>
+                    </div>
+                    <div class="device-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.device_name}
+                        </span>
+                    </div>
+                    <div class="button-wrapper">
+                        <div class="row center">
+                            <span class="p1">
+                                ${autoAcceptString}
+                            </span>
+                            <label class="auto-accept pointer switch">
+                                <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                        <button class="btn" type="button">${unpairString}</button>
+                    </div>`
 
                 $pairedDevice
                     .querySelector('input[type="checkbox"]')

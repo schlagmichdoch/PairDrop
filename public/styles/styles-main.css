@@ -31,7 +31,24 @@ html {
 }
 
 .p1 {
+    padding: 5px;
+}
+
+.p2 {
     padding: 10px;
+}
+
+.pb0 {
+    padding-bottom: 0;
+}
+
+.mx1 {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.m1 {
+    margin: 10px;
 }
 
 .cursive {
@@ -41,6 +58,18 @@ html {
 .row-reverse {
     display: flex;
     flex-direction: row-reverse;
+}
+
+.flex {
+    display: flex;
+}
+
+.align-center {
+    align-items: center;
+}
+
+.space-evenly {
+    justify-content: space-evenly;
 }
 
 .space-between {
