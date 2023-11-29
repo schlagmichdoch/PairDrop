@@ -166,9 +166,9 @@
                     <span data-i18n-key="footer.discovery" data-i18n-attrs="text"></span>
                 </div>
                 <div class="row center">
-                    <span class="badge badge-gradient badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title"></span>
-                    <span class="badge badge-gradient badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden></span>
-                    <span class="badge badge-gradient badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
+                    <span class="badge badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title"></span>
+                    <span class="badge badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden></span>
+                    <span class="badge badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
                 </div>
             </div>
         </div>
@@ -177,8 +177,8 @@
     <x-dialog id="language-select-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center">
-                    <h2 class="center" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text"></h2>
+                <div class="row center p1">
+                    <h2 class="dialog-title" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text"></h2>
                 </div>
                 <div class="language-buttons">
                     <button class="btn fw" data-i18n-key="dialogs.system-language" data-i18n-attrs="text"></button>
@@ -262,10 +262,10 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center">
-                        <h2 class="center" data-i18n-key="dialogs.pair-devices-title" data-i18n-attrs="text"></h2>
+                    <div class="row center p1">
+                        <h2 class="dialog-title" data-i18n-key="dialogs.pair-devices-title" data-i18n-attrs="text"></h2>
                     </div>
-                    <div class="row center">
+                    <div class="row center p1">
                         <div class="column">
                             <div class="center key-qr-code" data-i18n-key="dialogs.pair-devices-qr-code" data-i18n-attrs="title"></div>
                             <h1 class="center key" dir="ltr">000 000</h1>
@@ -281,7 +281,7 @@
                             <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text"></span>
                         </div>
                     </div>
-                    <div class="row center">
+                    <div class="row center p1">
                         <div class="column fw">
                             <div class="input-key-container six-chars" dir="ltr">
                                 <input type="tel" class="textarea center" aria-label="pair-key-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
@@ -307,8 +307,8 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center">
-                        <h2 class="center" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text"></h2>
+                    <div class="row center p1">
+                        <h2 class="dialog-title" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text"></h2>
                     </div>
                     <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-wrapper" data-i18n-attrs="data-empty"></div>
                     <div class="font-subheading center">
@@ -330,12 +330,10 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center">
-                        <div class="column">
-                            <h2 class="center" data-i18n-key="dialogs.temporary-public-room-title" data-i18n-attrs="text"></h2>
-                        </div>
+                    <div class="row center p1">
+                        <h2 class="dialog-title" data-i18n-key="dialogs.temporary-public-room-title" data-i18n-attrs="text"></h2>
                     </div>
-                    <div class="row center">
+                    <div class="row center p1">
                         <div class="column">
                             <div class="center key-qr-code" data-i18n-key="dialogs.public-room-qr-code" data-i18n-attrs="title"></div>
                             <h1 class="center key" dir="ltr"></h1>
@@ -351,7 +349,7 @@
                             <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text"></span>
                         </div>
                     </div>
-                    <div class="row center">
+                    <div class="row center p1">
                         <div class="column fw">
                             <div class="input-key-container" dir="ltr">
                                 <input type="text" class="textarea center" aria-label="room-id-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
@@ -376,15 +374,13 @@
     <x-dialog id="receive-request-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center">
-                    <div class="column">
-                        <h2 class="center"></h2>
-                    </div>
+                <div class="row center p1">
+                    <h2 class="dialog-title"></h2>
                 </div>
                 <div class="row center p1">
                     <div class="column center file-description">
                         <div>
-                            <span class="display-name badge badge-gradient"></span>
+                            <span class="display-name badge"></span>
                             <span data-i18n-key="dialogs.would-like-to-share" data-i18n-attrs="text"></span>
                         </div>
                         <div class="row file-name">
@@ -408,15 +404,13 @@
     <x-dialog id="receive-file-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center">
-                    <div class="column">
-                        <h2 class="center"></h2>
-                    </div>
+                <div class="row center p1">
+                    <h2 class="dialog-title"></h2>
                 </div>
                 <div class="row center p1">
                     <div class="column center file-description">
                         <div>
-                            <span class="display-name badge badge-gradient"></span>
+                            <span class="display-name badge"></span>
                             <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text"></span>
                         </div>
                         <div class="row file-name">
@@ -442,16 +436,14 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <div class="row center">
-                        <div class="column">
-                            <h2 class="center" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text"></h2>
-                        </div>
+                    <div class="row center p1">
+                        <h2 class="dialog-title" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text"></h2>
                     </div>
                     <div class="row center p1 display-name-wrapper">
                         <div class="column">
                             <div class="text-center">
                                 <span data-i18n-key="dialogs.send-message-to" data-i18n-attrs="text"></span>
-                                <span class="display-name badge badge-gradient"></span>
+                                <span class="display-name badge"></span>
                             </div>
                         </div>
                     </div>
@@ -472,12 +464,12 @@
     <x-dialog id="receive-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center">
-                    <h2 class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text"></h2>
+                <div class="row center p1">
+                    <h2 class="dialog-title" class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text"></h2>
                 </div>
                 <div class="row center p1 display-name-wrapper">
                     <div class="text-center">
-                        <span class="display-name badge badge-gradient"></span>
+                        <span class="display-name badge"></span>
                         <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text"></span>
                     </div>
                 </div>
@@ -497,10 +489,8 @@
     <x-dialog id="share-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center">
-                    <div class="column">
-                        <h2 class="center" data-i18n-key="dialogs.share-text-title" data-i18n-attrs="text"></h2>
-                    </div>
+                <div class="row center p1">
+                    <h2 class="dialog-title" data-i18n-key="dialogs.share-text-title" data-i18n-attrs="text"></h2>
                 </div>
                 <div class="row center p1">
                     <div class="column">

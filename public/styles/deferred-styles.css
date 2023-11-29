@@ -13,7 +13,7 @@
     overflow: auto;
     resize: none;
     line-height: 16px;
-    max-height: 300px;
+    max-height: 350px;
     word-break: break-word;
     word-wrap: anywhere;
 }
@@ -276,38 +276,30 @@ x-dialog x-background {
     z-index: 30;
     transition: opacity 300ms;
     will-change: opacity;
-    overflow: overlay;
+    padding: 10px 5px 20px;
+    overflow: scroll
 }
 
 x-dialog x-paper {
+    position: relative;
     display: flex;
+    margin: auto;
     flex-direction: column;
-    width: calc(100vw - 10px);
+    width: 400px;
     z-index: 3;
     border-radius: 30px;
-    max-width: 400px;
     overflow: hidden;
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
 }
 
-#pair-device-dialog x-paper,
-#edit-paired-devices-dialog x-paper,
-#public-room-dialog x-paper,
-#language-select-dialog x-paper {
-    position: absolute;
-    top: max(50%, 350px);
-    margin-top: -328.5px;
-}
-
 x-paper > .row:first-of-type {
     background-color: var(--accent-color);
-    padding: 10px;
     margin-bottom: 5px;
 }
 
-x-paper > .row:first-of-type h2 {
+x-paper .dialog-title {
     color: white;
 }
 
@@ -383,15 +375,15 @@ x-dialog a {
     user-select: text;
     display: inline-block;
     font-size: 45px;
-    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 20px);
-    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 28px)));
+    letter-spacing: 18px;
+    text-indent: 15px;
     margin: 10px 0;
 }
 
 .key-qr-code {
     width: fit-content;
     align-self: center;
-    margin-top: 15px;
+    margin-top: 5px;
     margin-bottom: 10px;
 }
 
@@ -413,8 +405,8 @@ x-dialog hr {
 }
 
 .hr-note {
-    margin-top: 23px;
-    margin-bottom: 31px;
+    margin-top: 13px;
+    margin-bottom: 21px;
 }
 
 .hr-note hr {
@@ -434,10 +426,6 @@ x-dialog hr {
     background-color: var(--dialog-bg-color);
     border: var(--border-color) solid 3px;
     text-transform: uppercase;
-}
-
-#pair-device-dialog x-background {
-    padding: 16px!important;
 }
 
 /* Edit Paired Devices Dialog */

@@ -181,7 +181,7 @@ h1 {
 }
 
 h2 {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 400;
     letter-spacing: -.012em;
     line-height: 32px;
@@ -432,10 +432,6 @@ footer .logo {
     background-color: var(--badge-color);
     color: white;
     white-space: nowrap;
-}
-
-.badge-gradient {
-    background-image: linear-gradient(180deg, color-mix(in srgb, var(--badge-color) 80%, white) 0%, var(--badge-color) 50%);
 }
 
 .badge-room-ip {
@@ -840,7 +836,7 @@ body {
     /* Constant colors */
     --primary-color: #4285f4;
     --paired-device-color: #00a69c;
-    --public-room-color: #db8500;
+    --public-room-color: #ed9d01;
     --accent-color: var(--primary-color);
     --ws-peer-color: #ff6b6b;
     --btn-disabled-color: #5B5B66;
@@ -867,7 +863,7 @@ body {
 /* Dark theme colors */
 body.dark-theme {
     --text-color: 238,238,238;
-    --dialog-bg-color: #121212;
+    --dialog-bg-color: #141414;
     --bg-color: 0,0,0;
     --bg-color-secondary: #262628;
     --border-color: rgb(91, 91, 91);
@@ -885,7 +881,7 @@ body.dark-theme {
     /* defaults to dark theme */
     body {
         --text-color: 238,238,238;
-        --dialog-bg-color: #121212;
+        --dialog-bg-color: #141414;
         --bg-color-secondary: #262628;
         --bg-color: 0,0,0;
         --border-color: rgb(91, 91, 91);

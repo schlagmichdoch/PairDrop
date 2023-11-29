@@ -688,10 +688,13 @@ class PeerUI {
 class Dialog {
     constructor(id) {
         this.$el = $(id);
-        this.$el.querySelectorAll('[close]').forEach(el => {
+        this.$autoFocus = this.$el.querySelector('[autofocus]');
+        this.$xBackground = this.$el.querySelector('x-background');
+        this.$closeBtns = this.$el.querySelectorAll('[close]');
+
+        this.$closeBtns.forEach(el => {
             el.addEventListener('click', _ => this.hide())
         });
-        this.$autoFocus = this.$el.querySelector('[autofocus]');
 
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
@@ -701,8 +704,15 @@ class Dialog {
     }
 
     show() {
+        if (this.$xBackground) {
+            this.$xBackground.scrollTop = 0;
+        }
+
         this.$el.setAttribute('show', true);
-        if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
+
+        if (!window.isMobile && this.$autoFocus) {
+            this.$autoFocus.focus();
+        }
     }
 
     isShown() {
