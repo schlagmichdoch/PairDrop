@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/schlagmichdoch/PairDrop">
-    <img src="https://raw.githubusercontent.com/schlagmichdoch/PairDrop/master/public/images/android-chrome-512x512.png" alt="Logo"  width="150" height="150">
+    <img src="public/images/android-chrome-512x512.png" alt="Logo"  width="150" height="150">
   </a>
  
   # _Send it_, with [PairDrop](https://pairdrop.net)
@@ -65,10 +65,10 @@ Connect to others in complex network situations, or over the Internet.
 * Multiple files are transferred at once with an overall progress indicator.
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
-* [Send files directly from the context menu on Windows](/docs/how-to.md#send-files-directly-from-context-menu-on-windows)
-* [Send directly from the "Share" menu on iOS](/docs/how-to.md#send-directly-from-share-menu-on-ios)
-* [Send directly from the "Share" menu on Android](/docs/how-to.md#send-directly-from-share-menu-on-android)
-* [Send directly via the command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
+* [Send files directly from the context menu on Windows](docs/how-to.md#send-files-directly-from-context-menu-on-windows)
+* [Send directly from the "Share" menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
+* [Send directly from the "Share" menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
+* [Send directly via the command-line interface](docs/how-to.md#send-directly-via-command-line-interface)
 
 ### Other Changes
 * Change your display name to easily differentiate your devices.
@@ -78,17 +78,17 @@ Connect to others in complex network situations, or over the Internet.
 * Open PairDrop on multiple tabs simultaneously (Thanks [@willstott101](https://github.com/willstott101))
 * [Video and audio preview](https://github.com/RobinLinus/snapdrop/pull/455) (Thanks [@victorwads](https://github.com/victorwads))
 * Switch theme back to auto/system after dark or light mode is on
-* * Node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
+* Node-only implementation (Thanks [@Bellisario](https://github.com/Bellisario))
 * Auto-restart on error (Thanks [@KaKi87](https://github.com/KaKi87))
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
-* When hosting PairDrop yourself, you can [set your own STUN/TURN servers](/docs/host-your-own.md#specify-stunturn-servers)
+* When hosting PairDrop yourself, you can [set your own STUN/TURN servers](docs/host-your-own.md#specify-stunturn-servers)
 * Translations.
 
 </details>
 
 ## Screenshots
-<img src="https://raw.githubusercontent.com/schlagmichdoch/PairDrop/master/docs/pairdrop_screenshot_mobile.gif" style="max-height: 50vh">
+<img src="docs/pairdrop_screenshot_mobile.gif" style="max-height: 50vh">
 
 ## Built with the following awesome technologies:
 * Vanilla HTML5 / JS ES6 / CSS 3 frontend
@@ -100,9 +100,9 @@ Connect to others in complex network situations, or over the Internet.
 * [cyrb53](https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js) super-fast hash function
 * [Weblate](https://weblate.org/) web-based localization tool
 
-[FAQ](/docs/faq.md)
+[FAQ](docs/faq.md)
 
-[Host your own instance with Docker](/docs/host-your-own.md).
+[Host your own instance with Docker](docs/host-your-own.md).
 
 ## Support
 <a href="https://www.buymeacoffee.com/pairdrop" target="_blank">
@@ -122,4 +122,4 @@ Thanks a lot for supporting copylefted libre software!
 ## Contributing
 Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a
 [pull request](https://github.com/schlagmichdoch/pairdrop/pulls), following the
-[Contributing Guidelines](/CONTRIBUTING.md).
+[Contributing Guidelines](CONTRIBUTING.md).
