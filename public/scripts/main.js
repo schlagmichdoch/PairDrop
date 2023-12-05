@@ -207,6 +207,15 @@ class PairDrop {
         else if (urlParams.has("file_handler")) {
             await this.webFileHandlersUI.evaluateLaunchQueue();
         }
+        else if (urlParams.has("init")) {
+            const init = urlParams.get("init");
+            if (init === "pair") {
+                this.pairDeviceDialog._pairDeviceInitiate();
+            }
+            else if (init === "public_room") {
+                this.publicRoomDialog._createPublicRoom();
+            }
+        }
 
         // remove url params from url
         const urlWithoutParams = getUrlWithoutArguments();
