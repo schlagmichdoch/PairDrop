@@ -2143,7 +2143,7 @@ class ShareTextDialog extends Dialog {
     }
 }
 
-class Base64ZipDialog extends Dialog {
+class Base64Dialog extends Dialog {
 
     constructor() {
         super('base64-paste-dialog');

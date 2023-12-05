@@ -1,42 +1,64 @@
 class PairDrop {
+
     constructor() {
-        this.$header = $$('header.opacity-0');
-        this.$center = $$('#center');
-        this.$footer = $$('footer');
-        this.$xNoPeers = $$('x-no-peers');
         this.$headerNotificationButton = $('notification');
-        this.$editPairedDevicesHeaderBtn = $('edit-paired-devices');
-        this.$footerInstructionsPairedDevices = $$('.discovery-wrapper .badge-room-secret');
-        this.$head = $$('head');
-        this.$installBtn = $('install');
+        this.$headerEditPairedDevicesBtn = $('edit-paired-devices');
+        this.$footerPairedDevicesBadge = $$('.discovery-wrapper .badge-room-secret');
+        this.$headerInstallBtn = $('install');
+
+        this.deferredStyles = [
+            "styles/deferred-styles.css"
+        ];
+        this.deferredScripts = [
+            "scripts/browser-tabs-connector.js",
+            "scripts/util.js",
+            "scripts/network.js",
+            "scripts/ui.js",
+            "scripts/qr-code.min.js",
+            "scripts/zip.min.js",
+            "scripts/no-sleep.min.js"
+        ];
 
         this.registerServiceWorker();
 
         Events.on('beforeinstallprompt', e => this.onPwaInstallable(e));
 
-        const persistentStorage = new PersistentStorage();
-        const themeUI = new ThemeUI();
-        const backgroundCanvas = new BackgroundCanvas();
+        this.persistentStorage = new PersistentStorage();
+        this.localization = new Localization();
+        this.themeUI = new ThemeUI();
+        this.backgroundCanvas = new BackgroundCanvas();
+        this.headerUI = new HeaderUI();
+        this.centerUI = new CenterUI();
+        this.footerUI = new FooterUI();
 
+        this.initialize()
+            .then(_ => {
+                console.log("Initialization completed.");
+            });
+    }
+
+    async initialize() {
         // Translate page before fading in
-        const localization = new Localization();
-        localization
-            .setInitialTranslation()
-            .then(() => {
-                console.log("Initial translation successful.");
+        await this.localization.setInitialTranslation()
+        console.log("Initial translation successful.");
 
-                // FooterUI needs translations
-                const footerUI = new FooterUI();
+        // Show "Loading..." until connected to WsServer
+        await this.footerUI.showLoading();
 
-                Events.on('fade-in-ui', _ => this.fadeInUI())
-                Events.on('fade-in-header', _ => this.fadeInHeader())
+        // Evaluate css shifting UI elements and fade in UI elements
+        await this.evaluateUI();
+        await this.headerUI.fadeIn();
+        await this.footerUI._evaluateFooterBadges();
+        await this.footerUI.fadeIn();
+        await this.centerUI.fadeIn();
+        await this.backgroundCanvas.fadeIn();
 
-                // Evaluate UI elements and fade in UI
-                this.evaluateUI();
+        // Load deferred assets
+        await this.loadDeferredAssets();
+        console.log("Loading of deferred assets completed.");
 
-                // Load deferred assets
-                this.loadDeferredAssets();
-            })
+        await this.hydrate();
+        console.log("UI hydrated.");
     }
 
     registerServiceWorker() {
@@ -53,131 +75,101 @@ class PairDrop {
     onPwaInstallable(e) {
         if (!window.matchMedia('(display-mode: minimal-ui)').matches) {
             // only display install btn when not installed
-            this.$installBtn.removeAttribute('hidden');
-            this.$installBtn.addEventListener('click', () => {
-                this.$installBtn.setAttribute('hidden', true);
+            this.$headerInstallBtn.removeAttribute('hidden');
+            this.$headerInstallBtn.addEventListener('click', () => {
+                this.$headerInstallBtn.setAttribute('hidden', true);
                 e.prompt();
             });
         }
         return e.preventDefault();
     }
 
-    evaluateUI() {
+    async evaluateUI() {
         // Check whether notification permissions have already been granted
         if ('Notification' in window && Notification.permission !== 'granted') {
             this.$headerNotificationButton.removeAttribute('hidden');
         }
 
-        PersistentStorage
-            .getAllRoomSecrets()
-            .then(roomSecrets => {
-                if (roomSecrets.length > 0) {
-                    this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
-                    this.$footerInstructionsPairedDevices.removeAttribute('hidden');
-                }
-            })
-            .finally(() => {
-                Events.fire('evaluate-footer-badges');
-                Events.fire('fade-in-header');
-            });
+        let roomSecrets = await PersistentStorage.getAllRoomSecrets();
+        if (roomSecrets.length > 0) {
+            this.$headerEditPairedDevicesBtn.removeAttribute('hidden');
+            this.$footerPairedDevicesBadge.removeAttribute('hidden');
+        }
     }
 
-    fadeInUI() {
-        this.$center.classList.remove('opacity-0');
-        this.$footer.classList.remove('opacity-0');
-
-        // Prevent flickering on load
-        setTimeout(() => {
-            this.$xNoPeers.classList.remove('no-animation-on-load');
-        }, 600);
-    }
-
-    fadeInHeader() {
-        this.$header.classList.remove('opacity-0');
-    }
-
-    loadDeferredAssets() {
+    async loadDeferredAssets() {
         console.log("Load deferred assets");
-        this.deferredStyles = [
-            "styles/deferred-styles.css"
-        ];
-        this.deferredScripts = [
-            "scripts/browser-tabs-connector.js",
-            "scripts/util.js",
-            "scripts/network.js",
-            "scripts/ui.js",
-            "scripts/qr-code.min.js",
-            "scripts/zip.min.js",
-            "scripts/no-sleep.min.js"
-        ];
-        this.deferredStyles.forEach(url => this.loadStyleSheet(url, _ => this.onStyleLoaded(url)))
-        this.deferredScripts.forEach(url => this.loadScript(url, _ => this.onScriptLoaded(url)))
-    }
-
-    loadStyleSheet(url, callback) {
-        let stylesheet = document.createElement('link');
-        stylesheet.rel = 'stylesheet';
-        stylesheet.href = url;
-        stylesheet.type = 'text/css';
-        stylesheet.onload = callback;
-        this.$head.appendChild(stylesheet);
-    }
-
-    loadScript(url, callback) {
-        let script = document.createElement("script");
-        script.src = url;
-        script.onload = callback;
-        document.body.appendChild(script);
-    }
-
-    onStyleLoaded(url) {
-        // remove entry from array
-        const index = this.deferredStyles.indexOf(url);
-        if (index !== -1) {
-            this.deferredStyles.splice(index, 1);
+        for (const url of this.deferredStyles) {
+            await this.loadAndApplyStylesheet(url);
         }
-        this.onAssetLoaded();
-    }
-
-    onScriptLoaded(url) {
-        // remove entry from array
-        const index = this.deferredScripts.indexOf(url);
-        if (index !== -1) {
-            this.deferredScripts.splice(index, 1);
+        for (const url of this.deferredScripts) {
+            await this.loadAndApplyScript(url);
         }
-        this.onAssetLoaded();
     }
 
-    onAssetLoaded() {
-        if (this.deferredScripts.length || this.deferredStyles.length) return;
+    loadStyleSheet(url) {
+        return new Promise((resolve, reject) => {
+            let stylesheet = document.createElement('link');
+            stylesheet.rel = 'stylesheet';
+            stylesheet.href = url;
+            stylesheet.type = 'text/css';
+            stylesheet.onload = resolve;
+            stylesheet.onerror = reject;
 
-        console.log("Loading of deferred assets completed. Start UI hydration.");
-
-        this.hydrate();
+            document.head.appendChild(stylesheet);
+        });
     }
 
-    hydrate() {
-        const peersUI = new PeersUI();
-        const languageSelectDialog = new LanguageSelectDialog();
-        const receiveFileDialog = new ReceiveFileDialog();
-        const receiveRequestDialog = new ReceiveRequestDialog();
-        const sendTextDialog = new SendTextDialog();
-        const receiveTextDialog = new ReceiveTextDialog();
-        const pairDeviceDialog = new PairDeviceDialog();
-        const clearDevicesDialog = new EditPairedDevicesDialog();
-        const publicRoomDialog = new PublicRoomDialog();
-        const base64ZipDialog = new Base64ZipDialog();
-        const shareTextDialog = new ShareTextDialog();
-        const toast = new Toast();
-        const notifications = new Notifications();
-        const networkStatusUI = new NetworkStatusUI();
-        const webShareTargetUI = new WebShareTargetUI();
-        const webFileHandlersUI = new WebFileHandlersUI();
-        const noSleepUI = new NoSleepUI();
-        const broadCast = new BrowserTabsConnector();
-        const server = new ServerConnection();
-        const peers = new PeersManager(server);
-        console.log("UI hydrated.")
+    async loadAndApplyStylesheet(url) {
+        try {
+            await this.loadStyleSheet(url);
+            console.log(`Stylesheet loaded successfully: ${url}`);
+        } catch (error) {
+            console.error('Error loading stylesheet:', error);
+        }
+    }
+
+    loadScript(url) {
+        return new Promise((resolve, reject) => {
+            let script = document.createElement("script");
+            script.src = url;
+            script.onload = resolve;
+            script.onerror = reject;
+
+            document.body.appendChild(script);
+        });
+    }
+
+    async loadAndApplyScript(url) {
+        try {
+            await this.loadScript(url);
+            console.log(`Script loaded successfully: ${url}`);
+        } catch (error) {
+            console.error('Error loading script:', error);
+        }
+    }
+
+    async hydrate() {
+        this.peersUI = new PeersUI();
+        this.languageSelectDialog = new LanguageSelectDialog();
+        this.receiveFileDialog = new ReceiveFileDialog();
+        this.receiveRequestDialog = new ReceiveRequestDialog();
+        this.sendTextDialog = new SendTextDialog();
+        this.receiveTextDialog = new ReceiveTextDialog();
+        this.pairDeviceDialog = new PairDeviceDialog();
+        this.clearDevicesDialog = new EditPairedDevicesDialog();
+        this.publicRoomDialog = new PublicRoomDialog();
+        this.base64Dialog = new Base64Dialog();
+        this.shareTextDialog = new ShareTextDialog();
+        this.toast = new Toast();
+        this.notifications = new Notifications();
+        this.networkStatusUI = new NetworkStatusUI();
+        this.webShareTargetUI = new WebShareTargetUI();
+        this.webFileHandlersUI = new WebFileHandlersUI();
+        this.noSleepUI = new NoSleepUI();
+        this.broadCast = new BrowserTabsConnector();
+        this.server = new ServerConnection();
+        this.peers = new PeersManager(this.server);
     }
 }
 

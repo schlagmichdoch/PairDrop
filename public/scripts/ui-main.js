@@ -111,14 +111,40 @@ class ThemeUI {
     }
 }
 
+class HeaderUI {
+
+    constructor() {
+        this.$header = $$('header.opacity-0');
+    }
+
+    async fadeIn() {
+        this.$header.classList.remove('opacity-0');
+    }
+}
+
+class CenterUI {
+
+    constructor() {
+        this.$center = $$('#center');
+        this.$xNoPeers = $$('x-no-peers');
+    }
+
+    async fadeIn() {
+        this.$center.classList.remove('opacity-0');
+
+        // Prevent flickering on load
+        setTimeout(() => {
+            this.$xNoPeers.classList.remove('no-animation-on-load');
+        }, 600);
+    }
+}
+
 class FooterUI {
 
     constructor() {
+        this.$footer = $$('footer');
         this.$displayName = $('display-name');
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
-
-        // Show "Loading…"
-        this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
@@ -133,7 +159,15 @@ class FooterUI {
         Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges());
     }
 
-    _evaluateFooterBadges() {
+    async showLoading() {
+        this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
+    }
+
+    async fadeIn() {
+        this.$footer.classList.remove('opacity-0');
+    }
+
+    async _evaluateFooterBadges() {
         if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
             this.$discoveryWrapper.classList.remove('row');
             this.$discoveryWrapper.classList.add('column');
@@ -143,17 +177,15 @@ class FooterUI {
             this.$discoveryWrapper.classList.add('row');
         }
         Events.fire('redraw-canvas');
-        Events.fire('fade-in-ui');
     }
 
-    _loadSavedDisplayName() {
-        this._getSavedDisplayName()
-            .then(displayName => {
-                console.log("Retrieved edited display name:", displayName)
-                if (displayName) {
-                    Events.fire('self-display-name-changed', displayName);
-                }
-            });
+    async _loadSavedDisplayName() {
+        const displayName = await this._getSavedDisplayName()
+
+        if (!displayName) return;
+
+        console.log("Retrieved edited display name:", displayName)
+        Events.fire('self-display-name-changed', displayName);
     }
 
     _onDisplayName(displayName){
@@ -234,9 +266,6 @@ class BackgroundCanvas {
         this.cCtx = this.c.getContext('2d');
         this.$footer = $$('footer');
 
-        // fade-in on load
-        Events.on('fade-in-ui', _ => this._fadeIn());
-
         // redraw canvas
         Events.on('resize', _ => this.init());
         Events.on('redraw-canvas', _ => this.init());
@@ -246,7 +275,7 @@ class BackgroundCanvas {
         Events.on('share-mode-changed', e => this.onShareModeChanged(e.detail.active));
     }
 
-    _fadeIn() {
+    async fadeIn() {
         this.c.classList.remove('opacity-0');
     }
 

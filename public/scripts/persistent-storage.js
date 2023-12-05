@@ -149,7 +149,7 @@ class PersistentStorage {
             return(secrets);
         } catch (e) {
             this.logBrowserNotCapable();
-            return 0;
+            return [];
         }
     }
 
