@@ -235,6 +235,7 @@ class PeersUI {
 
         Events.on('share-mode-pointerdown', this._activateCallback);
 
+        const sharedText = Localization.getTranslation("instructions.activate-share-mode-shared-text");
         const andOtherFilesPlural = Localization.getTranslation("instructions.activate-share-mode-and-other-files-plural", null, {count: files.length-1});
         const andOtherFiles = Localization.getTranslation("instructions.activate-share-mode-and-other-file");
 
@@ -257,7 +258,7 @@ class PeersUI {
         else {
             // text shared
             descriptorItem = text.replace(/\s/g," ");
-            descriptorComplete = descriptorItem;
+            descriptorComplete = sharedText;
         }
 
         if (files.length > 0) {
@@ -308,6 +309,7 @@ class PeersUI {
         this.$shareModeDescriptorItem.innerText = descriptorItem;
 
         this.shareMode.active = true;
+        this.shareMode.descriptor = descriptorComplete;
         this.shareMode.files = files;
         this.shareMode.text = text;
 
@@ -334,6 +336,7 @@ class PeersUI {
         if (!this.shareMode.active) return;
 
         this.shareMode.active = false;
+        this.shareMode.descriptor = "";
         this.shareMode.files = [];
         this.shareMode.text = "";
 
@@ -412,7 +415,9 @@ class PeerUI {
     }
 
     html() {
-        let title = Localization.getTranslation("peer-ui.click-to-send", null, {descriptor: PeerUI._shareMode.descriptor});
+        let title= PeerUI._shareMode.active
+            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor})
+            : Localization.getTranslation("peer-ui.click-to-send");
 
         this.$el.innerHTML = `
             <label class="column center pointer" title="${title}">
