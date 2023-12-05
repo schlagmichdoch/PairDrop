@@ -1,12 +1,21 @@
-FROM node:lts-alpine
-
-WORKDIR /home/node/app
+# Prepare Nodejs Project
+FROM node:18 AS builder
 
 COPY package*.json ./
+
+WORKDIR /home/node/app
 
 RUN npm ci
 
 COPY . .
+
+# Copy build and put it in distroless Image
+
+FROM gcr.io/distroless/nodejs:18
+
+COPY --from=builder /home/node/app /home/node/app
+
+WORKDIR /home/node/app
 
 EXPOSE 3000
 
