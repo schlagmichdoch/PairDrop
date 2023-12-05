@@ -59,6 +59,9 @@ class PairDrop {
 
         await this.hydrate();
         console.log("UI hydrated.");
+
+        // Evaluate url params as soon as ws is connected
+        Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
     }
 
     registerServiceWorker() {
@@ -170,6 +173,44 @@ class PairDrop {
         this.broadCast = new BrowserTabsConnector();
         this.server = new ServerConnection();
         this.peers = new PeersManager(this.server);
+    }
+
+    async evaluateUrlParams() {
+        // get url params
+        const urlParams = new URLSearchParams(window.location.search);
+        const hash = window.location.hash.substring(1);
+
+        // evaluate url params
+        if (urlParams.has('pair_key')) {
+            const pairKey = urlParams.get('pair_key');
+            this.pairDeviceDialog._pairDeviceJoin(pairKey);
+        }
+        else if (urlParams.has('room_id')) {
+            const roomId = urlParams.get('room_id');
+            this.publicRoomDialog._joinPublicRoom(roomId);
+        }
+        else if (urlParams.has('base64text')) {
+            const base64Text = urlParams.get('base64text');
+            await this.base64Dialog.evaluateBase64Text(base64Text, hash);
+        }
+        else if (urlParams.has('base64zip')) {
+            const base64Zip = urlParams.get('base64zip');
+            await this.base64Dialog.evaluateBase64Zip(base64Zip, hash);
+        }
+        else if (urlParams.has("share_target")) {
+            const shareTargetType = urlParams.get("share_target");
+            const title = urlParams.get('title') || '';
+            const text = urlParams.get('text') || '';
+            const url = urlParams.get('url') || '';
+            await this.webShareTargetUI.evaluateShareTarget(shareTargetType, title, text, url);
+        }
+        else if (urlParams.has("file_handler")) {
+            await this.webFileHandlersUI.evaluateLaunchQueue();
+        }
+
+        // remove url params from url
+        const urlWithoutParams = getUrlWithoutArguments();
+        window.history.replaceState({}, "Rewrite URL", urlWithoutParams);
     }
 }
 

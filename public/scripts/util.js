@@ -505,3 +505,28 @@ function getResizedImageDataUrl(file, width = undefined, height = undefined, qua
         image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
     })
 }
+
+async function decodeBase64Files(base64) {
+    if (!base64) throw new Error('Base64 is empty');
+
+    let bstr = atob(base64), n = bstr.length, u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+
+    const zipBlob = new File([u8arr], 'archive.zip');
+
+    let files = [];
+    const zipEntries = await zipper.getEntries(zipBlob);
+    for (let i = 0; i < zipEntries.length; i++) {
+        let fileBlob = await zipper.getData(zipEntries[i]);
+        files.push(new File([fileBlob], zipEntries[i].filename));
+    }
+    return files
+}
+
+async function decodeBase64Text(base64) {
+    if (!base64) throw new Error('Base64 is empty');
+
+    return decodeURIComponent(escape(window.atob(base64)))
+}

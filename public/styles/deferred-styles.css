@@ -705,6 +705,7 @@ x-dialog .dialog-subheader {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
+    margin: 6px;
 }
 
 #base64-paste-dialog .textarea {

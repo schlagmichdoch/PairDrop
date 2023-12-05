@@ -521,8 +521,13 @@
     <x-dialog id="base64-paste-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
-                <div class="textarea" placeholder="Paste here to send files" title="CMD/⌘ + V" contenteditable hidden></div>
+                <div class="row center p2">
+                    <h2 class="dialog-title"></h2>
+                </div>
+                <div class="row p2">
+                    <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
+                    <div class="textarea" title="CMD/⌘ + V" contenteditable hidden></div>
+                </div>
                 <div class="row-reverse center btn-row">
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>

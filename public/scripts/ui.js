@@ -1321,8 +1321,6 @@ class PairDeviceDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyPairUrl());
 
-        this.evaluateUrlAttributes();
-
         this.pairPeer = {};
     }
 
@@ -1342,15 +1340,6 @@ class PairDeviceDialog extends Dialog {
             .replace(/\D/g,'')
             .substring(0, 6);
         this.inputKeyContainer._onPaste(pastedKey);
-    }
-
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('pair_key')) {
-            this._pairDeviceJoin(urlParams.get('pair_key'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
     }
 
     _pairDeviceInitiate() {
@@ -1700,8 +1689,6 @@ class PublicRoomDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyShareRoomUrl());
 
-        this.evaluateUrlAttributes();
-
         Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('translation-loaded', _ => this.setFooterBadge());
     }
@@ -1789,15 +1776,6 @@ class PublicRoomDialog extends Dialog {
             .catch(_ => {
                 Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard-error"));
             })
-    }
-
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('room_id')) {
-            this._joinPublicRoom(urlParams.get('room_id'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
     }
 
     _onWsConnected() {
@@ -2147,61 +2125,47 @@ class Base64Dialog extends Dialog {
 
     constructor() {
         super('base64-paste-dialog');
-        const urlParams = new URL(window.location).searchParams;
-        const base64Text = urlParams.get('base64text');
-        const base64Zip = urlParams.get('base64zip');
-        const base64Hash = window.location.hash.substring(1);
 
+        this.$title = this.$el.querySelector('.dialog-title');
         this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
         this.$fallbackTextarea = this.$el.querySelector('.textarea');
+    }
 
-        if (base64Text) {
+    async evaluateBase64Text(base64Text, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-text');
+
+        if (base64Text === 'paste') {
+            // ?base64text=paste
+            // base64 encoded string is ready to be pasted from clipboard
+            this.preparePasting('text');
             this.show();
-            if (base64Text === 'paste') {
-                // ?base64text=paste
-                // base64 encoded string is ready to be pasted from clipboard
-                this.preparePasting('text');
-            }
-            else if (base64Text === 'hash') {
-                // ?base64text=hash#BASE64ENCODED
-                // base64 encoded string is url hash which is never sent to server and faster (recommended)
-                this.processBase64Text(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
-            else {
-                // ?base64text=BASE64ENCODED
-                // base64 encoded string was part of url param (not recommended)
-                this.processBase64Text(base64Text)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
         }
-        else if (base64Zip) {
+        else if (base64Text === 'hash') {
+            // ?base64text=hash#BASE64ENCODED
+            // base64 encoded text is url hash which cannot be seen by the server and is faster (recommended)
             this.show();
-            if (base64Zip === "hash") {
-                // ?base64zip=hash#BASE64ENCODED
-                // base64 encoded zip file is url hash which is never sent to the server
-                this.processBase64Zip(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
-                        console.log("File content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
-            else {
-                // ?base64zip=paste || ?base64zip=true
-                this.preparePasting('files');
-            }
+            await this.processBase64Text(hash)
+        }
+        else {
+            // ?base64text=BASE64ENCODED
+            // base64 encoded text is part of the url param. Seen by server and slow (not recommended)
+            this.show();
+            await this.processBase64Text(base64Text)
+        }
+    }
+
+    async evaluateBase64Zip(base64Zip, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-files');
+
+        if (base64Zip === 'paste') {
+            // ?base64zip=paste || ?base64zip=true
+            this.preparePasting('files');
+            this.show();
+        }
+        else if (base64Zip === 'hash') {
+            // ?base64zip=hash#BASE64ENCODED
+            // base64 encoded zip file is url hash which cannot be seen by the server
+            await this.processBase64Zip(hash)
         }
     }
 
@@ -2234,28 +2198,15 @@ class Base64Dialog extends Dialog {
     async processInput(type) {
         const base64 = this.$fallbackTextarea.textContent;
         this.$fallbackTextarea.textContent = '';
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
     async processClipboard(type) {
         const base64 = await navigator.clipboard.readText();
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
-    isValidBase64(base64) {
-        try {
-            // check if input is base64 encoded
-            window.atob(base64);
-            return true;
-        } catch (e) {
-            // input is not base64 string.
-            return false;
-        }
-    }
-
-    async processBase64(type, base64) {
-        if (!base64 || !this.isValidBase64(base64)) return;
-        this._setPasteBtnToProcessing();
+    async processPastedBase64(type, base64) {
         try {
             if (type === 'text') {
                 await this.processBase64Text(base64);
@@ -2263,51 +2214,50 @@ class Base64Dialog extends Dialog {
             else {
                 await this.processBase64Zip(base64);
             }
-        } catch(_) {
+        }
+        catch(e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-content-incorrect"));
             console.log("Clipboard content is incorrect.")
         }
         this.hide();
     }
 
-    processBase64Text(base64Text){
-        return new Promise((resolve) => {
-            this._setPasteBtnToProcessing();
-            let decodedText = decodeURIComponent(escape(window.atob(base64Text)));
+    async processBase64Text(base64){
+        this._setPasteBtnToProcessing();
+
+        try {
+            const decodedText = await decodeBase64Text(base64);
             if (ShareTextDialog.isApproveShareTextSet()) {
                 Events.fire('share-text-dialog', decodedText);
-            } else {
+            }
+            else {
                 Events.fire('activate-share-mode', {text: decodedText});
             }
-            resolve();
-        });
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
+            console.log("Text content incorrect.");
+        }
+
+        this.hide();
     }
 
-    async processBase64Zip(base64zip) {
+    async processBase64Zip(base64) {
         this._setPasteBtnToProcessing();
-        let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
+
+        try {
+            const decodedFiles = await decodeBase64Files(base64);
+            Events.fire('activate-share-mode', {files: decodedFiles});
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
+            console.log("File content incorrect.");
         }
 
-        const zipBlob = new File([u8arr], 'archive.zip');
-
-        let files = [];
-        const zipEntries = await zipper.getEntries(zipBlob);
-        for (let i = 0; i < zipEntries.length; i++) {
-            let fileBlob = await zipper.getData(zipEntries[i]);
-            files.push(new File([fileBlob], zipEntries[i].filename));
-        }
-        Events.fire('activate-share-mode', {files: files});
-    }
-
-    clearBrowserHistory() {
-        const url = getUrlWithoutArguments();
-        window.history.replaceState({}, "Rewrite URL", url);
+        this.hide();
     }
 
     hide() {
-        this.clearBrowserHistory();
         this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
         this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
         super.hide();
@@ -2529,80 +2479,72 @@ class NetworkStatusUI {
 }
 
 class WebShareTargetUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        const share_target_type = urlParams.get("share-target")
-        if (share_target_type) {
-            if (share_target_type === "text") {
-                const title = urlParams.get('title') || '';
-                const text = urlParams.get('text') || '';
-                const url = urlParams.get('url') || '';
-                let shareTargetText;
 
-                if (url) {
-                    shareTargetText = url; // we share only the link - no text.
-                }
-                else if (title && text) {
-                    shareTargetText = title + '\r\n' + text;
-                }
-                else {
-                    shareTargetText = title + text;
-                }
-
-                if (ShareTextDialog.isApproveShareTextSet()) {
-                    Events.fire('share-text-dialog', shareTargetText);
-                } else {
-                    Events.fire('activate-share-mode', {text: shareTargetText});
-                }
+    async evaluateShareTarget(shareTargetType, title, text, url) {
+        if (shareTargetType === "text") {
+            let shareTargetText;
+            if (url) {
+                shareTargetText = url; // we share only the link - no text.
             }
-            else if (share_target_type === "files") {
-                let openRequest = window.indexedDB.open('pairdrop_store')
-                openRequest.onsuccess = e => {
-                    const db = e.target.result;
-                    const tx = db.transaction('share_target_files', 'readwrite');
-                    const store = tx.objectStore('share_target_files');
-                    const request = store.getAll();
-                    request.onsuccess = _ => {
-                        const fileObjects = request.result;
-                        let filesReceived = [];
-                        for (let i=0; i<fileObjects.length; i++) {
-                            filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
-                        }
-                        const clearRequest = store.clear()
-                        clearRequest.onsuccess = _ => db.close();
+            else if (title && text) {
+                shareTargetText = title + '\r\n' + text;
+            }
+            else {
+                shareTargetText = title + text;
+            }
 
-                        Events.fire('activate-share-mode', {files: filesReceived})
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', shareTargetText);
+            }
+            else {
+                Events.fire('activate-share-mode', {text: shareTargetText});
+            }
+        }
+        else if (shareTargetType === "files") {
+            let openRequest = window.indexedDB.open('pairdrop_store')
+            openRequest.onsuccess = e => {
+                const db = e.target.result;
+                const tx = db.transaction('share_target_files', 'readwrite');
+                const store = tx.objectStore('share_target_files');
+                const request = store.getAll();
+                request.onsuccess = _ => {
+                    const fileObjects = request.result;
+
+                    let filesReceived = [];
+                    for (let i = 0; i < fileObjects.length; i++) {
+                        filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
                     }
+
+                    const clearRequest = store.clear()
+                    clearRequest.onsuccess = _ => db.close();
+
+                    Events.fire('activate-share-mode', {files: filesReceived})
                 }
             }
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
         }
     }
 }
 
 class WebFileHandlersUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        if (urlParams.has("file_handler")  && "launchQueue" in window) {
-            launchQueue.setConsumer(async launchParams => {
-                console.log("Launched with: ", launchParams);
-                if (!launchParams.files.length)
-                    return;
-                let files = [];
+    async evaluateLaunchQueue() {
+        if (!"launchQueue" in window) return;
 
-                for (let i=0; i<launchParams.files.length; i++) {
-                    if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
-                    const fileHandle = launchParams.files[i];
-                    const file = await fileHandle.getFile();
-                    files.push(file);
-                }
-                Events.fire('activate-share-mode', {files: files})
-                launchParams = null;
-            });
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
-        }
+        launchQueue.setConsumer(async launchParams => {
+            console.log("Launched with: ", launchParams);
+
+            if (!launchParams.files.length) return;
+
+            let files = [];
+
+            for (let i = 0; i < launchParams.files.length; i++) {
+                if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
+
+                const file = await launchParams.files[i].getFile();
+                files.push(file);
+            }
+
+            Events.fire('activate-share-mode', {files: files})
+        });
     }
 }
 
