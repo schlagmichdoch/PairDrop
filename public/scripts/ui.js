@@ -1349,7 +1349,14 @@ class PairDeviceDialog extends Dialog {
     _onPairDeviceInitiated(msg) {
         this.pairKey = msg.pairKey;
         this.roomSecret = msg.roomSecret;
+        this._setKeyAndQRCode();
+        this.inputKeyContainer._enableChars();
+        this.show();
+    }
+
+    _setKeyAndQRCode() {
         this.$key.innerText = `${this.pairKey.substring(0,3)} ${this.pairKey.substring(3,6)}`
+
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getPairUrl(),
@@ -1362,8 +1369,6 @@ class PairDeviceDialog extends Dialog {
             join: true
         });
         this.$qrCode.innerHTML = qr.svg();
-        this.inputKeyContainer._enableChars();
-        this.show();
     }
 
     _getPairUrl() {
@@ -1723,14 +1728,14 @@ class PublicRoomDialog extends Dialog {
     _onPublicRoomCreated(roomId) {
         this.roomId = roomId;
 
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this.show();
 
         sessionStorage.setItem('public_room_id', roomId);
     }
 
-    setIdAndQrCode() {
+    _setKeyAndQrCode() {
         if (!this.roomId) return;
 
         this.$key.innerText = this.roomId.toUpperCase();
@@ -1784,7 +1789,7 @@ class PublicRoomDialog extends Dialog {
         if (!roomId) return;
 
         this.roomId = roomId;
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this._joinPublicRoom(roomId, true);
     }
@@ -1836,7 +1841,7 @@ class PublicRoomDialog extends Dialog {
         if (isJoinedRoomId) {
             this.roomId = roomId;
             this.roomIdJoin = false;
-            this.setIdAndQrCode();
+            this._setKeyAndQrCode();
         }
     }
 
