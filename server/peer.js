@@ -37,7 +37,7 @@ export default class Peer {
             return true;
         }
         this.requestRate += 1;
-        setTimeout(_ => this.requestRate -= 1, 10000);
+        setTimeout(() => this.requestRate -= 1, 10000);
         return false;
     }
 
