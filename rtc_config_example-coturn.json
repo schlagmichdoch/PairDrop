@@ -1,0 +1,13 @@
+{
+  "sdpSemantics": "unified-plan",
+  "iceServers": [
+    {
+        "urls": "stuns:<DOMAIN>:5349"
+    },
+    {
+        "urls": "turns:<DOMAIN>:5349",
+        "username": "user",
+        "credential": "password"
+    }
+  ]
+}

@@ -10,10 +10,18 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    environment:
+      - RTC_CONFIG=/home/node/app/rtc_config.json
+      - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+      - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
+      - TZ=Europa/Vienna # Time Zone
+    # you need to copy rtc_config_example.json to rtc_config.json and specify domain, IP address, user and password
   coturn_server:
     image: "coturn/coturn"
     restart: always
     network_mode: "host"
     volumes:
       - ./turnserver.conf:/etc/coturn/turnserver.conf
-    #you need to copy turnserver_example.conf to turnserver.conf and specify domain, IP address, user and password
+      - ./ssl/:/etc/coturn/ssl/
+    # you need to copy turnserver_example.conf to turnserver.conf and specify domain, IP address, user and password
+    # create dhparams.pem with `openssl dhparam -out ssl/dhparams.pem 4096` it takes a very long time!!!
