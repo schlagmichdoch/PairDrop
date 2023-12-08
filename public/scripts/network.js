@@ -1082,20 +1082,9 @@ class PeersManager {
         this.peers[detail.to]._respondToFileTransferRequest(detail.accepted);
     }
 
-    _onFilesSelected(message) {
-        let inputFiles = Array.from(message.files);
-        delete message.files;
-        let files = [];
-        const l = inputFiles.length;
-        for (let i=0; i<l; i++) {
-            // when filetype is empty guess via suffix
-            const inputFile = inputFiles.shift();
-            const file = inputFile.type
-                ? inputFile
-                : new File([inputFile], inputFile.name, {type: mime.getMimeByFilename(inputFile.name)});
-            files.push(file)
-        }
-        this.peers[message.to].requestFileTransfer(files);
+    async _onFilesSelected(message) {
+        let files = await mime.addMissingMimeTypesToFiles(message.files);
+        await this.peers[message.to].requestFileTransfer(files);
     }
 
     _onSendText(message) {
