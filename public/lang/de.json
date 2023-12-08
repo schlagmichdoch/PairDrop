@@ -15,7 +15,7 @@
     },
     "dialogs": {
         "share": "Teilen",
-        "download": "Herunterladen",
+        "download": "Download",
         "pair-devices-title": "Geräte Dauerhaft Koppeln",
         "input-key-on-this-device": "Gib diesen Schlüssel auf einem anderen Gerät ein",
         "enter-key-from-another-device": "Gib den Schlüssel von einem anderen Gerät hier ein.",
@@ -51,7 +51,7 @@
         "file-other-description-image": "und ein anderes Bild",
         "file-other-description-file": "und eine andere Datei",
         "receive-title": "{{descriptor}} Erhalten",
-        "download-again": "Erneut herunterladen",
+        "download-again": "Erneuter Download",
         "system-language": "Systemsprache",
         "language-selector-title": "Sprache Einstellen",
         "hr-or": "ODER",
