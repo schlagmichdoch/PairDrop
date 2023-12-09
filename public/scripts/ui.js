@@ -6,15 +6,15 @@ class PeersUI {
         this.$xInstructions = $$('x-instructions');
         this.$wsFallbackWarning = $('websocket-fallback');
 
-        this.$sharePanel = $$('.share-panel');
-        this.$shareModeImageThumb = $$('.share-panel .image-thumb');
-        this.$shareModeTextThumb = $$('.share-panel .text-thumb');
-        this.$shareModeFileThumb = $$('.share-panel .file-thumb');
-        this.$shareModeDescriptor = $$('.share-panel .share-descriptor');
-        this.$shareModeDescriptorItem = $$('.share-panel .descriptor-item');
-        this.$shareModeDescriptorOther = $$('.share-panel .descriptor-other');
-        this.$shareModeCancelBtn = $$('.share-panel .cancel-btn');
-        this.$shareModeEditBtn = $$('.share-panel .edit-btn');
+        this.$sharePanel = $$('.shr-panel');
+        this.$shareModeImageThumb = $$('.shr-panel .image-thumb');
+        this.$shareModeTextThumb = $$('.shr-panel .text-thumb');
+        this.$shareModeFileThumb = $$('.shr-panel .file-thumb');
+        this.$shareModeDescriptor = $$('.shr-panel .share-descriptor');
+        this.$shareModeDescriptorItem = $$('.shr-panel .descriptor-item');
+        this.$shareModeDescriptorOther = $$('.shr-panel .descriptor-other');
+        this.$shareModeCancelBtn = $$('.shr-panel .cancel-btn');
+        this.$shareModeEditBtn = $$('.shr-panel .edit-btn');
 
         this.peers = {};
 

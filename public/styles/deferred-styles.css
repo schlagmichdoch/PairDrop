@@ -634,7 +634,9 @@ x-dialog .dialog-subheader {
     pointer-events: none;
 }
 
-.share-panel {
+/* Do not call it 'share-panel', 'share-pannel' or 'sharepanel' as iOS Safari does not show any element with these classnames... */
+
+.shr-panel {
     min-width: 250px;
     max-width: calc(100vw - 20px);
     overflow: hidden;
@@ -643,15 +645,15 @@ x-dialog .dialog-subheader {
     background-image: linear-gradient(225deg, var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 60%, black) 100%);
 }
 
-.share-panel > div {
+.shr-panel > div {
     margin: 4px 2px;
 }
 
-.share-panel > div:not(:first-child) {
+.shr-panel > div:not(:first-child) {
     margin-top: 2px;
 }
 
-.share-panel .thumb > div {
+.shr-panel .thumb > div {
     width: 36px;
     height: 36px;
     background: white;
@@ -659,23 +661,23 @@ x-dialog .dialog-subheader {
     margin-right: 6px;
 }
 
-.share-panel .text-thumb svg {
+.shr-panel .text-thumb svg {
     width: 18px;
     height: 36px;
 }
 
-.share-panel .file-thumb svg {
+.shr-panel .file-thumb svg {
     width: 36px;
     height: 36px;
 }
 
-.share-panel .thumb .image-thumb {
+.shr-panel .thumb .image-thumb {
     background-size: cover;
     border-radius: 6px;
     background-position: center;
 }
 
-.share-panel .btn {
+.shr-panel .btn {
     height: 36px;
 }
 
