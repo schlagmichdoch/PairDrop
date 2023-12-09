@@ -388,6 +388,10 @@ x-dialog a {
 
 /* Pair Devices Dialog & Public Room Dialog */
 
+#public-room-dialog x-paper {
+    width: 450px;
+}
+
 .input-key-container {
     width: 100%;
     display: flex;
@@ -544,18 +548,14 @@ x-dialog hr {
 }
 
 /* button row*/
-.btn-row > .btn {
-    height: 100%;
-    width: 100%;
-}
-
-.btn-row > .btn {
-    margin-right: 5px;
-    margin-left: 5px;
+.btn-row .btn {
+    margin: 3px;
+    flex-grow: 1;
+    height: 50px;
+    width: 120px; /* fixed width needed to ensure same width for all buttons */
 }
 
 x-paper > .btn-row {
-    height: 50px;
     margin: 5px 10px 10px;
 }
 
@@ -638,10 +638,11 @@ x-dialog .dialog-subheader {
 }
 
 .share-panel {
+    min-width: 250px;
     max-width: calc(100vw - 20px);
     overflow: hidden;
-    background-color: var(--primary-color);
     color: white;
+    background-color: var(--primary-color);
     background-image: linear-gradient(225deg, var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 60%, black) 100%);
 }
 
@@ -675,6 +676,10 @@ x-dialog .dialog-subheader {
     background-size: cover;
     border-radius: 6px;
     background-position: center;
+}
+
+.share-panel .btn {
+    height: 36px;
 }
 
 .share-descriptor {

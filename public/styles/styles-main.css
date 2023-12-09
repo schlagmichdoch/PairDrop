@@ -48,16 +48,36 @@ html {
 }
 
 .m1 {
-    margin: 10px;
+    margin: 5px;
 }
 
 .cursive {
     font-style: italic;
 }
 
-.row-reverse {
+.wrap {
     display: flex;
-    flex-direction: row-reverse;
+    flex-wrap: wrap;
+}
+
+.wrap-reverse {
+    display: flex;
+    flex-wrap: wrap-reverse;
+}
+
+.grow {
+    display: flex;
+    flex-grow: 1;
+}
+
+.grow-2 {
+    display: flex;
+    flex-grow: 2;
+}
+
+.shrink {
+    display: flex;
+    flex-shrink: 1;
 }
 
 .flex {
@@ -81,6 +101,11 @@ html {
     flex-direction: row;
 }
 
+.row-reverse {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
 .column {
     display: flex;
     flex-direction: column;
@@ -90,10 +115,6 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.grow {
-    flex-grow: 1;
 }
 
 .full {

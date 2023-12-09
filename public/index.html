@@ -131,7 +131,7 @@
                     <span class="descriptor-other" hidden></span>
                 </div>
             </div>
-            <div class="center btn-row">
+            <div class="center btn-row wrap">
                 <div class="cancel-btn btn btn-small btn-rounded btn-dark text-white" data-i18n-key="header.cancel-share-mode" data-i18n-attrs="text"></div>
                 <div class="edit-btn btn btn-small btn-rounded btn-dark text-white" data-i18n-key="header.edit-share-mode" data-i18n-attrs="text" hidden></div>
             </div>
@@ -165,7 +165,7 @@
                 <div class="row center">
                     <span data-i18n-key="footer.discovery" data-i18n-attrs="text"></span>
                 </div>
-                <div class="row center">
+                <div class="row center wrap">
                     <span class="badge badge-room-ip" data-i18n-key="footer.on-this-network" data-i18n-attrs="text title"></span>
                     <span class="badge badge-room-secret pointer" data-i18n-key="footer.paired-devices" data-i18n-attrs="text title" hidden></span>
                     <span class="badge badge-room-public-id pointer" data-i18n-key="footer.public-room-devices" data-i18n-attrs="title" hidden>in room IAIAI</span>
@@ -251,7 +251,7 @@
                         <span>(Japanese)</span>
                     </button>
                 </div>
-                <div class="center row-reverse btn-row">
+                <div class="center row-reverse btn-row wrap">
                     <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
@@ -294,7 +294,7 @@
                             <p class="font-subheading center text-center" data-i18n-key="dialogs.enter-key-from-another-device" data-i18n-attrs="text"></p>
                         </div>
                     </div>
-                    <div class="btn-row row-reverse">
+                    <div class="btn-row row-reverse wrap">
                         <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.pair" data-i18n-attrs="text" disabled></button>
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
@@ -318,7 +318,7 @@
                             <span data-i18n-key="dialogs.auto-accept-instructions-2" data-i18n-attrs="text"></span>
                         </p>
                     </div>
-                    <div class="center row-reverse btn-row">
+                    <div class="center row-reverse btn-row wrap">
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                     </div>
                 </x-paper>
@@ -361,10 +361,12 @@
                             <p class="font-subheading center text-center" data-i18n-key="dialogs.enter-room-id-from-another-device" data-i18n-attrs="text"></p>
                         </div>
                     </div>
-                    <div class="center row-reverse btn-row">
-                        <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.join" data-i18n-attrs="text" disabled></button>
+                    <div class="center row-reverse btn-row wrap">
+                        <div class="row-reverse wrap grow-2">
+                            <button class="btn btn-rounded btn-grey" type="submit" data-i18n-key="dialogs.join" data-i18n-attrs="text" disabled></button>
+                            <button class="btn btn-rounded btn-grey leave-room" type="button" data-i18n-key="dialogs.leave" data-i18n-attrs="text"></button>
+                        </div>
                         <button class="btn btn-rounded btn-grey" type="button" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
-                        <button class="btn btn-rounded btn-grey leave-room" type="button" data-i18n-key="dialogs.leave" data-i18n-attrs="text"></button>
                     </div>
                 </x-paper>
             </x-background>
@@ -393,7 +395,7 @@
                     </div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse center btn-row">
+                <div class="row-reverse center btn-row wrap">
                     <button id="accept-request" class="btn btn-rounded btn-grey" title="ENTER" data-i18n-key="dialogs.accept" data-i18n-attrs="text" autofocus disabled></button>
                     <button id="decline-request" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.decline" data-i18n-attrs="text"></button>
                 </div>
@@ -423,7 +425,7 @@
                     </div>
                 </div>
                 <div class="center file-preview"></div>
-                <div class="row-reverse center btn-row">
+                <div class="row-reverse center btn-row wrap">
                     <button id="share-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden></button>
                     <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus disabled></button>
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
@@ -452,7 +454,7 @@
                             <div class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" autofocus contenteditable></div>
                         </div>
                     </div>
-                    <div class="btn-row row-reverse">
+                    <div class="btn-row row-reverse wrap">
                         <button class="btn btn-rounded btn-grey" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.send" data-i18n-attrs="text" disabled></button>
                         <button class="btn btn-rounded btn-grey" type="button" title="ESCAPE" data-i18n-key="dialogs.cancel" data-i18n-attrs="text" close></button>
                     </div>
@@ -478,7 +480,7 @@
                         <div id="text" class="textarea"></div>
                     </div>
                 </div>
-                <div class="row-reverse center btn-row">
+                <div class="row-reverse center btn-row wrap">
                     <button id="copy" class="btn btn-rounded btn-grey" title="CTRL/⌘ + C" data-i18n-key="dialogs.copy" data-i18n-attrs="text"></button>
                     <button id="close" class="btn btn-rounded btn-grey" title="ESCAPE" data-i18n-key="dialogs.close" data-i18n-attrs="text"></button>
                 </div>
@@ -511,7 +513,7 @@
                         <div class="slider round"></div>
                     </label>
                 </div>
-                <div class="btn-row row-reverse">
+                <div class="btn-row row-reverse wrap">
                     <button class="btn btn-rounded btn-grey" type="submit" title="CTRL/⌘ + ENTER" data-i18n-key="dialogs.approve" data-i18n-attrs="text" autofocus disabled></button>
                 </div>
             </x-paper>
@@ -528,7 +530,7 @@
                     <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
                     <div class="textarea" title="CMD/⌘ + V" contenteditable hidden></div>
                 </div>
-                <div class="row-reverse center btn-row">
+                <div class="row-reverse center btn-row wrap">
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
