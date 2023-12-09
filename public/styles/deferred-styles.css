@@ -505,6 +505,10 @@ x-dialog hr {
     align-items: center;
 }
 
+.paired-device:empty {
+    padding: 47px;
+}
+
 .paired-device:not(:last-child) {
     border-bottom: solid 4px var(--paired-device-color);
 }
@@ -521,17 +525,10 @@ x-dialog hr {
     opacity: 1;
 }
 
-.paired-device > .button-wrapper {
-    display: flex;
-    height: 36px;
-    width: 100%;
-}
-
 .paired-device > .button-wrapper > * {
-    width: 50%;
-    padding-left: 6px;
-    padding-right: 6px;
-    height: 36px;
+    min-height: 38px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 .paired-device > .button-wrapper > :not(:last-child) {

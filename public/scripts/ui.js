@@ -1545,6 +1545,7 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     async _initDOM() {
+        const pairedDeviceRemovedString = Localization.getTranslation("dialogs.paired-device-removed");
         const unpairString = Localization.getTranslation("dialogs.unpair").toUpperCase();
         const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
@@ -1553,6 +1554,7 @@ class EditPairedDevicesDialog extends Dialog {
             .forEach(roomSecretsEntry => {
                 let $pairedDevice = document.createElement('div');
                 $pairedDevice.classList.add("paired-device");
+                $pairedDevice.setAttribute('placeholder', pairedDeviceRemovedString);
 
                 $pairedDevice.innerHTML = `
                     <div class="display-name">
@@ -1565,17 +1567,17 @@ class EditPairedDevicesDialog extends Dialog {
                             ${roomSecretsEntry.device_name}
                         </span>
                     </div>
-                    <div class="button-wrapper">
-                        <div class="row center">
-                            <span class="p1">
+                    <div class="button-wrapper row fw center wrap">
+                        <div class="center grow">
+                            <span class="center wrap">
                                 ${autoAcceptString}
                             </span>
-                            <label class="auto-accept pointer switch">
+                            <label class="auto-accept switch pointer m1">
                                 <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                                 <div class="slider round"></div>
                             </label>
                         </div>
-                        <button class="btn" type="button">${unpairString}</button>
+                        <button class="btn grow" type="button">${unpairString}</button>
                     </div>`
 
                 $pairedDevice
@@ -1599,11 +1601,10 @@ class EditPairedDevicesDialog extends Dialog {
                             .then(roomSecret => {
                                 Events.fire('room-secrets-deleted', [roomSecret]);
                                 Events.fire('evaluate-number-room-secrets');
-                                e.target.parentNode.parentNode.remove();
+                                $pairedDevice.innerText = "";
                             });
                     })
 
-                this.$pairedDevicesWrapper.html = "";
                 this.$pairedDevicesWrapper.appendChild($pairedDevice)
             })
     }
