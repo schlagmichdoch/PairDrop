@@ -40,74 +40,76 @@
 </head>
 
 <body translate="no">
-    <header class="row-reverse opacity-0">
-        <div class="row-reverse">
-            <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label">
+    <header class="row-reverse wrap opacity-0">
+        <a href="#about" class="icon-button" data-i18n-key="header.about" data-i18n-attrs="title aria-label">
+            <svg class="icon">
+                <use xlink:href="#info-outline"></use>
+            </svg>
+        </a>
+        <div id="language-selector" class="icon-button" data-i18n-key="header.language-selector" data-i18n-attrs="title">
+            <svg class="icon">
+                <use xlink:href="#icon-language-selector"></use>
+            </svg>
+        </div>
+        <div id="theme-wrapper">
+            <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title">
                 <svg class="icon">
-                    <use xlink:href="#info-outline"></use>
-                </svg>
-            </a>
-            <div id="language-selector" class="icon-button" data-i18n-key="header.language-selector" data-i18n-attrs="title">
-                <svg class="icon">
-                    <use xlink:href="#icon-language-selector"></use>
+                    <use xlink:href="#icon-theme-auto"></use>
                 </svg>
             </div>
-            <div id="theme-wrapper">
-                <div id="theme-auto" class="icon-button selected" data-i18n-key="header.theme-auto" data-i18n-attrs="title">
+            <div>
+                <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title">
                     <svg class="icon">
-                        <use xlink:href="#icon-theme-auto"></use>
+                        <use xlink:href="#icon-theme-light"></use>
                     </svg>
                 </div>
-                <div>
-                    <div id="theme-light" class="icon-button" data-i18n-key="header.theme-light" data-i18n-attrs="title">
-                        <svg class="icon">
-                            <use xlink:href="#icon-theme-light"></use>
-                        </svg>
-                    </div>
-                    <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title">
-                        <svg class="icon">
-                            <use xlink:href="#icon-theme-dark"></use>
-                        </svg>
-                    </div>
+                <div id="theme-dark" class="icon-button" data-i18n-key="header.theme-dark" data-i18n-attrs="title">
+                    <svg class="icon">
+                        <use xlink:href="#icon-theme-dark"></use>
+                    </svg>
                 </div>
             </div>
-            <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" hidden>
-                <svg class="icon">
-                    <use xlink:href="#notifications"></use>
-                </svg>
-            </div>
-            <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" hidden>
-                <svg class="icon">
-                    <use xlink:href="#homescreen"></use>
-                </svg>
-            </div>
-            <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title">
-                <svg class="icon">
-                    <use xlink:href="#pair-device-icon"></use>
-                </svg>
-            </div>
-            <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" hidden>
-                <svg class="icon">
-                    <use xlink:href="#edit-pair-devices-icon"></use>
-                </svg>
-            </div>
-            <div id="join-public-room" class="icon-button" data-i18n-key="header.join-public-room" data-i18n-attrs="title">
-                <svg class="icon">
-                    <use xlink:href="#public-room-icon"></use>
-                </svg>
-            </div>
+        </div>
+        <div id="notification" class="icon-button" data-i18n-key="header.notification" data-i18n-attrs="title" hidden>
+            <svg class="icon">
+                <use xlink:href="#notifications"></use>
+            </svg>
+        </div>
+        <div id="install" class="icon-button" data-i18n-key="header.install" data-i18n-attrs="title" hidden>
+            <svg class="icon">
+                <use xlink:href="#homescreen"></use>
+            </svg>
+        </div>
+        <div id="pair-device" class="icon-button" data-i18n-key="header.pair-device" data-i18n-attrs="title">
+            <svg class="icon">
+                <use xlink:href="#pair-device-icon"></use>
+            </svg>
+        </div>
+        <div id="edit-paired-devices" class="icon-button" data-i18n-key="header.edit-paired-devices" data-i18n-attrs="title" hidden>
+            <svg class="icon">
+                <use xlink:href="#edit-pair-devices-icon"></use>
+            </svg>
+        </div>
+        <div id="join-public-room" class="icon-button" data-i18n-key="header.join-public-room" data-i18n-attrs="title">
+            <svg class="icon">
+                <use xlink:href="#public-room-icon"></use>
+            </svg>
+        </div>
+        <div id="expand" class="icon-button" data-i18n-key="header.expand" data-i18n-attrs="title" hidden>
+            <svg class="icon">
+                <use xlink:href="#caret"></use>
+            </svg>
         </div>
     </header>
     <!-- Center -->
     <div id="center" class="opacity-0">
         <!-- Peers -->
-        <div class="x-peers-filler"></div>
-        <x-peers class="center"></x-peers>
-        <x-no-peers class="no-animation-on-load" data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg">
+        <x-peers class="center grow"></x-peers>
+        <x-no-peers class="center grow fade-in no-animation-on-load" data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg">
             <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text"></h2>
             <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text"></div>
         </x-no-peers>
-        <x-instructions data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"></x-instructions>
+        <x-instructions class="fade-in" data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"></x-instructions>
         <div class="share-panel panel column" hidden>
             <div class="row">
                 <div class="thumb center">
@@ -674,6 +676,9 @@
         <symbol id="file" viewBox="-130 0 650 530">
             <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
             <path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"/>
+        </symbol>
+        <symbol id="caret" viewBox="0 0 320 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/>
         </symbol>
 
     </svg>

@@ -114,11 +114,61 @@ class ThemeUI {
 class HeaderUI {
 
     constructor() {
-        this.$header = $$('header.opacity-0');
+        this.$header = $$('header');
+        this.$expandBtn = $('expand');
+        Events.on("resize", _ => this.evaluateOverflowing());
+        this.$expandBtn.addEventListener('click', _ => this.onExpandBtnClick());
     }
 
     async fadeIn() {
         this.$header.classList.remove('opacity-0');
+    }
+
+    async evaluateOverflowing() {
+        // remove and reset bracket icon before evaluating
+        this.$expandBtn.setAttribute('hidden', true);
+        this.$expandBtn.classList.add('flipped');
+
+        const rtlLocale = Localization.isCurrentLocaleRtl();
+        let icon;
+        const $headerIconsShown = document.querySelectorAll('body > header:first-of-type > *:not([hidden])');
+
+        for (let i= 1; i < $headerIconsShown.length; i++) {
+            let isFurtherLeftThanLastIcon = $headerIconsShown[i].offsetLeft >= $headerIconsShown[i-1].offsetLeft;
+            let isFurtherRightThanLastIcon = $headerIconsShown[i].offsetLeft <= $headerIconsShown[i-1].offsetLeft;
+            if ((!rtlLocale && isFurtherLeftThanLastIcon) || (rtlLocale && isFurtherRightThanLastIcon)) {
+                // we have found the first icon on second row. Use previous icon.
+                icon = $headerIconsShown[i-1];
+                break;
+            }
+        }
+        if (icon) {
+            // overflowing
+            // add overflowing-hidden class
+            this.$header.classList.add('overflow-hidden');
+            // add expand btn 2 before icon
+            this.$expandBtn.removeAttribute('hidden');
+            icon.before(this.$expandBtn);
+        }
+        else {
+            // no overflowing
+            // add overflowing-hidden class
+            this.$header.classList.remove('overflow-hidden');
+        }
+    }
+
+    onExpandBtnClick() {
+        // toggle overflowing-hidden class and flip expand btn icon
+        if (this.$header.classList.contains('overflow-hidden')) {
+            this.$header.classList.remove('overflow-hidden');
+            this.$header.classList.add('overflow-expanded');
+            this.$expandBtn.classList.remove('flipped');
+        }
+        else {
+            this.$header.classList.add('overflow-hidden');
+            this.$header.classList.remove('overflow-expanded');
+            this.$expandBtn.classList.add('flipped');
+        }
     }
 }
 

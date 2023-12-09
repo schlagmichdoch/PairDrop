@@ -2,7 +2,7 @@ class Localization {
     constructor() {
         Localization.defaultLocale = "en";
         Localization.supportedLocales = ["ar", "de", "en", "es", "fr", "id", "it", "ja", "nb", "nl", "ro", "ru", "tr", "zh-CN"];
-        Localization.supportedLocalesRTL = ["ar"];
+        Localization.supportedLocalesRtl = ["ar"];
 
         Localization.translations = {};
         Localization.defaultTranslations = {};
@@ -20,8 +20,12 @@ class Localization {
         return Localization.supportedLocales.indexOf(locale) > -1;
     }
 
-    static isRTLLanguage(locale) {
-        return Localization.supportedLocalesRTL.indexOf(locale) > -1;
+    static isRtlLanguage(locale) {
+        return Localization.supportedLocalesRtl.indexOf(locale) > -1;
+    }
+
+    static isCurrentLocaleRtl() {
+        return Localization.isRtlLanguage(Localization.locale);
     }
 
     static getSupportedOrDefault(locales) {
@@ -46,7 +50,7 @@ class Localization {
 
         const htmlRootNode = document.querySelector('html');
 
-        if (Localization.isRTLLanguage(locale)) {
+        if (Localization.isRtlLanguage(locale)) {
             htmlRootNode.setAttribute('dir', 'rtl');
         }
         else {

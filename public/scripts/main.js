@@ -1,7 +1,7 @@
 class PairDrop {
 
     constructor() {
-        this.$headerNotificationButton = $('notification');
+        this.$headerNotificationBtn = $('notification');
         this.$headerEditPairedDevicesBtn = $('edit-paired-devices');
         this.$footerPairedDevicesBadge = $$('.discovery-wrapper .badge-room-secret');
         this.$headerInstallBtn = $('install');
@@ -46,7 +46,8 @@ class PairDrop {
         await this.footerUI.showLoading();
 
         // Evaluate css shifting UI elements and fade in UI elements
-        await this.evaluateUI();
+        await this.evaluatePermissionsAndRoomSecrets();
+        await this.headerUI.evaluateOverflowing();
         await this.headerUI.fadeIn();
         await this.footerUI._evaluateFooterBadges();
         await this.footerUI.fadeIn();
@@ -87,10 +88,10 @@ class PairDrop {
         return e.preventDefault();
     }
 
-    async evaluateUI() {
+    async evaluatePermissionsAndRoomSecrets() {
         // Check whether notification permissions have already been granted
         if ('Notification' in window && Notification.permission !== 'granted') {
-            this.$headerNotificationButton.removeAttribute('hidden');
+            this.$headerNotificationBtn.removeAttribute('hidden');
         }
 
         let roomSecrets = await PersistentStorage.getAllRoomSecrets();
