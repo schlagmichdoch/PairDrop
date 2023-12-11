@@ -11,14 +11,15 @@
         "edit-paired-devices_title": "Eşleştirilmiş cihazları düzenle",
         "cancel-share-mode": "Bitti",
         "join-public-room_title": "Geçici olarak genel odaya katılın",
-        "language-selector_title": "Dili Seç"
+        "language-selector_title": "Dili Seç",
+        "edit-share-mode": "Düzenle"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Alıcıyı seçmek için bırakın",
         "x-instructions_mobile": "Dosya göndermek için dokun veya mesaj göndermek için uzun dokun",
-        "x-instructions-share-mode_desktop": "Göndermek için tıkla",
+        "x-instructions-share-mode_desktop": "Göndermek için tıkla {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "ve {{count}} diğer dosya",
-        "x-instructions-share-mode_mobile": "Göndermek için dokun",
+        "x-instructions-share-mode_mobile": "Göndermek için dokun {{descriptor}}",
         "activate-share-mode-base": "Göndermek için diğer cihazlarda PairDrop'u açın",
         "no-peers-subtitle": "Diğer ağlarda keşfedilebilir olmak için cihazları eşleştirin veya ortak bir odaya girin",
         "activate-share-mode-shared-text": "paylaşılan metin",
@@ -26,7 +27,10 @@
         "no-peers-title": "Dosya göndermek için diğer cihazlarda PairDrop'u açın",
         "x-instructions_data-drop-peer": "Göndermek için serbest bırak",
         "x-instructions_data-drop-bg": "Alıcıyı seçmek için bırakın",
-        "webrtc-requirement": "Bu PairDrop örneğini kullanmak için WebRTC etkinleştirilmelidir!"
+        "webrtc-requirement": "Bu PairDrop örneğini kullanmak için WebRTC etkinleştirilmelidir!",
+        "activate-share-mode-shared-files-plural": "{{count}} adet paylaşılan dosya",
+        "activate-share-mode-shared-file": "paylaşılan dosya",
+        "activate-share-mode-and-other-file": "ve 1 dosya"
     },
     "footer": {
         "display-name_data-placeholder": "Yükleniyor…",
@@ -46,7 +50,7 @@
     "dialogs": {
         "cancel": "İptal",
         "edit-paired-devices-title": "Eşleştirilmiş Cihazları Düzenle",
-        "base64-paste-to-send": "{{type}} göndermek için buraya yapıştır",
+        "base64-paste-to-send": "{{type}} paylaşmak için buraya yapıştır",
         "auto-accept-instructions-2": "böylelikle cihazdan gönderilen tüm dosyaları otomatik olarak kabul eder.",
         "receive-text-title": "Mesaj Alındı",
         "auto-accept-instructions-1": "Etkinleştir",
@@ -61,7 +65,7 @@
         "join": "Katıl",
         "title-image-plural": "Resimler",
         "send": "Gönder",
-        "base64-tap-to-paste": "{{type}} yapıştırmak için buraya dokun",
+        "base64-tap-to-paste": "{{type}} paylaşmak için buraya dokun",
         "base64-text": "metin",
         "copy": "Kopyala",
         "file-other-description-image": "ve 1 diğer resim",
@@ -94,7 +98,15 @@
         "input-room-id-on-another-device": "Bu ID'yi diğer cihaza girin",
         "file-other-description-image-plural": "ve {{count}} diğer resim",
         "enter-room-id-from-another-device": "Odaya katılmak için diğer cihazın ID'sini girin.",
-        "message_placeholder": "Metin"
+        "message_placeholder": "Metin",
+        "close-toast_title": "Bildirimleri kapat",
+        "share-text-checkbox": "Metin paylaşırken her zaman bu pencereyi göster",
+        "base64-title-files": "Dosyaları Paylaş",
+        "approve": "onayla",
+        "paired-device-removed": "Eşleştirilmiş cihaz kaldırıldı.",
+        "share-text-title": "Kısa Mesaj Paylaş",
+        "share-text-subtitle": "Göndermeden önce mesajı düzenle:",
+        "base64-title-text": "Metin Paylaş"
     },
     "notifications": {
         "request-title": "{{name}} {{count}} {{descriptor}} transfer etmek istiyor",
