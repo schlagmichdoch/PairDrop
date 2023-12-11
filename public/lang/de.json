@@ -11,7 +11,8 @@
         "theme-light_title": "Immer hellen Stil verwenden",
         "cancel-share-mode": "Fertig",
         "language-selector_title": "Sprache Wählen",
-        "join-public-room_title": "Öffentlichen Raum temporär betreten"
+        "join-public-room_title": "Öffentlichen Raum temporär betreten",
+        "edit-share-mode": "Bearbeiten"
     },
     "dialogs": {
         "share": "Teilen",
@@ -43,8 +44,8 @@
         "has-sent": "hat Folgendes gesendet:",
         "send-message-title": "Nachricht Senden",
         "send-message-to": "An:",
-        "base64-tap-to-paste": "Hier tippen, um {{type}} einzufügen",
-        "base64-paste-to-send": "Hier einfügen, um {{type}} zu versenden",
+        "base64-tap-to-paste": "Hier tippen, um {{type}} zu teilen",
+        "base64-paste-to-send": "Hier einfügen, um {{type}} zu teilen",
         "base64-text": "Text",
         "base64-files": "Dateien",
         "base64-processing": "Bearbeitung läuft…",
@@ -64,7 +65,15 @@
         "message_title": "Nachricht zum Senden hier einfügen",
         "pair-devices-qr-code_title": "Klicke, um Link zum Koppeln mit diesem Gerät zu kopieren",
         "public-room-qr-code_title": "Klicke, um Link zu diesem öffentlichen Raum zu kopieren",
-        "message_placeholder": "Text"
+        "message_placeholder": "Text",
+        "close-toast_title": "Benachrichtigung schließen",
+        "share-text-checkbox": "Diesen Dialog immer anzeigen, wenn Text geteilt wird",
+        "base64-title-files": "Teile Dateien",
+        "approve": "bestätigen",
+        "paired-device-removed": "Gekoppeltes Gerät wurde entfernt.",
+        "share-text-title": "Teile Nachricht",
+        "share-text-subtitle": "Bearbeite Nachricht vor dem Senden:",
+        "base64-title-text": "Teile Text"
     },
     "about": {
         "tweet_title": "Über PairDrop twittern",
@@ -139,15 +148,18 @@
         "no-peers-title": "Öffne PairDrop auf anderen Geräten, um Dateien zu senden",
         "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
         "no-peers-subtitle": "Kopple Geräte oder besuche einen öffentlichen Raum, damit du in anderen Netzwerken sichtbar bist",
-        "x-instructions-share-mode_desktop": "Klicke zum Senden von",
-        "x-instructions-share-mode_mobile": "Tippe zum Senden von",
+        "x-instructions-share-mode_desktop": "Klicke zum Senden von {{descriptor}}",
+        "x-instructions-share-mode_mobile": "Tippe zum Senden von {{descriptor}}",
         "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
         "x-instructions_data-drop-bg": "Loslassen um Empfänger auszuwählen",
         "x-instructions_mobile": "Tippe, um Dateien zu senden oder tippe lange, um Nachrichten zu senden",
         "activate-share-mode-base": "Öffne PairDrop auf anderen Geräten zum Senden von",
         "activate-share-mode-and-other-files-plural": "und {{count}} anderen Dateien",
         "activate-share-mode-shared-text": "freigegebenem Text",
-        "webrtc-requirement": "Um diese PairDrop Instanz zu verwenden, WebRTC muss aktiviert sein!"
+        "webrtc-requirement": "Um diese PairDrop Instanz zu verwenden, WebRTC muss aktiviert sein!",
+        "activate-share-mode-shared-files-plural": "{{count}} geteilte Dateien",
+        "activate-share-mode-shared-file": "geteilte Datei",
+        "activate-share-mode-and-other-file": "und 1 andere Datei"
     },
     "document-titles": {
         "file-transfer-requested": "Dateiübertragung angefordert",
