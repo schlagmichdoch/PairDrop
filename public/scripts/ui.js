@@ -2545,6 +2545,7 @@ class WebShareTargetUI {
     }
 }
 
+// Keep for legacy reasons even though this is removed from new PWA installations
 class WebFileHandlersUI {
     async evaluateLaunchQueue() {
         if (!"launchQueue" in window) return;

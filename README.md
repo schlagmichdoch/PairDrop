@@ -67,10 +67,11 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Multiple files are transferred at once with an overall progress indicator
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
-* [Send files directly from context menu on Windows](/docs/how-to.md#send-files-directly-from-context-menu-on-windows)
-* [Send directly from share menu on iOS](/docs/how-to.md#send-directly-from-share-menu-on-ios)
-* [Send directly from share menu on Android](/docs/how-to.md#send-directly-from-share-menu-on-android)
-* [Send directly via command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
+* [Send files directly from context menu on Windows](/docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-windows)
+* [Send files directly from context menu on Ubuntu (using Nautilus)](/docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
+* [Send files directly from share menu on iOS](/docs/how-to.md#send-directly-from-share-menu-on-ios)
+* [Send files directly from share menu on Android](/docs/how-to.md#send-directly-from-share-menu-on-android)
+* [Send files directly via command-line interface](/docs/how-to.md#send-directly-via-command-line-interface)
 
 ### Other changes
 * Change your display name permanently to easily differentiate your devices
