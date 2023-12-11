@@ -469,11 +469,30 @@ function base64ToArrayBuffer(base64) {
     return bytes.buffer;
 }
 
-function getResizedImageDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
-    return new Promise((resolve, reject) => {
-        let image = new Image();
-        image.src = URL.createObjectURL(file);
-        image.onload = _ => {
+async function fileToBlob (file) {
+    return new Blob([new Uint8Array(await file.arrayBuffer())], {type: file.type});
+}
+
+function getThumbnailAsDataUrl(file, width = undefined, height = undefined, quality = 0.7) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (file.type === "image/heif" || file.type === "image/heic") {
+                // browsers can't show heic files --> convert to jpeg before creating thumbnail
+                let blob = await fileToBlob(file);
+                file = await heic2any({
+                    blob,
+                    toType: "image/jpeg",
+                    quality: quality
+                });
+            }
+
+            let imageUrl = URL.createObjectURL(file);
+
+            let image = new Image();
+            image.src = imageUrl;
+
+            await waitUntilImageIsLoaded(imageUrl);
+
             let imageWidth = image.width;
             let imageHeight = image.height;
             let canvas = document.createElement('canvas');
@@ -501,9 +520,44 @@ function getResizedImageDataUrl(file, width = undefined, height = undefined, qua
 
             let dataUrl = canvas.toDataURL("image/jpeg", quality);
             resolve(dataUrl);
+        } catch (e) {
+            console.error(e);
+            reject(new Error(`Could not create an image thumbnail from type ${file.type}`));
         }
-        image.onerror = _ => reject(`Could not create an image thumbnail from type ${file.type}`);
     })
+}
+
+// Resolves returned promise when image is loaded and throws error if image cannot be shown
+function waitUntilImageIsLoaded(imageUrl, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        let image = new Image();
+        image.src = imageUrl;
+
+        const onLoad = () => {
+            cleanup();
+            resolve();
+        };
+
+        const onError = () => {
+            cleanup();
+            reject(new Error('Image failed to load.'));
+        };
+
+        const cleanup = () => {
+            clearTimeout(timeoutId);
+            image.onload = null;
+            image.onerror = null;
+            URL.revokeObjectURL(imageUrl);
+        };
+
+        const timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error('Image loading timed out.'));
+        }, timeout);
+
+        image.onload = onLoad;
+        image.onerror = onError;
+    });
 }
 
 async function decodeBase64Files(base64) {

@@ -450,13 +450,12 @@ class Peer {
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 0.8, status: 'prepare'})
 
-        let dataUrl;
-
+        let dataUrl = '';
         if (files[0].type.split('/')[0] === 'image') {
             try {
-                dataUrl = await getResizedImageDataUrl(files[0], 400, null, 0.9);
+                dataUrl = await getThumbnailAsDataUrl(files[0], 400, null, 0.9);
             } catch (e) {
-                dataUrl = '';
+                console.error(e);
             }
         }
 

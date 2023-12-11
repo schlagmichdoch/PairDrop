@@ -276,14 +276,28 @@ class PeersUI {
             files = await mime.addMissingMimeTypesToFiles(files);
 
             if (files[0].type.split('/')[0] === 'image') {
-                getResizedImageDataUrl(files[0], 80, null, 0.9)
-                    .then(dataUrl => {
-                        this.$shareModeImageThumb.style.backgroundImage = `url(${dataUrl})`;
-                        this.$shareModeImageThumb.removeAttribute('hidden');
-                    })
-                    .catch(_ => {
-                        this.$shareModeFileThumb.removeAttribute('hidden');
-                    });
+                try {
+                    let image = files[0]
+
+                    // Heic files can't be shown by browsers natively --> convert to jpeg
+                    if (image.type === "image/heif" || image.type === "image/heic") {
+                        let blob = await fileToBlob(image);
+                        image = await heic2any({
+                            blob,
+                            toType: "image/jpeg",
+                            quality: 0.9
+                        });
+                    }
+
+                    let imageUrl = URL.createObjectURL(image);
+                    this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
+
+                    await waitUntilImageIsLoaded(imageUrl);
+                    this.$shareModeImageThumb.removeAttribute('hidden');
+                } catch (e) {
+                    console.error(e);
+                    this.$shareModeFileThumb.removeAttribute('hidden');
+                }
             } else {
                 this.$shareModeFileThumb.removeAttribute('hidden');
             }
