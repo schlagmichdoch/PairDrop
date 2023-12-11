@@ -58,7 +58,7 @@
         "room-url-copied-to-clipboard": "パブリックルームへのリンクをクリップボードにコピーしました"
     },
     "header": {
-        "cancel-paste-mode": "完了",
+        "cancel-share-mode": "完了",
         "theme-auto_title": "テーマをシステムの設定に自動的に合わせる",
         "install_title": "PairDropをインストール",
         "theme-dark_title": "常にダークテーマを使用する",
@@ -73,12 +73,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "タップしてファイルを送信または長押ししてメッセージを送信します",
-        "click-to-send": "クリックして送信",
-        "activate-paste-mode-and-other-files": "とその他{{count}}個のファイル",
-        "tap-to-send": "タップして送信",
-        "activate-paste-mode-base": "他のデバイスでPairDropを開いて送信します",
+        "x-instructions-share-mode_desktop": "クリックして送信",
+        "activate-share-mode-and-other-files-plural": "とその他{{count}}個のファイル",
+        "x-instructions-share-mode_mobile": "タップして送信",
+        "activate-share-mode-base": "他のデバイスでPairDropを開いて送信します",
         "no-peers-subtitle": "デバイスをペア設定するかパブリックルームに参加すると、他のネットワーク上からも見つけられるようになります",
-        "activate-paste-mode-shared-text": "共有されたテキスト",
+        "activate-share-mode-shared-text": "共有されたテキスト",
         "x-instructions_desktop": "左クリックしてファイルを送信または右クリックしてメッセージを送信します",
         "no-peers-title": "他のデバイスでPairDropを開いてファイルを送信します",
         "x-instructions_data-drop-peer": "離すとこの相手に送信します",
@@ -87,7 +87,7 @@
     },
     "peer-ui": {
         "processing": "処理中…",
-        "click-to-send-paste-mode": "クリックして{{descriptor}}を送信",
+        "click-to-send-share-mode": "クリックして{{descriptor}}を送信",
         "click-to-send": "クリックしてファイルを送信または右クリックしてメッセージを送信します",
         "waiting": "待機中…",
         "connection-hash": "エンドツーエンド暗号化のセキュリティを確認するには、両方のデバイスのセキュリティナンバーを確認します",

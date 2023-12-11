@@ -1,20 +1,31 @@
 class PeersUI {
 
     constructor() {
-        this.$cancelPasteModeBtn = $('cancel-paste-mode');
         this.$xPeers = $$('x-peers');
         this.$xNoPeers = $$('x-no-peers');
         this.$xInstructions = $$('x-instructions');
         this.$wsFallbackWarning = $('websocket-fallback');
 
+        this.$sharePanel = $$('.shr-panel');
+        this.$shareModeImageThumb = $$('.shr-panel .image-thumb');
+        this.$shareModeTextThumb = $$('.shr-panel .text-thumb');
+        this.$shareModeFileThumb = $$('.shr-panel .file-thumb');
+        this.$shareModeDescriptor = $$('.shr-panel .share-descriptor');
+        this.$shareModeDescriptorItem = $$('.shr-panel .descriptor-item');
+        this.$shareModeDescriptorOther = $$('.shr-panel .descriptor-other');
+        this.$shareModeCancelBtn = $$('.shr-panel .cancel-btn');
+        this.$shareModeEditBtn = $$('.shr-panel .edit-btn');
+
         this.peers = {};
 
-        this.pasteMode = {};
-        this.pasteMode.activated = false;
-        this.pasteMode.descriptor = "";
+        this.shareMode = {};
+        this.shareMode.active = false;
+        this.shareMode.descriptor = "";
+        this.shareMode.files = [];
+        this.shareMode.text = "";
 
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-added', _ => this._evaluateOverflowing());
+        Events.on('peer-added', _ => this._evaluateOverflowingPeers());
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
@@ -25,14 +36,15 @@ class PeersUI {
         Events.on('dragover', e => this._onDragOver(e));
         Events.on('dragleave', _ => this._onDragEnd());
         Events.on('dragend', _ => this._onDragEnd());
-        Events.on('resize', _ => this._evaluateOverflowing());
+        Events.on('resize', _ => this._evaluateOverflowingPeers());
 
         Events.on('paste', e => this._onPaste(e));
-        Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
+        Events.on('activate-share-mode', e => this._activateShareMode(e.detail.files, e.detail.text));
+        Events.on('translation-loaded', _ => this._reloadShareMode());
         Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
 
 
-        this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
+        this.$shareModeCancelBtn.addEventListener('click', _ => this._deactivateShareMode());
 
         Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
 
@@ -63,13 +75,11 @@ class PeersUI {
         this._changePeerDisplayName(e.detail.peerId, e.detail.displayName);
     }
 
-    _noDialogShown() {
-        return document.querySelectorAll('x-dialog[show]').length === 0;
-    }
+    async _onKeyDown(e) {
+        if (!this.shareMode.active || Dialog.anyDialogShown()) return;
 
-    _onKeyDown(e) {
-        if (this._noDialogShown() && this.pasteMode.activated && e.code === "Escape") {
-            Events.fire('deactivate-paste-mode');
+        if (e.key === "Escape") {
+            await this._deactivateShareMode();
         }
 
         // close About PairDrop page on Escape
@@ -103,7 +113,10 @@ class PeersUI {
 
         const peer = this.peers[peerId];
 
-        new PeerUI(peer, connectionHash);
+        new PeerUI(peer, connectionHash, {
+            active: this.shareMode.active,
+            descriptor: this.shareMode.descriptor,
+        });
     }
 
     _redrawPeerRoomTypes(peerId) {
@@ -121,7 +134,7 @@ class PeersUI {
         Object.keys(peer._roomIds).forEach(roomType => peerNode.classList.add(`type-${roomType}`));
     }
 
-    _evaluateOverflowing() {
+    _evaluateOverflowingPeers() {
         if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
             this.$xPeers.classList.add('overflowing');
         }
@@ -138,7 +151,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
-        this._evaluateOverflowing();
+        this._evaluateOverflowingPeers();
     }
 
     _onRoomTypeRemoved(peerId, roomType) {
@@ -159,14 +172,30 @@ class PeersUI {
 
     _onDrop(e) {
         e.preventDefault();
+
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
         if (!$$('x-peer') || !$$('x-peer').contains(e.target)) {
-            this._activatePasteMode(e.dataTransfer.files, '')
+            if (e.dataTransfer.files.length > 0) {
+                Events.fire('activate-share-mode', {files: e.dataTransfer.files});
+            } else {
+                for (let i=0; i<e.dataTransfer.items.length; i++) {
+                    if (e.dataTransfer.items[i].type === "text/plain") {
+                        e.dataTransfer.items[i].getAsString(text => {
+                            Events.fire('activate-share-mode', {text: text});
+                        });
+                    }
+                }
+            }
         }
         this._onDragEnd();
     }
 
     _onDragOver(e) {
         e.preventDefault();
+
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
         this.$xInstructions.setAttribute('drop-bg', true);
         this.$xNoPeers.setAttribute('drop-bg', true);
     }
@@ -177,91 +206,184 @@ class PeersUI {
     }
 
     _onPaste(e) {
-        if(document.querySelectorAll('x-dialog[show]').length === 0) {
-            // prevent send on paste when dialog is open
-            e.preventDefault()
-            const files = e.clipboardData.files;
-            const text = e.clipboardData.getData("Text");
-            if (files.length === 0 && text.length === 0) return;
-            this._activatePasteMode(files, text);
+        // prevent send on paste when dialog is open
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
+        e.preventDefault()
+        const files = e.clipboardData.files;
+        const text = e.clipboardData.getData("Text");
+
+        if (files.length > 0) {
+            Events.fire('activate-share-mode', {files: files});
+        } else if (text.length > 0) {
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', text);
+            } else {
+                Events.fire('activate-share-mode', {text: text});
+            }
         }
     }
 
-    _activatePasteMode(files, text) {
-        if (!this.pasteMode.activated && (files.length > 0 || text.length > 0)) {
-            const openPairDrop = Localization.getTranslation("instructions.activate-paste-mode-base");
-            const andOtherFiles = Localization.getTranslation("instructions.activate-paste-mode-and-other-files", null, {count: files.length-1});
-            const sharedText = Localization.getTranslation("instructions.activate-paste-mode-shared-text");
-            const clickToSend = Localization.getTranslation("instructions.click-to-send")
-            const tapToSend = Localization.getTranslation("instructions.tap-to-send")
+    async _activateShareMode(files = [], text = "") {
+        if (this.shareMode.active || (files.length === 0 && text.length === 0)) return;
 
-            let descriptor;
+        this._activateCallback = e => this._sendShareData(e);
+        this._editShareTextCallback = _ => {
+            this._deactivateShareMode();
+            Events.fire('share-text-dialog', text);
+        };
 
-            if (files.length === 1) {
-                descriptor = `<i>${files[0].name}</i>`;
+        Events.on('share-mode-pointerdown', this._activateCallback);
+
+        const sharedText = Localization.getTranslation("instructions.activate-share-mode-shared-text");
+        const andOtherFilesPlural = Localization.getTranslation("instructions.activate-share-mode-and-other-files-plural", null, {count: files.length-1});
+        const andOtherFiles = Localization.getTranslation("instructions.activate-share-mode-and-other-file");
+
+        let descriptorComplete, descriptorItem, descriptorOther, descriptorInstructions;
+
+        if (files.length > 2) {
+            // files shared
+            descriptorItem = files[0].name;
+            descriptorOther = andOtherFilesPlural;
+            descriptorComplete = `${descriptorItem} ${descriptorOther}`;
+        }
+        else if (files.length === 2) {
+            descriptorItem = files[0].name;
+            descriptorOther = andOtherFiles;
+            descriptorComplete = `${descriptorItem} ${descriptorOther}`;
+        } else if (files.length === 1) {
+            descriptorItem = files[0].name;
+            descriptorComplete = descriptorItem;
+        }
+        else {
+            // text shared
+            descriptorItem = text.replace(/\s/g," ");
+            descriptorComplete = sharedText;
+        }
+
+        if (files.length > 0) {
+            if (descriptorOther) {
+                this.$shareModeDescriptorOther.innerText = descriptorOther;
+                this.$shareModeDescriptorOther.removeAttribute('hidden');
             }
-            else if (files.length > 1) {
-                descriptor = `<i>${files[0].name}</i><br>${andOtherFiles}`;
+            if (files.length > 1) {
+                descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-files-plural", null, {count: files.length});
             }
             else {
-                descriptor = sharedText;
+                descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-file");
             }
 
-            this.$xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
-            this.$xInstructions.querySelector('p').style.display = 'block';
-            this.$xInstructions.setAttribute('desktop', clickToSend);
-            this.$xInstructions.setAttribute('mobile', tapToSend);
+            files = await mime.addMissingMimeTypesToFiles(files);
 
-            this.$xNoPeers.querySelector('h2').innerHTML = `${openPairDrop}<br>${descriptor}`;
+            if (files[0].type.split('/')[0] === 'image') {
+                try {
+                    let image = files[0]
 
-            this.pasteMode.descriptor = descriptor;
+                    // Heic files can't be shown by browsers natively --> convert to jpeg
+                    if (image.type === "image/heif" || image.type === "image/heic") {
+                        let blob = await fileToBlob(image);
+                        image = await heic2any({
+                            blob,
+                            toType: "image/jpeg",
+                            quality: 0.9
+                        });
+                    }
 
-            const _callback = e => this._sendClipboardData(e, files, text);
-            Events.on('paste-pointerdown', _callback);
-            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback), { once: true });
+                    let imageUrl = URL.createObjectURL(image);
+                    this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
 
-            this.$cancelPasteModeBtn.removeAttribute('hidden');
-
-
-            console.log('Paste mode activated.');
-            Events.fire('paste-mode-changed', {
-                active: true,
-                descriptor: descriptor
-            });
+                    await waitUntilImageIsLoaded(imageUrl);
+                    this.$shareModeImageThumb.removeAttribute('hidden');
+                } catch (e) {
+                    console.error(e);
+                    this.$shareModeFileThumb.removeAttribute('hidden');
+                }
+            } else {
+                this.$shareModeFileThumb.removeAttribute('hidden');
+            }
         }
-    }
+        else {
+            this.$shareModeTextThumb.removeAttribute('hidden');
 
-    _cancelPasteMode() {
-        Events.fire('deactivate-paste-mode');
-    }
+            this.$shareModeEditBtn.addEventListener('click', this._editShareTextCallback);
+            this.$shareModeEditBtn.removeAttribute('hidden');
 
-    _deactivatePasteMode(_callback) {
-        if (this.pasteMode.activated) {
-            this.pasteMode.activated = false;
-            this.pasteMode.descriptor = "";
-            Events.off('paste-pointerdown', _callback);
-
-            this.$xInstructions.querySelector('p').innerText = '';
-            this.$xInstructions.querySelector('p').style.display = 'none';
-
-            this.$xInstructions.setAttribute('desktop', Localization.getTranslation("instructions.x-instructions", "desktop"));
-            this.$xInstructions.setAttribute('mobile',  Localization.getTranslation("instructions.x-instructions", "mobile"));
-
-            this.$xNoPeers.querySelector('h2').innerHTML =  Localization.getTranslation("instructions.no-peers-title");
-
-            this.$cancelPasteModeBtn.setAttribute('hidden', true);
-
-            console.log('Paste mode deactivated.')
-            Events.fire('paste-mode-changed', {
-                active: false,
-                descriptor: null
-            });
+            descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-text");
         }
+
+        const desktop = Localization.getTranslation("instructions.x-instructions-share-mode_desktop", null, {descriptor: descriptorInstructions});
+        const mobile = Localization.getTranslation("instructions.x-instructions-share-mode_mobile", null, {descriptor: descriptorInstructions});
+
+        this.$xInstructions.setAttribute('desktop', desktop);
+        this.$xInstructions.setAttribute('mobile', mobile);
+
+        this.$sharePanel.removeAttribute('hidden');
+
+        this.$shareModeDescriptor.removeAttribute('hidden');
+        this.$shareModeDescriptorItem.innerText = descriptorItem;
+
+        this.shareMode.active = true;
+        this.shareMode.descriptor = descriptorComplete;
+        this.shareMode.files = files;
+        this.shareMode.text = text;
+
+        console.log('Share mode activated.');
+
+        Events.fire('share-mode-changed', {
+            active: true,
+            descriptor: descriptorComplete
+        });
     }
 
-    _sendClipboardData(e, files, text) {
-        // send the pasted file/text content
+    async _reloadShareMode() {
+        // If shareMode is active only
+        if (!this.shareMode.active) return;
+
+        let files = this.shareMode.files;
+        let text = this.shareMode.text;
+
+        await this._deactivateShareMode();
+        await this._activateShareMode(files, text);
+    }
+
+    async _deactivateShareMode() {
+        if (!this.shareMode.active) return;
+
+        this.shareMode.active = false;
+        this.shareMode.descriptor = "";
+        this.shareMode.files = [];
+        this.shareMode.text = "";
+
+        Events.off('share-mode-pointerdown', this._activateCallback);
+
+        const desktop = Localization.getTranslation("instructions.x-instructions_desktop");
+        const mobile = Localization.getTranslation("instructions.x-instructions_mobile");
+
+        this.$xInstructions.setAttribute('desktop', desktop);
+        this.$xInstructions.setAttribute('mobile', mobile);
+
+        this.$sharePanel.setAttribute('hidden', true);
+
+        this.$shareModeImageThumb.setAttribute('hidden', true);
+        this.$shareModeFileThumb.setAttribute('hidden', true);
+        this.$shareModeTextThumb.setAttribute('hidden', true);
+
+        this.$shareModeDescriptorItem.innerHTML = "";
+        this.$shareModeDescriptorItem.classList.remove('cursive');
+        this.$shareModeDescriptorOther.innerHTML = "";
+        this.$shareModeDescriptorOther.setAttribute('hidden', true);
+        this.$shareModeEditBtn.removeEventListener('click', this._editShareTextCallback);
+        this.$shareModeEditBtn.setAttribute('hidden', true);
+
+        console.log('Share mode deactivated.')
+        Events.fire('share-mode-changed', { active: false });
+    }
+
+    _sendShareData(e) {
+        // send the shared file/text content
         const peerId = e.detail.peerId;
+        const files = this.shareMode.files;
+        const text = this.shareMode.text;
 
         if (files.length > 0) {
             Events.fire('files-selected', {
@@ -281,8 +403,12 @@ class PeersUI {
 class PeerUI {
 
     static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
+    static _shareMode = {
+        active: false,
+        descriptor: ""
+    };
 
-    constructor(peer, connectionHash) {
+    constructor(peer, connectionHash, shareMode) {
         this.$xInstructions = $$('x-instructions');
         this.$xPeers = $$('x-peers');
 
@@ -290,30 +416,26 @@ class PeerUI {
         this._connectionHash =
             `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
 
-        this.pasteMode = {};
-        this.pasteMode.activated = false;
-        this.pasteMode.descriptor = "";
+        // This is needed if the ShareMode is started BEFORE the PeerUI is drawn.
+        PeerUI._shareMode = shareMode;
 
         this._initDom();
-        this._bindListeners();
 
         this.$xPeers.appendChild(this.$el);
         Events.fire('peer-added');
+
+        // ShareMode
+        Events.on('share-mode-changed', e => this._onShareModeChanged(e.detail.active, e.detail.descriptor));
     }
 
     html() {
-        let title;
-        let input = '';
-        if (this.pasteMode.activated) {
-            title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: this.pasteMode.descriptor});
-        }
-        else {
-            title = Localization.getTranslation("peer-ui.click-to-send");
-            input = '<input type="file" multiple>';
-        }
+        let title= PeerUI._shareMode.active
+            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor})
+            : Localization.getTranslation("peer-ui.click-to-send");
+
         this.$el.innerHTML = `
             <label class="column center pointer" title="${title}">
-                ${input}
+                <input type="file" multiple/>
                 <x-icon>
                     <div class="icon-wrapper" shadow="1">
                         <svg class="icon"><use xlink:href="#"/></svg>
@@ -338,6 +460,9 @@ class PeerUI {
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
+
+        this.$label = this.$el.querySelector('label');
+        this.$input = this.$el.querySelector('input');
     }
 
     addTypesToClassList() {
@@ -360,32 +485,51 @@ class PeerUI {
 
         this.html();
 
-        this._callbackInput = e => this._onFilesSelected(e)
-        this._callbackClickSleep = _ => NoSleepUI.enable()
-        this._callbackTouchStartSleep = _ => NoSleepUI.enable()
-        this._callbackDrop = e => this._onDrop(e)
-        this._callbackDragEnd = e => this._onDragEnd(e)
-        this._callbackDragLeave = e => this._onDragEnd(e)
-        this._callbackDragOver = e => this._onDragOver(e)
-        this._callbackContextMenu = e => this._onRightClick(e)
-        this._callbackTouchStart = e => this._onTouchStart(e)
-        this._callbackTouchEnd = e => this._onTouchEnd(e)
-        this._callbackPointerDown = e => this._onPointerDown(e)
+        this._createCallbacks();
 
-        // PasteMode
-        Events.on('paste-mode-changed', e => this._onPasteModeChanged(e.detail.active, e.detail.descriptor));
-    }
-
-    _onPasteModeChanged(active, descriptor) {
-        this.pasteMode.active = active
-        this.pasteMode.descriptor = descriptor
-        this.html();
+        this._evaluateShareMode();
         this._bindListeners();
     }
 
+    _onShareModeChanged(active = false, descriptor = "") {
+        // This is needed if the ShareMode is started AFTER the PeerUI is drawn.
+        PeerUI._shareMode.active = active;
+        PeerUI._shareMode.descriptor = descriptor;
+
+        this._evaluateShareMode();
+        this._bindListeners();
+    }
+
+    _evaluateShareMode() {
+        let title;
+        if (!PeerUI._shareMode.active) {
+            title = Localization.getTranslation("peer-ui.click-to-send");
+            this.$input.removeAttribute('disabled');
+        }
+        else {
+            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor});
+            this.$input.setAttribute('disabled', true);
+        }
+        this.$label.setAttribute('title', title);
+    }
+
+    _createCallbacks() {
+        this._callbackInput = e => this._onFilesSelected(e);
+        this._callbackClickSleep = _ => NoSleepUI.enable();
+        this._callbackTouchStartSleep = _ => NoSleepUI.enable();
+        this._callbackDrop = e => this._onDrop(e);
+        this._callbackDragEnd = e => this._onDragEnd(e);
+        this._callbackDragLeave = e => this._onDragEnd(e);
+        this._callbackDragOver = e => this._onDragOver(e);
+        this._callbackContextMenu = e => this._onRightClick(e);
+        this._callbackTouchStart = e => this._onTouchStart(e);
+        this._callbackTouchEnd = e => this._onTouchEnd(e);
+        this._callbackPointerDown = e => this._onPointerDown(e);
+    }
+
     _bindListeners() {
-        if(!this.pasteMode.activated) {
-            // Remove Events Paste Mode
+        if(!PeerUI._shareMode.active) {
+            // Remove Events Share mode
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
             // Add Events Normal Mode
@@ -412,7 +556,7 @@ class PeerUI {
             this.$el.removeEventListener('touchstart', this._callbackTouchStart);
             this.$el.removeEventListener('touchend', this._callbackTouchEnd);
 
-            // Add Events Paste Mode
+            // Add Events Share mode
             this.$el.addEventListener('pointerdown', this._callbackPointerDown);
         }
     }
@@ -421,7 +565,7 @@ class PeerUI {
         // Prevents triggering of event twice on touch devices
         e.stopPropagation();
         e.preventDefault();
-        Events.fire('paste-pointerdown', {
+        Events.fire('share-mode-pointerdown', {
             peerId: this._peer.id
         });
     }
@@ -498,10 +642,27 @@ class PeerUI {
 
     _onDrop(e) {
         e.preventDefault();
-        Events.fire('files-selected', {
-            files: e.dataTransfer.files,
-            to: this._peer.id
-        });
+
+        if (PeerUI._shareMode.active || Dialog.anyDialogShown()) return;
+
+        if (e.dataTransfer.files.length > 0) {
+            Events.fire('files-selected', {
+                files: e.dataTransfer.files,
+                to: this._peer.id
+            });
+        } else {
+            for (let i=0; i<e.dataTransfer.items.length; i++) {
+                if (e.dataTransfer.items[i].type === "text/plain") {
+                    e.dataTransfer.items[i].getAsString(text => {
+                        Events.fire('send-text', {
+                            text: text,
+                            to: this._peer.id
+                        });
+                    });
+                }
+            }
+        }
+
         this._onDragEnd();
     }
 
@@ -546,17 +707,31 @@ class PeerUI {
 class Dialog {
     constructor(id) {
         this.$el = $(id);
-        this.$el.querySelectorAll('[close]').forEach(el => {
+        this.$autoFocus = this.$el.querySelector('[autofocus]');
+        this.$xBackground = this.$el.querySelector('x-background');
+        this.$closeBtns = this.$el.querySelectorAll('[close]');
+
+        this.$closeBtns.forEach(el => {
             el.addEventListener('click', _ => this.hide())
         });
-        this.$autoFocus = this.$el.querySelector('[autofocus]');
 
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
 
+    static anyDialogShown() {
+        return document.querySelectorAll('x-dialog[show]').length > 0;
+    }
+
     show() {
+        if (this.$xBackground) {
+            this.$xBackground.scrollTop = 0;
+        }
+
         this.$el.setAttribute('show', true);
-        if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
+
+        if (!window.isMobile && this.$autoFocus) {
+            this.$autoFocus.focus();
+        }
     }
 
     isShown() {
@@ -580,6 +755,15 @@ class Dialog {
             Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
         }
     }
+
+    _evaluateOverflowing(element) {
+        if (element.clientHeight < element.scrollHeight) {
+            element.classList.add('overflowing');
+        }
+        else {
+            element.classList.remove('overflowing');
+        }
+    }
 }
 
 class LanguageSelectDialog extends Dialog {
@@ -598,7 +782,9 @@ class LanguageSelectDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
@@ -625,10 +811,10 @@ class LanguageSelectDialog extends Dialog {
         let languageCode = e.target.value;
 
         if (languageCode) {
-            localStorage.setItem('language-code', languageCode);
+            localStorage.setItem('language_code', languageCode);
         }
         else {
-            localStorage.removeItem('language-code');
+            localStorage.removeItem('language_code');
         }
 
         Localization.setTranslation(languageCode)
@@ -707,7 +893,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this._filesQueue = [];
     }
 
-    _onFilesReceived(peerId, files, imagesOnly, totalSize) {
+    async _onFilesReceived(peerId, files, imagesOnly, totalSize) {
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
         const badgeClassName = $(peerId).ui._badgeClassName();
@@ -722,28 +908,16 @@ class ReceiveFileDialog extends ReceiveDialog {
             badgeClassName: badgeClassName
         });
 
-        this._nextFiles();
-
         window.blop.play();
+
+        await this._nextFiles();
     }
 
-    _nextFiles() {
-        if (this._busy) return;
+    async _nextFiles() {
+        if (this._busy || !this._filesQueue.length) return;
         this._busy = true;
         const {peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName} = this._filesQueue.shift();
-        this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
-    }
-
-    _dequeueFile() {
-        if (!this._filesQueue.length) { // nothing to do
-            this._busy = false;
-            return;
-        }
-        // dequeue next file
-        setTimeout(() => {
-            this._busy = false;
-            this._nextFiles();
-        }, 300);
+        await this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
     }
 
     createPreviewElement(file) {
@@ -845,6 +1019,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             }
         }
 
+        this.$downloadBtn.removeAttribute('disabled');
         this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download");
         this.$downloadBtn.onclick = _ => {
             if (downloadZipped) {
@@ -861,6 +1036,8 @@ class ReceiveFileDialog extends ReceiveDialog {
                 this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download-again");
             }
             Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
+
+            // Prevent clicking the button multiple times
             this.$downloadBtn.style.pointerEvents = "none";
             setTimeout(() => this.$downloadBtn.style.pointerEvents = "unset", 2000);
         };
@@ -874,6 +1051,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.show();
 
         setTimeout(() => {
+            // wait for the dialog to be shown
             if (canShare) {
                 this.$shareBtn.click();
             }
@@ -904,10 +1082,14 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     hide() {
-        this.$shareBtn.setAttribute('hidden', true);
-        this.$previewBox.innerHTML = '';
         super.hide();
-        this._dequeueFile();
+        setTimeout(async () => {
+            this.$shareBtn.setAttribute('hidden', true);
+            this.$downloadBtn.setAttribute('disabled', true);
+            this.$previewBox.innerHTML = '';
+            this._busy = false;
+            await this._nextFiles();
+        }, 300);
     }
 }
 
@@ -927,7 +1109,9 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this._respondToFileTransferRequest(false);
         }
     }
@@ -968,6 +1152,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         document.title =  `${transferRequestTitle} - PairDrop`;
         changeFavicon("images/favicon-96x96-notification.png");
+
+        this.$acceptRequestBtn.removeAttribute('disabled');
         this.show();
     }
 
@@ -985,12 +1171,15 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     hide() {
         // clear previewBox after dialog is closed
-        setTimeout(() => this.$previewBox.innerHTML = '', 300);
+        setTimeout(() => {
+            this.$previewBox.innerHTML = '';
+            this.$acceptRequestBtn.setAttribute('disabled', true);
+        }, 300);
 
         super.hide();
 
         // show next request
-        setTimeout(() => this._dequeueRequests(), 500);
+        setTimeout(() => this._dequeueRequests(), 300);
     }
 }
 
@@ -1146,14 +1335,14 @@ class PairDeviceDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyPairUrl());
 
-        this.evaluateUrlAttributes();
-
         this.pairPeer = {};
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
-            // Timeout to prevent paste mode from getting cancelled simultaneously
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
+            // Timeout to prevent share mode from getting cancelled simultaneously
             setTimeout(() => this._close(), 50);
         }
     }
@@ -1167,15 +1356,6 @@ class PairDeviceDialog extends Dialog {
         this.inputKeyContainer._onPaste(pastedKey);
     }
 
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('pair_key')) {
-            this._pairDeviceJoin(urlParams.get('pair_key'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
-    }
-
     _pairDeviceInitiate() {
         Events.fire('pair-device-initiate');
     }
@@ -1183,21 +1363,26 @@ class PairDeviceDialog extends Dialog {
     _onPairDeviceInitiated(msg) {
         this.pairKey = msg.pairKey;
         this.roomSecret = msg.roomSecret;
+        this._setKeyAndQRCode();
+        this.inputKeyContainer._enableChars();
+        this.show();
+    }
+
+    _setKeyAndQRCode() {
         this.$key.innerText = `${this.pairKey.substring(0,3)} ${this.pairKey.substring(3,6)}`
+
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getPairUrl(),
             width: 130,
             height: 130,
             padding: 1,
-            background: 'rgb(250,250,250)',
+            background: 'white',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
         });
         this.$qrCode.innerHTML = qr.svg();
-        this.inputKeyContainer._enableChars();
-        this.show();
     }
 
     _getPairUrl() {
@@ -1366,12 +1551,15 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
 
     async _initDOM() {
+        const pairedDeviceRemovedString = Localization.getTranslation("dialogs.paired-device-removed");
         const unpairString = Localization.getTranslation("dialogs.unpair").toUpperCase();
         const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
@@ -1379,21 +1567,32 @@ class EditPairedDevicesDialog extends Dialog {
         roomSecretsEntries
             .forEach(roomSecretsEntry => {
                 let $pairedDevice = document.createElement('div');
-                $pairedDevice.classList = ["paired-device"];
+                $pairedDevice.classList.add("paired-device");
+                $pairedDevice.setAttribute('placeholder', pairedDeviceRemovedString);
 
                 $pairedDevice.innerHTML = `
-                <div class="display-name">
-                    <span>${roomSecretsEntry.display_name}</span>
-                </div>
-                <div class="device-name">
-                    <span>${roomSecretsEntry.device_name}</span>
-                </div>
-                <div class="button-wrapper">
-                    <label class="auto-accept pointer">${autoAcceptString}
-                        <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
-                    </label>
-                    <button class="btn" type="button">${unpairString}</button>
-                </div>`
+                    <div class="display-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.display_name}
+                        </span>
+                    </div>
+                    <div class="device-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.device_name}
+                        </span>
+                    </div>
+                    <div class="button-wrapper row fw center wrap">
+                        <div class="center grow">
+                            <span class="center wrap">
+                                ${autoAcceptString}
+                            </span>
+                            <label class="auto-accept switch pointer m1">
+                                <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                        <button class="btn grow" type="button">${unpairString}</button>
+                    </div>`
 
                 $pairedDevice
                     .querySelector('input[type="checkbox"]')
@@ -1416,11 +1615,10 @@ class EditPairedDevicesDialog extends Dialog {
                             .then(roomSecret => {
                                 Events.fire('room-secrets-deleted', [roomSecret]);
                                 Events.fire('evaluate-number-room-secrets');
-                                e.target.parentNode.parentNode.remove();
+                                $pairedDevice.innerText = "";
                             });
                     })
 
-                this.$pairedDevicesWrapper.html = "";
                 this.$pairedDevicesWrapper.appendChild($pairedDevice)
             })
     }
@@ -1435,17 +1633,9 @@ class EditPairedDevicesDialog extends Dialog {
     _onEditPairedDevices() {
         this._initDOM()
             .then(_ => {
-                this._evaluateOverflowing();
+                this._evaluateOverflowing(this.$pairedDevicesWrapper);
                 this.show();
             });
-    }
-
-    _evaluateOverflowing() {
-        if (this.$pairedDevicesWrapper.clientHeight < this.$pairedDevicesWrapper.scrollHeight) {
-            this.$pairedDevicesWrapper.classList.add('overflowing');
-        } else {
-            this.$pairedDevicesWrapper.classList.remove('overflowing');
-        }
     }
 
     _clearRoomSecrets() {
@@ -1519,14 +1709,14 @@ class PublicRoomDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyShareRoomUrl());
 
-        this.evaluateUrlAttributes();
-
         Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('translation-loaded', _ => this.setFooterBadge());
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
@@ -1553,14 +1743,14 @@ class PublicRoomDialog extends Dialog {
     _onPublicRoomCreated(roomId) {
         this.roomId = roomId;
 
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this.show();
 
         sessionStorage.setItem('public_room_id', roomId);
     }
 
-    setIdAndQrCode() {
+    _setKeyAndQrCode() {
         if (!this.roomId) return;
 
         this.$key.innerText = this.roomId.toUpperCase();
@@ -1571,7 +1761,7 @@ class PublicRoomDialog extends Dialog {
             width: 130,
             height: 130,
             padding: 1,
-            background: 'rgb(250,250,250)',
+            background: 'white',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
@@ -1608,22 +1798,13 @@ class PublicRoomDialog extends Dialog {
             })
     }
 
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('room_id')) {
-            this._joinPublicRoom(urlParams.get('room_id'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
-    }
-
     _onWsConnected() {
         let roomId = sessionStorage.getItem('public_room_id');
 
         if (!roomId) return;
 
         this.roomId = roomId;
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this._joinPublicRoom(roomId, true);
     }
@@ -1675,7 +1856,7 @@ class PublicRoomDialog extends Dialog {
         if (isJoinedRoomId) {
             this.roomId = roomId;
             this.roomIdJoin = false;
-            this.setIdAndQrCode();
+            this._setKeyAndQrCode();
         }
     }
 
@@ -1719,34 +1900,37 @@ class PublicRoomDialog extends Dialog {
 class SendTextDialog extends Dialog {
     constructor() {
         super('send-text-dialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
-        this.$text = this.$el.querySelector('#text-input');
+
+        this.$text = this.$el.querySelector('.textarea');
         this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
-        this.$text.addEventListener('input', _ => this._onChange());
+        this.$text.addEventListener('input', _ => this._onInput());
+
+        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
-    async _onKeyDown(e) {
+    _onKeyDown(e) {
         if (!this.isShown()) return;
 
         if (e.code === "Escape") {
             this.hide();
         }
         else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
-            if (this._textInputEmpty()) return;
+            if (this._textEmpty()) return;
+
             this._send();
         }
     }
 
-    _textInputEmpty() {
+    _textEmpty() {
         return !this.$text.innerText || this.$text.innerText === "\n";
     }
 
-    _onChange() {
-        if (this._textInputEmpty()) {
+    _onInput() {
+        if (this._textEmpty()) {
             this.$submit.setAttribute('disabled', true);
             // remove remaining whitespace on Firefox on text deletion
             this.$text.innerText = "";
@@ -1754,15 +1938,7 @@ class SendTextDialog extends Dialog {
         else {
             this.$submit.removeAttribute('disabled');
         }
-        this._evaluateOverflowing();
-    }
-
-    _evaluateOverflowing() {
-        if (this.$text.clientHeight < this.$text.scrollHeight) {
-            this.$text.classList.add('overflowing');
-        } else {
-            this.$text.classList.remove('overflowing');
-        }
+        this._evaluateOverflowing(this.$text);
     }
 
     _onRecipient(peerId, deviceName) {
@@ -1814,14 +1990,14 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.isShown()) {
-            if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
-                await this._onCopy()
-                this.hide();
-            }
-            else if (e.code === "Escape") {
-                this.hide();
-            }
+        if (!this.isShown()) return
+
+        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+            await this._onCopy()
+            this.hide();
+        }
+        else if (e.code === "Escape") {
+            this.hide();
         }
     }
 
@@ -1855,20 +2031,12 @@ class ReceiveTextDialog extends Dialog {
             });
         }
 
-        this._evaluateOverflowing();
+        this._evaluateOverflowing(this.$text);
 
         this._setDocumentTitleMessages();
 
         changeFavicon("images/favicon-96x96-notification.png");
         this.show();
-    }
-
-    _evaluateOverflowing() {
-        if (this.$text.clientHeight < this.$text.scrollHeight) {
-            this.$text.classList.add('overflowing');
-        } else {
-            this.$text.classList.remove('overflowing');
-        }
     }
 
     _setDocumentTitleMessages() {
@@ -1896,65 +2064,128 @@ class ReceiveTextDialog extends Dialog {
     }
 }
 
-class Base64ZipDialog extends Dialog {
+class ShareTextDialog extends Dialog {
+    constructor() {
+        super('share-text-dialog');
+
+        this.$text = this.$el.querySelector('.textarea');
+        this.$approveMsgBtn = this.$el.querySelector('button[type="submit"]');
+        this.$checkbox = this.$el.querySelector('input[type="checkbox"]')
+
+        this.$approveMsgBtn.addEventListener('click', _ => this._approveShareText());
+
+        // Only show this per default if user sets checkmark
+        this.$checkbox.checked = localStorage.getItem('approve-share-text')
+            ? ShareTextDialog.isApproveShareTextSet()
+            : false;
+
+        this._setCheckboxValueToLocalStorage();
+
+        this.$checkbox.addEventListener('change', _ => this._setCheckboxValueToLocalStorage());
+        Events.on('share-text-dialog', e => this._onShareText(e.detail));
+        Events.on('keydown', e => this._onKeyDown(e));
+        this.$text.addEventListener('input', _ => this._evaluateEmptyText());
+    }
+
+    static isApproveShareTextSet() {
+        return localStorage.getItem('approve-share-text') === "true";
+    }
+
+    _setCheckboxValueToLocalStorage() {
+        localStorage.setItem('approve-share-text', this.$checkbox.checked ? "true" : "false");
+    }
+
+    _onKeyDown(e) {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
+            this._approveShareText();
+        }
+        else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+            if (this._textEmpty()) return;
+
+            this._approveShareText();
+        }
+    }
+
+    _textEmpty() {
+        return !this.$text.innerText || this.$text.innerText === "\n";
+    }
+
+    _evaluateEmptyText() {
+        if (this._textEmpty()) {
+            this.$approveMsgBtn.setAttribute('disabled', true);
+            // remove remaining whitespace on Firefox on text deletion
+            this.$text.innerText = "";
+        }
+        else {
+            this.$approveMsgBtn.removeAttribute('disabled');
+        }
+        this._evaluateOverflowing(this.$text);
+    }
+
+    _onShareText(text) {
+        this.$text.innerText = text;
+        this._evaluateEmptyText();
+        this.show();
+    }
+
+    _approveShareText() {
+        Events.fire('activate-share-mode', {text: this.$text.innerText});
+        this.hide();
+    }
+
+    hide() {
+        super.hide();
+        setTimeout(() => this.$text.innerText = "", 500);
+    }
+}
+
+class Base64Dialog extends Dialog {
 
     constructor() {
         super('base64-paste-dialog');
-        const urlParams = new URL(window.location).searchParams;
-        const base64Text = urlParams.get('base64text');
-        const base64Zip = urlParams.get('base64zip');
-        const base64Hash = window.location.hash.substring(1);
 
+        this.$title = this.$el.querySelector('.dialog-title');
         this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
         this.$fallbackTextarea = this.$el.querySelector('.textarea');
+    }
 
-        if (base64Text) {
+    async evaluateBase64Text(base64Text, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-text');
+
+        if (base64Text === 'paste') {
+            // ?base64text=paste
+            // base64 encoded string is ready to be pasted from clipboard
+            this.preparePasting('text');
             this.show();
-            if (base64Text === 'paste') {
-                // ?base64text=paste
-                // base64 encoded string is ready to be pasted from clipboard
-                this.preparePasting('text');
-            }
-            else if (base64Text === 'hash') {
-                // ?base64text=hash#BASE64ENCODED
-                // base64 encoded string is url hash which is never sent to server and faster (recommended)
-                this.processBase64Text(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
-            else {
-                // ?base64text=BASE64ENCODED
-                // base64 encoded string was part of url param (not recommended)
-                this.processBase64Text(base64Text)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
         }
-        else if (base64Zip) {
+        else if (base64Text === 'hash') {
+            // ?base64text=hash#BASE64ENCODED
+            // base64 encoded text is url hash which cannot be seen by the server and is faster (recommended)
             this.show();
-            if (base64Zip === "hash") {
-                // ?base64zip=hash#BASE64ENCODED
-                // base64 encoded zip file is url hash which is never sent to the server
-                this.processBase64Zip(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
-                        console.log("File content incorrect.");
-                    }).finally(() => {
-                        this.hide();
-                    });
-            }
-            else {
-                // ?base64zip=paste || ?base64zip=true
-                this.preparePasting('files');
-            }
+            await this.processBase64Text(hash)
+        }
+        else {
+            // ?base64text=BASE64ENCODED
+            // base64 encoded text is part of the url param. Seen by server and slow (not recommended)
+            this.show();
+            await this.processBase64Text(base64Text)
+        }
+    }
+
+    async evaluateBase64Zip(base64Zip, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-files');
+
+        if (base64Zip === 'paste') {
+            // ?base64zip=paste || ?base64zip=true
+            this.preparePasting('files');
+            this.show();
+        }
+        else if (base64Zip === 'hash') {
+            // ?base64zip=hash#BASE64ENCODED
+            // base64 encoded zip file is url hash which cannot be seen by the server
+            await this.processBase64Zip(hash)
         }
     }
 
@@ -1987,28 +2218,15 @@ class Base64ZipDialog extends Dialog {
     async processInput(type) {
         const base64 = this.$fallbackTextarea.textContent;
         this.$fallbackTextarea.textContent = '';
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
     async processClipboard(type) {
         const base64 = await navigator.clipboard.readText();
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
-    isValidBase64(base64) {
-        try {
-            // check if input is base64 encoded
-            window.atob(base64);
-            return true;
-        } catch (e) {
-            // input is not base64 string.
-            return false;
-        }
-    }
-
-    async processBase64(type, base64) {
-        if (!base64 || !this.isValidBase64(base64)) return;
-        this._setPasteBtnToProcessing();
+    async processPastedBase64(type, base64) {
         try {
             if (type === 'text') {
                 await this.processBase64Text(base64);
@@ -2016,47 +2234,50 @@ class Base64ZipDialog extends Dialog {
             else {
                 await this.processBase64Zip(base64);
             }
-        } catch(_) {
+        }
+        catch(e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-content-incorrect"));
             console.log("Clipboard content is incorrect.")
         }
         this.hide();
     }
 
-    processBase64Text(base64Text){
-        return new Promise((resolve) => {
-            this._setPasteBtnToProcessing();
-            let decodedText = decodeURIComponent(escape(window.atob(base64Text)));
-            Events.fire('activate-paste-mode', {files: [], text: decodedText});
-            resolve();
-        });
-    }
-
-    async processBase64Zip(base64zip) {
+    async processBase64Text(base64){
         this._setPasteBtnToProcessing();
-        let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
+
+        try {
+            const decodedText = await decodeBase64Text(base64);
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', decodedText);
+            }
+            else {
+                Events.fire('activate-share-mode', {text: decodedText});
+            }
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
+            console.log("Text content incorrect.");
         }
 
-        const zipBlob = new File([u8arr], 'archive.zip');
-
-        let files = [];
-        const zipEntries = await zipper.getEntries(zipBlob);
-        for (let i = 0; i < zipEntries.length; i++) {
-            let fileBlob = await zipper.getData(zipEntries[i]);
-            files.push(new File([fileBlob], zipEntries[i].filename));
-        }
-        Events.fire('activate-paste-mode', {files: files, text: ""});
+        this.hide();
     }
 
-    clearBrowserHistory() {
-        const url = getUrlWithoutArguments();
-        window.history.replaceState({}, "Rewrite URL", url);
+    async processBase64Zip(base64) {
+        this._setPasteBtnToProcessing();
+
+        try {
+            const decodedFiles = await decodeBase64Files(base64);
+            Events.fire('activate-share-mode', {files: decodedFiles});
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
+            console.log("File content incorrect.");
+        }
+
+        this.hide();
     }
 
     hide() {
-        this.clearBrowserHistory();
         this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
         this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
         super.hide();
@@ -2066,17 +2287,27 @@ class Base64ZipDialog extends Dialog {
 class Toast extends Dialog {
     constructor() {
         super('toast');
+        this.$closeBtn = this.$el.querySelector('.icon-button');
+        this.$text = this.$el.querySelector('span');
+
+        this.$closeBtn.addEventListener('click', _ => this.hide());
         Events.on('notify-user', e => this._onNotify(e.detail));
+        Events.on('share-mode-changed', _ => this.hide());
     }
 
     _onNotify(message) {
         if (this.hideTimeout) clearTimeout(this.hideTimeout);
-        this.$el.innerText = typeof message === "object" ? message.message : message;
+        this.$text.innerText = typeof message === "object" ? message.message : message;
         this.show();
 
         if (typeof message === "object" && message.persistent) return;
 
         this.hideTimeout = setTimeout(() => this.hide(), 5000);
+    }
+
+    hide() {
+        if (this.hideTimeout) clearTimeout(this.hideTimeout);
+        super.hide();
     }
 }
 
@@ -2087,6 +2318,7 @@ class Notifications {
         if (!('Notification' in window)) return;
 
         this.$headerNotificationButton = $('notification');
+        this.$downloadBtn = $('download-btn');
 
         this.$headerNotificationButton.addEventListener('click', _ => this._requestPermission());
 
@@ -2216,7 +2448,7 @@ class Notifications {
     }
 
     _download(notification) {
-        $('download-btn').click();
+        this.$downloadBtn.click();
         notification.close();
     }
 
@@ -2267,76 +2499,73 @@ class NetworkStatusUI {
 }
 
 class WebShareTargetUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        const share_target_type = urlParams.get("share-target")
-        if (share_target_type) {
-            if (share_target_type === "text") {
-                const title = urlParams.get('title') || '';
-                const text = urlParams.get('text') || '';
-                const url = urlParams.get('url') || '';
-                let shareTargetText;
 
-                if (url) {
-                    shareTargetText = url; // we share only the link - no text.
-                }
-                else if (title && text) {
-                    shareTargetText = title + '\r\n' + text;
-                }
-                else {
-                    shareTargetText = title + text;
-                }
-
-                Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
+    async evaluateShareTarget(shareTargetType, title, text, url) {
+        if (shareTargetType === "text") {
+            let shareTargetText;
+            if (url) {
+                shareTargetText = url; // we share only the link - no text.
             }
-            else if (share_target_type === "files") {
-                let openRequest = window.indexedDB.open('pairdrop_store')
-                openRequest.onsuccess = e => {
-                    const db = e.target.result;
-                    const tx = db.transaction('share_target_files', 'readwrite');
-                    const store = tx.objectStore('share_target_files');
-                    const request = store.getAll();
-                    request.onsuccess = _ => {
-                        const fileObjects = request.result;
-                        let filesReceived = [];
-                        for (let i=0; i<fileObjects.length; i++) {
-                            filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
-                        }
-                        const clearRequest = store.clear()
-                        clearRequest.onsuccess = _ => db.close();
+            else if (title && text) {
+                shareTargetText = title + '\r\n' + text;
+            }
+            else {
+                shareTargetText = title + text;
+            }
 
-                        Events.fire('activate-paste-mode', {files: filesReceived, text: ""})
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', shareTargetText);
+            }
+            else {
+                Events.fire('activate-share-mode', {text: shareTargetText});
+            }
+        }
+        else if (shareTargetType === "files") {
+            let openRequest = window.indexedDB.open('pairdrop_store')
+            openRequest.onsuccess = e => {
+                const db = e.target.result;
+                const tx = db.transaction('share_target_files', 'readwrite');
+                const store = tx.objectStore('share_target_files');
+                const request = store.getAll();
+                request.onsuccess = _ => {
+                    const fileObjects = request.result;
+
+                    let filesReceived = [];
+                    for (let i = 0; i < fileObjects.length; i++) {
+                        filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
                     }
+
+                    const clearRequest = store.clear()
+                    clearRequest.onsuccess = _ => db.close();
+
+                    Events.fire('activate-share-mode', {files: filesReceived})
                 }
             }
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
         }
     }
 }
 
+// Keep for legacy reasons even though this is removed from new PWA installations
 class WebFileHandlersUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        if (urlParams.has("file_handler")  && "launchQueue" in window) {
-            launchQueue.setConsumer(async launchParams => {
-                console.log("Launched with: ", launchParams);
-                if (!launchParams.files.length)
-                    return;
-                let files = [];
+    async evaluateLaunchQueue() {
+        if (!"launchQueue" in window) return;
 
-                for (let i=0; i<launchParams.files.length; i++) {
-                    if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
-                    const fileHandle = launchParams.files[i];
-                    const file = await fileHandle.getFile();
-                    files.push(file);
-                }
-                Events.fire('activate-paste-mode', {files: files, text: ""})
-                launchParams = null;
-            });
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
-        }
+        launchQueue.setConsumer(async launchParams => {
+            console.log("Launched with: ", launchParams);
+
+            if (!launchParams.files.length) return;
+
+            let files = [];
+
+            for (let i = 0; i < launchParams.files.length; i++) {
+                if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
+
+                const file = await launchParams.files[i].getFile();
+                files.push(file);
+            }
+
+            Events.fire('activate-share-mode', {files: files})
+        });
     }
 }
 

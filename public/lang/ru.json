@@ -3,7 +3,7 @@
         "about_aria-label": "Открыть страницу \"О сервисе\"",
         "pair-device_title": "Связать ваши устройства навсегда",
         "install_title": "Установить PairDrop",
-        "cancel-paste-mode": "Выполнено",
+        "cancel-share-mode": "Выполнено",
         "edit-paired-devices_title": "Редактировать связанные устройства",
         "notification_title": "Включить уведомления",
         "about_title": "О сервисе",
@@ -16,16 +16,16 @@
     "instructions": {
         "x-instructions_desktop": "Нажмите, чтобы отправить файлы, или щелкните правой кнопкой мыши, чтобы отправить сообщение",
         "no-peers_data-drop-bg": "Отпустите, чтобы выбрать получателя",
-        "click-to-send": "Нажмите, чтобы отправить",
+        "x-instructions-share-mode_desktop": "Нажмите, чтобы отправить",
         "x-instructions_data-drop-bg": "Отпустите, чтобы выбрать получателя",
-        "tap-to-send": "Прикоснитесь, чтобы отправить",
+        "x-instructions-share-mode_mobile": "Прикоснитесь, чтобы отправить",
         "x-instructions_data-drop-peer": "Отпустите, чтобы послать узлу",
         "x-instructions_mobile": "Прикоснитесь коротко, чтобы отправить файлы, или долго, чтобы отправить сообщение",
         "no-peers-title": "Откройте PairDrop на других устройствах, чтобы отправить файлы",
         "no-peers-subtitle": "Свяжите устройства или войдите в публичную комнату, чтобы вас могли обнаружить из других сетей",
-        "activate-paste-mode-and-other-files": "и {{count}} других файлов",
-        "activate-paste-mode-base": "Откройте PairDrop на других устройствах, чтобы отправить",
-        "activate-paste-mode-shared-text": "общий текст"
+        "activate-share-mode-and-other-files-plural": "и {{count}} других файлов",
+        "activate-share-mode-base": "Откройте PairDrop на других устройствах, чтобы отправить",
+        "activate-share-mode-shared-text": "общий текст"
     },
     "footer": {
         "display-name_data-placeholder": "Загрузка…",
@@ -148,7 +148,7 @@
         "room-url-copied-to-clipboard": "Ссылка на публичную комнату была скопирована в буфер обмена"
     },
     "peer-ui": {
-        "click-to-send-paste-mode": "Нажмите, чтобы отправить {{descriptor}}",
+        "click-to-send-share-mode": "Нажмите, чтобы отправить {{descriptor}}",
         "preparing": "Подготовка…",
         "transferring": "Передача…",
         "processing": "Обработка…",

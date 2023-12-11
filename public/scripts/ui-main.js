@@ -111,14 +111,90 @@ class ThemeUI {
     }
 }
 
+class HeaderUI {
+
+    constructor() {
+        this.$header = $$('header');
+        this.$expandBtn = $('expand');
+        Events.on("resize", _ => this.evaluateOverflowing());
+        this.$expandBtn.addEventListener('click', _ => this.onExpandBtnClick());
+    }
+
+    async fadeIn() {
+        this.$header.classList.remove('opacity-0');
+    }
+
+    async evaluateOverflowing() {
+        // remove and reset bracket icon before evaluating
+        this.$expandBtn.setAttribute('hidden', true);
+        this.$expandBtn.classList.add('flipped');
+
+        const rtlLocale = Localization.isCurrentLocaleRtl();
+        let icon;
+        const $headerIconsShown = document.querySelectorAll('body > header:first-of-type > *:not([hidden])');
+
+        for (let i= 1; i < $headerIconsShown.length; i++) {
+            let isFurtherLeftThanLastIcon = $headerIconsShown[i].offsetLeft >= $headerIconsShown[i-1].offsetLeft;
+            let isFurtherRightThanLastIcon = $headerIconsShown[i].offsetLeft <= $headerIconsShown[i-1].offsetLeft;
+            if ((!rtlLocale && isFurtherLeftThanLastIcon) || (rtlLocale && isFurtherRightThanLastIcon)) {
+                // we have found the first icon on second row. Use previous icon.
+                icon = $headerIconsShown[i-1];
+                break;
+            }
+        }
+        if (icon) {
+            // overflowing
+            // add overflowing-hidden class
+            this.$header.classList.add('overflow-hidden');
+            // add expand btn 2 before icon
+            this.$expandBtn.removeAttribute('hidden');
+            icon.before(this.$expandBtn);
+        }
+        else {
+            // no overflowing
+            // add overflowing-hidden class
+            this.$header.classList.remove('overflow-hidden');
+        }
+    }
+
+    onExpandBtnClick() {
+        // toggle overflowing-hidden class and flip expand btn icon
+        if (this.$header.classList.contains('overflow-hidden')) {
+            this.$header.classList.remove('overflow-hidden');
+            this.$header.classList.add('overflow-expanded');
+            this.$expandBtn.classList.remove('flipped');
+        }
+        else {
+            this.$header.classList.add('overflow-hidden');
+            this.$header.classList.remove('overflow-expanded');
+            this.$expandBtn.classList.add('flipped');
+        }
+    }
+}
+
+class CenterUI {
+
+    constructor() {
+        this.$center = $$('#center');
+        this.$xNoPeers = $$('x-no-peers');
+    }
+
+    async fadeIn() {
+        this.$center.classList.remove('opacity-0');
+
+        // Prevent flickering on load
+        setTimeout(() => {
+            this.$xNoPeers.classList.remove('no-animation-on-load');
+        }, 600);
+    }
+}
+
 class FooterUI {
 
     constructor() {
+        this.$footer = $$('footer');
         this.$displayName = $('display-name');
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
-
-        // Show "Loading…"
-        this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
@@ -133,7 +209,15 @@ class FooterUI {
         Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges());
     }
 
-    _evaluateFooterBadges() {
+    async showLoading() {
+        this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
+    }
+
+    async fadeIn() {
+        this.$footer.classList.remove('opacity-0');
+    }
+
+    async _evaluateFooterBadges() {
         if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
             this.$discoveryWrapper.classList.remove('row');
             this.$discoveryWrapper.classList.add('column');
@@ -143,17 +227,15 @@ class FooterUI {
             this.$discoveryWrapper.classList.add('row');
         }
         Events.fire('redraw-canvas');
-        Events.fire('fade-in-ui');
     }
 
-    _loadSavedDisplayName() {
-        this._getSavedDisplayName()
-            .then(displayName => {
-                console.log("Retrieved edited display name:", displayName)
-                if (displayName) {
-                    Events.fire('self-display-name-changed', displayName);
-                }
-            });
+    async _loadSavedDisplayName() {
+        const displayName = await this._getSavedDisplayName()
+
+        if (!displayName) return;
+
+        console.log("Retrieved edited display name:", displayName)
+        Events.fire('self-display-name-changed', displayName);
     }
 
     _onDisplayName(displayName){
@@ -184,13 +266,13 @@ class FooterUI {
         if (newDisplayName === savedDisplayName) return;
 
         if (newDisplayName) {
-            PersistentStorage.set('editedDisplayName', newDisplayName)
+            PersistentStorage.set('edited_display_name', newDisplayName)
                 .then(_ => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-permanently"));
                 })
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.");
-                    localStorage.setItem('editedDisplayName', newDisplayName);
+                    localStorage.setItem('edited_display_name', newDisplayName);
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
                 .finally(() => {
@@ -199,10 +281,10 @@ class FooterUI {
                 });
         }
         else {
-            PersistentStorage.delete('editedDisplayName')
+            PersistentStorage.delete('edited_display_name')
                 .catch(_ => {
                     console.log("This browser does not support IndexedDB. Use localStorage instead.")
-                    localStorage.removeItem('editedDisplayName');
+                    localStorage.removeItem('edited_display_name');
                 })
                 .finally(() => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
@@ -214,13 +296,13 @@ class FooterUI {
 
     _getSavedDisplayName() {
         return new Promise((resolve) => {
-            PersistentStorage.get('editedDisplayName')
+            PersistentStorage.get('edited_display_name')
                 .then(displayName => {
                     if (!displayName) displayName = "";
                     resolve(displayName);
                 })
                 .catch(_ => {
-                    let displayName = localStorage.getItem('editedDisplayName');
+                    let displayName = localStorage.getItem('edited_display_name');
                     if (!displayName) displayName = "";
                     resolve(displayName);
                 })
@@ -234,16 +316,16 @@ class BackgroundCanvas {
         this.cCtx = this.c.getContext('2d');
         this.$footer = $$('footer');
 
-        // fade-in on load
-        Events.on('fade-in-ui', _ => this._fadeIn());
-
         // redraw canvas
         Events.on('resize', _ => this.init());
         Events.on('redraw-canvas', _ => this.init());
         Events.on('translation-loaded', _ => this.init());
+
+        // ShareMode
+        Events.on('share-mode-changed', e => this.onShareModeChanged(e.detail.active));
     }
 
-    _fadeIn() {
+    async fadeIn() {
         this.c.classList.remove('opacity-0');
     }
 
@@ -263,7 +345,15 @@ class BackgroundCanvas {
         this.x0 = this.w / 2;
         this.y0 = this.h - this.offset;
         this.dw = Math.round(Math.max(this.w, this.h, 1000) / 13);
+        this.baseColor = '165, 165, 165';
+        this.baseOpacity = 0.3;
 
+        this.drawCircles(this.cCtx);
+    }
+
+    onShareModeChanged(active) {
+        this.baseColor = active ? '165, 165, 255' : '165, 165, 165';
+        this.baseOpacity = active ? 0.5 : 0.3;
         this.drawCircles(this.cCtx);
     }
 
@@ -271,8 +361,8 @@ class BackgroundCanvas {
     drawCircle(ctx, radius) {
         ctx.beginPath();
         ctx.lineWidth = 2;
-        let opacity = Math.max(0, 0.3 * (1 - 1.2 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(165, 165, 165, ${opacity})`;
+        let opacity = Math.max(0, this.baseOpacity * (1 - 1.2 * radius / Math.max(this.w, this.h)));
+        ctx.strokeStyle = `rgba(${this.baseColor}, ${opacity})`;
         ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }

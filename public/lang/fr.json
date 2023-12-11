@@ -11,7 +11,7 @@
         "pair-device_title": "Associez vos appareils de manière permanente",
         "edit-paired-devices_title": "Gérer les appareils couplés",
         "join-public-room_title": "Rejoindre temporairement la salle publique",
-        "cancel-paste-mode": "Terminé"
+        "cancel-share-mode": "Terminé"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Déposer pour choisir le destinataire",
@@ -21,11 +21,11 @@
         "x-instructions_mobile": "Appuyez pour envoyer des fichiers ou appuyez longuement pour envoyer un message",
         "x-instructions_data-drop-peer": "Déposer pour envoyer au destinataire",
         "x-instructions_data-drop-bg": "Lâcher pour choisir le destinataire",
-        "click-to-send": "Cliquez pour envoyer",
-        "tap-to-send": "Appuyez pour envoyer",
-        "activate-paste-mode-base": "Ouvrez PairDrop sur d'autres appareils pour envoyer",
-        "activate-paste-mode-and-other-files": "et {{count}} autres fichiers",
-        "activate-paste-mode-shared-text": "texte partagé"
+        "x-instructions-share-mode_desktop": "Cliquez pour envoyer",
+        "x-instructions-share-mode_mobile": "Appuyez pour envoyer",
+        "activate-share-mode-base": "Ouvrez PairDrop sur d'autres appareils pour envoyer",
+        "activate-share-mode-and-other-files-plural": "et {{count}} autres fichiers",
+        "activate-share-mode-shared-text": "texte partagé"
     },
     "footer": {
         "known-as": "Vous êtes connu comme :",
@@ -149,7 +149,7 @@
         "message-received-plural": "{{count}} Messages reçus"
     },
     "peer-ui": {
-        "click-to-send-paste-mode": "Cliquez pour envoyer {{descriptor}}",
+        "click-to-send-share-mode": "Cliquez pour envoyer {{descriptor}}",
         "click-to-send": "Cliquez pour envoyer des fichiers ou faites un clic droit pour envoyer un message",
         "connection-hash": "Pour vérifier la sécurité du chiffrement de bout en bout, comparez ce numéro de sécurité sur les deux appareils",
         "preparing": "Préparation…",

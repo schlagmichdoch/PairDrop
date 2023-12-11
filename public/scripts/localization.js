@@ -2,33 +2,30 @@ class Localization {
     constructor() {
         Localization.defaultLocale = "en";
         Localization.supportedLocales = ["ar", "de", "en", "es", "fr", "id", "it", "ja", "nb", "nl", "ro", "ru", "tr", "zh-CN","pt-BR"];
-        Localization.supportedLocalesRTL = ["ar"];
+        Localization.supportedLocalesRtl = ["ar"];
 
         Localization.translations = {};
         Localization.defaultTranslations = {};
 
         Localization.systemLocale = Localization.getSupportedOrDefault(navigator.languages);
 
-        let storedLanguageCode = localStorage.getItem("language-code");
+        let storedLanguageCode = localStorage.getItem('language_code');
 
         Localization.initialLocale = storedLanguageCode && Localization.isSupported(storedLanguageCode)
             ? storedLanguageCode
             : Localization.systemLocale;
-
-        Localization
-            .setTranslation(Localization.initialLocale)
-            .then(_ => {
-                console.log("Initial translation successful.");
-                Events.fire("initial-translation-loaded");
-            });
     }
 
     static isSupported(locale) {
         return Localization.supportedLocales.indexOf(locale) > -1;
     }
 
-    static isRTLLanguage(locale) {
-        return Localization.supportedLocalesRTL.indexOf(locale) > -1;
+    static isRtlLanguage(locale) {
+        return Localization.supportedLocalesRtl.indexOf(locale) > -1;
+    }
+
+    static isCurrentLocaleRtl() {
+        return Localization.isRtlLanguage(Localization.locale);
     }
 
     static getSupportedOrDefault(locales) {
@@ -41,6 +38,10 @@ class Localization {
             || Localization.defaultLocale;
     }
 
+    async setInitialTranslation() {
+        await Localization.setTranslation(Localization.initialLocale)
+    }
+
     static async setTranslation(locale) {
         if (!locale) locale = Localization.systemLocale;
 
@@ -49,7 +50,7 @@ class Localization {
 
         const htmlRootNode = document.querySelector('html');
 
-        if (Localization.isRTLLanguage(locale)) {
+        if (Localization.isRtlLanguage(locale)) {
             htmlRootNode.setAttribute('dir', 'rtl');
         }
         else {
@@ -85,7 +86,7 @@ class Localization {
     }
 
     static isSystemLocale() {
-        return !localStorage.getItem('language-code');
+        return !localStorage.getItem('language_code');
     }
 
     static async fetchTranslationsFor(newLocale) {
@@ -121,7 +122,7 @@ class Localization {
         }
     }
 
-    static getTranslation(key, attr=null, data={}, useDefault=false) {
+    static getTranslation(key, attr = null, data = {}, useDefault = false) {
         const keys = key.split(".");
 
         let translationCandidates = useDefault
@@ -142,25 +143,43 @@ class Localization {
             translation = translationCandidates[lastKey];
 
             for (let j in data) {
-                translation = translation.replace(`{{${j}}}`, data[j]);
+                if (translation.includes(`{{${j}}}`)) {
+                    translation = translation.replace(`{{${j}}}`, data[j]);
+                } else {
+                    console.warn(`Translation for your language ${Localization.locale.toUpperCase()} misses at least one data placeholder:`, key, attr, data);
+                    Localization.logHelpCallKey(key);
+                    Localization.logHelpCall();
+                    translation = "";
+                    break;
+                }
             }
         } catch (e) {
+            console.error(e);
             translation = "";
         }
 
         if (!translation) {
             if (!useDefault) {
-                translation = this.getTranslation(key, attr, data, true);
                 console.warn(`Missing translation entry for your language ${Localization.locale.toUpperCase()}. Using ${Localization.defaultLocale.toUpperCase()} instead.`, key, attr);
-                console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${Localization.locale.toLowerCase()}/?q=${key}`)
-                console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
+                Localization.logHelpCallKey(key);
+                Localization.logHelpCall();
+                translation = this.getTranslation(key, attr, data, true);
             }
             else {
                 console.warn("Missing translation in default language:", key, attr);
+                Localization.logHelpCall();
             }
         }
 
         return Localization.escapeHTML(translation);
+    }
+
+    static logHelpCall() {
+        console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
+    }
+
+    static logHelpCallKey(key) {
+        console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${Localization.locale.toLowerCase()}/?q=${key}`);
     }
 
     static escapeHTML(unsafeText) {

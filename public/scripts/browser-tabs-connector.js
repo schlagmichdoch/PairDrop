@@ -19,42 +19,42 @@ class BrowserTabsConnector {
     }
 
     static peerIsSameBrowser(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
+        let peerIdsBrowser = JSON.parse(localStorage.getItem('peer_ids_browser'));
         return peerIdsBrowser
             ? peerIdsBrowser.indexOf(peerId) !== -1
             : false;
     }
 
     static async addPeerIdToLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
+        const peerId = sessionStorage.getItem('peer_id');
         if (!peerId) return false;
 
         let peerIdsBrowser = [];
-        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peer_ids_browser"));
+        let peerIdsBrowserOld = JSON.parse(localStorage.getItem('peer_ids_browser'));
 
         if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
         peerIdsBrowser.push(peerId);
         peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem('peer_ids_browser', JSON.stringify(peerIdsBrowser));
 
         return peerIdsBrowser;
     }
 
     static async removePeerIdFromLocalStorage(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
+        let peerIdsBrowser = JSON.parse(localStorage.getItem('peer_ids_browser'));
         const index = peerIdsBrowser.indexOf(peerId);
         peerIdsBrowser.splice(index, 1);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem('peer_ids_browser', JSON.stringify(peerIdsBrowser));
         return peerId;
     }
 
 
     static async removeOtherPeerIdsFromLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
+        const peerId = sessionStorage.getItem('peer_id');
         if (!peerId) return false;
 
         let peerIdsBrowser = [peerId];
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
+        localStorage.setItem('peer_ids_browser', JSON.stringify(peerIdsBrowser));
         return peerIdsBrowser;
     }
 }

@@ -1,20 +1,5 @@
 /* All styles in this sheet are not needed on page load and deferred */
 
-/* Paste mode */
-#cancel-paste-mode {
-    z-index: 21;
-    margin: 0;
-    padding: 0;
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    width: 100vw;
-    height: 56px;
-    background-color: var(--primary-color);
-    color: rgb(238, 238, 238);
-}
-
 /* Text Input */
 .textarea {
     box-sizing: border-box;
@@ -22,15 +7,19 @@
     outline: none;
     padding: 16px 24px;
     border-radius: 12px;
-    font-size: inherit;
+    font-size: 16px;
     font-family: inherit;
     display: block;
     overflow: auto;
     resize: none;
     line-height: 16px;
-    max-height: 300px;
+    max-height: 350px;
     word-break: break-word;
     word-wrap: anywhere;
+}
+
+.textarea:before {
+    opacity: 0.5;
 }
 
 /* Peers */
@@ -279,6 +268,56 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
+/* Checkboxes as slider */
+
+.switch {
+    display: inline-block;
+    height: 20px;
+    position: relative;
+    width: 30px;
+}
+
+.switch input {
+    display:none;
+}
+
+.slider {
+    background-color: rgba(128, 128, 128, 0.5);
+    cursor: pointer;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+    transition: .4s;
+}
+
+.slider:before {
+    background-color: #fff;
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(10px);
+}
+
+.slider.round {
+    border-radius: 20px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
 
 /* Dialog */
 
@@ -287,38 +326,30 @@ x-dialog x-background {
     z-index: 30;
     transition: opacity 300ms;
     will-change: opacity;
-    overflow: overlay;
+    padding: 10px 5px 20px;
+    overflow: scroll
 }
 
 x-dialog x-paper {
+    position: relative;
     display: flex;
+    margin: auto;
     flex-direction: column;
-    width: calc(100vw - 10px);
+    width: 400px;
     z-index: 3;
     border-radius: 30px;
-    max-width: 400px;
     overflow: hidden;
     box-sizing: border-box;
     transition: transform 300ms;
     will-change: transform;
 }
 
-#pair-device-dialog x-paper,
-#edit-paired-devices-dialog x-paper,
-#public-room-dialog x-paper,
-#language-select-dialog x-paper {
-    position: absolute;
-    top: max(50%, 350px);
-    margin-top: -328.5px;
-}
-
 x-paper > .row:first-of-type {
     background-color: var(--accent-color);
-    padding: 10px;
     margin-bottom: 5px;
 }
 
-x-paper > .row:first-of-type h2 {
+x-paper .dialog-title {
     color: white;
 }
 
@@ -357,6 +388,10 @@ x-dialog a {
 
 /* Pair Devices Dialog & Public Room Dialog */
 
+#public-room-dialog x-paper {
+    width: 450px;
+}
+
 .input-key-container {
     width: 100%;
     display: flex;
@@ -394,15 +429,15 @@ x-dialog a {
     user-select: text;
     display: inline-block;
     font-size: 45px;
-    letter-spacing: min(calc((100vw - 80px - 99px) / 100 * 7), 20px);
-    text-indent: calc(0.5 * (11px + min(calc((100vw - 80px - 99px) / 100 * 6), 28px)));
+    letter-spacing: 18px;
+    text-indent: 15px;
     margin: 10px 0;
 }
 
 .key-qr-code {
     width: fit-content;
     align-self: center;
-    margin-top: 15px;
+    margin-top: 5px;
     margin-bottom: 10px;
 }
 
@@ -424,8 +459,8 @@ x-dialog hr {
 }
 
 .hr-note {
-    margin-top: 23px;
-    margin-bottom: 31px;
+    margin-top: 13px;
+    margin-bottom: 21px;
 }
 
 .hr-note hr {
@@ -445,10 +480,6 @@ x-dialog hr {
     background-color: var(--dialog-bg-color);
     border: var(--border-color) solid 3px;
     text-transform: uppercase;
-}
-
-#pair-device-dialog x-background {
-    padding: 16px!important;
 }
 
 /* Edit Paired Devices Dialog */
@@ -474,6 +505,10 @@ x-dialog hr {
     align-items: center;
 }
 
+.paired-device:empty {
+    padding: 47px;
+}
+
 .paired-device:not(:last-child) {
     border-bottom: solid 4px var(--paired-device-color);
 }
@@ -489,30 +524,11 @@ x-dialog hr {
     border-bottom: solid 2px rgba(128, 128, 128, 0.5);
     opacity: 1;
 }
-.paired-device span {
-    width: 100%;
-}
 
-.paired-device > .button-wrapper {
-    display: flex;
-    height: 36px;
-    justify-content: space-between;
-    flex-direction: row;
-    align-items: center;
-    width: 100%;
-}
-
-.paired-device > .button-wrapper > label,
-.paired-device > .button-wrapper > button {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    white-space: nowrap;
-    justify-content: center;
-    width: 50%;
-    padding-left: 6px;
-    padding-right: 6px;
-    height: 36px;
+.paired-device > .button-wrapper > * {
+    min-height: 38px;
+    padding-left: 5px;
+    padding-right: 5px;
 }
 
 .paired-device > .button-wrapper > :not(:last-child) {
@@ -529,30 +545,15 @@ x-dialog hr {
 }
 
 /* button row*/
-x-paper > .button-row {
+.btn-row .btn {
+    margin: 3px;
+    flex-grow: 1;
     height: 50px;
+    width: 120px; /* fixed width needed to ensure same width for all buttons */
+}
+
+x-paper > .btn-row {
     margin: 5px 10px 10px;
-}
-
-x-paper > .button-row > .btn {
-    height: 100%;
-    width: 100%;
-}
-
-html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:first-child) {
-    margin-right: 5px;
-}
-
-html:not([dir="rtl"]) x-paper > .button-row > .btn:not(:last-child) {
-    margin-left: 5px;
-}
-
-html[dir="rtl"] x-paper > .button-row > .btn:not(:first-child) {
-    margin-right: 5px;
-}
-
-html[dir="rtl"] x-paper > .button-row > .btn:not(:last-child) {
-    margin-left: 5px;
 }
 
 .language-buttons > button > span {
@@ -597,7 +598,10 @@ x-dialog .dialog-subheader {
 
 #send-text-dialog,
 #receive-text-dialog {
-    font-size: 16px;  /* prevents auto-zoom on edit */
+    font-size: 16px; /* prevents auto-zoom on edit */
+}
+
+.textarea.overflowing {
     --shadow-color-rgb: var(--shadow-color-secondary-rgb);
     --shadow-color-cover-rgb: var(--shadow-color-secondary-cover-rgb);
 }
@@ -605,10 +609,6 @@ x-dialog .dialog-subheader {
 #edit-paired-devices-dialog {
     --shadow-color-rgb: var(--shadow-color-dialog-rgb);
     --shadow-color-cover-rgb: var(--shadow-color-dialog-cover-rgb);
-}
-
-#text-input:before {
-    opacity: 0.5;
 }
 
 /* Receive Text Dialog */
@@ -634,11 +634,82 @@ x-dialog .dialog-subheader {
     pointer-events: none;
 }
 
+/* Do not call it 'share-panel', 'share-pannel' or 'sharepanel' as iOS Safari does not show any element with these classnames... */
+
+.shr-panel {
+    min-width: 250px;
+    max-width: calc(100vw - 20px);
+    overflow: hidden;
+    color: white;
+    background-color: var(--primary-color);
+    background-image: linear-gradient(225deg, var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 60%, black) 100%);
+}
+
+.shr-panel > div {
+    margin: 4px 2px;
+}
+
+.shr-panel > div:not(:first-child) {
+    margin-top: 2px;
+}
+
+.shr-panel .thumb > div {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 6px;
+    margin-right: 6px;
+}
+
+.shr-panel .text-thumb svg {
+    width: 18px;
+    height: 36px;
+}
+
+.shr-panel .file-thumb svg {
+    width: 36px;
+    height: 36px;
+}
+
+.shr-panel .thumb .image-thumb {
+    background-size: cover;
+    border-radius: 6px;
+    background-position: center;
+}
+
+.shr-panel .btn {
+    height: 36px;
+}
+
+.share-descriptor {
+    justify-content: center;
+}
+
+.share-descriptor > span {
+    display: inline;
+    margin-bottom: 0;
+    margin-top: 0;
+    height: 20px;
+    max-width: 15rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.share-descriptor > span:first-child {
+    font-weight: bold;
+}
+
+.share-descriptor > span:not(:first-child) {
+    font-size: small;
+}
+
 #base64-paste-btn,
 #base64-paste-dialog .textarea {
     width: 100%;
     height: 40vh;
     border: solid 12px #438cff;
+    margin: 6px;
 }
 
 #base64-paste-dialog .textarea {

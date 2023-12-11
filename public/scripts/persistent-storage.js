@@ -4,7 +4,7 @@ class PersistentStorage {
             PersistentStorage.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 4);
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 5);
         DBOpenRequest.onerror = e => {
             PersistentStorage.logBrowserNotCapable();
             console.log('Error initializing database: ');
@@ -13,7 +13,7 @@ class PersistentStorage {
         DBOpenRequest.onsuccess = _ => {
             console.log('Database initialised.');
         };
-        DBOpenRequest.onupgradeneeded = e => {
+        DBOpenRequest.onupgradeneeded = async e => {
             const db = e.target.result;
             const txn = e.target.transaction;
 
@@ -41,6 +41,14 @@ class PersistentStorage {
                 let roomSecretsObjectStore4 = txn.objectStore('room_secrets');
                 roomSecretsObjectStore4.createIndex('display_name', 'display_name');
                 roomSecretsObjectStore4.createIndex('auto_accept', 'auto_accept');
+            }
+            if (e.oldVersion <= 4) {
+                // migrate to v5
+                const editedDisplayNameOld = await PersistentStorage.get('editedDisplayName');
+                if (editedDisplayNameOld) {
+                    await PersistentStorage.set('edited_display_name', editedDisplayNameOld);
+                    await PersistentStorage.delete('editedDisplayName');
+                }
             }
         }
     }
@@ -141,7 +149,7 @@ class PersistentStorage {
             return(secrets);
         } catch (e) {
             this.logBrowserNotCapable();
-            return 0;
+            return [];
         }
     }
 

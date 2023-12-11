@@ -58,7 +58,7 @@
         "room-url-copied-to-clipboard": "Tautan ke ruang publik disalin ke papan klip"
     },
     "header": {
-        "cancel-paste-mode": "Selesai",
+        "cancel-share-mode": "Selesai",
         "theme-auto_title": "Sesuaikan tema dengan sistem",
         "install_title": "Instal PairDrop",
         "theme-dark_title": "Selalu gunakan tema gelap",
@@ -73,12 +73,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "Ketuk untuk mengirim file atau ketuk lama untuk mengirim pesan",
-        "click-to-send": "Klik untuk mengirim",
-        "activate-paste-mode-and-other-files": "dan {{count}} file lainnya",
-        "tap-to-send": "Ketuk untuk mengirim",
-        "activate-paste-mode-base": "Buka PairDrop di perangkat lain untuk berkirim",
+        "x-instructions-share-mode_desktop": "Klik untuk mengirim",
+        "activate-share-mode-and-other-files-plural": "dan {{count}} file lainnya",
+        "x-instructions-share-mode_mobile": "Ketuk untuk mengirim",
+        "activate-share-mode-base": "Buka PairDrop di perangkat lain untuk berkirim",
         "no-peers-subtitle": "Pasangkan perangkat atau masuk ke ruang publik agar dapat terdeteksi di jaringan lain",
-        "activate-paste-mode-shared-text": "teks bersama",
+        "activate-share-mode-shared-text": "teks bersama",
         "x-instructions_desktop": "Klik untuk mengirim file atau klik kanan untuk mengirim pesan",
         "no-peers-title": "Buka PairDrop di perangkat lain untuk berkirim file",
         "x-instructions_data-drop-peer": "Lepaskan untuk mengirim ke rekan",
@@ -87,7 +87,7 @@
     },
     "peer-ui": {
         "processing": "Memproses…",
-        "click-to-send-paste-mode": "Klik untuk mengirim {{descriptor}}",
+        "click-to-send-share-mode": "Klik untuk mengirim {{descriptor}}",
         "click-to-send": "Klik untuk mengirim file atau klik kanan untuk mengirim pesan",
         "waiting": "Menunggu…",
         "connection-hash": "Untuk memverifikasi keamanan enkripsi end-to-end, bandingkan nomor keamanan ini pada kedua perangkat",

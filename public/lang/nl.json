@@ -55,7 +55,7 @@
         "click-to-show": "Klik om te tonen"
     },
     "header": {
-        "cancel-paste-mode": "Klaar",
+        "cancel-share-mode": "Klaar",
         "theme-auto_title": "Gebruik systeemstijl",
         "install_title": "PairDrop installeren",
         "theme-dark_title": "Altijd donkere modus gebruiken",
@@ -70,12 +70,12 @@
     },
     "instructions": {
         "x-instructions_mobile": "Tik om bestanden te versturen of houdt vast om een bericht te sturen",
-        "click-to-send": "Klik om te verzenden",
-        "activate-paste-mode-and-other-files": "en {{count}} andere bestanden",
-        "tap-to-send": "Tik om te verzenden",
-        "activate-paste-mode-base": "Open PairDrop op andere apparaten om te verzenden",
+        "x-instructions-share-mode_desktop": "Klik om te verzenden",
+        "activate-share-mode-and-other-files-plural": "en {{count}} andere bestanden",
+        "x-instructions-share-mode_mobile": "Tik om te verzenden",
+        "activate-share-mode-base": "Open PairDrop op andere apparaten om te verzenden",
         "no-peers-subtitle": "Koppel apparaten of betreed een openbare ruimte om op andere netwerken zichtbaar te worden",
-        "activate-paste-mode-shared-text": "gedeelde tekst",
+        "activate-share-mode-shared-text": "gedeelde tekst",
         "x-instructions_desktop": "Klik om bestanden te versturen of rechtsklik om een bericht te sturen",
         "no-peers-title": "Open PairDrop op andere apparaten om bestanden te versturen",
         "x-instructions_data-drop-peer": "Laat los om naar peer te versturen",
@@ -84,7 +84,7 @@
     },
     "peer-ui": {
         "processing": "Verwerken…",
-        "click-to-send-paste-mode": "Klik om {{descriptor}} te versturen",
+        "click-to-send-share-mode": "Klik om {{descriptor}} te versturen",
         "click-to-send": "Klik om bestanden te versturen of rechtsklik om een bericht te versturen",
         "waiting": "Wachten…",
         "connection-hash": "Vergelijk dit veiligheidsnummer op beide apparaten, om de beveiliging van de eind-tot-eind versleuteling te verifiëren",

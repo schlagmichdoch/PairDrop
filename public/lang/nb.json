@@ -7,7 +7,7 @@
         "theme-light_title": "Alltid bruk lys drakt",
         "theme-dark_title": "Alltid bruk mørk drakt",
         "notification_title": "Skru på merknader",
-        "cancel-paste-mode": "Ferdig",
+        "cancel-share-mode": "Ferdig",
         "install_title": "Installer PairDrop",
         "pair-device_title": "Sammenkoble enhet"
     },
@@ -25,15 +25,15 @@
         "x-instructions_desktop": "Klikk for å sende filer, eller høyreklikk for å sende en melding",
         "x-instructions_mobile": "Trykk for å sende filer, eller lang-trykk for å sende en melding",
         "x-instructions_data-drop-bg": "Slipp for å velge mottager",
-        "click-to-send": "Klikk for å sende",
+        "x-instructions-share-mode_desktop": "Klikk for å sende",
         "no-peers_data-drop-bg": "Slipp for å velge mottager",
         "no-peers-title": "Åpne PairDrop på andre enheter for å sende filer",
         "no-peers-subtitle": "Sammenkoble enheter for å kunne oppdages på andre nettverk",
         "x-instructions_data-drop-peer": "Slipp for å sende til likemann",
-        "tap-to-send": "Trykk for å sende",
-        "activate-paste-mode-base": "Åpne PairDrop på andre enheter for å sende",
-        "activate-paste-mode-and-other-files": "og {{count}} andre filer",
-        "activate-paste-mode-shared-text": "delt tekst"
+        "x-instructions-share-mode_mobile": "Trykk for å sende",
+        "activate-share-mode-base": "Åpne PairDrop på andre enheter for å sende",
+        "activate-share-mode-and-other-files-plural": "og {{count}} andre filer",
+        "activate-share-mode-shared-text": "delt tekst"
     },
     "dialogs": {
         "input-key-on-this-device": "Skriv inn denne nøkkelen på en annen enhet",
@@ -132,7 +132,7 @@
         "processing": "Behandler …",
         "transferring": "Overfører …",
         "click-to-send": "Klikk for å sende filer, eller høyreklikk for å sende en melding",
-        "click-to-send-paste-mode": "Klikk for å sende {{descriptor}}",
+        "click-to-send-share-mode": "Klikk for å sende {{descriptor}}",
         "connection-hash": "Sammenlign dette sikkerhetsnummeret på begge enhetene for å bekrefte ende-til-ende -krypteringen."
     }
 }

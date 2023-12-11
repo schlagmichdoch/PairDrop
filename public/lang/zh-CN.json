@@ -9,7 +9,7 @@
         "theme-dark_title": "总是使用暗黑主题",
         "notification_title": "开启通知",
         "edit-paired-devices_title": "管理已配对设备",
-        "cancel-paste-mode": "完成",
+        "cancel-share-mode": "完成",
         "join-public-room_title": "暂时加入公共房间",
         "language-selector_title": "设置语言"
     },
@@ -21,11 +21,11 @@
         "x-instructions_desktop": "点击以发送文件 或 右键来发送信息",
         "x-instructions_mobile": "轻触以发送文件 或 长按来发送信息",
         "x-instructions_data-drop-bg": "释放来选择接收者",
-        "click-to-send": "点击发送",
-        "tap-to-send": "轻触发送",
-        "activate-paste-mode-base": "在其他设备上打开 PairDrop 来发送",
-        "activate-paste-mode-and-other-files": "和 {{count}} 个其他的文件",
-        "activate-paste-mode-shared-text": "分享文本"
+        "x-instructions-share-mode_desktop": "点击发送",
+        "x-instructions-share-mode_mobile": "轻触发送",
+        "activate-share-mode-base": "在其他设备上打开 PairDrop 来发送",
+        "activate-share-mode-and-other-files-plural": "和 {{count}} 个其他的文件",
+        "activate-share-mode-shared-text": "分享文本"
     },
     "footer": {
         "routed": "途径服务器",
@@ -155,7 +155,7 @@
         "image-transfer-requested": "图片传输请求"
     },
     "peer-ui": {
-        "click-to-send-paste-mode": "点击发送 {{descriptor}}",
+        "click-to-send-share-mode": "点击发送 {{descriptor}}",
         "click-to-send": "点击以发送文件 或 右键来发送信息",
         "connection-hash": "若要验证端到端加密的安全性，请在两个设备上比较此安全编号",
         "preparing": "准备中…",
