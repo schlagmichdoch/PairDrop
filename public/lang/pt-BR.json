@@ -11,7 +11,7 @@
         "pair-device_title": "Emparelhar seus dispositivos permanentemente",
         "edit-paired-devices_title": "Editar dispositivos emparelhados",
         "join-public-room_title": "Entrar em uma sala pública temporariamente",
-        "cancel-paste-mode": "Concluído"
+        "cancel-share-mode": "Concluído"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Solte para selecionar o destinatário",
@@ -21,11 +21,11 @@
         "x-instructions_mobile": "Toque para enviar arquivos ou toque e segure para enviar uma mensagem",
         "x-instructions_data-drop-peer": "Solte para enviar para o par",
         "x-instructions_data-drop-bg": "Solte para selecionar o destinatário",
-        "click-to-send": "Clique para enviar",
-        "tap-to-send": "Toque para enviar",
-        "activate-paste-mode-base": "Abra o PairDrop em outros dispositivos para enviar",
-        "activate-paste-mode-and-other-files": "e {{count}} outros arquivos",
-        "activate-paste-mode-shared-text": "texto compartilhado"
+        "x-instructions-share-mode_desktop": "Clique para enviar",
+        "x-instructions-share-mode_mobile": "Toque para enviar",
+        "activate-share-mode-base": "Abra o PairDrop em outros dispositivos para enviar",
+        "activate-share-mode-and-other-files-plural": "e {{count}} outros arquivos",
+        "activate-share-mode-shared-text": "texto compartilhado"
     },
     "footer": {
         "known-as": "Você é conhecido como:",
@@ -154,7 +154,7 @@
         "message-received-plural": "{{count}} mensagens recebidas"
     },
     "peer-ui": {
-        "click-to-send-paste-mode": "Clique para enviar {{descriptor}}",
+        "click-to-send-share-mode": "Clique para enviar {{descriptor}}",
         "click-to-send": "Clique para enviar arquivos ou clique com o botão direito para enviar uma mensagem",
         "connection-hash": "Para verificar a segurança da criptografia de ponta a ponta, compare este número de segurança em ambos os dispositivos",
         "preparing": "Preparando…",
