@@ -335,7 +335,7 @@ x-dialog x-paper {
     display: flex;
     margin: auto;
     flex-direction: column;
-    width: 400px;
+    max-width: 450px;
     z-index: 3;
     border-radius: 30px;
     overflow: hidden;
@@ -387,10 +387,6 @@ x-dialog a {
 }
 
 /* Pair Devices Dialog & Public Room Dialog */
-
-#public-room-dialog x-paper {
-    width: 450px;
-}
 
 .input-key-container {
     width: 100%;
@@ -556,12 +552,25 @@ x-paper > .btn-row {
     margin: 5px 10px 10px;
 }
 
-.language-buttons > button > span {
-    margin: 0 0.3em;
+.language-buttons > .btn {
+    border-top: solid lightgray 1px;
+    padding: 7px;
+    font-size: 12px;
 }
 
-.language-buttons > button {
-    min-height: 36px;
+.language-buttons > .btn:last-of-type {
+    border-bottom: solid lightgray 1px;
+}
+
+/* Ensure click event target is always button and never span */
+.language-buttons span {
+    z-index: -1;
+}
+
+.language-buttons > .current > span {
+    text-decoration: underline 4px;
+    text-decoration-skip-ink: none;
+    text-underline-position: under;
 }
 
 .file-description {
