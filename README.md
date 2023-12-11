@@ -99,9 +99,11 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [NodeJS](https://nodejs.org/en/) backend
 * [Progressive Web App](https://wikipedia.org/wiki/Progressive_Web_App)
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-* [zip.js](https://gildas-lormeau.github.io/zip.js/)
-* [cyrb53](https://github.com/bryc) super fast hash function
 * [Weblate](https://weblate.org/) Web based localization tool
+* [zip.js](https://github.com/gildas-lormeau/zip.js) JavaScript library to zip and unzip files ([BSD 3-Clause License](licenses/BSD_3-Clause-zip-js))
+* [NoSleep](https://github.com/richtr/NoSleep.js) JavaScript library to prevent display sleep and enable wake lock in any Android or iOS web browser ([MIT License](licenses/MIT-NoSleep))
+* [heic2any](https://github.com/alexcorvi/heic2any) JavaScript library to convert HEIC/HEIF images to PNG/GIF/JPEG ([MIT License](licenses/MIT-heic2any))
+* [cyrb53](https://github.com/bryc) Super fast hash function
 
 Have any questions? Read our [FAQ](/docs/faq.md).
 
