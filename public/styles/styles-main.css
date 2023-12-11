@@ -922,6 +922,7 @@ body {
     --lt-bg-color-secondary: #f2f2f2;
     --lt-border-color: #a9a9a9;
     --lt-badge-color: #a5a5a5;
+    --lt-lang-hr-color: #DDD;
 
     --lt-shadow-color-secondary-rgb: 0,0,0;
     --lt-shadow-color-secondary-cover-rgb: 242,242,242;
@@ -935,6 +936,7 @@ body {
     --dt-bg-color-secondary: #262628;
     --dt-border-color: #919191;
     --dt-badge-color: #717171;
+    --dt-lang-hr-color: #404040;
 
     --dt-shadow-color-secondary-rgb: 255,255,255;
     --dt-shadow-color-secondary-cover-rgb: 38,38,38;
@@ -950,6 +952,7 @@ body {
     --bg-color-secondary: var(--lt-bg-color-secondary);
     --border-color: var(--lt-border-color);
     --badge-color: var(--lt-badge-color);
+    --lang-hr-color: var(--lt-lang-hr-color);
 
     --shadow-color-secondary-rgb: var(--lt-shadow-color-secondary-rgb);
     --shadow-color-secondary-cover-rgb: var(--lt-shadow-color-secondary-cover-rgb);
@@ -965,6 +968,7 @@ body.dark-theme {
     --bg-color-secondary: var(--dt-bg-color-secondary);
     --border-color: var(--dt-border-color);
     --badge-color: var(--dt-badge-color);
+    --lang-hr-color: var(--dt-lang-hr-color);
 
     --shadow-color-secondary-rgb: var(--dt-shadow-color-secondary-rgb);
     --shadow-color-secondary-cover-rgb: var(--dt-shadow-color-secondary-cover-rgb);
@@ -983,6 +987,7 @@ body.dark-theme {
         --bg-color-secondary: var(--dt-bg-color-secondary);
         --border-color: var(--dt-border-color);
         --badge-color: var(--dt-badge-color);
+        --lang-hr-color: var(--dt-lang-hr-color);
 
         --shadow-color-secondary-rgb: var(--dt-shadow-color-secondary-rgb);
         --shadow-color-secondary-cover-rgb: var(--dt-shadow-color-secondary-cover-rgb);
@@ -999,6 +1004,7 @@ body.dark-theme {
         --bg-color-secondary: var(--lt-bg-color-secondary);
         --border-color: var(--lt-border-color);
         --badge-color: var(--lt-badge-color);
+        --lang-hr-color: var(--lt-lang-hr-color);
 
         --shadow-color-secondary-rgb: var(--lt-shadow-color-secondary-rgb);
         --shadow-color-secondary-cover-rgb: var(--lt-shadow-color-secondary-cover-rgb);
