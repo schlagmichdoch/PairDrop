@@ -65,6 +65,11 @@
             "src": "images/pairdrop_screenshot_mobile_7.png",
             "sizes": "1170x2532",
             "type": "image/png"
+        },
+        {
+            "src": "images/pairdrop_screenshot_mobile_8.png",
+            "sizes": "1170x2532",
+            "type": "image/png"
         }
     ],
     "share_target": {
