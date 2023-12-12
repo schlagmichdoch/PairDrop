@@ -37,6 +37,7 @@ class PeersUI {
         Events.on('dragleave', _ => this._onDragEnd());
         Events.on('dragend', _ => this._onDragEnd());
         Events.on('resize', _ => this._evaluateOverflowingPeers());
+        Events.on('header-changed', _ => this._evaluateOverflowingPeers());
 
         Events.on('paste', e => this._onPaste(e));
         Events.on('activate-share-mode', e => this._activateShareMode(e.detail.files, e.detail.text));
@@ -1586,7 +1587,7 @@ class EditPairedDevicesDialog extends Dialog {
                             <span class="center wrap">
                                 ${autoAcceptString}
                             </span>
-                            <label class="auto-accept switch pointer m1">
+                            <label class="auto-accept switch pointer m-1">
                                 <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                                 <div class="slider round"></div>
                             </label>
