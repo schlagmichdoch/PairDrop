@@ -278,22 +278,10 @@ class PeersUI {
 
             if (files[0].type.split('/')[0] === 'image') {
                 try {
-                    let image = files[0]
+                    let imageUrl = await getThumbnailAsDataUrl(files[0], 80, null, 0.9);
 
-                    // Heic files can't be shown by browsers natively --> convert to jpeg
-                    if (image.type === "image/heif" || image.type === "image/heic") {
-                        let blob = await fileToBlob(image);
-                        image = await heic2any({
-                            blob,
-                            toType: "image/jpeg",
-                            quality: 0.9
-                        });
-                    }
-
-                    let imageUrl = URL.createObjectURL(image);
                     this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
 
-                    await waitUntilImageIsLoaded(imageUrl);
                     this.$shareModeImageThumb.removeAttribute('hidden');
                 } catch (e) {
                     console.error(e);
