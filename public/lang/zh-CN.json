@@ -11,7 +11,8 @@
         "edit-paired-devices_title": "管理已配对设备",
         "cancel-share-mode": "完成",
         "join-public-room_title": "暂时加入公共房间",
-        "language-selector_title": "设置语言"
+        "language-selector_title": "设置语言",
+        "edit-share-mode": "编辑"
     },
     "instructions": {
         "x-instructions_data-drop-peer": "释放以发送到此设备",
@@ -21,12 +22,15 @@
         "x-instructions_desktop": "点击以发送文件 或 右键来发送信息",
         "x-instructions_mobile": "轻触以发送文件 或 长按来发送信息",
         "x-instructions_data-drop-bg": "释放来选择接收者",
-        "x-instructions-share-mode_desktop": "点击发送",
-        "x-instructions-share-mode_mobile": "轻触发送",
+        "x-instructions-share-mode_desktop": "单击发送 {{descriptor}}",
+        "x-instructions-share-mode_mobile": "轻触发送 {{descriptor}}",
         "activate-share-mode-base": "在其他设备上打开 PairDrop 来发送",
         "activate-share-mode-and-other-files-plural": "和 {{count}} 个其他的文件",
         "activate-share-mode-shared-text": "分享文本",
-        "webrtc-requirement": "要使用此 PairDrop 示例。必须开启 WebRTC！"
+        "webrtc-requirement": "要使用此 PairDrop 示例。必须开启 WebRTC！",
+        "activate-share-mode-shared-files-plural": "{{count}} 个已分享的文件",
+        "activate-share-mode-shared-file": "分享的文件",
+        "activate-share-mode-and-other-file": "及其余 1 个文件"
     },
     "footer": {
         "routed": "途径服务器",
@@ -57,8 +61,8 @@
         "auto-accept": "自动接收",
         "decline": "拒绝",
         "base64-processing": "处理中…",
-        "base64-tap-to-paste": "轻触此处粘贴{{type}}",
-        "base64-paste-to-send": "粘贴到此处以发送 {{type}}",
+        "base64-tap-to-paste": "轻触此处分享 {{type}}",
+        "base64-paste-to-send": "将剪贴板粘贴到此处以分享 {{type}}",
         "auto-accept-instructions-2": "以无需同意而自动接收从那个设备上发送的所有文件。",
         "would-like-to-share": "想要分享",
         "accept": "接收",
@@ -94,7 +98,15 @@
         "message_title": "插入要发送的消息",
         "pair-devices-qr-code_title": "单击复制和此设备配对的链接",
         "public-room-qr-code_title": "单击复制公共房间链接",
-        "message_placeholder": "文本"
+        "message_placeholder": "文本",
+        "close-toast_title": "关闭通知",
+        "share-text-checkbox": "分享文本时总是显示此对话框",
+        "base64-title-files": "分享文件",
+        "approve": "批准",
+        "paired-device-removed": "已删除配对的设备。",
+        "share-text-title": "分享文本消息",
+        "share-text-subtitle": "发送前编辑消息：",
+        "base64-title-text": "分享文本"
     },
     "about": {
         "faq_title": "常见问题",
