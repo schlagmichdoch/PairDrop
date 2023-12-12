@@ -729,7 +729,7 @@ class Dialog {
 
     hide() {
         this.$el.removeAttribute('show');
-        if (!window.isMobile && this.$autoFocus) {
+        if (!window.isMobile) {
             document.activeElement.blur();
             window.blur();
         }
@@ -2153,13 +2153,13 @@ class Base64Dialog extends Dialog {
             // ?base64text=hash#BASE64ENCODED
             // base64 encoded text is url hash which cannot be seen by the server and is faster (recommended)
             this.show();
-            await this.processBase64Text(hash)
+            await this.processBase64Text(hash);
         }
         else {
             // ?base64text=BASE64ENCODED
             // base64 encoded text is part of the url param. Seen by server and slow (not recommended)
             this.show();
-            await this.processBase64Text(base64Text)
+            await this.processBase64Text(base64Text);
         }
     }
 
@@ -2174,7 +2174,7 @@ class Base64Dialog extends Dialog {
         else if (base64Zip === 'hash') {
             // ?base64zip=hash#BASE64ENCODED
             // base64 encoded zip file is url hash which cannot be seen by the server
-            await this.processBase64Zip(hash)
+            await this.processBase64Zip(hash);
         }
     }
 
@@ -2269,6 +2269,8 @@ class Base64Dialog extends Dialog {
     hide() {
         this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
         this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
+        this.$fallbackTextarea.setAttribute('disabled', true);
+        this.$fallbackTextarea.blur();
         super.hide();
     }
 }
