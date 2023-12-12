@@ -1,0 +1,26 @@
+{
+    "instructions": {
+        "x-instructions_mobile": "Toca per enviar fitxers o mantén premut per enviar un missatge",
+        "no-peers-subtitle": "Vincula dispositius o entra a una sala pública per ser detectable en altres xarxes",
+        "x-instructions_desktop": "Fes click per enviar fitxers o click dret per enviar un missatge de text",
+        "no-peers-title": "Obre PairDrop a altres dispositius per enviar arxius",
+        "x-instructions_data-drop-peer": "Allibera per enviar a un company",
+        "x-instructions_data-drop-bg": "Allibera per seleccionar recipient",
+        "no-peers_data-drop-bg": "Allibera per seleccionar destinatari"
+    },
+    "header": {
+        "theme-auto_title": "Adapta el tema al del sistema automàticament",
+        "install_title": "Instal·la PairDrop",
+        "theme-dark_title": "Utilitza sempre el mode fosc",
+        "pair-device_title": "Vincula els teus dispositius permanentment",
+        "join-public-room_title": "Uneix-te temporalment a una sala pública",
+        "notification_title": "Permet les notificacions",
+        "edit-paired-devices_title": "Edita els dispositius vinculats",
+        "edit-share-mode": "Editar",
+        "language-selector_title": "Configurar idioma",
+        "cancel-share-mode": "Cancel·lar",
+        "about_title": "Sobre PairDrop",
+        "about_aria-label": "Obre Sobre PairDrop",
+        "theme-light_title": "Utilitza sempre el mode clar"
+    }
+}

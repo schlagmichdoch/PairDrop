@@ -763,7 +763,7 @@ class LanguageSelectDialog extends Dialog {
         this.$languageSelectBtn = $('language-selector');
         this.$languageSelectBtn.addEventListener('click', _ => this.show());
 
-        this.$languageButtons = this.$el.querySelectorAll(".language-buttons button");
+        this.$languageButtons = this.$el.querySelectorAll(".language-buttons .btn");
         this.$languageButtons.forEach($btn => {
             $btn.addEventListener("click", e => this.selectLanguage(e));
         })
@@ -779,20 +779,20 @@ class LanguageSelectDialog extends Dialog {
     }
 
     show() {
-        if (Localization.isSystemLocale()) {
-            this.$languageButtons[0].focus();
-        }
-        else {
-            let locale = Localization.getLocale();
-            for (let i=0; i<this.$languageButtons.length; i++) {
-                const $btn = this.$languageButtons[i];
-                if ($btn.value === locale) {
-                    $btn.focus();
-                    break;
-                }
-            }
-        }
+        let locale = Localization.getLocale();
+        this.currentLanguageBtn = Localization.isSystemLocale()
+            ? this.$languageButtons[0]
+            : this.$el.querySelector(`.btn[value="${locale}"]`);
+
+        this.currentLanguageBtn.classList.add("current");
+
         super.show();
+    }
+
+    hide() {
+        this.currentLanguageBtn.classList.remove("current");
+
+        super.hide();
     }
 
     selectLanguage(e) {
