@@ -92,7 +92,7 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 </details>
 
 ## Screenshots
-<img src="docs/pairdrop_screenshot_mobile.gif" style="max-height: 50vh">
+<img src="docs/pairdrop_screenshot_mobile.gif" alt="Gif of Screenshots that show PairDrop in use" style="width: 300px">
 
 ## PairDrop is built with the following awesome technologies:
 * Vanilla HTML5 / ES6 / CSS3 frontend
@@ -125,7 +125,7 @@ Thanks a lot for supporting free and open software!
 
 ## Translate PairDrop
 <a href="https://hosted.weblate.org/engage/pairdrop/">
-<img src="https://hosted.weblate.org/widget/pairdrop/pairdrop-spa/open-graph.png" alt="Translation status" style="max-height: 30vh" />
+<img src="https://hosted.weblate.org/widget/pairdrop/pairdrop-spa/open-graph.png" alt="Translation status" style="width: 300px" />
 </a>
 
 ## How to contribute
