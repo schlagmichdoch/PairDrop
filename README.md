@@ -67,10 +67,11 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Multiple files are transferred at once with an overall progress indicator
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
-* [Send files directly from context menu on Windows](docs/how-to.md#send-files-directly-from-context-menu-on-windows)
-* [Send directly from share menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
-* [Send directly from share menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
-* [Send directly via command-line interface](docs/how-to.md#send-directly-via-command-line-interface)
+* [Send files directly from context menu on Windows](docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-windows)
+* [Send files directly from context menu on Ubuntu (using Nautilus)](/docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
+* [Send files directly from share menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
+* [Send files directly from share menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
+* [Send files directly via command-line interface](docs/how-to.md#send-directly-via-command-line-interface)
 
 ### Other changes
 * Change your display name permanently to easily differentiate your devices
@@ -85,7 +86,8 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * Lots of stability fixes (Thanks [@MWY001](https://github.com/MWY001) [@skiby7](https://github.com/skiby7) and [@willstott101](https://github.com/willstott101))
 * To host PairDrop on your local network (e.g. on Raspberry Pi): [All peers connected with private IPs are discoverable by each other](https://github.com/RobinLinus/snapdrop/pull/558)
 * When hosting PairDrop yourself you can [set your own STUN/TURN servers](docs/host-your-own.md#specify-stunturn-servers)
-* Built-in translations
+* Built-in translations via [Weblate](https://hosted.weblate.org/engage/pairdrop/)
+* Airy design (Thanks [@Avieshek](https://linktr.ee/avieshek/))
 
 </details>
 
@@ -98,9 +100,11 @@ Developed based on [Snapdrop](https://github.com/RobinLinus/snapdrop)
 * [NodeJS](https://nodejs.org/en/) backend
 * [Progressive Web App](https://wikipedia.org/wiki/Progressive_Web_App)
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)
-* [zip.js](https://gildas-lormeau.github.io/zip.js/)
-* [cyrb53](https://github.com/bryc) super fast hash function
 * [Weblate](https://weblate.org/) Web based localization tool
+* [zip.js](https://github.com/gildas-lormeau/zip.js) JavaScript library to zip and unzip files ([BSD 3-Clause License](licenses/BSD_3-Clause-zip-js))
+* [NoSleep](https://github.com/richtr/NoSleep.js) JavaScript library to prevent display sleep and enable wake lock in any Android or iOS web browser ([MIT License](licenses/MIT-NoSleep))
+* [heic2any](https://github.com/alexcorvi/heic2any) JavaScript library to convert HEIC/HEIF images to PNG/GIF/JPEG ([MIT License](licenses/MIT-heic2any))
+* [cyrb53](https://github.com/bryc) Super fast hash function
 
 Have any questions? Read our [FAQ](docs/faq.md).
 

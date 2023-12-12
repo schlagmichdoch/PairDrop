@@ -1,180 +1,67 @@
-const $ = query => document.getElementById(query);
-const $$ = query => document.body.querySelector(query);
-window.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-window.android = /android/i.test(navigator.userAgent);
-window.isMobile = window.iOS || window.android;
-window.pasteMode = {};
-window.pasteMode.activated = false;
-
-// set display name
-Events.on('display-name', e => {
-    const me = e.detail.message;
-    const $displayName = $('display-name');
-    $displayName.setAttribute('placeholder', me.displayName);
-});
-
 class PeersUI {
 
     constructor() {
+        this.$xPeers = $$('x-peers');
+        this.$xNoPeers = $$('x-no-peers');
+        this.$xInstructions = $$('x-instructions');
+        this.$wsFallbackWarning = $('websocket-fallback');
+
+        this.$sharePanel = $$('.shr-panel');
+        this.$shareModeImageThumb = $$('.shr-panel .image-thumb');
+        this.$shareModeTextThumb = $$('.shr-panel .text-thumb');
+        this.$shareModeFileThumb = $$('.shr-panel .file-thumb');
+        this.$shareModeDescriptor = $$('.shr-panel .share-descriptor');
+        this.$shareModeDescriptorItem = $$('.shr-panel .descriptor-item');
+        this.$shareModeDescriptorOther = $$('.shr-panel .descriptor-other');
+        this.$shareModeCancelBtn = $$('.shr-panel .cancel-btn');
+        this.$shareModeEditBtn = $$('.shr-panel .edit-btn');
+
+        this.peers = {};
+
+        this.shareMode = {};
+        this.shareMode.active = false;
+        this.shareMode.descriptor = "";
+        this.shareMode.files = [];
+        this.shareMode.text = "";
+
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
+        Events.on('peer-added', _ => this._evaluateOverflowingPeers());
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('set-progress', e => this._onSetProgress(e.detail));
-        Events.on('paste', e => this._onPaste(e));
-        Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
-        Events.on('activate-paste-mode', e => this._activatePasteMode(e.detail.files, e.detail.text));
-        this.peers = {};
-
-        this.$cancelPasteModeBtn = $('cancel-paste-mode');
-        this.$cancelPasteModeBtn.addEventListener('click', _ => this._cancelPasteMode());
-
-        Events.on('dragover', e => this._onDragOver(e));
-        Events.on('dragleave', _ => this._onDragEnd());
-        Events.on('dragend', _ => this._onDragEnd());
 
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
+        Events.on('dragover', e => this._onDragOver(e));
+        Events.on('dragleave', _ => this._onDragEnd());
+        Events.on('dragend', _ => this._onDragEnd());
+        Events.on('resize', _ => this._evaluateOverflowingPeers());
+        Events.on('header-changed', _ => this._evaluateOverflowingPeers());
 
-        this.$xPeers = $$('x-peers');
-        this.$xNoPeers = $$('x-no-peers');
-        this.$xInstructions = $$('x-instructions');
-        this.$center = $$('#center');
-        this.$footer = $$('footer');
-        this.$discoveryWrapper = $$('footer .discovery-wrapper');
+        Events.on('paste', e => this._onPaste(e));
+        Events.on('activate-share-mode', e => this._activateShareMode(e.detail.files, e.detail.text));
+        Events.on('translation-loaded', _ => this._reloadShareMode());
+        Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
 
-        Events.on('peer-added', _ => this._evaluateOverflowing());
-        Events.on('bg-resize', _ => this._evaluateOverflowing());
 
-        this.$displayName = $('display-name');
+        this.$shareModeCancelBtn.addEventListener('click', _ => this._deactivateShareMode());
 
-        this.$displayName.setAttribute("placeholder", this.$displayName.dataset.placeholder);
-
-        this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
-        this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
-        this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
-
-        Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
         Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
 
-        // Load saved display name on page load
-        this._getSavedDisplayName().then(displayName => {
-            console.log("Retrieved edited display name:", displayName)
-            if (displayName) Events.fire('self-display-name-changed', displayName);
-        });
-
-        Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges())
-
-        this.fadedIn = false;
-
-        this.$header = document.querySelector('header.opacity-0');
-        Events.on('header-evaluated', e => this._fadeInHeader(e.detail));
-
-        // wait for evaluation of notification and edit-paired-devices buttons
-        this.evaluateHeader = ["notification", "edit-paired-devices"];
-
-        if (!('Notification' in window)) this.evaluateHeader.splice(this.evaluateHeader.indexOf("notification"), 1);
+        Events.on('ws-config', e => this._evaluateRtcSupport(e.detail))
     }
 
-    _fadeInHeader(id) {
-        this.evaluateHeader.splice(this.evaluateHeader.indexOf(id), 1);
-        console.log(`Header btn ${id} evaluated. ${this.evaluateHeader.length} to go.`);
-
-        if (this.evaluateHeader.length !== 0) return;
-
-        this.$header.classList.remove('opacity-0');
-    }
-
-    _fadeInUI() {
-        if (this.fadedIn) return;
-
-        this.fadedIn = true;
-
-        this.$center.classList.remove('opacity-0');
-        this.$footer.classList.remove('opacity-0');
-
-        // Prevent flickering on load
-        setTimeout(_ => {
-            this.$xNoPeers.classList.remove('no-animation-on-load');
-        }, 600);
-
-        Events.fire('ui-faded-in');
-    }
-
-    _evaluateFooterBadges() {
-        if (this.$discoveryWrapper.querySelectorAll('div:last-of-type > span[hidden]').length < 2) {
-            this.$discoveryWrapper.classList.remove('row');
-            this.$discoveryWrapper.classList.add('column');
-        } else {
-            this.$discoveryWrapper.classList.remove('column');
-            this.$discoveryWrapper.classList.add('row');
+    _evaluateRtcSupport(wsConfig) {
+        if (wsConfig.wsFallback) {
+            this.$wsFallbackWarning.hidden = false;
         }
-        Events.fire('redraw-canvas');
-        this._fadeInUI();
-    }
-
-    _insertDisplayName(displayName) {
-        this.$displayName.textContent = displayName;
-    }
-
-    _onKeyDownDisplayName(e) {
-        if (e.key === "Enter" || e.key === "Escape") {
-            e.preventDefault();
-            e.target.blur();
+        else {
+            this.$wsFallbackWarning.hidden = true;
+            if (!window.isRtcSupported) {
+                alert(Localization.getTranslation("instructions.webrtc-requirement"));
+            }
         }
-    }
-
-    _onKeyUpDisplayName(e) {
-        // fix for Firefox inserting a linebreak into div on edit which prevents the placeholder from showing automatically when it is empty
-        if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) e.target.innerText = '';
-    }
-
-    async _saveDisplayName(newDisplayName) {
-        newDisplayName = newDisplayName.replace(/(\n|\r|\r\n)/, '')
-        const savedDisplayName = await this._getSavedDisplayName();
-        if (newDisplayName === savedDisplayName) return;
-
-        if (newDisplayName) {
-            PersistentStorage.set('editedDisplayName', newDisplayName)
-                .then(_ => {
-                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-permanently"));
-                })
-                .catch(_ => {
-                    console.log("This browser does not support IndexedDB. Use localStorage instead.");
-                    localStorage.setItem('editedDisplayName', newDisplayName);
-                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
-                })
-                .finally(_ => {
-                    Events.fire('self-display-name-changed', newDisplayName);
-                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
-                });
-        } else {
-            PersistentStorage.delete('editedDisplayName')
-                .catch(_ => {
-                    console.log("This browser does not support IndexedDB. Use localStorage instead.")
-                    localStorage.removeItem('editedDisplayName');
-                })
-                .finally(_ => {
-                    Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
-                    Events.fire('self-display-name-changed', '');
-                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
-                });
-        }
-    }
-
-    _getSavedDisplayName() {
-        return new Promise((resolve) => {
-            PersistentStorage.get('editedDisplayName')
-                .then(displayName => {
-                    if (!displayName) displayName = "";
-                    resolve(displayName);
-                })
-                .catch(_ => {
-                    let displayName = localStorage.getItem('editedDisplayName');
-                    if (!displayName) displayName = "";
-                    resolve(displayName);
-                })
-        });
     }
 
     _changePeerDisplayName(peerId, displayName) {
@@ -189,9 +76,11 @@ class PeersUI {
         this._changePeerDisplayName(e.detail.peerId, e.detail.displayName);
     }
 
-    _onKeyDown(e) {
-        if (document.querySelectorAll('x-dialog[show]').length === 0 && window.pasteMode.activated && e.code === "Escape") {
-            Events.fire('deactivate-paste-mode');
+    async _onKeyDown(e) {
+        if (!this.shareMode.active || Dialog.anyDialogShown()) return;
+
+        if (e.key === "Escape") {
+            await this._deactivateShareMode();
         }
 
         // close About PairDrop page on Escape
@@ -213,7 +102,7 @@ class PeersUI {
             return;
         }
 
-        peer._isSameBrowser = _ => BrowserTabsConnector.peerIsSameBrowser(peer.id);
+        peer._isSameBrowser = () => BrowserTabsConnector.peerIsSameBrowser(peer.id);
         peer._roomIds = {};
 
         peer._roomIds[roomType] = roomId;
@@ -225,7 +114,10 @@ class PeersUI {
 
         const peer = this.peers[peerId];
 
-        new PeerUI(peer, connectionHash);
+        new PeerUI(peer, connectionHash, {
+            active: this.shareMode.active,
+            descriptor: this.shareMode.descriptor,
+        });
     }
 
     _redrawPeerRoomTypes(peerId) {
@@ -243,10 +135,11 @@ class PeersUI {
         Object.keys(peer._roomIds).forEach(roomType => peerNode.classList.add(`type-${roomType}`));
     }
 
-    _evaluateOverflowing() {
+    _evaluateOverflowingPeers() {
         if (this.$xPeers.clientHeight < this.$xPeers.scrollHeight) {
             this.$xPeers.classList.add('overflowing');
-        } else {
+        }
+        else {
             this.$xPeers.classList.remove('overflowing');
         }
     }
@@ -259,7 +152,7 @@ class PeersUI {
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
-        this._evaluateOverflowing();
+        this._evaluateOverflowingPeers();
     }
 
     _onRoomTypeRemoved(peerId, roomType) {
@@ -280,108 +173,214 @@ class PeersUI {
 
     _onDrop(e) {
         e.preventDefault();
+
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
         if (!$$('x-peer') || !$$('x-peer').contains(e.target)) {
-            this._activatePasteMode(e.dataTransfer.files, '')
+            if (e.dataTransfer.files.length > 0) {
+                Events.fire('activate-share-mode', {files: e.dataTransfer.files});
+            } else {
+                for (let i=0; i<e.dataTransfer.items.length; i++) {
+                    if (e.dataTransfer.items[i].type === "text/plain") {
+                        e.dataTransfer.items[i].getAsString(text => {
+                            Events.fire('activate-share-mode', {text: text});
+                        });
+                    }
+                }
+            }
         }
         this._onDragEnd();
     }
 
     _onDragOver(e) {
         e.preventDefault();
-        this.$xInstructions.setAttribute('drop-bg', 1);
-        this.$xNoPeers.setAttribute('drop-bg', 1);
+
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
+        this.$xInstructions.setAttribute('drop-bg', true);
+        this.$xNoPeers.setAttribute('drop-bg', true);
     }
 
     _onDragEnd() {
-        this.$xInstructions.removeAttribute('drop-bg', 1);
+        this.$xInstructions.removeAttribute('drop-bg');
         this.$xNoPeers.removeAttribute('drop-bg');
     }
 
     _onPaste(e) {
-        if(document.querySelectorAll('x-dialog[show]').length === 0) {
-            // prevent send on paste when dialog is open
-            e.preventDefault()
-            const files = e.clipboardData.files;
-            const text = e.clipboardData.getData("Text");
-            if (files.length === 0 && text.length === 0) return;
-            this._activatePasteMode(files, text);
+        // prevent send on paste when dialog is open
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
+        e.preventDefault()
+        const files = e.clipboardData.files;
+        const text = e.clipboardData.getData("Text");
+
+        if (files.length > 0) {
+            Events.fire('activate-share-mode', {files: files});
+        } else if (text.length > 0) {
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', text);
+            } else {
+                Events.fire('activate-share-mode', {text: text});
+            }
         }
     }
 
-    _activatePasteMode(files, text) {
-        if (!window.pasteMode.activated && (files.length > 0 || text.length > 0)) {
-            const openPairDrop = Localization.getTranslation("instructions.activate-paste-mode-base");
-            const andOtherFiles = Localization.getTranslation("instructions.activate-paste-mode-and-other-files", null, {count: files.length-1});
-            const sharedText = Localization.getTranslation("instructions.activate-paste-mode-shared-text");
-            const clickToSend = Localization.getTranslation("instructions.click-to-send")
-            const tapToSend = Localization.getTranslation("instructions.tap-to-send")
+    async _activateShareMode(files = [], text = "") {
+        if (this.shareMode.active || (files.length === 0 && text.length === 0)) return;
 
-            let descriptor;
+        this._activateCallback = e => this._sendShareData(e);
+        this._editShareTextCallback = _ => {
+            this._deactivateShareMode();
+            Events.fire('share-text-dialog', text);
+        };
 
-            if (files.length === 1) {
-                descriptor = `<i>${files[0].name}</i>`;
-            } else if (files.length > 1) {
-                descriptor = `<i>${files[0].name}</i><br>${andOtherFiles}`;
-            } else {
-                descriptor = sharedText;
+        Events.on('share-mode-pointerdown', this._activateCallback);
+
+        const sharedText = Localization.getTranslation("instructions.activate-share-mode-shared-text");
+        const andOtherFilesPlural = Localization.getTranslation("instructions.activate-share-mode-and-other-files-plural", null, {count: files.length-1});
+        const andOtherFiles = Localization.getTranslation("instructions.activate-share-mode-and-other-file");
+
+        let descriptorComplete, descriptorItem, descriptorOther, descriptorInstructions;
+
+        if (files.length > 2) {
+            // files shared
+            descriptorItem = files[0].name;
+            descriptorOther = andOtherFilesPlural;
+            descriptorComplete = `${descriptorItem} ${descriptorOther}`;
+        }
+        else if (files.length === 2) {
+            descriptorItem = files[0].name;
+            descriptorOther = andOtherFiles;
+            descriptorComplete = `${descriptorItem} ${descriptorOther}`;
+        } else if (files.length === 1) {
+            descriptorItem = files[0].name;
+            descriptorComplete = descriptorItem;
+        }
+        else {
+            // text shared
+            descriptorItem = text.replace(/\s/g," ");
+            descriptorComplete = sharedText;
+        }
+
+        if (files.length > 0) {
+            if (descriptorOther) {
+                this.$shareModeDescriptorOther.innerText = descriptorOther;
+                this.$shareModeDescriptorOther.removeAttribute('hidden');
+            }
+            if (files.length > 1) {
+                descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-files-plural", null, {count: files.length});
+            }
+            else {
+                descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-file");
             }
 
-            this.$xInstructions.querySelector('p').innerHTML = `<i>${descriptor}</i>`;
-            this.$xInstructions.querySelector('p').style.display = 'block';
-            this.$xInstructions.setAttribute('desktop', clickToSend);
-            this.$xInstructions.setAttribute('mobile', tapToSend);
+            files = await mime.addMissingMimeTypesToFiles(files);
 
-            this.$xNoPeers.querySelector('h2').innerHTML = `${openPairDrop}<br>${descriptor}`;
+            if (files[0].type.split('/')[0] === 'image') {
+                try {
+                    let imageUrl = await getThumbnailAsDataUrl(files[0], 80, null, 0.9);
 
-            const _callback = (e) => this._sendClipboardData(e, files, text);
-            Events.on('paste-pointerdown', _callback);
-            Events.on('deactivate-paste-mode', _ => this._deactivatePasteMode(_callback), { once: true });
+                    this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
 
-            this.$cancelPasteModeBtn.removeAttribute('hidden');
-
-            window.pasteMode.descriptor = descriptor;
-            window.pasteMode.activated = true;
-
-            console.log('Paste mode activated.');
-            Events.fire('paste-mode-changed');
+                    this.$shareModeImageThumb.removeAttribute('hidden');
+                } catch (e) {
+                    console.error(e);
+                    this.$shareModeFileThumb.removeAttribute('hidden');
+                }
+            } else {
+                this.$shareModeFileThumb.removeAttribute('hidden');
+            }
         }
-    }
+        else {
+            this.$shareModeTextThumb.removeAttribute('hidden');
 
-    _cancelPasteMode() {
-        Events.fire('deactivate-paste-mode');
-    }
+            this.$shareModeEditBtn.addEventListener('click', this._editShareTextCallback);
+            this.$shareModeEditBtn.removeAttribute('hidden');
 
-    _deactivatePasteMode(_callback) {
-        if (window.pasteMode.activated) {
-            window.pasteMode.descriptor = undefined;
-            window.pasteMode.activated = false;
-            Events.off('paste-pointerdown', _callback);
-
-            this.$xInstructions.querySelector('p').innerText = '';
-            this.$xInstructions.querySelector('p').style.display = 'none';
-
-            this.$xInstructions.setAttribute('desktop', Localization.getTranslation("instructions.x-instructions", "desktop"));
-            this.$xInstructions.setAttribute('mobile',  Localization.getTranslation("instructions.x-instructions", "mobile"));
-
-            this.$xNoPeers.querySelector('h2').innerHTML =  Localization.getTranslation("instructions.no-peers-title");
-
-            this.$cancelPasteModeBtn.setAttribute('hidden', "");
-
-            console.log('Paste mode deactivated.')
-            Events.fire('paste-mode-changed');
+            descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-text");
         }
+
+        const desktop = Localization.getTranslation("instructions.x-instructions-share-mode_desktop", null, {descriptor: descriptorInstructions});
+        const mobile = Localization.getTranslation("instructions.x-instructions-share-mode_mobile", null, {descriptor: descriptorInstructions});
+
+        this.$xInstructions.setAttribute('desktop', desktop);
+        this.$xInstructions.setAttribute('mobile', mobile);
+
+        this.$sharePanel.removeAttribute('hidden');
+
+        this.$shareModeDescriptor.removeAttribute('hidden');
+        this.$shareModeDescriptorItem.innerText = descriptorItem;
+
+        this.shareMode.active = true;
+        this.shareMode.descriptor = descriptorComplete;
+        this.shareMode.files = files;
+        this.shareMode.text = text;
+
+        console.log('Share mode activated.');
+
+        Events.fire('share-mode-changed', {
+            active: true,
+            descriptor: descriptorComplete
+        });
     }
 
-    _sendClipboardData(e, files, text) {
-        // send the pasted file/text content
+    async _reloadShareMode() {
+        // If shareMode is active only
+        if (!this.shareMode.active) return;
+
+        let files = this.shareMode.files;
+        let text = this.shareMode.text;
+
+        await this._deactivateShareMode();
+        await this._activateShareMode(files, text);
+    }
+
+    async _deactivateShareMode() {
+        if (!this.shareMode.active) return;
+
+        this.shareMode.active = false;
+        this.shareMode.descriptor = "";
+        this.shareMode.files = [];
+        this.shareMode.text = "";
+
+        Events.off('share-mode-pointerdown', this._activateCallback);
+
+        const desktop = Localization.getTranslation("instructions.x-instructions_desktop");
+        const mobile = Localization.getTranslation("instructions.x-instructions_mobile");
+
+        this.$xInstructions.setAttribute('desktop', desktop);
+        this.$xInstructions.setAttribute('mobile', mobile);
+
+        this.$sharePanel.setAttribute('hidden', true);
+
+        this.$shareModeImageThumb.setAttribute('hidden', true);
+        this.$shareModeFileThumb.setAttribute('hidden', true);
+        this.$shareModeTextThumb.setAttribute('hidden', true);
+
+        this.$shareModeDescriptorItem.innerHTML = "";
+        this.$shareModeDescriptorItem.classList.remove('cursive');
+        this.$shareModeDescriptorOther.innerHTML = "";
+        this.$shareModeDescriptorOther.setAttribute('hidden', true);
+        this.$shareModeEditBtn.removeEventListener('click', this._editShareTextCallback);
+        this.$shareModeEditBtn.setAttribute('hidden', true);
+
+        console.log('Share mode deactivated.')
+        Events.fire('share-mode-changed', { active: false });
+    }
+
+    _sendShareData(e) {
+        // send the shared file/text content
         const peerId = e.detail.peerId;
+        const files = this.shareMode.files;
+        const text = this.shareMode.text;
 
         if (files.length > 0) {
             Events.fire('files-selected', {
                 files: files,
                 to: peerId
             });
-        } else if (text.length > 0) {
+        }
+        else if (text.length > 0) {
             Events.fire('send-text', {
                 text: text,
                 to: peerId
@@ -392,30 +391,40 @@ class PeersUI {
 
 class PeerUI {
 
-    constructor(peer, connectionHash) {
+    static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
+    static _shareMode = {
+        active: false,
+        descriptor: ""
+    };
+
+    constructor(peer, connectionHash, shareMode) {
+        this.$xInstructions = $$('x-instructions');
+        this.$xPeers = $$('x-peers');
+
         this._peer = peer;
         this._connectionHash =
             `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
-        this._initDom();
-        this._bindListeners();
 
-        $$('x-peers').appendChild(this.$el)
+        // This is needed if the ShareMode is started BEFORE the PeerUI is drawn.
+        PeerUI._shareMode = shareMode;
+
+        this._initDom();
+
+        this.$xPeers.appendChild(this.$el);
         Events.fire('peer-added');
-        this.$xInstructions = $$('x-instructions');
+
+        // ShareMode
+        Events.on('share-mode-changed', e => this._onShareModeChanged(e.detail.active, e.detail.descriptor));
     }
 
     html() {
-        let title;
-        let input = '';
-        if (window.pasteMode.activated) {
-            title =  Localization.getTranslation("peer-ui.click-to-send-paste-mode", null, {descriptor: window.pasteMode.descriptor});
-        } else {
-            title = Localization.getTranslation("peer-ui.click-to-send");
-            input = '<input type="file" multiple>';
-        }
+        let title= PeerUI._shareMode.active
+            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor})
+            : Localization.getTranslation("peer-ui.click-to-send");
+
         this.$el.innerHTML = `
             <label class="column center pointer" title="${title}">
-                ${input}
+                <input type="file" multiple/>
                 <x-icon>
                     <div class="icon-wrapper" shadow="1">
                         <svg class="icon"><use xlink:href="#"/></svg>
@@ -434,14 +443,15 @@ class PeerUI {
                     <div class="name font-subheading"></div>
                     <div class="device-name font-body2"></div>
                     <div class="status font-body2"></div>
-                    <span class="connection-hash font-body2" dir="ltr" title="${ Localization.getTranslation("peer-ui.connection-hash") }"></span>
                 </div>
             </label>`;
 
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
-        this.$el.querySelector('.connection-hash').textContent = this._connectionHash;
+
+        this.$label = this.$el.querySelector('label');
+        this.$input = this.$el.querySelector('input');
     }
 
     addTypesToClassList() {
@@ -450,6 +460,8 @@ class PeerUI {
         }
 
         Object.keys(this._peer._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+
+        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer');
     }
 
     _initDom() {
@@ -462,30 +474,51 @@ class PeerUI {
 
         this.html();
 
-        this._callbackInput = e => this._onFilesSelected(e)
-        this._callbackClickSleep = _ => NoSleepUI.enable()
-        this._callbackTouchStartSleep = _ => NoSleepUI.enable()
-        this._callbackDrop = e => this._onDrop(e)
-        this._callbackDragEnd = e => this._onDragEnd(e)
-        this._callbackDragLeave = e => this._onDragEnd(e)
-        this._callbackDragOver = e => this._onDragOver(e)
-        this._callbackContextMenu = e => this._onRightClick(e)
-        this._callbackTouchStart = e => this._onTouchStart(e)
-        this._callbackTouchEnd = e => this._onTouchEnd(e)
-        this._callbackPointerDown = e => this._onPointerDown(e)
+        this._createCallbacks();
 
-        // PasteMode
-        Events.on('paste-mode-changed', _ => this._onPasteModeChanged());
-    }
-
-    _onPasteModeChanged() {
-        this.html();
+        this._evaluateShareMode();
         this._bindListeners();
     }
 
+    _onShareModeChanged(active = false, descriptor = "") {
+        // This is needed if the ShareMode is started AFTER the PeerUI is drawn.
+        PeerUI._shareMode.active = active;
+        PeerUI._shareMode.descriptor = descriptor;
+
+        this._evaluateShareMode();
+        this._bindListeners();
+    }
+
+    _evaluateShareMode() {
+        let title;
+        if (!PeerUI._shareMode.active) {
+            title = Localization.getTranslation("peer-ui.click-to-send");
+            this.$input.removeAttribute('disabled');
+        }
+        else {
+            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor});
+            this.$input.setAttribute('disabled', true);
+        }
+        this.$label.setAttribute('title', title);
+    }
+
+    _createCallbacks() {
+        this._callbackInput = e => this._onFilesSelected(e);
+        this._callbackClickSleep = _ => NoSleepUI.enable();
+        this._callbackTouchStartSleep = _ => NoSleepUI.enable();
+        this._callbackDrop = e => this._onDrop(e);
+        this._callbackDragEnd = e => this._onDragEnd(e);
+        this._callbackDragLeave = e => this._onDragEnd(e);
+        this._callbackDragOver = e => this._onDragOver(e);
+        this._callbackContextMenu = e => this._onRightClick(e);
+        this._callbackTouchStart = e => this._onTouchStart(e);
+        this._callbackTouchEnd = e => this._onTouchEnd(e);
+        this._callbackPointerDown = e => this._onPointerDown(e);
+    }
+
     _bindListeners() {
-        if(!window.pasteMode.activated) {
-            // Remove Events Paste Mode
+        if(!PeerUI._shareMode.active) {
+            // Remove Events Share mode
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
             // Add Events Normal Mode
@@ -499,7 +532,8 @@ class PeerUI {
             this.$el.addEventListener('contextmenu', this._callbackContextMenu);
             this.$el.addEventListener('touchstart', this._callbackTouchStart);
             this.$el.addEventListener('touchend', this._callbackTouchEnd);
-        } else {
+        }
+        else {
             // Remove Events Normal Mode
             this.$el.removeEventListener('click', this._callbackClickSleep);
             this.$el.removeEventListener('touchstart', this._callbackTouchStartSleep);
@@ -511,7 +545,7 @@ class PeerUI {
             this.$el.removeEventListener('touchstart', this._callbackTouchStart);
             this.$el.removeEventListener('touchend', this._callbackTouchEnd);
 
-            // Add Events Paste Mode
+            // Add Events Share mode
             this.$el.addEventListener('pointerdown', this._callbackPointerDown);
         }
     }
@@ -520,7 +554,7 @@ class PeerUI {
         // Prevents triggering of event twice on touch devices
         e.stopPropagation();
         e.preventDefault();
-        Events.fire('paste-pointerdown', {
+        Events.fire('share-mode-pointerdown', {
             peerId: this._peer.id
         });
     }
@@ -567,7 +601,8 @@ class PeerUI {
         const $progress = this.$el.querySelector('.progress');
         if (0.5 < progress && progress < 1) {
             $progress.classList.add('over50');
-        } else {
+        }
+        else {
             $progress.classList.remove('over50');
         }
         if (progress < 1) {
@@ -583,7 +618,8 @@ class PeerUI {
                 this.$el.querySelector('.status').innerText = statusName;
                 this.currentStatus = status;
             }
-        } else {
+        }
+        else {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
             progress = 0;
@@ -595,21 +631,38 @@ class PeerUI {
 
     _onDrop(e) {
         e.preventDefault();
-        Events.fire('files-selected', {
-            files: e.dataTransfer.files,
-            to: this._peer.id
-        });
+
+        if (PeerUI._shareMode.active || Dialog.anyDialogShown()) return;
+
+        if (e.dataTransfer.files.length > 0) {
+            Events.fire('files-selected', {
+                files: e.dataTransfer.files,
+                to: this._peer.id
+            });
+        } else {
+            for (let i=0; i<e.dataTransfer.items.length; i++) {
+                if (e.dataTransfer.items[i].type === "text/plain") {
+                    e.dataTransfer.items[i].getAsString(text => {
+                        Events.fire('send-text', {
+                            text: text,
+                            to: this._peer.id
+                        });
+                    });
+                }
+            }
+        }
+
         this._onDragEnd();
     }
 
     _onDragOver() {
-        this.$el.setAttribute('drop', 1);
-        this.$xInstructions.setAttribute('drop-peer', 1);
+        this.$el.setAttribute('drop', true);
+        this.$xInstructions.setAttribute('drop-peer', true);
     }
 
     _onDragEnd() {
         this.$el.removeAttribute('drop');
-        this.$xInstructions.removeAttribute('drop-peer', 1);
+        this.$xInstructions.removeAttribute('drop-peer');
     }
 
     _onRightClick(e) {
@@ -622,13 +675,14 @@ class PeerUI {
 
     _onTouchStart(e) {
         this._touchStart = Date.now();
-        this._touchTimer = setTimeout(_ => this._onTouchEnd(e), 610);
+        this._touchTimer = setTimeout(() => this._onTouchEnd(e), 610);
     }
 
     _onTouchEnd(e) {
         if (Date.now() - this._touchStart < 500) {
             clearTimeout(this._touchTimer);
-        } else if (this._touchTimer) { // this was a long tap
+        }
+        else if (this._touchTimer) { // this was a long tap
             e.preventDefault();
             Events.fire('text-recipient', {
                 peerId: this._peer.id,
@@ -642,15 +696,31 @@ class PeerUI {
 class Dialog {
     constructor(id) {
         this.$el = $(id);
-        this.$el.querySelectorAll('[close]').forEach(el => el.addEventListener('click', _ => this.hide()));
         this.$autoFocus = this.$el.querySelector('[autofocus]');
+        this.$xBackground = this.$el.querySelector('x-background');
+        this.$closeBtns = this.$el.querySelectorAll('[close]');
+
+        this.$closeBtns.forEach(el => {
+            el.addEventListener('click', _ => this.hide())
+        });
 
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
     }
 
+    static anyDialogShown() {
+        return document.querySelectorAll('x-dialog[show]').length > 0;
+    }
+
     show() {
-        this.$el.setAttribute('show', 1);
-        if (!window.isMobile && this.$autoFocus) this.$autoFocus.focus();
+        if (this.$xBackground) {
+            this.$xBackground.scrollTop = 0;
+        }
+
+        this.$el.setAttribute('show', true);
+
+        if (!window.isMobile && this.$autoFocus) {
+            this.$autoFocus.focus();
+        }
     }
 
     isShown() {
@@ -659,11 +729,11 @@ class Dialog {
 
     hide() {
         this.$el.removeAttribute('show');
-        if (!window.isMobile && this.$autoFocus) {
+        if (!window.isMobile) {
             document.activeElement.blur();
             window.blur();
         }
-        document.title = 'PairDrop';
+        document.title = 'PairDrop | Transfer Files Cross-Platform. No Setup, No Signup.';
         changeFavicon("images/favicon-96x96.png");
         this.correspondingPeerId = undefined;
     }
@@ -672,6 +742,15 @@ class Dialog {
         if (this.isShown() && this.correspondingPeerId === peerId) {
             this.hide();
             Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
+        }
+    }
+
+    _evaluateOverflowing(element) {
+        if (element.clientHeight < element.scrollHeight) {
+            element.classList.add('overflowing');
+        }
+        else {
+            element.classList.remove('overflowing');
         }
     }
 }
@@ -684,7 +763,7 @@ class LanguageSelectDialog extends Dialog {
         this.$languageSelectBtn = $('language-selector');
         this.$languageSelectBtn.addEventListener('click', _ => this.show());
 
-        this.$languageButtons = this.$el.querySelectorAll(".language-buttons button");
+        this.$languageButtons = this.$el.querySelectorAll(".language-buttons .btn");
         this.$languageButtons.forEach($btn => {
             $btn.addEventListener("click", e => this.selectLanguage(e));
         })
@@ -692,25 +771,28 @@ class LanguageSelectDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
 
     show() {
-        if (Localization.isSystemLocale()) {
-            this.$languageButtons[0].focus();
-        } else {
-            let locale = Localization.getLocale();
-            for (let i=0; i<this.$languageButtons.length; i++) {
-                const $btn = this.$languageButtons[i];
-                if ($btn.value === locale) {
-                    $btn.focus();
-                    break;
-                }
-            }
-        }
+        let locale = Localization.getLocale();
+        this.currentLanguageBtn = Localization.isSystemLocale()
+            ? this.$languageButtons[0]
+            : this.$el.querySelector(`.btn[value="${locale}"]`);
+
+        this.currentLanguageBtn.classList.add("current");
+
         super.show();
+    }
+
+    hide() {
+        this.currentLanguageBtn.classList.remove("current");
+
+        super.hide();
     }
 
     selectLanguage(e) {
@@ -718,9 +800,10 @@ class LanguageSelectDialog extends Dialog {
         let languageCode = e.target.value;
 
         if (languageCode) {
-            localStorage.setItem('language-code', languageCode);
-        } else {
-            localStorage.removeItem('language-code');
+            localStorage.setItem('language_code', languageCode);
+        }
+        else {
+            localStorage.removeItem('language_code');
         }
 
         Localization.setTranslation(languageCode)
@@ -746,11 +829,14 @@ class ReceiveDialog extends Dialog {
         // 1024^2 = 104876; 1024^3 = 1073741824
         if (bytes >= 1073741824) {
             return Math.round(10 * bytes / 1073741824) / 10 + ' GB';
-        } else if (bytes >= 1048576) {
+        }
+        else if (bytes >= 1048576) {
             return Math.round(bytes / 1048576) + ' MB';
-        } else if (bytes > 1024) {
+        }
+        else if (bytes > 1024) {
             return Math.round(bytes / 1024) + ' KB';
-        } else {
+        }
+        else {
             return bytes + ' Bytes';
         }
     }
@@ -762,7 +848,8 @@ class ReceiveDialog extends Dialog {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image")
                 : Localization.getTranslation("dialogs.file-other-description-file");
-        } else if (files.length >= 2) {
+        }
+        else if (files.length >= 2) {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
                 : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
@@ -795,7 +882,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this._filesQueue = [];
     }
 
-    _onFilesReceived(peerId, files, imagesOnly, totalSize) {
+    async _onFilesReceived(peerId, files, imagesOnly, totalSize) {
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
         const badgeClassName = $(peerId).ui._badgeClassName();
@@ -810,28 +897,16 @@ class ReceiveFileDialog extends ReceiveDialog {
             badgeClassName: badgeClassName
         });
 
-        this._nextFiles();
-
         window.blop.play();
+
+        await this._nextFiles();
     }
 
-    _nextFiles() {
-        if (this._busy) return;
+    async _nextFiles() {
+        if (this._busy || !this._filesQueue.length) return;
         this._busy = true;
         const {peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName} = this._filesQueue.shift();
-        this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
-    }
-
-    _dequeueFile() {
-        if (!this._filesQueue.length) { // nothing to do
-            this._busy = false;
-            return;
-        }
-        // dequeue next file
-        setTimeout(_ => {
-            this._busy = false;
-            this._nextFiles();
-        }, 300);
+        await this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
     }
 
     createPreviewElement(file) {
@@ -846,7 +921,8 @@ class ReceiveFileDialog extends ReceiveDialog {
 
                 if (Object.keys(previewElement).indexOf(mime) === -1) {
                     resolve(false);
-                } else {
+                }
+                else {
                     let element = document.createElement(previewElement[mime]);
                     element.controls = true;
                     element.onload = _ => {
@@ -876,7 +952,8 @@ class ReceiveFileDialog extends ReceiveDialog {
             descriptor = imagesOnly
                 ? Localization.getTranslation("dialogs.title-image")
                 : Localization.getTranslation("dialogs.title-file");
-        } else {
+        }
+        else {
             descriptor = imagesOnly
                 ? Localization.getTranslation("dialogs.title-image-plural")
                 : Localization.getTranslation("dialogs.title-file-plural");
@@ -931,6 +1008,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             }
         }
 
+        this.$downloadBtn.removeAttribute('disabled');
         this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download");
         this.$downloadBtn.onclick = _ => {
             if (downloadZipped) {
@@ -938,7 +1016,8 @@ class ReceiveFileDialog extends ReceiveDialog {
                 tmpZipBtn.download = filenameDownload;
                 tmpZipBtn.href = url;
                 tmpZipBtn.click();
-            } else {
+            }
+            else {
                 this._downloadFilesIndividually(files);
             }
 
@@ -946,8 +1025,10 @@ class ReceiveFileDialog extends ReceiveDialog {
                 this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download-again");
             }
             Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
+
+            // Prevent clicking the button multiple times
             this.$downloadBtn.style.pointerEvents = "none";
-            setTimeout(_ => this.$downloadBtn.style.pointerEvents = "unset", 2000);
+            setTimeout(() => this.$downloadBtn.style.pointerEvents = "unset", 2000);
         };
 
         document.title = files.length === 1
@@ -958,10 +1039,12 @@ class ReceiveFileDialog extends ReceiveDialog {
         Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
         this.show();
 
-        setTimeout(_ => {
+        setTimeout(() => {
+            // wait for the dialog to be shown
             if (canShare) {
                 this.$shareBtn.click();
-            } else {
+            }
+            else {
                 this.$downloadBtn.click();
             }
         }, 500);
@@ -970,7 +1053,8 @@ class ReceiveFileDialog extends ReceiveDialog {
             .then(canPreview => {
                 if (canPreview) {
                     console.log('the file is able to preview');
-                } else {
+                }
+                else {
                     console.log('the file is not able to preview');
                 }
             })
@@ -987,10 +1071,14 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     hide() {
-        this.$shareBtn.setAttribute('hidden', '');
-        this.$previewBox.innerHTML = '';
         super.hide();
-        this._dequeueFile();
+        setTimeout(async () => {
+            this.$shareBtn.setAttribute('hidden', true);
+            this.$downloadBtn.setAttribute('disabled', true);
+            this.$previewBox.innerHTML = '';
+            this._busy = false;
+            await this._nextFiles();
+        }, 300);
     }
 }
 
@@ -1010,7 +1098,9 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this._respondToFileTransferRequest(false);
         }
     }
@@ -1051,6 +1141,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
         document.title =  `${transferRequestTitle} - PairDrop`;
         changeFavicon("images/favicon-96x96-notification.png");
+
+        this.$acceptRequestBtn.removeAttribute('disabled');
         this.show();
     }
 
@@ -1068,12 +1160,15 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     hide() {
         // clear previewBox after dialog is closed
-        setTimeout(_ => this.$previewBox.innerHTML = '', 300);
+        setTimeout(() => {
+            this.$previewBox.innerHTML = '';
+            this.$acceptRequestBtn.setAttribute('disabled', true);
+        }, 300);
 
         super.hide();
 
         // show next request
-        setTimeout(_ => this._dequeueRequests(), 500);
+        setTimeout(() => this._dequeueRequests(), 300);
     }
 }
 
@@ -1097,11 +1192,11 @@ class InputKeyContainer {
     }
 
     _enableChars() {
-        this.$inputKeyChars.forEach(char => char.removeAttribute("disabled"));
+        this.$inputKeyChars.forEach(char => char.removeAttribute('disabled'));
     }
 
     _disableChars() {
-        this.$inputKeyChars.forEach(char => char.setAttribute("disabled", ""));
+        this.$inputKeyChars.forEach(char => char.setAttribute('disabled', true));
     }
 
     _clearChars() {
@@ -1133,10 +1228,12 @@ class InputKeyContainer {
         if (e.key === "Backspace" && previousSibling && !e.target.value) {
             previousSibling.value = '';
             previousSibling.focus();
-        } else if (e.key === "ArrowRight" && nextSibling) {
+        }
+        else if (e.key === "ArrowRight" && nextSibling) {
             e.preventDefault();
             nextSibling.focus();
-        } else if (e.key === "ArrowLeft" && previousSibling) {
+        }
+        else if (e.key === "ArrowLeft" && previousSibling) {
             e.preventDefault();
             previousSibling.focus();
         }
@@ -1172,7 +1269,8 @@ class InputKeyContainer {
     _evaluateKeyChars() {
         if (this.$inputKeyContainer.querySelectorAll('input:placeholder-shown').length > 0) {
             this._onNotAllCharsFilled();
-        } else {
+        }
+        else {
             this._onAllCharsFilled();
 
             const lastCharFocused = document.activeElement === this.$inputKeyChars[this.$inputKeyChars.length - 1];
@@ -1204,8 +1302,8 @@ class PairDeviceDialog extends Dialog {
         this.inputKeyContainer = new InputKeyContainer(
             this.$el.querySelector('.input-key-container'),
             /\d/,
-            () => this.$pairSubmitBtn.removeAttribute("disabled"),
-            () => this.$pairSubmitBtn.setAttribute("disabled", ""),
+            () => this.$pairSubmitBtn.removeAttribute('disabled'),
+            () => this.$pairSubmitBtn.setAttribute('disabled', true),
             () => this._submit()
         );
 
@@ -1226,33 +1324,25 @@ class PairDeviceDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyPairUrl());
 
-        this.evaluateUrlAttributes();
-
         this.pairPeer = {};
-
-        this._evaluateNumberRoomSecrets();
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
-            // Timeout to prevent paste mode from getting cancelled simultaneously
-            setTimeout(_ => this._close(), 50);
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
+            // Timeout to prevent share mode from getting cancelled simultaneously
+            setTimeout(() => this._close(), 50);
         }
     }
 
     _onPaste(e) {
         e.preventDefault();
-        let pastedKey = e.clipboardData.getData("Text").replace(/\D/g,'').substring(0, 6);
+        let pastedKey = e.clipboardData
+            .getData("Text")
+            .replace(/\D/g,'')
+            .substring(0, 6);
         this.inputKeyContainer._onPaste(pastedKey);
-    }
-
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('pair_key')) {
-            this._pairDeviceJoin(urlParams.get('pair_key'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
     }
 
     _pairDeviceInitiate() {
@@ -1262,21 +1352,26 @@ class PairDeviceDialog extends Dialog {
     _onPairDeviceInitiated(msg) {
         this.pairKey = msg.pairKey;
         this.roomSecret = msg.roomSecret;
+        this._setKeyAndQRCode();
+        this.inputKeyContainer._enableChars();
+        this.show();
+    }
+
+    _setKeyAndQRCode() {
         this.$key.innerText = `${this.pairKey.substring(0,3)} ${this.pairKey.substring(3,6)}`
+
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getPairUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
-            background: 'rgb(250,250,250)',
+            background: 'white',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
         });
         this.$qrCode.innerHTML = qr.svg();
-        this.inputKeyContainer._enableChars();
-        this.show();
     }
 
     _getPairUrl() {
@@ -1365,12 +1460,13 @@ class PairDeviceDialog extends Dialog {
             deviceName = $peer.ui._peer.name.deviceName;
         }
 
-        PersistentStorage.addRoomSecret(roomSecret, displayName, deviceName)
+        PersistentStorage
+            .addRoomSecret(roomSecret, displayName, deviceName)
             .then(_ => {
                 Events.fire('notify-user', Localization.getTranslation("notifications.pairing-success"));
                 this._evaluateNumberRoomSecrets();
             })
-            .finally(_ => {
+            .finally(() => {
                 this._cleanUp();
                 this.hide();
             })
@@ -1406,23 +1502,26 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onSecretRoomDeleted(roomSecret) {
-        PersistentStorage.deleteRoomSecret(roomSecret).then(_ => {
-            this._evaluateNumberRoomSecrets();
-        });
+        PersistentStorage
+            .deleteRoomSecret(roomSecret)
+            .then(_ => {
+                this._evaluateNumberRoomSecrets();
+            });
     }
 
     _evaluateNumberRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets()
+        PersistentStorage
+            .getAllRoomSecrets()
             .then(roomSecrets => {
                 if (roomSecrets.length > 0) {
                     this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
                     this.$footerInstructionsPairedDevices.removeAttribute('hidden');
-                } else {
-                    this.$editPairedDevicesHeaderBtn.setAttribute('hidden', '');
-                    this.$footerInstructionsPairedDevices.setAttribute('hidden', '');
+                }
+                else {
+                    this.$editPairedDevicesHeaderBtn.setAttribute('hidden', true);
+                    this.$footerInstructionsPairedDevices.setAttribute('hidden', true);
                 }
                 Events.fire('evaluate-footer-badges');
-                Events.fire('header-evaluated', 'edit-paired-devices');
             });
     }
 }
@@ -1441,77 +1540,105 @@ class EditPairedDevicesDialog extends Dialog {
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
 
     async _initDOM() {
+        const pairedDeviceRemovedString = Localization.getTranslation("dialogs.paired-device-removed");
         const unpairString = Localization.getTranslation("dialogs.unpair").toUpperCase();
         const autoAcceptString = Localization.getTranslation("dialogs.auto-accept").toLowerCase();
         const roomSecretsEntries = await PersistentStorage.getAllRoomSecretEntries();
 
-        roomSecretsEntries.forEach(roomSecretsEntry => {
-            let $pairedDevice = document.createElement('div');
-            $pairedDevice.classList = ["paired-device"];
+        roomSecretsEntries
+            .forEach(roomSecretsEntry => {
+                let $pairedDevice = document.createElement('div');
+                $pairedDevice.classList.add("paired-device");
+                $pairedDevice.setAttribute('placeholder', pairedDeviceRemovedString);
 
-            $pairedDevice.innerHTML = `
-            <div class="display-name">
-                <span>${roomSecretsEntry.display_name}</span>
-            </div>
-            <div class="device-name">
-                <span>${roomSecretsEntry.device_name}</span>
-            </div>
-            <div class="button-wrapper">
-                <label class="auto-accept pointer">${autoAcceptString}
-                    <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
-                </label>
-                <button class="button" type="button">${unpairString}</button>
-            </div>`
+                $pairedDevice.innerHTML = `
+                    <div class="display-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.display_name}
+                        </span>
+                    </div>
+                    <div class="device-name">
+                        <span class="fw">
+                            ${roomSecretsEntry.device_name}
+                        </span>
+                    </div>
+                    <div class="button-wrapper row fw center wrap">
+                        <div class="center grow">
+                            <span class="center wrap">
+                                ${autoAcceptString}
+                            </span>
+                            <label class="auto-accept switch pointer m-1">
+                                <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
+                                <div class="slider round"></div>
+                            </label>
+                        </div>
+                        <button class="btn grow" type="button">${unpairString}</button>
+                    </div>`
 
-            $pairedDevice.querySelector('input[type="checkbox"]').addEventListener('click', e => {
-                PersistentStorage.updateRoomSecretAutoAccept(roomSecretsEntry.secret, e.target.checked).then(roomSecretsEntry => {
-                    Events.fire('auto-accept-updated', {
-                        'roomSecret': roomSecretsEntry.entry.secret,
-                        'autoAccept': e.target.checked
+                $pairedDevice
+                    .querySelector('input[type="checkbox"]')
+                    .addEventListener('click', e => {
+                        PersistentStorage
+                            .updateRoomSecretAutoAccept(roomSecretsEntry.secret, e.target.checked)
+                            .then(roomSecretsEntry => {
+                                Events.fire('auto-accept-updated', {
+                                    'roomSecret': roomSecretsEntry.entry.secret,
+                                    'autoAccept': e.target.checked
+                                });
+                            });
                     });
-                });
-            });
 
-            $pairedDevice.querySelector('button').addEventListener('click', e => {
-                PersistentStorage.deleteRoomSecret(roomSecretsEntry.secret).then(roomSecret => {
-                    Events.fire('room-secrets-deleted', [roomSecret]);
-                    Events.fire('evaluate-number-room-secrets');
-                    e.target.parentNode.parentNode.remove();
-                });
+                $pairedDevice
+                    .querySelector('button')
+                    .addEventListener('click', e => {
+                        PersistentStorage
+                            .deleteRoomSecret(roomSecretsEntry.secret)
+                            .then(roomSecret => {
+                                Events.fire('room-secrets-deleted', [roomSecret]);
+                                Events.fire('evaluate-number-room-secrets');
+                                $pairedDevice.innerText = "";
+                            });
+                    })
+
+                this.$pairedDevicesWrapper.appendChild($pairedDevice)
             })
-
-            this.$pairedDevicesWrapper.html = "";
-            this.$pairedDevicesWrapper.appendChild($pairedDevice)
-        })
-
     }
 
     hide() {
         super.hide();
-        setTimeout(_ => {
+        setTimeout(() => {
             this.$pairedDevicesWrapper.innerHTML = ""
         }, 300);
     }
 
     _onEditPairedDevices() {
-        this._initDOM().then(_ => this.show());
+        this._initDOM()
+            .then(_ => {
+                this._evaluateOverflowing(this.$pairedDevicesWrapper);
+                this.show();
+            });
     }
 
     _clearRoomSecrets() {
-        PersistentStorage.getAllRoomSecrets()
+        PersistentStorage
+            .getAllRoomSecrets()
             .then(roomSecrets => {
-                PersistentStorage.clearRoomSecrets().finally(_ => {
-                    Events.fire('room-secrets-deleted', roomSecrets);
-                    Events.fire('evaluate-number-room-secrets');
-                    Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
-                    this.hide();
-                })
+                PersistentStorage
+                    .clearRoomSecrets()
+                    .finally(() => {
+                        Events.fire('room-secrets-deleted', roomSecrets);
+                        Events.fire('evaluate-number-room-secrets');
+                        Events.fire('notify-user', Localization.getTranslation("notifications.pairing-cleared"));
+                        this.hide();
+                    })
             });
     }
 
@@ -1525,9 +1652,11 @@ class EditPairedDevicesDialog extends Dialog {
 
         if (!peer || !peer._roomIds["secret"]) return;
 
-        PersistentStorage.updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName).then(roomSecretEntry => {
-            console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
-        })
+        PersistentStorage
+            .updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName)
+            .then(roomSecretEntry => {
+                console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
+            })
     }
 }
 
@@ -1555,8 +1684,8 @@ class PublicRoomDialog extends Dialog {
         this.inputKeyContainer = new InputKeyContainer(
             this.$el.querySelector('.input-key-container'),
             /[a-z|A-Z]/,
-            () => this.$joinSubmitBtn.removeAttribute("disabled"),
-            () => this.$joinSubmitBtn.setAttribute("disabled", ""),
+            () => this.$joinSubmitBtn.removeAttribute('disabled'),
+            () => this.$joinSubmitBtn.setAttribute('disabled', true),
             () => this._submit()
         );
 
@@ -1569,14 +1698,14 @@ class PublicRoomDialog extends Dialog {
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyShareRoomUrl());
 
-        this.evaluateUrlAttributes();
-
         Events.on('ws-connected', _ => this._onWsConnected());
         Events.on('translation-loaded', _ => this.setFooterBadge());
     }
 
     _onKeyDown(e) {
-        if (this.isShown() && e.code === "Escape") {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
             this.hide();
         }
     }
@@ -1590,7 +1719,8 @@ class PublicRoomDialog extends Dialog {
     _onHeaderBtnClick() {
         if (this.roomId) {
             this.show();
-        } else {
+        }
+        else {
             this._createPublicRoom();
         }
     }
@@ -1602,14 +1732,14 @@ class PublicRoomDialog extends Dialog {
     _onPublicRoomCreated(roomId) {
         this.roomId = roomId;
 
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this.show();
 
         sessionStorage.setItem('public_room_id', roomId);
     }
 
-    setIdAndQrCode() {
+    _setKeyAndQrCode() {
         if (!this.roomId) return;
 
         this.$key.innerText = this.roomId.toUpperCase();
@@ -1617,10 +1747,10 @@ class PublicRoomDialog extends Dialog {
         // Display the QR code for the url
         const qr = new QRCode({
             content: this._getShareRoomUrl(),
-            width: 150,
-            height: 150,
+            width: 130,
+            height: 130,
             padding: 1,
-            background: 'rgb(250,250,250)',
+            background: 'white',
             color: 'rgb(18, 18, 18)',
             ecl: "L",
             join: true
@@ -1657,22 +1787,13 @@ class PublicRoomDialog extends Dialog {
             })
     }
 
-    evaluateUrlAttributes() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('room_id')) {
-            this._joinPublicRoom(urlParams.get('room_id'));
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url); //remove pair_key from url
-        }
-    }
-
     _onWsConnected() {
         let roomId = sessionStorage.getItem('public_room_id');
 
         if (!roomId) return;
 
         this.roomId = roomId;
-        this.setIdAndQrCode();
+        this._setKeyAndQrCode();
 
         this._joinPublicRoom(roomId, true);
     }
@@ -1724,7 +1845,7 @@ class PublicRoomDialog extends Dialog {
         if (isJoinedRoomId) {
             this.roomId = roomId;
             this.roomIdJoin = false;
-            this.setIdAndQrCode();
+            this._setKeyAndQrCode();
         }
     }
 
@@ -1760,7 +1881,7 @@ class PublicRoomDialog extends Dialog {
         this.roomId = null;
         this.inputKeyContainer._cleanUp();
         sessionStorage.removeItem('public_room_id');
-        this.$footerBadgePublicRoomDevices.setAttribute('hidden', '');
+        this.$footerBadgePublicRoomDevices.setAttribute('hidden', true);
         Events.fire('evaluate-footer-badges');
     }
 }
@@ -1768,43 +1889,51 @@ class PublicRoomDialog extends Dialog {
 class SendTextDialog extends Dialog {
     constructor() {
         super('send-text-dialog');
-        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
-        this.$text = this.$el.querySelector('#text-input');
+
+        this.$text = this.$el.querySelector('.textarea');
         this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
-        this.$text.addEventListener('input', e => this._onChange(e));
+        this.$text.addEventListener('input', _ => this._onInput());
+
+        Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
-    async _onKeyDown(e) {
+    _onKeyDown(e) {
         if (!this.isShown()) return;
 
         if (e.code === "Escape") {
             this.hide();
-        } else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
-            if (this._textInputEmpty()) return;
+        }
+        else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+            if (this._textEmpty()) return;
+
             this._send();
         }
     }
 
-    _textInputEmpty() {
+    _textEmpty() {
         return !this.$text.innerText || this.$text.innerText === "\n";
     }
 
-    _onChange(e) {
-        if (this._textInputEmpty()) {
-            this.$submit.setAttribute('disabled', '');
-        } else {
+    _onInput() {
+        if (this._textEmpty()) {
+            this.$submit.setAttribute('disabled', true);
+            // remove remaining whitespace on Firefox on text deletion
+            this.$text.innerText = "";
+        }
+        else {
             this.$submit.removeAttribute('disabled');
         }
+        this._evaluateOverflowing(this.$text);
     }
 
     _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
         this.$peerDisplayName.innerText = deviceName;
-        this.$peerDisplayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$peerDisplayName.classList.remove(...PeerUI._badgeClassNames);
         this.$peerDisplayName.classList.add($(peerId).ui._badgeClassName());
 
         this.show();
@@ -1827,8 +1956,8 @@ class SendTextDialog extends Dialog {
             to: this.correspondingPeerId,
             text: this.$text.innerText
         });
-        this.$text.innerText = "";
         this.hide();
+        setTimeout(() => this.$text.innerText = "", 300);
     }
 }
 
@@ -1850,13 +1979,14 @@ class ReceiveTextDialog extends Dialog {
     }
 
     async _onKeyDown(e) {
-        if (this.isShown()) {
-            if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
-                await this._onCopy()
-                this.hide();
-            } else if (e.code === "Escape") {
-                this.hide();
-            }
+        if (!this.isShown()) return
+
+        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+            await this._onCopy()
+            this.hide();
+        }
+        else if (e.code === "Escape") {
+            this.hide();
         }
     }
 
@@ -1876,7 +2006,7 @@ class ReceiveTextDialog extends Dialog {
 
     _showReceiveTextDialog(text, peerId) {
         this.$displayName.innerText = $(peerId).ui._displayName();
-        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
+        this.$displayName.classList.remove(...PeerUI._badgeClassNames);
         this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;
@@ -1889,6 +2019,8 @@ class ReceiveTextDialog extends Dialog {
                 return `<a href="${url}" target="_blank">${url}</a>`;
             });
         }
+
+        this._evaluateOverflowing(this.$text);
 
         this._setDocumentTitleMessages();
 
@@ -1904,7 +2036,8 @@ class ReceiveTextDialog extends Dialog {
 
     async _onCopy() {
         const sanitizedText = this.$text.innerText.replace(/\u00A0/gm, ' ');
-        navigator.clipboard.writeText(sanitizedText)
+        navigator.clipboard
+            .writeText(sanitizedText)
             .then(_ => {
                 Events.fire('notify-user', Localization.getTranslation("notifications.copied-to-clipboard"));
                 this.hide();
@@ -1916,65 +2049,132 @@ class ReceiveTextDialog extends Dialog {
 
     hide() {
         super.hide();
-        setTimeout(_ => this._dequeueRequests(), 500);
+        setTimeout(() => this._dequeueRequests(), 500);
     }
 }
 
-class Base64ZipDialog extends Dialog {
+class ShareTextDialog extends Dialog {
+    constructor() {
+        super('share-text-dialog');
+
+        this.$text = this.$el.querySelector('.textarea');
+        this.$approveMsgBtn = this.$el.querySelector('button[type="submit"]');
+        this.$checkbox = this.$el.querySelector('input[type="checkbox"]')
+
+        this.$approveMsgBtn.addEventListener('click', _ => this._approveShareText());
+
+        // Only show this per default if user sets checkmark
+        this.$checkbox.checked = localStorage.getItem('approve-share-text')
+            ? ShareTextDialog.isApproveShareTextSet()
+            : false;
+
+        this._setCheckboxValueToLocalStorage();
+
+        this.$checkbox.addEventListener('change', _ => this._setCheckboxValueToLocalStorage());
+        Events.on('share-text-dialog', e => this._onShareText(e.detail));
+        Events.on('keydown', e => this._onKeyDown(e));
+        this.$text.addEventListener('input', _ => this._evaluateEmptyText());
+    }
+
+    static isApproveShareTextSet() {
+        return localStorage.getItem('approve-share-text') === "true";
+    }
+
+    _setCheckboxValueToLocalStorage() {
+        localStorage.setItem('approve-share-text', this.$checkbox.checked ? "true" : "false");
+    }
+
+    _onKeyDown(e) {
+        if (!this.isShown()) return;
+
+        if (e.code === "Escape") {
+            this._approveShareText();
+        }
+        else if (e.code === "Enter" && (e.ctrlKey || e.metaKey)) {
+            if (this._textEmpty()) return;
+
+            this._approveShareText();
+        }
+    }
+
+    _textEmpty() {
+        return !this.$text.innerText || this.$text.innerText === "\n";
+    }
+
+    _evaluateEmptyText() {
+        if (this._textEmpty()) {
+            this.$approveMsgBtn.setAttribute('disabled', true);
+            // remove remaining whitespace on Firefox on text deletion
+            this.$text.innerText = "";
+        }
+        else {
+            this.$approveMsgBtn.removeAttribute('disabled');
+        }
+        this._evaluateOverflowing(this.$text);
+    }
+
+    _onShareText(text) {
+        this.$text.innerText = text;
+        this._evaluateEmptyText();
+        this.show();
+    }
+
+    _approveShareText() {
+        Events.fire('activate-share-mode', {text: this.$text.innerText});
+        this.hide();
+    }
+
+    hide() {
+        super.hide();
+        setTimeout(() => this.$text.innerText = "", 500);
+    }
+}
+
+class Base64Dialog extends Dialog {
 
     constructor() {
         super('base64-paste-dialog');
-        const urlParams = new URL(window.location).searchParams;
-        const base64Text = urlParams.get('base64text');
-        const base64Zip = urlParams.get('base64zip');
-        const base64Hash = window.location.hash.substring(1);
 
+        this.$title = this.$el.querySelector('.dialog-title');
         this.$pasteBtn = this.$el.querySelector('#base64-paste-btn');
         this.$fallbackTextarea = this.$el.querySelector('.textarea');
+    }
 
-        if (base64Text) {
+    async evaluateBase64Text(base64Text, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-text');
+
+        if (base64Text === 'paste') {
+            // ?base64text=paste
+            // base64 encoded string is ready to be pasted from clipboard
+            this.preparePasting('text');
             this.show();
-            if (base64Text === 'paste') {
-                // ?base64text=paste
-                // base64 encoded string is ready to be pasted from clipboard
-                this.preparePasting('text');
-            } else if (base64Text === 'hash') {
-                // ?base64text=hash#BASE64ENCODED
-                // base64 encoded string is url hash which is never sent to server and faster (recommended)
-                this.processBase64Text(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(_ => {
-                        this.hide();
-                    });
-            } else {
-                // ?base64text=BASE64ENCODED
-                // base64 encoded string was part of url param (not recommended)
-                this.processBase64Text(base64Text)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-                        console.log("Text content incorrect.");
-                    }).finally(_ => {
-                        this.hide();
-                    });
-            }
-        } else if (base64Zip) {
+        }
+        else if (base64Text === 'hash') {
+            // ?base64text=hash#BASE64ENCODED
+            // base64 encoded text is url hash which cannot be seen by the server and is faster (recommended)
             this.show();
-            if (base64Zip === "hash") {
-                // ?base64zip=hash#BASE64ENCODED
-                // base64 encoded zip file is url hash which is never sent to the server
-                this.processBase64Zip(base64Hash)
-                    .catch(_ => {
-                        Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
-                        console.log("File content incorrect.");
-                    }).finally(_ => {
-                        this.hide();
-                    });
-            } else {
-                // ?base64zip=paste || ?base64zip=true
-                this.preparePasting('files');
-            }
+            await this.processBase64Text(hash);
+        }
+        else {
+            // ?base64text=BASE64ENCODED
+            // base64 encoded text is part of the url param. Seen by server and slow (not recommended)
+            this.show();
+            await this.processBase64Text(base64Text);
+        }
+    }
+
+    async evaluateBase64Zip(base64Zip, hash) {
+        this.$title.innerText = Localization.getTranslation('dialogs.base64-title-files');
+
+        if (base64Zip === 'paste') {
+            // ?base64zip=paste || ?base64zip=true
+            this.preparePasting('files');
+            this.show();
+        }
+        else if (base64Zip === 'hash') {
+            // ?base64zip=hash#BASE64ENCODED
+            // base64 encoded zip file is url hash which cannot be seen by the server
+            await this.processBase64Zip(hash);
         }
     }
 
@@ -1992,9 +2192,10 @@ class Base64ZipDialog extends Dialog {
             this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", null, {type: translateType});
             this._clickCallback = _ => this.processClipboard(type);
             this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
-        } else {
+        }
+        else {
             console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
-            this.$pasteBtn.setAttribute('hidden', '');
+            this.$pasteBtn.setAttribute('hidden', true);
             this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
             this.$fallbackTextarea.removeAttribute('hidden');
             this._inputCallback = _ => this.processInput(type);
@@ -2006,77 +2207,70 @@ class Base64ZipDialog extends Dialog {
     async processInput(type) {
         const base64 = this.$fallbackTextarea.textContent;
         this.$fallbackTextarea.textContent = '';
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
     async processClipboard(type) {
         const base64 = await navigator.clipboard.readText();
-        await this.processBase64(type, base64);
+        await this.processPastedBase64(type, base64);
     }
 
-    isValidBase64(base64) {
-        try {
-            // check if input is base64 encoded
-            window.atob(base64);
-            return true;
-        } catch (e) {
-            // input is not base64 string.
-            return false;
-        }
-    }
-
-    async processBase64(type, base64) {
-        if (!base64 || !this.isValidBase64(base64)) return;
-        this._setPasteBtnToProcessing();
+    async processPastedBase64(type, base64) {
         try {
             if (type === 'text') {
                 await this.processBase64Text(base64);
-            } else {
+            }
+            else {
                 await this.processBase64Zip(base64);
             }
-        } catch(_) {
+        }
+        catch(e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-content-incorrect"));
             console.log("Clipboard content is incorrect.")
         }
         this.hide();
     }
 
-    processBase64Text(base64Text){
-        return new Promise((resolve) => {
-            this._setPasteBtnToProcessing();
-            let decodedText = decodeURIComponent(escape(window.atob(base64Text)));
-            Events.fire('activate-paste-mode', {files: [], text: decodedText});
-            resolve();
-        });
-    }
-
-    async processBase64Zip(base64zip) {
+    async processBase64Text(base64){
         this._setPasteBtnToProcessing();
-        let bstr = atob(base64zip), n = bstr.length, u8arr = new Uint8Array(n);
-        while (n--) {
-            u8arr[n] = bstr.charCodeAt(n);
+
+        try {
+            const decodedText = await decodeBase64Text(base64);
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', decodedText);
+            }
+            else {
+                Events.fire('activate-share-mode', {text: decodedText});
+            }
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
+            console.log("Text content incorrect.");
         }
 
-        const zipBlob = new File([u8arr], 'archive.zip');
-
-        let files = [];
-        const zipEntries = await zipper.getEntries(zipBlob);
-        for (let i = 0; i < zipEntries.length; i++) {
-            let fileBlob = await zipper.getData(zipEntries[i]);
-            files.push(new File([fileBlob], zipEntries[i].filename));
-        }
-        Events.fire('activate-paste-mode', {files: files, text: ""});
+        this.hide();
     }
 
-    clearBrowserHistory() {
-        const url = getUrlWithoutArguments();
-        window.history.replaceState({}, "Rewrite URL", url);
+    async processBase64Zip(base64) {
+        this._setPasteBtnToProcessing();
+
+        try {
+            const decodedFiles = await decodeBase64Files(base64);
+            Events.fire('activate-share-mode', {files: decodedFiles});
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
+            console.log("File content incorrect.");
+        }
+
+        this.hide();
     }
 
     hide() {
-        this.clearBrowserHistory();
         this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
         this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
+        this.$fallbackTextarea.setAttribute('disabled', true);
+        this.$fallbackTextarea.blur();
         super.hide();
     }
 }
@@ -2084,17 +2278,27 @@ class Base64ZipDialog extends Dialog {
 class Toast extends Dialog {
     constructor() {
         super('toast');
+        this.$closeBtn = this.$el.querySelector('.icon-button');
+        this.$text = this.$el.querySelector('span');
+
+        this.$closeBtn.addEventListener('click', _ => this.hide());
         Events.on('notify-user', e => this._onNotify(e.detail));
+        Events.on('share-mode-changed', _ => this.hide());
     }
 
     _onNotify(message) {
         if (this.hideTimeout) clearTimeout(this.hideTimeout);
-        this.$el.innerText = typeof message === "object" ? message.message : message;
+        this.$text.innerText = typeof message === "object" ? message.message : message;
         this.show();
 
         if (typeof message === "object" && message.persistent) return;
 
         this.hideTimeout = setTimeout(() => this.hide(), 5000);
+    }
+
+    hide() {
+        if (this.hideTimeout) clearTimeout(this.hideTimeout);
+        super.hide();
     }
 }
 
@@ -2104,29 +2308,27 @@ class Notifications {
         // Check if the browser supports notifications
         if (!('Notification' in window)) return;
 
-        // Check whether notification permissions have already been granted
-        if (Notification.permission !== 'granted') {
-            this.$headerNotificationButton = $('notification');
-            this.$headerNotificationButton.removeAttribute('hidden');
-            this.$headerNotificationButton.addEventListener('click', _ => this._requestPermission());
-        }
+        this.$headerNotificationButton = $('notification');
+        this.$downloadBtn = $('download-btn');
 
-        Events.fire('header-evaluated', 'notification');
+        this.$headerNotificationButton.addEventListener('click', _ => this._requestPermission());
+
 
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files));
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
     }
 
-    _requestPermission() {
-        Notification.requestPermission(permission => {
-            if (permission !== 'granted') {
-                Events.fire('notify-user', Localization.getTranslation("notifications.notifications-permissions-error"));
-                return;
-            }
-            Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
-            this.$headerNotificationButton.setAttribute('hidden', "");
-        });
+    async _requestPermission() {
+        await Notification.
+            requestPermission(permission => {
+                if (permission !== 'granted') {
+                    Events.fire('notify-user', Localization.getTranslation("notifications.notifications-permissions-error"));
+                    return;
+                }
+                Events.fire('notify-user', Localization.getTranslation("notifications.notifications-enabled"));
+                this.$headerNotificationButton.setAttribute('hidden', true);
+            });
     }
 
     _notify(title, body) {
@@ -2160,8 +2362,9 @@ class Notifications {
             const peerDisplayName = $(peerId).ui._displayName();
             if (/^((https?:\/\/|www)[abcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)$/.test(message.toLowerCase())) {
                 const notification = this._notify(Localization.getTranslation("notifications.link-received", null, {name: peerDisplayName}), message);
-                this._bind(notification, _ => window.open(message, '_blank', null, true));
-            } else {
+                this._bind(notification, _ => window.open(message, '_blank', "noreferrer"));
+            }
+            else {
                 const notification = this._notify(Localization.getTranslation("notifications.message-received", null, {name: peerDisplayName}), message);
                 this._bind(notification, _ => this._copyText(message, notification));
             }
@@ -2180,13 +2383,15 @@ class Notifications {
             let title;
             if (files.length === 1) {
                 title = `${files[0].name}`;
-            } else {
+            }
+            else {
                 let fileOther;
                 if (files.length === 2) {
                     fileOther = imagesOnly
                         ? Localization.getTranslation("dialogs.file-other-description-image")
                         : Localization.getTranslation("dialogs.file-other-description-file");
-                } else {
+                }
+                else {
                     fileOther = imagesOnly
                         ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
                         : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
@@ -2215,42 +2420,50 @@ class Notifications {
                 descriptor = imagesOnly
                     ? Localization.getTranslation("dialogs.title-image")
                     : Localization.getTranslation("dialogs.title-file");
-            } else {
+            }
+            else {
                 descriptor = imagesOnly
                     ? Localization.getTranslation("dialogs.title-image-plural")
                     : Localization.getTranslation("dialogs.title-file-plural");
             }
 
-            let title = Localization.getTranslation("notifications.request-title", null, {
-                name: displayName,
-                count: request.header.length,
-                descriptor: descriptor.toLowerCase()
-            });
+            let title = Localization
+                .getTranslation("notifications.request-title", null, {
+                    name: displayName,
+                    count: request.header.length,
+                    descriptor: descriptor.toLowerCase()
+                });
 
             const notification = this._notify(title, Localization.getTranslation("notifications.click-to-show"));
         }
     }
 
     _download(notification) {
-        $('download-btn').click();
+        this.$downloadBtn.click();
         notification.close();
     }
 
-    _copyText(message, notification) {
-        if (navigator.clipboard.writeText(message)) {
+    async _copyText(message, notification) {
+        if (await navigator.clipboard.writeText(message)) {
             notification.close();
             this._notify(Localization.getTranslation("notifications.copied-text"));
-        } else {
+        }
+        else {
             this._notify(Localization.getTranslation("notifications.copied-text-error"));
         }
     }
 
     _bind(notification, handler) {
         if (notification.then) {
-            notification.then(_ => serviceWorker.getNotifications().then(_ => {
-                serviceWorker.addEventListener('notificationclick', handler);
-            }));
-        } else {
+            notification.then(_ => {
+                serviceWorker
+                    .getNotifications()
+                    .then(_ => {
+                        serviceWorker.addEventListener('notificationclick', handler);
+                    })
+            });
+        }
+        else {
             notification.onclick = handler;
         }
     }
@@ -2277,73 +2490,73 @@ class NetworkStatusUI {
 }
 
 class WebShareTargetUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        const share_target_type = urlParams.get("share-target")
-        if (share_target_type) {
-            if (share_target_type === "text") {
-                const title = urlParams.get('title') || '';
-                const text = urlParams.get('text') || '';
-                const url = urlParams.get('url') || '';
-                let shareTargetText;
 
-                if (url) {
-                    shareTargetText = url; // we share only the link - no text.
-                } else if (title && text) {
-                    shareTargetText = title + '\r\n' + text;
-                } else {
-                    shareTargetText = title + text;
-                }
+    async evaluateShareTarget(shareTargetType, title, text, url) {
+        if (shareTargetType === "text") {
+            let shareTargetText;
+            if (url) {
+                shareTargetText = url; // we share only the link - no text.
+            }
+            else if (title && text) {
+                shareTargetText = title + '\r\n' + text;
+            }
+            else {
+                shareTargetText = title + text;
+            }
 
-                Events.fire('activate-paste-mode', {files: [], text: shareTargetText})
-            } else if (share_target_type === "files") {
-                let openRequest = window.indexedDB.open('pairdrop_store')
-                openRequest.onsuccess = e => {
-                    const db = e.target.result;
-                    const tx = db.transaction('share_target_files', 'readwrite');
-                    const store = tx.objectStore('share_target_files');
-                    const request = store.getAll();
-                    request.onsuccess = _ => {
-                        const fileObjects = request.result;
-                        let filesReceived = [];
-                        for (let i=0; i<fileObjects.length; i++) {
-                            filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
-                        }
-                        const clearRequest = store.clear()
-                        clearRequest.onsuccess = _ => db.close();
+            if (ShareTextDialog.isApproveShareTextSet()) {
+                Events.fire('share-text-dialog', shareTargetText);
+            }
+            else {
+                Events.fire('activate-share-mode', {text: shareTargetText});
+            }
+        }
+        else if (shareTargetType === "files") {
+            let openRequest = window.indexedDB.open('pairdrop_store')
+            openRequest.onsuccess = e => {
+                const db = e.target.result;
+                const tx = db.transaction('share_target_files', 'readwrite');
+                const store = tx.objectStore('share_target_files');
+                const request = store.getAll();
+                request.onsuccess = _ => {
+                    const fileObjects = request.result;
 
-                        Events.fire('activate-paste-mode', {files: filesReceived, text: ""})
+                    let filesReceived = [];
+                    for (let i = 0; i < fileObjects.length; i++) {
+                        filesReceived.push(new File([fileObjects[i].buffer], fileObjects[i].name));
                     }
+
+                    const clearRequest = store.clear()
+                    clearRequest.onsuccess = _ => db.close();
+
+                    Events.fire('activate-share-mode', {files: filesReceived})
                 }
             }
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
         }
     }
 }
 
+// Keep for legacy reasons even though this is removed from new PWA installations
 class WebFileHandlersUI {
-    constructor() {
-        const urlParams = new URL(window.location).searchParams;
-        if (urlParams.has("file_handler")  && "launchQueue" in window) {
-            launchQueue.setConsumer(async launchParams => {
-                console.log("Launched with: ", launchParams);
-                if (!launchParams.files.length)
-                    return;
-                let files = [];
+    async evaluateLaunchQueue() {
+        if (!"launchQueue" in window) return;
 
-                for (let i=0; i<launchParams.files.length; i++) {
-                    if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
-                    const fileHandle = launchParams.files[i];
-                    const file = await fileHandle.getFile();
-                    files.push(file);
-                }
-                Events.fire('activate-paste-mode', {files: files, text: ""})
-                launchParams = null;
-            });
-            const url = getUrlWithoutArguments();
-            window.history.replaceState({}, "Rewrite URL", url);
-        }
+        launchQueue.setConsumer(async launchParams => {
+            console.log("Launched with: ", launchParams);
+
+            if (!launchParams.files.length) return;
+
+            let files = [];
+
+            for (let i = 0; i < launchParams.files.length; i++) {
+                if (i !== 0 && await launchParams.files[i].isSameEntry(launchParams.files[i-1])) continue;
+
+                const file = await launchParams.files[i].getFile();
+                files.push(file);
+            }
+
+            Events.fire('activate-share-mode', {files: files})
+        });
     }
 }
 
@@ -2355,7 +2568,7 @@ class NoSleepUI {
     static enable() {
         if (!this._interval) {
             NoSleepUI._nosleep.enable();
-            NoSleepUI._interval = setInterval(_ => NoSleepUI.disable(), 10000);
+            NoSleepUI._interval = setInterval(() => NoSleepUI.disable(), 10000);
         }
     }
 
@@ -2366,474 +2579,3 @@ class NoSleepUI {
         }
     }
 }
-
-class PersistentStorage {
-    constructor() {
-        if (!('indexedDB' in window)) {
-            PersistentStorage.logBrowserNotCapable();
-            return;
-        }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 4);
-        DBOpenRequest.onerror = (e) => {
-            PersistentStorage.logBrowserNotCapable();
-            console.log('Error initializing database: ');
-            console.log(e)
-        };
-        DBOpenRequest.onsuccess = () => {
-            console.log('Database initialised.');
-        };
-        DBOpenRequest.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            const txn = e.target.transaction;
-
-            db.onerror = e => console.log('Error loading database: ' + e);
-
-            console.log(`Upgrading IndexedDB database from version ${e.oldVersion} to version ${e.newVersion}`);
-
-            if (e.oldVersion === 0) {
-                // initiate v1
-                db.createObjectStore('keyval');
-                let roomSecretsObjectStore1 = db.createObjectStore('room_secrets', {autoIncrement: true});
-                roomSecretsObjectStore1.createIndex('secret', 'secret', { unique: true });
-            }
-            if (e.oldVersion <= 1) {
-                // migrate to v2
-                db.createObjectStore('share_target_files');
-            }
-            if (e.oldVersion <= 2) {
-                // migrate to v3
-                db.deleteObjectStore('share_target_files');
-                db.createObjectStore('share_target_files', {autoIncrement: true});
-            }
-            if (e.oldVersion <= 3) {
-                // migrate to v4
-                let roomSecretsObjectStore4 = txn.objectStore('room_secrets');
-                roomSecretsObjectStore4.createIndex('display_name', 'display_name');
-                roomSecretsObjectStore4.createIndex('auto_accept', 'auto_accept');
-            }
-        }
-    }
-
-    static logBrowserNotCapable() {
-        console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
-    }
-
-    static set(key, value) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('keyval', 'readwrite');
-                const objectStore = transaction.objectStore('keyval');
-                const objectStoreRequest = objectStore.put(value, key);
-                objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Added key-pair: ${key} - ${value}`);
-                    resolve(value);
-                };
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        })
-    }
-
-    static get(key) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('keyval', 'readonly');
-                const objectStore = transaction.objectStore('keyval');
-                const objectStoreRequest = objectStore.get(key);
-                objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Retrieved key-pair: ${key} - ${objectStoreRequest.result}`);
-                    resolve(objectStoreRequest.result);
-                }
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        });
-    }
-
-    static delete(key) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('keyval', 'readwrite');
-                const objectStore = transaction.objectStore('keyval');
-                const objectStoreRequest = objectStore.delete(key);
-                objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Deleted key: ${key}`);
-                    resolve();
-                };
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        })
-    }
-
-    static addRoomSecret(roomSecret, displayName, deviceName) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readwrite');
-                const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequest = objectStore.add({
-                    'secret': roomSecret,
-                    'display_name': displayName,
-                    'device_name': deviceName,
-                    'auto_accept': false
-                });
-                objectStoreRequest.onsuccess = e => {
-                    console.log(`Request successful. RoomSecret added: ${e.target.result}`);
-                    resolve();
-                }
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        })
-    }
-
-    static async getAllRoomSecrets() {
-        try {
-            const roomSecrets = await this.getAllRoomSecretEntries();
-            let secrets = [];
-            for (let i = 0; i < roomSecrets.length; i++) {
-                secrets.push(roomSecrets[i].secret);
-            }
-            console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
-            return(secrets);
-        } catch (e) {
-            this.logBrowserNotCapable();
-            return 0;
-        }
-    }
-
-    static getAllRoomSecretEntries() {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readonly');
-                const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequest = objectStore.getAll();
-                objectStoreRequest.onsuccess = e => {
-                    resolve(e.target.result);
-                }
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        });
-    }
-
-    static getRoomSecretEntry(roomSecret) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readonly');
-                const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequestKey = objectStore.index("secret").getKey(roomSecret);
-                objectStoreRequestKey.onsuccess = e => {
-                    const key = e.target.result;
-                    if (!key) {
-                        console.log(`Nothing to retrieve. Entry for room_secret not existing: ${roomSecret}`);
-                        resolve();
-                        return;
-                    }
-                    const objectStoreRequestRetrieval = objectStore.get(key);
-                    objectStoreRequestRetrieval.onsuccess = e => {
-                        console.log(`Request successful. Retrieved entry for room_secret: ${key}`);
-                        resolve({
-                            "entry": e.target.result,
-                            "key": key
-                        });
-                    }
-                    objectStoreRequestRetrieval.onerror = (e) => {
-                        reject(e);
-                    }
-                };
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        });
-    }
-
-    static deleteRoomSecret(roomSecret) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readwrite');
-                const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequestKey = objectStore.index("secret").getKey(roomSecret);
-                objectStoreRequestKey.onsuccess = e => {
-                    if (!e.target.result) {
-                        console.log(`Nothing to delete. room_secret not existing: ${roomSecret}`);
-                        resolve();
-                        return;
-                    }
-                    const key = e.target.result;
-                    const objectStoreRequestDeletion = objectStore.delete(key);
-                    objectStoreRequestDeletion.onsuccess = _ => {
-                        console.log(`Request successful. Deleted room_secret: ${key}`);
-                        resolve(roomSecret);
-                    }
-                    objectStoreRequestDeletion.onerror = (e) => {
-                        reject(e);
-                    }
-                };
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        })
-    }
-
-    static clearRoomSecrets() {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                const transaction = db.transaction('room_secrets', 'readwrite');
-                const objectStore = transaction.objectStore('room_secrets');
-                const objectStoreRequest = objectStore.clear();
-                objectStoreRequest.onsuccess = _ => {
-                    console.log('Request successful. All room_secrets cleared');
-                    resolve();
-                };
-            }
-            DBOpenRequest.onerror = (e) => {
-                reject(e);
-            }
-        })
-    }
-
-    static updateRoomSecretNames(roomSecret, displayName, deviceName) {
-        return this.updateRoomSecret(roomSecret, undefined, displayName, deviceName);
-    }
-
-    static updateRoomSecretAutoAccept(roomSecret, autoAccept) {
-        return this.updateRoomSecret(roomSecret, undefined, undefined, undefined, autoAccept);
-    }
-
-    static updateRoomSecret(roomSecret, updatedRoomSecret = undefined, updatedDisplayName = undefined, updatedDeviceName = undefined, updatedAutoAccept = undefined) {
-        return new Promise((resolve, reject) => {
-            const DBOpenRequest = window.indexedDB.open('pairdrop_store');
-            DBOpenRequest.onsuccess = (e) => {
-                const db = e.target.result;
-                this.getRoomSecretEntry(roomSecret)
-                    .then(roomSecretEntry => {
-                        if (!roomSecretEntry) {
-                           resolve(false);
-                           return;
-                        }
-                        const transaction = db.transaction('room_secrets', 'readwrite');
-                        const objectStore = transaction.objectStore('room_secrets');
-                        // Do not use `updatedRoomSecret ?? roomSecretEntry.entry.secret` to ensure compatibility with older browsers
-                        const updatedRoomSecretEntry = {
-                            'secret': updatedRoomSecret !== undefined ? updatedRoomSecret : roomSecretEntry.entry.secret,
-                            'display_name': updatedDisplayName !== undefined ? updatedDisplayName : roomSecretEntry.entry.display_name,
-                            'device_name': updatedDeviceName !== undefined ? updatedDeviceName : roomSecretEntry.entry.device_name,
-                            'auto_accept': updatedAutoAccept !== undefined ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
-                        };
-
-                        const objectStoreRequestUpdate = objectStore.put(updatedRoomSecretEntry, roomSecretEntry.key);
-
-                        objectStoreRequestUpdate.onsuccess = e => {
-                            console.log(`Request successful. Updated room_secret: ${roomSecretEntry.key}`);
-                            resolve({
-                                "entry": updatedRoomSecretEntry,
-                                "key": roomSecretEntry.key
-                            });
-                        }
-
-                        objectStoreRequestUpdate.onerror = (e) => {
-                            reject(e);
-                        }
-                    })
-                    .catch(e => reject(e));
-            };
-
-            DBOpenRequest.onerror = e => reject(e);
-        })
-    }
-}
-
-class BrowserTabsConnector {
-    constructor() {
-        this.bc = new BroadcastChannel('pairdrop');
-        this.bc.addEventListener('message', e => this._onMessage(e));
-        Events.on('broadcast-send', e => this._broadcastSend(e.detail));
-    }
-
-    _broadcastSend(message) {
-        this.bc.postMessage(message);
-    }
-
-    _onMessage(e) {
-        console.log('Broadcast:', e.data)
-        switch (e.data.type) {
-            case 'self-display-name-changed':
-                Events.fire('self-display-name-changed', e.data.detail);
-                break;
-        }
-    }
-
-    static peerIsSameBrowser(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
-        return peerIdsBrowser
-            ? peerIdsBrowser.indexOf(peerId) !== -1
-            : false;
-    }
-
-    static async addPeerIdToLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
-        if (!peerId) return false;
-
-        let peerIdsBrowser = [];
-        let peerIdsBrowserOld = JSON.parse(localStorage.getItem("peer_ids_browser"));
-
-        if (peerIdsBrowserOld) peerIdsBrowser.push(...peerIdsBrowserOld);
-        peerIdsBrowser.push(peerId);
-        peerIdsBrowser = peerIdsBrowser.filter(onlyUnique);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-
-        return peerIdsBrowser;
-    }
-
-    static async removePeerIdFromLocalStorage(peerId) {
-        let peerIdsBrowser = JSON.parse(localStorage.getItem("peer_ids_browser"));
-        const index = peerIdsBrowser.indexOf(peerId);
-        peerIdsBrowser.splice(index, 1);
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-        return peerId;
-    }
-
-
-    static async removeOtherPeerIdsFromLocalStorage() {
-        const peerId = sessionStorage.getItem("peer_id");
-        if (!peerId) return false;
-
-        let peerIdsBrowser = [peerId];
-        localStorage.setItem("peer_ids_browser", JSON.stringify(peerIdsBrowser));
-        return peerIdsBrowser;
-    }
-}
-
-class BackgroundCanvas {
-    constructor() {
-        this.c = $$('canvas');
-        this.cCtx = this.c.getContext('2d');
-        this.$footer = $$('footer');
-
-        Events.on('bg-resize', _ => this.init());
-        Events.on('redraw-canvas', _ => this.init());
-        Events.on('translation-loaded', _ => this.init());
-
-        //fade-in on load
-        Events.on('ui-faded-in', _ => this._fadeIn());
-
-        window.onresize = _ => Events.fire('bg-resize');
-    }
-
-    _fadeIn() {
-        this.c.classList.remove('opacity-0');
-    }
-
-    init() {
-        let oldW = this.w;
-        let oldH = this.h;
-        let oldOffset = this.offset
-        this.w = document.documentElement.clientWidth;
-        this.h = document.documentElement.clientHeight;
-        this.offset = this.$footer.offsetHeight - 27;
-        if (this.h >= 800) this.offset += 10;
-
-        if (oldW === this.w && oldH === this.h && oldOffset === this.offset) return; // nothing has changed
-
-        this.c.width = this.w;
-        this.c.height = this.h;
-        this.x0 = this.w / 2;
-        this.y0 = this.h - this.offset;
-        this.dw = Math.round(Math.max(this.w, this.h, 1000) / 13);
-
-        this.drawCircles(this.cCtx);
-    }
-
-
-    drawCircle(ctx, radius) {
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        let opacity = Math.max(0, 0.3 * (1 - 1 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(128, 128, 128, ${opacity})`;
-        ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-
-    drawCircles(ctx) {
-        ctx.clearRect(0, 0, this.w, this.h);
-        for (let i = 0; i < 13; i++) {
-            this.drawCircle(ctx, this.dw * i + 33 + 66);
-        }
-    }
-}
-
-class PairDrop {
-    constructor() {
-        Events.on('initial-translation-loaded', _ => {
-            const server = new ServerConnection();
-            const peers = new PeersManager(server);
-            const peersUI = new PeersUI();
-            const backgroundCanvas = new BackgroundCanvas();
-            const languageSelectDialog = new LanguageSelectDialog();
-            const receiveFileDialog = new ReceiveFileDialog();
-            const receiveRequestDialog = new ReceiveRequestDialog();
-            const sendTextDialog = new SendTextDialog();
-            const receiveTextDialog = new ReceiveTextDialog();
-            const pairDeviceDialog = new PairDeviceDialog();
-            const clearDevicesDialog = new EditPairedDevicesDialog();
-            const publicRoomDialog = new PublicRoomDialog();
-            const base64ZipDialog = new Base64ZipDialog();
-            const toast = new Toast();
-            const notifications = new Notifications();
-            const networkStatusUI = new NetworkStatusUI();
-            const webShareTargetUI = new WebShareTargetUI();
-            const webFileHandlersUI = new WebFileHandlersUI();
-            const noSleepUI = new NoSleepUI();
-            const broadCast = new BrowserTabsConnector();
-        });
-    }
-}
-
-const persistentStorage = new PersistentStorage();
-const pairDrop = new PairDrop();
-const localization = new Localization();
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(serviceWorker => {
-            console.log('Service Worker registered');
-            window.serviceWorker = serviceWorker
-        });
-}
-
-window.addEventListener('beforeinstallprompt', installEvent => {
-    if (!window.matchMedia('(display-mode: minimal-ui)').matches) {
-        // only display install btn when not installed
-        const installBtn = document.querySelector('#install')
-        installBtn.removeAttribute('hidden');
-        installBtn.addEventListener('click', () => {
-            installBtn.setAttribute('hidden', '');
-            installEvent.prompt();
-        });
-    }
-    return installEvent.preventDefault();
-});

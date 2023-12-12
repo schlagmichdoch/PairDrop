@@ -12,10 +12,12 @@ help()
    echo
    echo "Usage:"
    echo -e "Open PairDrop:\t\t$(basename "$0")"
-   echo -e "Send files:\t\t$(basename "$0") file/directory"
+   echo -e "Send files:\t\t$(basename "$0") file1/directory1 (file2/directory2 file3/directory3 ...)"
    echo -e "Send text:\t\t$(basename "$0") -t \"text\""
    echo -e "Specify domain:\t\t$(basename "$0") -d \"https://pairdrop.net/\""
    echo -e "Show this help text:\t$(basename "$0") (-h|--help)"
+   echo
+   echo "This pairdrop-cli version was released alongside v1.10.0"
 }
 
 openPairDrop()
@@ -36,7 +38,7 @@ openPairDrop()
   elif [[ $OS == "WSL" || $OS == "WSL2" ]];then
     powershell.exe /c "Start-Process ${url}"
   else
-    xdg-open "$url"
+    xdg-open "$url" > /dev/null 2>&1
   fi
 
 
@@ -62,7 +64,7 @@ setOs()
 specifyDomain()
 {
   [[ ! $1 = http* ]] || [[ ! $1 = */ ]] && echo "Incorrect format. Specify domain like https://pairdrop.net/" && exit
-  echo "DOMAIN=${1}" > "$CONFIGPATH"
+  echo "DOMAIN=${1}" > "$config_path"
   echo -e "Domain is now set to:\n$1\n"
 }
 
@@ -87,74 +89,227 @@ sendText()
     exit
 }
 
+escapePSPath()
+{
+  local path=$1
+  
+  # escape '[' and ']' with grave accent (`) character
+  pathPS=${path//[/\`[}
+  pathPS=${pathPS//]/\`]}
+  # escape single quote (') with another single quote (')
+  pathPS=${pathPS//\'/\'\'}
+  
+  # Convert GitHub bash path "/i/path" to Windows path "I:/path"
+  if [[ $pathPS == /* ]]; then
+    # Remove preceding slash
+    pathPS="${pathPS#/}"
+    # Convert drive letter to uppercase
+    driveLetter=$(echo "${pathPS::1}" | tr '[:lower:]' '[:upper:]')
+    # Put together absolute path as used in Windows
+    pathPS="${driveLetter}:${pathPS:1}"        
+  fi
+  
+  echo "$pathPS"
+}
+
 sendFiles()
 {
   params="base64zip=hash"
-  if [[ $1 == */ ]]; then
-    path="${1::-1}"
-  else
-    path=$1
-  fi
-  zipPath="${path}_pairdrop.zip"
-  zipPath=${zipPath// /_}
+  workingDir="$(pwd)"
+  tmpDir="/tmp/pairdrop-cli-temp/"
+  tmpDirPS="\$env:TEMP/pairdrop-cli-temp/"
+  
+  index=0
+  directoryBaseNamesUnix=()
+  directoryPathsUnix=()
+  filePathsUnix=()
+  directoryCount=0
+  fileCount=0
+  pathsPS=""
 
-  [[ -a "$zipPath" ]] && echo "Cannot overwrite $zipPath. Please remove first." && exit
-
-  if [[ -d $path ]]; then
-    zipPathTemp="${path}_pairdrop_temp.zip"
-    [[ -a "$zipPathTemp" ]] && echo "Cannot overwrite $zipPathTemp. Please remove first." && exit
-    echo "Processing directory..."
-
-    # Create zip files temporarily to send directory
-    if [[ $OS == "Windows" ]];then
-          powershell.exe -Command "Compress-Archive -Path ${path} -DestinationPath ${zipPath}"
-          echo "Compress-Archive -Path ${zipPath} -DestinationPath ${zipPathTemp}"
-          powershell.exe -Command "Compress-Archive -Path ${zipPath} -DestinationPath ${zipPathTemp}"
-    else
-          zip -q -b /tmp/ -r "$zipPath" "$path"
-          zip -q -b /tmp/ "$zipPathTemp" "$zipPath"
-    fi
-
-    if [[ $OS == "Mac" ]];then
-      hash=$(base64 -i "$zipPathTemp")
-    else
-      hash=$(base64 -w 0 "$zipPathTemp")
-    fi
-
-    # remove temporary temp file
-    rm "$zipPathTemp"
-  else
-    echo "Processing file..."
-
-    # Create zip file temporarily to send file
-
-    if [[ $OS == "Windows" ]];then
-      powershell.exe -Command "Compress-Archive -Path ${path} -DestinationPath ${zipPath} -CompressionLevel Optimal"
-    else
-      zip -q -b /tmp/ "$zipPath" "$path"
-    fi
-    if [[ $OS == "Mac" ]];then
-      hash=$(base64 -i "$zipPath")
-    else
-      hash=$(base64 -w 0 "$zipPath")
-    fi
+  #create tmp folder if it does not exist already
+  if [[ ! -d "$tmpDir" ]]; then
+    mkdir "$tmpDir"
   fi
 
-  # remove temporary temp file
-  rm "$zipPath"
+  for arg in "$@"; do
+   echo "$arg"
+   [[ ! -e "$arg" ]] && echo "The given path $arg does not exist." && exit
 
-  if [[ $(echo -n "$hash" | wc -m) -gt 32600 ]];then
+    # Remove trailing slash from directory
+    arg="${arg%/}"
+
+    # get absolute path and basename of file/directory
+    absolutePath=$(realpath "$arg")
+    baseName=$(basename "$absolutePath")
+    directoryPath=$(dirname "$absolutePath")
+
+    if [[ -d $absolutePath ]]; then
+      # is directory
+      ((directoryCount+=1))
+      # add basename and directory path to arrays
+      directoryBaseNamesUnix+=("$baseName")
+      directoryPathsUnix+=("$directoryPath")
+    else
+      # is file
+      ((fileCount+=1))
+      absolutePathUnix=$absolutePath
+      # append new path and separate paths with space
+      filePathsUnix+=("$absolutePathUnix")
+    fi
+
+    # Prepare paths for PowerShell on Windows
+    if [[ $OS == "Windows" ]];then
+      absolutePathPS=$(escapePSPath "$absolutePath")
+      
+      # append new path and separate paths with commas
+      pathsPS+="'${absolutePathPS}', "
+    fi
+    
+    # set fileNames on first loop
+    if [[ $index == 0 ]]; then
+      baseNameU=${baseName// /_}
+
+      # Prevent baseNameU being empty for hidden files by removing the preceding dot
+      if [[ $baseNameU == .* ]]; then
+        baseNameU=${baseNameU#.*}
+      fi
+
+      # only use trunk of basename "document.txt" -> "document"
+      baseNameTrunk=${baseNameU%.*}
+      
+      # remove all special characters
+      zipName=${baseNameTrunk//[^a-zA-Z0-9_]/}
+      
+      zipToSendAbs="${tmpDir}${zipName}_pairdrop.zip"
+      wrapperZipAbs="${tmpDir}${zipName}_pairdrop_wrapper.zip"
+
+      if [[ $OS == "Windows" ]];then
+        zipToSendAbsPS="${tmpDirPS}${zipName}_pairdrop.zip"
+        wrapperZipAbsPS="${tmpDirPS}${zipName}_pairdrop_wrapper.zip"
+      fi
+    fi
+
+    ((index+=1)) # somehow ((index++)) stops the script
+  done
+
+  # Prepare paths for PowerShell on Windows
+  if [[ $OS == "Windows" ]];then
+    # remove trailing comma
+    pathsPS=${pathsPS%??}
+  fi
+
+  echo "Preparing ${fileCount} files and ${directoryCount} directories..."
+
+  # if arguments include files only -> zip files once so files it is unzipped by sending browser
+  # if arguments include directories -> wrap first zip in a second wrapper zip so that after unzip by sending browser a zip file is sent to receiver
+  #
+  # Preferred zip structure:
+  # pairdrop "d1/d2/d3/f1" "../../d4/d5/d6/f2" "d7/" "../d8/" "f5"
+  # zip structure: pairdrop.zip
+  #                |-f1
+  #                |-f2
+  #                |-d7/
+  #                |-d8/
+  #                |-f5
+  # -> truncate (relative) paths but keep directories
+  
+  [[ -e "$zipToSendAbs" ]] && echo "Cannot overwrite $zipToSendAbs. Please remove first." && exit
+
+  if [[ $OS == "Windows" ]];then
+    # Powershell does preferred zip structure natively
+    powershell.exe -Command "Compress-Archive -Path ${pathsPS} -DestinationPath ${zipToSendAbsPS}"
+  else
+    # Workaround needed to create preferred zip structure on unix systems
+    # Create zip file with all single files by junking the path
+    if [[ $fileCount != 0 ]]; then
+      zip -q -b /tmp/ -j -0 -r "$zipToSendAbs" "${filePathsUnix[@]}"
+    fi
+
+    # Add directories recursively to zip file
+    index=0
+    while [[ $index < $directoryCount ]]; do
+      # workaround to keep directory name but junk the rest of the paths
+
+      # cd to path above directory
+      cd "${directoryPathsUnix[index]}"
+
+      # add directory to zip without junking the path
+      zip -q -b /tmp/ -0 -u -r "$zipToSendAbs" "${directoryBaseNamesUnix[index]}"
+
+      # cd back to working directory
+      cd "$workingDir"
+
+      ((index+=1)) # somehow ((index++)) stops the script
+    done
+  fi
+
+  # If directories are included send as zip
+  # -> Create additional zip wrapper which will be unzipped by the sending browser
+  if [[ "$directoryCount" != 0 ]]; then
+    echo "Bundle as ZIP file..."
+
+    # Prevent filename from being absolute zip path by "cd"ing to directory before zipping
+    zipToSendDirectory=$(dirname "$zipToSendAbs")
+    zipToSendBaseName=$(basename "$zipToSendAbs")
+
+    cd "$zipToSendDirectory"
+    
+    [[ -e "$wrapperZipAbs" ]] && echo "Cannot overwrite $wrapperZipAbs. Please remove first." && exit
+    
+    if [[ $OS == "Windows" ]];then
+      powershell.exe -Command "Compress-Archive -Path ${zipToSendBaseName} -DestinationPath ${wrapperZipAbsPS} -CompressionLevel Optimal"
+    else
+      zip -q -b /tmp/ -0 "$wrapperZipAbs" "$zipToSendBaseName"
+    fi
+    cd "$workingDir"
+
+    # remove inner zip file and set wrapper as zipToSend (do not differentiate between OS as this is done via Git Bash on Windows)
+    rm "$zipToSendAbs"
+
+    zipToSendAbs=$wrapperZipAbs
+  fi
+
+  # base64 encode zip file
+  if [[ $OS == "Mac" ]];then
+    hash=$(base64 -i "$zipToSendAbs")
+  else
+    hash=$(base64 -w 0 "$zipToSendAbs")
+  fi
+
+  # remove zip file (do not differentiate between OS as this is done via Git Bash on Windows)
+  rm "$zipToSendAbs"
+
+  if [[ $(echo -n "$hash" | wc -m) -gt 1000 ]];then
     params="base64zip=paste"
+
+    # Copy $hash to clipboard
     if [[ $OS == "Windows" || $OS == "WSL" || $OS == "WSL2" ]];then
       echo -n "$hash" | clip.exe
     elif [[ $OS == "Mac" ]];then
       echo -n "$hash" | pbcopy
+    elif [ -n "$WAYLAND_DISPLAY" ]; then
+      # Wayland
+      if ! command -v wl-copy &> /dev/null; then
+          echo -e "You need to install 'wl-copy' to send bigger filePathsUnix from cli"
+          echo "Try: sudo apt install wl-clipboard"
+          exit 1
+      fi
+      # Workaround to prevent use of Pipe which has a max letter limit
+      echo -n "$hash" > /tmp/pairdrop-cli-temp/pairdrop_hash_temp
+      wl-copy < /tmp/pairdrop-cli-temp/pairdrop_hash_temp
+      rm /tmp/pairdrop-cli-temp/pairdrop_hash_temp
     else
-      (echo -n "$hash" | xclip) || echo "You need to install xclip for sending bigger files from cli"
+      # X11
+      if ! command -v xclip &> /dev/null; then
+          echo -e "You need to install 'xclip' to send bigger filePathsUnix from cli"
+          echo "Try: sudo apt install xclip"
+          exit 1
+      fi
+      echo -n "$hash" | xclip -sel c
     fi
     hash=
   fi
-
 
   openPairDrop
   exit
@@ -165,31 +320,32 @@ sendFiles()
 # Main program                                             #
 ############################################################
 ############################################################
-SCRIPTPATH="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
+script_path="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 pushd . > '/dev/null';
-SCRIPTPATH="${BASH_SOURCE[0]:-$0}";
+script_path="${BASH_SOURCE[0]:-$0}";
 
-while [ -h "$SCRIPTPATH" ];
+while [ -h "$script_path" ];
 do
-    cd "$( dirname -- "$SCRIPTPATH"; )";
-    SCRIPTPATH="$( readlink -f -- "$SCRIPTPATH"; )";
+  cd "$( dirname -- "$script_path"; )";
+  script_path="$( readlink -f -- "$script_path"; )";
 done
 
-cd "$( dirname -- "$SCRIPTPATH"; )" > '/dev/null';
-SCRIPTPATH="$( pwd; )";
+cd "$( dirname -- "$script_path"; )" > '/dev/null';
+script_path="$( pwd; )";
 popd  > '/dev/null';
 
-CONFIGPATH="${SCRIPTPATH}/.pairdrop-cli-config"
+config_path="${script_path}/.pairdrop-cli-config"
 
-[ ! -f "$CONFIGPATH" ] &&
- specifyDomain "https://pairdrop.net/" &&
- [ ! -f "$CONFIGPATH" ] &&
- echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this 'pairdrop' bash file"
+[ ! -f "$config_path" ] &&
+  specifyDomain "https://pairdrop.net/" &&
+  [ ! -f "$config_path" ] &&
+  echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this 'pairdrop' bash file"
 
-[ ! -f "$CONFIGPATH" ] || export "$(grep -v '^#' "$CONFIGPATH" | xargs)"
+[ ! -f "$config_path" ] || export "$(grep -v '^#' "$config_path" | xargs)"
 
 setOs
+
 ############################################################
 # Process the input options. Add options as needed.        #
 ############################################################
@@ -198,24 +354,23 @@ setOs
 [[ $# -eq 0 ]] && openPairDrop && exit
 
 #  display help and exit if first argument is "--help" or more than 2 arguments are given
-[ "$1" == "--help" ] || [[ $# -gt 2 ]] && help && exit
+[ "$1" == "--help" ] && help && exit
 
 while getopts "d:ht:*" option; do
-    case $option in
-      d) # specify domain
-        specifyDomain "$2"
-        exit;;
-      t) # Send text
-        sendText
-        exit;;
-      h | ?) # display help and exit
-        help
-        exit;;
-      esac
+  case $option in
+    d) # specify domain - show help and exit if too many arguments
+      [[ $# -gt 2 ]] && help && exit
+      specifyDomain "$2"
+      exit;;
+    t) # Send text - show help and exit if too many arguments
+      [[ $# -gt 2 ]] && help && exit
+      sendText
+      exit;;
+    h | ?) # display help and exit
+      help
+      exit;;
+    esac
 done
 
 # Send file(s)
-# display help and exit if 2 arguments are given or if file does not exist
-[[ $# -eq 2 ]] || [[ ! -a $1 ]] && help && exit
-
-sendFiles "$1"
+sendFiles "$@"
