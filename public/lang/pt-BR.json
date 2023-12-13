@@ -11,7 +11,8 @@
         "pair-device_title": "Emparelhar seus dispositivos permanentemente",
         "edit-paired-devices_title": "Editar dispositivos emparelhados",
         "join-public-room_title": "Entrar em uma sala pública temporariamente",
-        "cancel-share-mode": "Concluído"
+        "cancel-share-mode": "Concluído",
+        "edit-share-mode": "Editar"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Solte para selecionar o destinatário",
@@ -25,7 +26,11 @@
         "x-instructions-share-mode_mobile": "Toque para enviar",
         "activate-share-mode-base": "Abra o PairDrop em outros dispositivos para enviar",
         "activate-share-mode-and-other-files-plural": "e {{count}} outros arquivos",
-        "activate-share-mode-shared-text": "texto compartilhado"
+        "activate-share-mode-shared-text": "texto compartilhado",
+        "activate-share-mode-shared-files-plural": "{{count}} arquivos compartilhados",
+        "activate-share-mode-shared-file": "arquivo compartilhado",
+        "activate-share-mode-and-other-file": "e 1 outro arquivo",
+        "webrtc-requirement": "Para usar essa instância do PairDrop, o WebRTC deve estar habilitado!"
     },
     "footer": {
         "known-as": "Você é conhecido como:",
@@ -69,14 +74,14 @@
         "share": "Compartilhar",
         "download": "Baixar",
         "send-message-title": "Enviar Mensagem",
-        "send-message-to": "Enviar uma Mensagem para",
+        "send-message-to": "Para:",
         "message_title": "Insira a mensagem a ser enviada",
         "send": "Enviar",
         "receive-text-title": "Mensagem Recebida",
         "copy": "Copiar",
         "base64-processing": "Processando…",
-        "base64-tap-to-paste": "Toque aqui para colar {{type}}",
-        "base64-paste-to-send": "Cole aqui para enviar {{type}}",
+        "base64-tap-to-paste": "Toque aqui para compartilhar {{type}}",
+        "base64-paste-to-send": "Cole da área de transferência aqui para compartilhar {{type}}",
         "base64-text": "texto",
         "base64-files": "arquivos",
         "file-other-description-image": "e mais 1 imagem",
@@ -92,7 +97,16 @@
         "language-selector-title": "Definir idioma",
         "system-language": "Idioma do sistema",
         "public-room-qr-code_title": "Clique para copiar o link da sala pública",
-        "pair-devices-qr-code_title": "Clique para copiar o link para emparelhar este dispositivo"
+        "pair-devices-qr-code_title": "Clique para copiar o link para emparelhar este dispositivo",
+        "message_placeholder": "Texto",
+        "close-toast_title": "Fechar notificação",
+        "share-text-checkbox": "Sempre exibir essa mensagem ao compartilhar texto",
+        "base64-title-files": "Compartilhar arquivos",
+        "approve": "aprovar",
+        "paired-device-removed": "Dispositivo pareado foi removido.",
+        "share-text-title": "Compartilhar Mensagem de Texto",
+        "share-text-subtitle": "Editar mensagem antes de enviar:",
+        "base64-title-text": "Compartilhar texto"
     },
     "about": {
         "close-about_aria-label": "Fechar Sobre o PairDrop",
