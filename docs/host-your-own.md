@@ -419,6 +419,44 @@ SIGNALING_SERVER="pairdrop.net"
 >
 > `WS_SERVER` must be a valid url without the protocol prefix. 
 > Examples of valid values: `pairdrop.net`, `pairdrop.your-domain.com:3000`, `your-domain.com/pairdrop`
+
+<br>
+
+### Customizable buttons for the _About PairDrop_ page
+
+```bash
+DONATION_BUTTON_ACTIVE=true
+DONATION_BUTTON_LINK="https://www.buymeacoffee.com/pairdrop"
+DONATION_BUTTON_TITLE="Buy me a coffee"
+TWITTER_BUTTON_ACTIVE=true
+TWITTER_BUTTON_LINK="https://twitter.com/account"
+TWITTER_BUTTON_TITLE="Find me on Twitter"
+MASTODON_BUTTON_ACTIVE=true
+MASTODON_BUTTON_LINK="https://mastodon.social/account"
+MASTODON_BUTTON_TITLE="Find me on Mastodon"
+BLUESKY_BUTTON_ACTIVE=true
+BLUESKY_BUTTON_LINK="https://bsky.app/profile/account"
+BLUESKY_BUTTON_TITLE="Find me on Bluesky"
+CUSTOM_BUTTON_ACTIVE=true
+CUSTOM_BUTTON_LINK="https://your-custom-social-network.net/account"
+CUSTOM_BUTTON_TITLE="Find me on this custom social network"
+PRIVACYPOLICY_BUTTON_ACTIVE=true
+PRIVACYPOLICY_BUTTON_LINK="https://link-to-your-privacy-policy.net"
+PRIVACYPOLICY_BUTTON_TITLE="Open our privacy policy"
+```
+
+> Default: unset
+>
+> By default, clients will show the default button configuration: GitHub, BuyMeACoffee, Twitter, and FAQ on GitHub.
+> 
+> The GitHub and FAQ on GitHub buttons are essential, so they are always shown.
+> 
+> The other buttons can be customized:
+>
+> * `*_BUTTON_ACTIVE`: set this to `true` to show a natively hidden button or to `false` to hide a normally shown button
+> * `*_BUTTON_LINK`: set this to any URL to overwrite the href attribute of the button
+> * `*_BUTTON_TITLE`: set this to overwrite the hover title of the button. This will prevent the title from being translated.
+
 <br>
 
 ## Healthcheck
