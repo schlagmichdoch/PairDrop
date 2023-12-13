@@ -399,7 +399,8 @@ RTC_CONFIG="rtc_config.json"
 
 You can host an instance that uses another signaling server
 This can be useful if you don't want to trust the client files that are hosted on another instance but still want to connect to devices that use https://pairdrop.net.
-### Host Websocket Server (for VPN)
+
+### Specify Signaling Server
 
 ```bash
 SIGNALING_SERVER="pairdrop.net"
@@ -415,9 +416,9 @@ SIGNALING_SERVER="pairdrop.net"
 > E.g. host your own client files under *pairdrop.your-domain.com* but use the official signaling server under *pairdrop.net*
 > This way devices connecting to *pairdrop.your-domain.com* and *pairdrop.net* can discover each other.
 > 
-> Beware that the version of your PairDrop server is compatible with the version of the signaling server. 
+> Beware that the version of your PairDrop server must be compatible with the version of the signaling server.
 >
-> `WS_SERVER` must be a valid url without the protocol prefix. 
+> `SIGNALING_SERVER` must be a valid url without the protocol prefix. 
 > Examples of valid values: `pairdrop.net`, `pairdrop.your-domain.com:3000`, `your-domain.com/pairdrop`
 
 <br>
