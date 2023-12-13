@@ -27,6 +27,7 @@ const relativePathsToCache = [
     'images/android-chrome-512x512-maskable.png',
     'images/apple-touch-icon.png',
     'lang/ar.json',
+    'lang/ca.json',
     'lang/de.json',
     'lang/en.json',
     'lang/es.json',
