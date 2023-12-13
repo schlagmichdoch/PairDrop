@@ -6,7 +6,7 @@ const relativePathsToCache = [
     'index.html',
     'manifest.json',
     'styles/styles-main.css',
-    'styles/deferred-styles.css',
+    'styles/styles-deferred.css',
     'scripts/localization.js',
     'scripts/main.js',
     'scripts/network.js',
