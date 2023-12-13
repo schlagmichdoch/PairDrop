@@ -35,6 +35,7 @@
     <meta property="og:image" content="images/logo_transparent_512x512.png">
     <!-- Resources -->
     <link rel="preload" href="lang/en.json" as="fetch">
+    <link rel="preload" href="fonts/OpenSans/static/OpenSans-Medium.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" type="text/css" href="styles/styles-main.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -104,12 +105,12 @@
     <!-- Center -->
     <div id="center" class="opacity-0">
         <!-- Peers -->
-        <x-peers class="center grow"></x-peers>
+        <x-peers class="center grow-5"></x-peers>
         <x-no-peers class="center grow fade-in no-animation-on-load" data-i18n-key="instructions.no-peers" data-i18n-attrs="data-drop-bg">
             <h2 data-i18n-key="instructions.no-peers-title" data-i18n-attrs="text"></h2>
             <div data-i18n-key="instructions.no-peers-subtitle" data-i18n-attrs="text"></div>
         </x-no-peers>
-        <x-instructions class="fade-in" data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"></x-instructions>
+        <x-instructions class="grow fade-in" data-i18n-key="instructions.x-instructions" data-i18n-attrs="desktop mobile data-drop-peer data-drop-bg"></x-instructions>
         <div class="shr-panel panel column" hidden>
             <div class="row">
                 <div class="thumb center">
@@ -128,7 +129,7 @@
                     </div>
                     <div class="image-thumb" hidden></div>
                 </div>
-                <div class="share-descriptor column p1">
+                <div class="share-descriptor column p-1">
                     <span class="descriptor-item"></span>
                     <span class="descriptor-other" hidden></span>
                 </div>
@@ -179,7 +180,7 @@
     <x-dialog id="language-select-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text"></h2>
                 </div>
                 <div class="language-buttons p2">
@@ -276,10 +277,10 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <h2 class="dialog-title" data-i18n-key="dialogs.pair-devices-title" data-i18n-attrs="text"></h2>
                     </div>
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <div class="column">
                             <div class="center key-qr-code pointer" data-i18n-key="dialogs.pair-devices-qr-code" data-i18n-attrs="title"></div>
                             <h1 class="center key" dir="ltr">000 000</h1>
@@ -295,7 +296,7 @@
                             <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text"></span>
                         </div>
                     </div>
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <div class="column fw">
                             <div class="input-key-container six-chars" dir="ltr">
                                 <input type="tel" class="textarea center" aria-label="pair-key-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
@@ -321,7 +322,7 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <h2 class="dialog-title" data-i18n-key="dialogs.edit-paired-devices-title" data-i18n-attrs="text"></h2>
                     </div>
                     <div class="paired-devices-wrapper" data-i18n-key="dialogs.paired-devices-wrapper" data-i18n-attrs="data-empty"></div>
@@ -344,10 +345,10 @@
         <form action="#">
             <x-background class="full center text-center">
                 <x-paper shadow="2">
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <h2 class="dialog-title" data-i18n-key="dialogs.temporary-public-room-title" data-i18n-attrs="text"></h2>
                     </div>
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <div class="column">
                             <div class="center key-qr-code pointer" data-i18n-key="dialogs.public-room-qr-code" data-i18n-attrs="title"></div>
                             <h1 class="center key" dir="ltr"></h1>
@@ -363,7 +364,7 @@
                             <span data-i18n-key="dialogs.hr-or" data-i18n-attrs="text"></span>
                         </div>
                     </div>
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <div class="column fw">
                             <div class="input-key-container" dir="ltr">
                                 <input type="text" class="textarea center" aria-label="room-id-char-1" maxlength="1" autocorrect="off" autocomplete="off" autocapitalize="none" spellcheck="false" autofocus contenteditable placeholder disabled>
@@ -390,10 +391,10 @@
     <x-dialog id="receive-request-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title"></h2>
                 </div>
-                <div class="row center p2">
+                <div class="row center p-2">
                     <div class="column center file-description">
                         <div>
                             <span class="display-name badge"></span>
@@ -420,10 +421,10 @@
     <x-dialog id="receive-file-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title"></h2>
                 </div>
-                <div class="row center p2">
+                <div class="row center p-2">
                     <div class="column center file-description">
                         <div>
                             <span class="display-name badge"></span>
@@ -452,10 +453,10 @@
         <form action="#">
             <x-background class="full center">
                 <x-paper shadow="2">
-                    <div class="row center p2">
+                    <div class="row center p-2">
                         <h2 class="dialog-title" data-i18n-key="dialogs.send-message-title" data-i18n-attrs="text"></h2>
                     </div>
-                    <div class="row center p2 display-name-wrapper">
+                    <div class="row center p-2 display-name-wrapper">
                         <div class="column">
                             <div class="text-center">
                                 <span data-i18n-key="dialogs.send-message-to" data-i18n-attrs="text"></span>
@@ -463,7 +464,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row p2">
+                    <div class="row p-2">
                         <div class="column fw">
                             <div class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" autofocus contenteditable></div>
                         </div>
@@ -480,16 +481,16 @@
     <x-dialog id="receive-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title" class="text-center" data-i18n-key="dialogs.receive-text-title" data-i18n-attrs="text"></h2>
                 </div>
-                <div class="row center p2 display-name-wrapper">
+                <div class="row center p-2 display-name-wrapper">
                     <div class="text-center">
                         <span class="display-name badge"></span>
                         <span data-i18n-key="dialogs.has-sent" data-i18n-attrs="text"></span>
                     </div>
                 </div>
-                <div class="row center p2">
+                <div class="row center p-2">
                     <div class="column fw">
                         <div id="text" class="textarea"></div>
                     </div>
@@ -505,24 +506,24 @@
     <x-dialog id="share-text-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title" data-i18n-key="dialogs.share-text-title" data-i18n-attrs="text"></h2>
                 </div>
-                <div class="row center p2 pb0">
+                <div class="row center p-2 pb-0">
                     <div class="column">
                         <div class="text-center">
                             <span data-i18n-key="dialogs.share-text-subtitle" data-i18n-attrs="text"></span>
                         </div>
                     </div>
                 </div>
-                <div class="row p2">
+                <div class="row p-2">
                     <div class="column fw">
                         <div class="fw textarea" role="textbox" data-i18n-key="dialogs.message" data-i18n-attrs="title placeholder" contenteditable></div>
                     </div>
                 </div>
-                <div class="row p2 center">
-                    <span class="mx1" data-i18n-key="dialogs.share-text-checkbox" data-i18n-attrs="text"></span>
-                    <label class="pointer switch mx1">
+                <div class="row p-2 center">
+                    <span class="mx-1" data-i18n-key="dialogs.share-text-checkbox" data-i18n-attrs="text"></span>
+                    <label class="pointer switch mx-1">
                         <input type="checkbox">
                         <div class="slider round"></div>
                     </label>
@@ -537,10 +538,10 @@
     <x-dialog id="base64-paste-dialog">
         <x-background class="full center">
             <x-paper shadow="2">
-                <div class="row center p2">
+                <div class="row center p-2">
                     <h2 class="dialog-title"></h2>
                 </div>
-                <div class="row p2">
+                <div class="row p-2">
                     <button class="btn btn-rounded btn-grey center" id="base64-paste-btn" title="Paste"></button>
                     <div class="textarea" title="CMD/⌘ + V" contenteditable hidden></div>
                 </div>
@@ -576,7 +577,7 @@
             </svg>
             <div class="title-wrapper" dir="ltr">
                 <h1>PairDrop</h1>
-                <div class="font-subheading">v1.9.4</div>
+                <div class="font-subheading">v1.10.0</div>
             </div>
             <div class="font-subheading" data-i18n-key="about.claim" data-i18n-attrs="text"></div>
             <div class="row">

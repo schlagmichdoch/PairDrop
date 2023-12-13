@@ -672,19 +672,18 @@ x-dialog .dialog-subheader {
     margin-right: 6px;
 }
 
-.shr-panel .text-thumb svg {
+.shr-panel .thumb > .text-thumb > svg {
     width: 18px;
     height: 36px;
 }
 
-.shr-panel .file-thumb svg {
+.shr-panel .thumb > .file-thumb > svg {
     width: 36px;
     height: 36px;
 }
 
-.shr-panel .thumb .image-thumb {
+.shr-panel .thumb > .image-thumb {
     background-size: cover;
-    border-radius: 6px;
     background-position: center;
 }
 

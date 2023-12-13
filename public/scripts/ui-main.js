@@ -125,9 +125,12 @@ class HeaderUI {
     }
 
     async evaluateOverflowing() {
-        // remove and reset bracket icon before evaluating
+        // remove bracket icon before evaluating
         this.$expandBtn.setAttribute('hidden', true);
+        // reset bracket icon rotation and header overflow
         this.$expandBtn.classList.add('flipped');
+        this.$header.classList.remove('overflow-expanded');
+
 
         const rtlLocale = Localization.isCurrentLocaleRtl();
         let icon;
@@ -152,7 +155,7 @@ class HeaderUI {
         }
         else {
             // no overflowing
-            // add overflowing-hidden class
+            // remove overflowing-hidden class
             this.$header.classList.remove('overflow-hidden');
         }
     }
@@ -169,6 +172,7 @@ class HeaderUI {
             this.$header.classList.remove('overflow-expanded');
             this.$expandBtn.classList.add('flipped');
         }
+        Events.fire('header-changed');
     }
 }
 

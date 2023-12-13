@@ -30,24 +30,24 @@ html {
     width: 100%;
 }
 
-.p1 {
+.p-1 {
     padding: 5px;
 }
 
-.p2 {
+.p-2 {
     padding: 10px;
 }
 
-.pb0 {
+.pb-0 {
     padding-bottom: 0;
 }
 
-.mx1 {
+.mx-1 {
     margin-left: 5px;
     margin-right: 5px;
 }
 
-.m1 {
+.m-1 {
     margin: 5px;
 }
 
@@ -73,6 +73,11 @@ html {
 .grow-2 {
     display: flex;
     flex-grow: 2;
+}
+
+.grow-5 {
+    display: flex;
+    flex-grow: 5;
 }
 
 .shrink {
@@ -138,6 +143,7 @@ header {
     z-index: 20;
     top: 0;
     right: 0;
+    min-height: 56px;
 }
 
 header.overflow-hidden {
@@ -193,17 +199,24 @@ header * {
     margin-bottom: 8px;
 }
 
-#theme-wrapper:hover .icon-button:not(.selected):hover:before {
-    opacity: 0.3;
-}
-
-#theme-wrapper:hover .icon-button.selected::before {
-    opacity: 0.3;
-}
-
-@media (pointer: coarse) {
-    #theme-wrapper:hover .icon-button.selected:hover::before {
+@media (hover: hover) and (pointer: fine) {
+    #theme-wrapper:hover .icon-button:not(.selected):hover:before {
         opacity: 0.3;
+    }
+
+    #theme-wrapper:hover .icon-button.selected::before {
+        opacity: 0.3;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    #theme-wrapper:before {
+        opacity: 0.3 !important;
+        height: 40px !important;
+    }
+
+    #theme-wrapper .icon-button:before {
+        opacity: 0;
     }
 
     #theme-wrapper .icon-button:not(.selected) {
@@ -239,6 +252,7 @@ html[dir="rtl"] #expand.flipped  > .icon {
 @font-face {
     font-family: "Open Sans";
     src: url('../fonts/OpenSans/static/OpenSans-Medium.ttf') format('truetype');
+    font-display: swap;
 }
 
 body {
@@ -830,9 +844,11 @@ x-instructions {
     position: relative;
     opacity: 0.5;
     text-align: center;
-    margin: 50px 10px 0px;
+    margin-right: 10px;
+    margin-left: 10px;
+    min-height: max(6vh, 40px);
     flex-direction: column;
-    justify-content: center;
+    justify-content: end;
 }
 
 x-instructions:not([drop-peer]):not([drop-bg]):before {

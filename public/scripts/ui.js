@@ -37,6 +37,7 @@ class PeersUI {
         Events.on('dragleave', _ => this._onDragEnd());
         Events.on('dragend', _ => this._onDragEnd());
         Events.on('resize', _ => this._evaluateOverflowingPeers());
+        Events.on('header-changed', _ => this._evaluateOverflowingPeers());
 
         Events.on('paste', e => this._onPaste(e));
         Events.on('activate-share-mode', e => this._activateShareMode(e.detail.files, e.detail.text));
@@ -277,22 +278,10 @@ class PeersUI {
 
             if (files[0].type.split('/')[0] === 'image') {
                 try {
-                    let image = files[0]
+                    let imageUrl = await getThumbnailAsDataUrl(files[0], 80, null, 0.9);
 
-                    // Heic files can't be shown by browsers natively --> convert to jpeg
-                    if (image.type === "image/heif" || image.type === "image/heic") {
-                        let blob = await fileToBlob(image);
-                        image = await heic2any({
-                            blob,
-                            toType: "image/jpeg",
-                            quality: 0.9
-                        });
-                    }
-
-                    let imageUrl = URL.createObjectURL(image);
                     this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
 
-                    await waitUntilImageIsLoaded(imageUrl);
                     this.$shareModeImageThumb.removeAttribute('hidden');
                 } catch (e) {
                     console.error(e);
@@ -740,7 +729,7 @@ class Dialog {
 
     hide() {
         this.$el.removeAttribute('show');
-        if (!window.isMobile && this.$autoFocus) {
+        if (!window.isMobile) {
             document.activeElement.blur();
             window.blur();
         }
@@ -1586,7 +1575,7 @@ class EditPairedDevicesDialog extends Dialog {
                             <span class="center wrap">
                                 ${autoAcceptString}
                             </span>
-                            <label class="auto-accept switch pointer m1">
+                            <label class="auto-accept switch pointer m-1">
                                 <input type="checkbox" ${roomSecretsEntry.auto_accept ? "checked" : ""}>
                                 <div class="slider round"></div>
                             </label>
@@ -2164,13 +2153,13 @@ class Base64Dialog extends Dialog {
             // ?base64text=hash#BASE64ENCODED
             // base64 encoded text is url hash which cannot be seen by the server and is faster (recommended)
             this.show();
-            await this.processBase64Text(hash)
+            await this.processBase64Text(hash);
         }
         else {
             // ?base64text=BASE64ENCODED
             // base64 encoded text is part of the url param. Seen by server and slow (not recommended)
             this.show();
-            await this.processBase64Text(base64Text)
+            await this.processBase64Text(base64Text);
         }
     }
 
@@ -2185,7 +2174,7 @@ class Base64Dialog extends Dialog {
         else if (base64Zip === 'hash') {
             // ?base64zip=hash#BASE64ENCODED
             // base64 encoded zip file is url hash which cannot be seen by the server
-            await this.processBase64Zip(hash)
+            await this.processBase64Zip(hash);
         }
     }
 
@@ -2280,6 +2269,8 @@ class Base64Dialog extends Dialog {
     hide() {
         this.$pasteBtn.removeEventListener('click', _ => this._clickCallback());
         this.$fallbackTextarea.removeEventListener('input', _ => this._inputCallback());
+        this.$fallbackTextarea.setAttribute('disabled', true);
+        this.$fallbackTextarea.blur();
         super.hide();
     }
 }
