@@ -252,6 +252,7 @@ html[dir="rtl"] #expand.flipped  > .icon {
 @font-face {
     font-family: "Open Sans";
     src: url('../fonts/OpenSans/static/OpenSans-Medium.ttf') format('truetype');
+    font-display: swap;
 }
 
 body {
