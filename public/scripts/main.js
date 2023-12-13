@@ -155,6 +155,7 @@ class PairDrop {
     }
 
     async hydrate() {
+        this.aboutUI = new AboutUI();
         this.peersUI = new PeersUI();
         this.languageSelectDialog = new LanguageSelectDialog();
         this.receiveFileDialog = new ReceiveFileDialog();

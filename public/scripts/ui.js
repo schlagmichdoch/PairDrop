@@ -2275,6 +2275,53 @@ class Base64Dialog extends Dialog {
     }
 }
 
+class AboutUI {
+    constructor() {
+        this.$donationBtn = $('donation-btn');
+        this.$twitterBtn = $('twitter-btn');
+        this.$mastodonBtn = $('mastodon-btn');
+        this.$blueskyBtn = $('bluesky-btn');
+        this.$customBtn = $('custom-btn');
+        this.$privacypolicyBtn = $('privacypolicy-btn');
+        Events.on('config', e => this._onConfig(e.detail.buttons));
+    }
+
+    async _onConfig(btnConfig) {
+        await this._evaluateBtnConfig(this.$donationBtn, btnConfig.donation_button);
+        await this._evaluateBtnConfig(this.$twitterBtn, btnConfig.twitter_button);
+        await this._evaluateBtnConfig(this.$mastodonBtn, btnConfig.mastodon_button);
+        await this._evaluateBtnConfig(this.$blueskyBtn, btnConfig.bluesky_button);
+        await this._evaluateBtnConfig(this.$customBtn, btnConfig.custom_button);
+        await this._evaluateBtnConfig(this.$privacypolicyBtn, btnConfig.privacypolicy_button);
+    }
+
+    async _evaluateBtnConfig($btn, config) {
+        // if config is not set leave everything as default
+        if (!Object.keys(config).length) return;
+
+        if (config.active === "false") {
+            $btn.setAttribute('hidden', true);
+        } else {
+            if (config.link) {
+                $btn.setAttribute('href', config.link);
+            }
+            if (config.title) {
+                $btn.setAttribute('title', config.title);
+                // prevent overwriting of custom title when setting different language
+                $btn.removeAttribute('data-i18n-key');
+                $btn.removeAttribute('data-i18n-attrs');
+            }
+            if (config.icon) {
+                $btn.setAttribute('title', config.title);
+                // prevent overwriting of custom title when setting different language
+                $btn.removeAttribute('data-i18n-key');
+                $btn.removeAttribute('data-i18n-attrs');
+            }
+            $btn.removeAttribute('hidden');
+        }
+    }
+}
+
 class Toast extends Dialog {
     constructor() {
         super('toast');

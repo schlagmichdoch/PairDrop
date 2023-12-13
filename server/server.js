@@ -49,7 +49,8 @@ export default class PairDropServer {
         // By using `WS_SERVER`, you can host an instance that uses another signaling server.
         app.get('/config', (req, res) => {
             res.send({
-                signalingServer: conf.signalingServer
+                signalingServer: conf.signalingServer,
+                buttons: conf.buttons
             });
         });
 

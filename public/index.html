@@ -586,14 +586,34 @@
                         <use xlink:href="#github"></use>
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://www.buymeacoffee.com/pairdrop" rel="noreferrer" data-i18n-key="about.buy-me-a-coffee" data-i18n-attrs="title">
+                <a class="icon-button" id="donation-btn" target="_blank" href="https://www.buymeacoffee.com/pairdrop" rel="noreferrer" data-i18n-key="about.buy-me-a-coffee" data-i18n-attrs="title">
                     <svg class="icon">
-                        <use xlink:href="#monetarization"></use>
+                        <use xlink:href="#donation"></use>
                     </svg>
                 </a>
-                <a class="icon-button" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&amp;" rel="noreferrer" data-i18n-key="about.tweet" data-i18n-attrs="title">
+                <a class="icon-button" id="twitter-btn" target="_blank" href="https://twitter.com/intent/tweet?text=https%3A%2F%2Fpairdrop.net%20by%20https%3A%2F%2Fgithub.com%2Fschlagmichdoch%2F&amp;" rel="noreferrer" data-i18n-key="about.tweet" data-i18n-attrs="title">
                     <svg class="icon">
                         <use xlink:href="#twitter"></use>
+                    </svg>
+                </a>
+                <a class="icon-button" id="mastodon-btn" target="_blank" rel="noreferrer" data-i18n-key="about.mastodon" data-i18n-attrs="title" hidden>
+                    <svg class="icon">
+                        <use xlink:href="#mastodon"></use>
+                    </svg>
+                </a>
+                <a class="icon-button" id="bluesky-btn" target="_blank" rel="noreferrer" data-i18n-key="about.bluesky" data-i18n-attrs="title" hidden>
+                    <svg class="icon">
+                        <use xlink:href="#bluesky"></use>
+                    </svg>
+                </a>
+                <a class="icon-button" id="custom-btn" target="_blank" rel="noreferrer" data-i18n-key="about.custom" data-i18n-attrs="title" hidden>
+                    <svg class="icon">
+                        <use xlink:href="#custom"></use>
+                    </svg>
+                </a>
+                <a class="icon-button" id="privacypolicy-btn" target="_blank" rel="noreferrer" data-i18n-key="about.privacypolicy" data-i18n-attrs="title" hidden>
+                    <svg class="icon">
+                        <use xlink:href="#privacypolicy"></use>
                     </svg>
                 </a>
                 <a class="icon-button" target="_blank" href="https://github.com/schlagmichdoch/pairdrop/blob/master/docs/faq.md" rel="noreferrer" data-i18n-key="about.faq" data-i18n-attrs="title">
@@ -643,7 +663,7 @@
             <path d="M18 1.01L8 1c-1.1 0-2 .9-2 2v3h2V5h10v14H8v-1H6v3c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM10 15h2V8H5v2h3.59L3 15.59 4.41 17 10 11.41z"></path>
             <path fill="none" d="M0 0h24v24H0V0z"></path>
         </symbol>
-        <symbol id="monetarization">
+        <symbol id="donation">
             <path d="M0 0h24v24H0z" fill="none"></path>
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"></path>
         </symbol>
@@ -693,9 +713,25 @@
             <path d="M320 464c8.8 0 16-7.2 16-16V160H256c-17.7 0-32-14.3-32-32V48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H320zM0 64C0 28.7 28.7 0 64 0H229.5c17 0 33.3 6.7 45.3 18.7l90.5 90.5c12 12 18.7 28.3 18.7 45.3V448c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V64z"></path>
         </symbol>
         <symbol id="caret" viewBox="0 0 320 512">
-            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"></path>
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"></path>
         </symbol>
-
+        <symbol id="mastodon" viewBox="0 0 448 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M433 179.1c0-97.2-63.7-125.7-63.7-125.7-62.5-28.7-228.6-28.4-290.5 0 0 0-63.7 28.5-63.7 125.7 0 115.7-6.6 259.4 105.6 289.1 40.5 10.7 75.3 13 103.3 11.4 50.8-2.8 79.3-18.1 79.3-18.1l-1.7-36.9s-36.3 11.4-77.1 10.1c-40.4-1.4-83-4.4-89.6-54a102.5 102.5 0 0 1 -.9-13.9c85.6 20.9 158.7 9.1 178.8 6.7 56.1-6.7 105-41.3 111.2-72.9 9.8-49.8 9-121.5 9-121.5zm-75.1 125.2h-46.6v-114.2c0-49.7-64-51.6-64 6.9v62.5h-46.3V197c0-58.5-64-56.6-64-6.9v114.2H90.2c0-122.1-5.2-147.9 18.4-175 25.9-28.9 79.8-30.8 103.8 6.1l11.6 19.5 11.6-19.5c24.1-37.1 78.1-34.8 103.8-6.1 23.7 27.3 18.4 53 18.4 175z"></path>
+        </symbol>
+        <symbol id="bluesky" viewBox="0 0 448 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96z"></path>
+        </symbol>
+        <symbol id="custom" viewBox="0 0 512 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M418.4 157.9c35.3-8.3 61.6-40 61.6-77.9c0-44.2-35.8-80-80-80c-43.4 0-78.7 34.5-80 77.5L136.2 151.1C121.7 136.8 101.9 128 80 128c-44.2 0-80 35.8-80 80s35.8 80 80 80c12.2 0 23.8-2.7 34.1-7.6L259.7 407.8c-2.4 7.6-3.7 15.8-3.7 24.2c0 44.2 35.8 80 80 80s80-35.8 80-80c0-27.7-14-52.1-35.4-66.4l37.8-207.7zM156.3 232.2c2.2-6.9 3.5-14.2 3.7-21.7l183.8-73.5c3.6 3.5 7.4 6.7 11.6 9.5L317.6 354.1c-5.5 1.3-10.8 3.1-15.8 5.5L156.3 232.2z"></path>
+        </symbol>
+        <symbol id="privacypolicy" viewBox="0 0 512 512">
+            <!--!Font Awesome Free 6.5.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2023 Fonticons, Inc.-->
+            <path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0zm0 66.8V444.8C394 378 431.1 230.1 432 141.4L256 66.8l0 0z"></path>
+        </symbol>
     </svg>
     <!-- Scripts -->
     <script src="scripts/localization.js"></script>
