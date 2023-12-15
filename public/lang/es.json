@@ -11,7 +11,9 @@
         "join-public-room_title": "Unirse a una sala pública temporalmente",
         "notification_title": "Activar notificaciones",
         "edit-paired-devices_title": "Editar dispositivos emparejados",
-        "theme-light_title": "Siempre usar tema claro"
+        "theme-light_title": "Siempre usar tema claro",
+        "expand_title": "Ampliar la fila de botones de la cabecera",
+        "edit-share-mode": "Editar"
     },
     "footer": {
         "webrtc": "si WebRTC no está disponible.",
@@ -73,9 +75,9 @@
     },
     "instructions": {
         "x-instructions_mobile": "Toque para enviar archivos o toque prologádamente para enviar un mensaje",
-        "x-instructions-share-mode_desktop": "Haga clic para enviar",
+        "x-instructions-share-mode_desktop": "Haga clic para enviar {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "y {{count}} archivos diferentes",
-        "x-instructions-share-mode_mobile": "Toca para enviar",
+        "x-instructions-share-mode_mobile": "Toque para enviar {{descriptor}}",
         "activate-share-mode-base": "Abra PairDrop en otros dispositivos para enviar",
         "no-peers-subtitle": "Empareje dispositivos o ingrese a una sala pública para que lo puedan encontrar en otras redes",
         "activate-share-mode-shared-text": "texto compartido",
@@ -84,7 +86,10 @@
         "x-instructions_data-drop-peer": "Liberar para enviar a un par",
         "x-instructions_data-drop-bg": "Liberar para seleccionar destinatario",
         "no-peers_data-drop-bg": "Liberar para seleccionar destinatario",
-        "webrtc-requirement": "Para utilizar esta instancia de PairDrop, ¡WebRTC debe estar activado!"
+        "webrtc-requirement": "Para utilizar esta instancia de PairDrop, ¡WebRTC debe estar activado!",
+        "activate-share-mode-shared-files-plural": "{{count}} archivos compartidos",
+        "activate-share-mode-shared-file": "archivo compartido",
+        "activate-share-mode-and-other-file": "y 1 archivo más"
     },
     "peer-ui": {
         "processing": "Procesando…",
@@ -96,7 +101,7 @@
         "transferring": "Transferiendo…"
     },
     "dialogs": {
-        "base64-paste-to-send": "Pegar aquí para enviar {{type}}",
+        "base64-paste-to-send": "Pegar el portapapeles aquí para compartir {{type}}",
         "auto-accept-instructions-2": "para aceptar automáticamente todos los archivos enviados desde ese dispositivo.",
         "receive-text-title": "Mensaje Recibido",
         "edit-paired-devices-title": "Editar Dispositivos Emparejados",
@@ -112,7 +117,7 @@
         "join": "Unirse",
         "title-image-plural": "Imágenes",
         "send": "Enviar",
-        "base64-tap-to-paste": "Toca aquí para pegar {{type}}",
+        "base64-tap-to-paste": "Pulse aquí para compartir {{type}}",
         "base64-text": "texto",
         "copy": "Copiar",
         "file-other-description-image": "y una imagen mas",
@@ -146,7 +151,15 @@
         "message_title": "Insertar el mensaje a enviar",
         "pair-devices-qr-code_title": "Haz clic para copiar el enlace para emparejar este dispositivo",
         "public-room-qr-code_title": "Haz clic para copiar el enlace a la sala pública",
-        "message_placeholder": "Texto"
+        "message_placeholder": "Texto",
+        "close-toast_title": "Cerrar la notificación",
+        "share-text-checkbox": "Mostrar siempre este cuadro de diálogo al compartir texto",
+        "base64-title-files": "Compartir archivos",
+        "approve": "aprobar",
+        "paired-device-removed": "Se ha eliminado el dispositivo emparejado.",
+        "share-text-title": "Compartir un mensaje de texto",
+        "share-text-subtitle": "Edita el mensaje antes de enviarlo:",
+        "base64-title-text": "Compartir el texto"
     },
     "about": {
         "claim": "La forma más sencilla de transferir archivos entre dispositivos",
@@ -154,7 +167,11 @@
         "close-about_aria-label": "Cerrar Sobre PairDrop",
         "buy-me-a-coffee_title": "¡Cómprame un café!",
         "github_title": "PairDrop en GitHub",
-        "faq_title": "Preguntas frecuentes"
+        "faq_title": "Preguntas frecuentes",
+        "bluesky_title": "Síganos en BlueSky",
+        "privacypolicy_title": "Abrir nuestra política de privacidad",
+        "mastodon_title": "Escriba sobre PairDrop en Mastodon",
+        "custom_title": "Síguenos en"
     },
     "document-titles": {
         "file-transfer-requested": "Transferencia de archivos solicitada",
