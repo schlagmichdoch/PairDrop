@@ -12,7 +12,8 @@
         "cancel-share-mode": "Fertig",
         "language-selector_title": "Sprache Wählen",
         "join-public-room_title": "Öffentlichen Raum temporär betreten",
-        "edit-share-mode": "Bearbeiten"
+        "edit-share-mode": "Bearbeiten",
+        "expand_title": "Schaltflächenzeile ausklappen"
     },
     "dialogs": {
         "share": "Teilen",
@@ -81,7 +82,11 @@
         "close-about_aria-label": "Schließe Über PairDrop",
         "github_title": "PairDrop auf GitHub",
         "buy-me-a-coffee_title": "Kauf mir einen Kaffee!",
-        "claim": "Der einfachste Weg, Dateien zwischen Geräten zu übertragen"
+        "claim": "Der einfachste Weg, Dateien zwischen Geräten zu übertragen",
+        "bluesky_title": "Folge uns auf BlueSky",
+        "privacypolicy_title": "Öffne unsere Datenschutzerklärung",
+        "mastodon_title": "Schreibe über PairDrop auf Mastodon",
+        "custom_title": "Folge uns"
     },
     "footer": {
         "known-as": "Du wirst angezeigt als:",
