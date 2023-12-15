@@ -32,10 +32,14 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Evaluate arguments for deployment with Docker and Node.js
 let conf = {};
+
 conf.debugMode = process.env.DEBUG_MODE === "true";
+
 conf.port = process.env.PORT || 3000;
+
 conf.wsFallback = process.argv.includes('--include-ws-fallback') || process.env.WS_FALLBACK === "true";
-conf.rtcConfig = process.env.RTC_CONFIG
+
+conf.rtcConfig = process.env.RTC_CONFIG && process.env.RTC_CONFIG !== "false"
     ? JSON.parse(fs.readFileSync(process.env.RTC_CONFIG, 'utf8'))
     : {
         "sdpSemantics": "unified-plan",
@@ -47,7 +51,10 @@ conf.rtcConfig = process.env.RTC_CONFIG
     };
 
 
-conf.signalingServer = process.env.SIGNALING_SERVER || false;
+conf.signalingServer = process.env.SIGNALING_SERVER && process.env.SIGNALING_SERVER !== "false"
+    ? process.env.SIGNALING_SERVER
+    : false;
+
 conf.ipv6Localize = parseInt(process.env.IPV6_LOCALIZE) || false;
 
 let rateLimit = false;
@@ -61,6 +68,7 @@ else {
     }
 }
 conf.rateLimit = rateLimit;
+
 conf.buttons = {
     "donation_button": {
         "active": process.env.DONATION_BUTTON_ACTIVE,
@@ -96,7 +104,9 @@ conf.buttons = {
 
 // Evaluate arguments for deployment with Node.js only
 conf.autoStart = process.argv.includes('--auto-restart');
+
 conf.localhostOnly = process.argv.includes('--localhost-only');
+
 
 // Validate configuration
 if (conf.ipv6Localize) {
