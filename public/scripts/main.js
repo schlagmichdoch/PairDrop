@@ -65,7 +65,7 @@ class PairDrop {
         console.log("UI hydrated.");
 
         // Evaluate url params as soon as ws is connected
-        console.log("Evaluate URL params when websocket connection is established.");
+        console.log("Evaluate URL params as soon as websocket connection is established.");
         Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
     }
 
@@ -115,10 +115,14 @@ class PairDrop {
     loadStyleSheet(url) {
         return new Promise((resolve, reject) => {
             let stylesheet = document.createElement('link');
-            stylesheet.rel = 'stylesheet';
+            stylesheet.rel = 'preload';
+            stylesheet.as = 'style';
             stylesheet.href = url;
-            stylesheet.type = 'text/css';
-            stylesheet.onload = resolve;
+            stylesheet.onload = _ => {
+                stylesheet.onload = null;
+                stylesheet.rel = 'stylesheet';
+                resolve();
+            };
             stylesheet.onerror = reject;
 
             document.head.appendChild(stylesheet);
