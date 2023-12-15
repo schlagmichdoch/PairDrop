@@ -1,7 +1,7 @@
 {
     "header": {
         "about_title": "PairDrop Hakkında",
-        "about_aria-label": "PairDrop Hakkında Aç",
+        "about_aria-label": "PairDrop Hakkındayı Aç",
         "theme-auto_title": "Temayı sisteme uyarla",
         "theme-light_title": "Daima açık tema kullan",
         "theme-dark_title": "Daima koyu tema kullan",
@@ -17,13 +17,13 @@
     "instructions": {
         "no-peers_data-drop-bg": "Alıcıyı seçmek için bırakın",
         "x-instructions_mobile": "Dosya göndermek için dokun veya mesaj göndermek için uzun dokun",
-        "x-instructions-share-mode_desktop": "Göndermek için tıkla {{descriptor}}",
+        "x-instructions-share-mode_desktop": "{{descriptor}} kişisine göndermek için tıkla",
         "activate-share-mode-and-other-files-plural": "ve {{count}} diğer dosya",
-        "x-instructions-share-mode_mobile": "Göndermek için dokun {{descriptor}}",
+        "x-instructions-share-mode_mobile": "{{descriptor}} kişisine göndermek için dokun",
         "activate-share-mode-base": "Göndermek için diğer cihazlarda PairDrop'u açın",
         "no-peers-subtitle": "Diğer ağlarda keşfedilebilir olmak için cihazları eşleştirin veya ortak bir odaya girin",
         "activate-share-mode-shared-text": "paylaşılan metin",
-        "x-instructions_desktop": "Dosya göndermek için tıkla ya da mesaj göndermek için sağ tıkla",
+        "x-instructions_desktop": "Dosya göndermek için tıkla veya mesaj göndermek için sağ tıkla",
         "no-peers-title": "Dosya göndermek için diğer cihazlarda PairDrop'u açın",
         "x-instructions_data-drop-peer": "Göndermek için serbest bırak",
         "x-instructions_data-drop-bg": "Alıcıyı seçmek için bırakın",
@@ -131,11 +131,11 @@
         "public-room-left": "{{publicRoomId}} genel odasından ayrıldın",
         "copied-text": "Metin panoya kopyalandı",
         "display-name-random-again": "Mevcut adın tekrardan rastgele oluşturuldu",
-        "display-name-changed-permanently": "Mevcut adın kalıcı olarak değiştirilir",
+        "display-name-changed-permanently": "Mevcut adın kalıcı olarak değiştirildi",
         "copied-to-clipboard-error": "Kopyalama mümkün değil. Manuel olarak kopyalayın.",
         "pairing-success": "Cihazlar eşleştirildi",
         "clipboard-content-incorrect": "Pano içeriği yanlış",
-        "display-name-changed-temporarily": "Mevcut adın yalnızca bu oturum için değiştirilir",
+        "display-name-changed-temporarily": "Mevcut adın yalnızca bu oturum için değiştirildi",
         "copied-to-clipboard": "Panoya kopyalandı",
         "offline": "Çevrimdışısın",
         "pairing-tabs-error": "İki web tarayıcı sekmesini eşleştirmek mümkün değildir",
@@ -149,7 +149,7 @@
         "room-url-copied-to-clipboard": "Genel oda bağlantı linki panoya kopyalandı",
         "copied-text-error": "Panoya kopyalanamadı. Lütfen manuel olarak kopyalayın!",
         "download-successful": "{{descriptor}} indirildi",
-        "click-to-show": "Göstermek için tıkla"
+        "click-to-show": "Görmek için tıkla"
     },
     "peer-ui": {
         "processing": "İşleniyor…",
