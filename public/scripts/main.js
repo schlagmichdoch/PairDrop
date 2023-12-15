@@ -56,13 +56,16 @@ class PairDrop {
         await this.backgroundCanvas.fadeIn();
 
         // Load deferred assets
+        console.log("Load deferred assets...");
         await this.loadDeferredAssets();
         console.log("Loading of deferred assets completed.");
 
+        console.log("Hydrate UI...");
         await this.hydrate();
         console.log("UI hydrated.");
 
         // Evaluate url params as soon as ws is connected
+        console.log("Evaluate URL params as soon as websocket connection is established.");
         Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
     }
 
@@ -102,36 +105,40 @@ class PairDrop {
         }
     }
 
-    async loadDeferredAssets() {
-        console.log("Load deferred assets");
-        for (const url of this.deferredStyles) {
-            await this.loadAndApplyStylesheet(url);
-        }
-        for (const url of this.deferredScripts) {
-            await this.loadAndApplyScript(url);
-        }
+    loadDeferredAssets() {
+        const stylePromises = this.deferredStyles.map(url => this.loadAndApplyStylesheet(url));
+        const scriptPromises = this.deferredScripts.map(url => this.loadAndApplyScript(url));
+
+        return Promise.all([...stylePromises, ...scriptPromises]);
     }
 
     loadStyleSheet(url) {
         return new Promise((resolve, reject) => {
             let stylesheet = document.createElement('link');
-            stylesheet.rel = 'stylesheet';
+            stylesheet.rel = 'preload';
+            stylesheet.as = 'style';
             stylesheet.href = url;
-            stylesheet.type = 'text/css';
-            stylesheet.onload = resolve;
+            stylesheet.onload = _ => {
+                stylesheet.onload = null;
+                stylesheet.rel = 'stylesheet';
+                resolve();
+            };
             stylesheet.onerror = reject;
 
             document.head.appendChild(stylesheet);
         });
     }
 
-    async loadAndApplyStylesheet(url) {
-        try {
-            await this.loadStyleSheet(url);
-            console.log(`Stylesheet loaded successfully: ${url}`);
-        } catch (error) {
-            console.error('Error loading stylesheet:', error);
-        }
+    loadAndApplyStylesheet(url) {
+        return new Promise( async (resolve) => {
+            try {
+                await this.loadStyleSheet(url);
+                console.log(`Stylesheet loaded successfully: ${url}`);
+                resolve();
+            } catch (error) {
+                console.error('Error loading stylesheet:', error);
+            }
+        });
     }
 
     loadScript(url) {
@@ -145,13 +152,16 @@ class PairDrop {
         });
     }
 
-    async loadAndApplyScript(url) {
-        try {
-            await this.loadScript(url);
-            console.log(`Script loaded successfully: ${url}`);
-        } catch (error) {
-            console.error('Error loading script:', error);
-        }
+    loadAndApplyScript(url) {
+        return new Promise( async (resolve) => {
+            try {
+                await this.loadScript(url);
+                console.log(`Script loaded successfully: ${url}`);
+                resolve();
+            } catch (error) {
+                console.error('Error loading script:', error);
+            }
+        });
     }
 
     async hydrate() {
@@ -223,6 +233,8 @@ class PairDrop {
         // remove url params from url
         const urlWithoutParams = getUrlWithoutArguments();
         window.history.replaceState({}, "Rewrite URL", urlWithoutParams);
+
+        console.log("URL params evaluated.");
     }
 }
 

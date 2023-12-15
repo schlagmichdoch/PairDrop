@@ -2420,14 +2420,9 @@ class Notifications {
 
     _downloadNotification(files) {
         if (document.visibilityState !== 'visible') {
-            let imagesOnly = true;
-            for(let i=0; i<files.length; i++) {
-                if (files[i].type.split('/')[0] !== 'image') {
-                    imagesOnly = false;
-                    break;
-                }
-            }
+            let imagesOnly = files.every(file => file.type.split('/')[0] === 'image');
             let title;
+
             if (files.length === 1) {
                 title = `${files[0].name}`;
             }
@@ -2452,15 +2447,8 @@ class Notifications {
 
     _requestNotification(request, peerId) {
         if (document.visibilityState !== 'visible') {
-            let imagesOnly = true;
-            for(let i=0; i<request.header.length; i++) {
-                if (request.header[i].mime.split('/')[0] !== 'image') {
-                    imagesOnly = false;
-                    break;
-                }
-            }
-
-            let displayName = $(peerId).querySelector('.name').textContent
+            let imagesOnly = request.header.every(header => header.mime.split('/')[0] === 'image');
+            let displayName = $(peerId).querySelector('.name').textContent;
 
             let descriptor;
             if (request.header.length === 1) {

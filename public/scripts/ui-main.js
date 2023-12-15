@@ -132,7 +132,7 @@ class HeaderUI {
         this.$header.classList.remove('overflow-expanded');
 
 
-        const rtlLocale = Localization.isCurrentLocaleRtl();
+        const rtlLocale = Localization.currentLocaleIsRtl();
         let icon;
         const $headerIconsShown = document.querySelectorAll('body > header:first-of-type > *:not([hidden])');
 
