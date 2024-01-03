@@ -1978,12 +1978,15 @@ class ReceiveTextDialog extends Dialog {
         this._receiveTextQueue = [];
     }
 
+    selectionEmpty() {
+        return !window.getSelection().toString()
+    }
+
     async _onKeyDown(e) {
         if (!this.isShown()) return
 
-        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey) && this.selectionEmpty()) {
             await this._onCopy()
-            this.hide();
         }
         else if (e.code === "Escape") {
             this.hide();
