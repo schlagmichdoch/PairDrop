@@ -1978,12 +1978,15 @@ class ReceiveTextDialog extends Dialog {
         this._receiveTextQueue = [];
     }
 
+    selectionEmpty() {
+        return !window.getSelection().toString()
+    }
+
     async _onKeyDown(e) {
         if (!this.isShown()) return
 
-        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey)) {
+        if (e.code === "KeyC" && (e.ctrlKey || e.metaKey) && this.selectionEmpty()) {
             await this._onCopy()
-            this.hide();
         }
         else if (e.code === "Escape") {
             this.hide();
@@ -2014,10 +2017,19 @@ class ReceiveTextDialog extends Dialog {
 
         // Beautify text if text is short
         if (text.length < 2000) {
-            // replace urls with actual links
-            this.$text.innerHTML = this.$text.innerHTML.replace(/((https?:\/\/|www)[ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789\-._~:\/?#\[\]@!$&'()*+,;=]+)/g, url => {
-                return `<a href="${url}" target="_blank">${url}</a>`;
-            });
+            // replace URLs with actual links
+            this.$text.innerHTML = this.$text.innerHTML
+                .replace(/(^|(?<=(<br>|\s)))(https?:\/\/|www.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%]){2,}\.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%.]){2,})/g,
+                (url) => {
+                        let link = url;
+
+                        // prefix www.example.com with http protocol to prevent it from being a relative link
+                        if (link.startsWith('www')) {
+                            link = "http://" + link
+                        }
+
+                        return `<a href="${link}" target="_blank">${url}</a>`;
+                });
         }
 
         this._evaluateOverflowing(this.$text);
@@ -2049,7 +2061,10 @@ class ReceiveTextDialog extends Dialog {
 
     hide() {
         super.hide();
-        setTimeout(() => this._dequeueRequests(), 500);
+        setTimeout(() => {
+            this._dequeueRequests();
+            this.$text.innerHTML = "";
+        }, 500);
     }
 }
 
