@@ -16,6 +16,7 @@
     max-height: 350px;
     word-break: break-word;
     word-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .textarea:before {
