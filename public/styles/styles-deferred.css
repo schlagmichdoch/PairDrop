@@ -384,10 +384,6 @@ x-dialog:not([show]) x-paper {
     transform: scale(0.1);
 }
 
-x-dialog a {
-    color: var(--primary-color);
-}
-
 /* Pair Devices Dialog & Public Room Dialog */
 
 .input-key-container {
@@ -786,7 +782,7 @@ x-dialog x-paper {
     background-color: var(--bg-color-secondary) !important;
 }
 
-.textarea * {
+.textarea *:not(a) {
     margin: 0 !important;
     padding: 0 !important;
     color: unset !important;
@@ -797,6 +793,10 @@ x-dialog x-paper {
     font-size: inherit !important;
     font-style: unset !important;
     font-weight: unset !important;
+}
+
+x-dialog a {
+    color: var(--primary-color);
 }
 
 /* Image/Video/Audio Preview */
