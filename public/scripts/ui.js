@@ -2057,9 +2057,11 @@ class ReceiveTextDialog extends Dialog {
     }
 
     hide() {
-        // Todo: clear text field
         super.hide();
-        setTimeout(() => this._dequeueRequests(), 500);
+        setTimeout(() => {
+            this._dequeueRequests();
+            this.$text.innerHTML = "";
+        }, 500);
     }
 }
 
