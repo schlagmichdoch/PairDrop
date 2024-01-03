@@ -336,6 +336,7 @@ x-dialog x-paper {
     display: flex;
     margin: auto;
     flex-direction: column;
+    width: 100%;
     max-width: 450px;
     z-index: 3;
     border-radius: 30px;
