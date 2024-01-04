@@ -24,7 +24,7 @@ This opens PairDrop in the default browser where you can choose the receiver.
 ```bash
 pairdrop -h
 ```
-```bash
+```
 Send files or text with PairDrop via command-line interface.
 Current domain: https://pairdrop-dev.onrender.com/
 
@@ -35,7 +35,7 @@ Send text:		pairdrop -t "text"
 Specify domain:		pairdrop -d "https://pairdrop.net/"
 Show this help text:	pairdrop (-h|--help)
 
-This pairdrop-cli version was released alongside v1.10.0
+This pairdrop-cli version was released alongside v1.10.4
 ```
 
 <br>
