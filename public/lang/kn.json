@@ -13,7 +13,8 @@
         "about_aria-label": "PairDrop ಕುರಿತು ಪುಟವನ್ನು ತೆರೆಯಿರಿ",
         "theme-light_title": "ಯಾವಾಗಲೂ ಲೈಟ್ ಥೀಮ್ ಅನ್ನು ಬಳಸಿ",
         "edit-share-mode": "ಎಡಿಟ್ ಮಾಡಿ",
-        "cancel-share-mode": "ರದ್ದುಗೊಳಿಸಿ"
+        "cancel-share-mode": "ರದ್ದುಗೊಳಿಸಿ",
+        "expand_title": "ಹೆಡರ್ ಬಟನ್ ಸಾಲನ್ನು ವಿಸ್ತರಿಸಿ"
     },
     "dialogs": {
         "message_placeholder": "ಪಠ್ಯ",
@@ -173,7 +174,11 @@
         "close-about_aria-label": "PairDrop ಕುರಿತು ಪುಟವನ್ನು ಮುಚ್ಚಿ",
         "buy-me-a-coffee_title": "ನನಗೆ ಕಾಫಿ ಖರೀದಿಸಿ!",
         "github_title": "GitHub ನಲ್ಲಿ PairDrop",
-        "faq_title": "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು"
+        "faq_title": "ಪದೇ ಪದೇ ಕೇಳಲಾಗುವ ಪ್ರಶ್ನೆಗಳು",
+        "bluesky_title": "BlueSky ನಲ್ಲಿ ನಮ್ಮನ್ನು ಅನುಸರಿಸಿ",
+        "privacypolicy_title": "ನಮ್ಮ ಗೌಪ್ಯತೆ ನೀತಿ ತೆರೆಯಿರಿ",
+        "mastodon_title": "Mastodon ನಲ್ಲಿ PairDrop ಕುರಿತು ಬರೆಯಿರಿ",
+        "custom_title": "ನಮ್ಮನ್ನು ಅನುಸರಿಸಿ"
     },
     "document-titles": {
         "file-transfer-requested": "ಫೈಲ್ ವರ್ಗಾವಣೆಗೆ ವಿನಂತಿಸಲಾಗಿದೆ",
