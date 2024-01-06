@@ -40,7 +40,8 @@
         "no-peers-title": "Apri PairDrop su altri dispositivi per inviare files",
         "x-instructions_data-drop-peer": "Rilascia per inviare al peer",
         "x-instructions_data-drop-bg": "Rilascia per selezionare il destinatario",
-        "no-peers_data-drop-bg": "Rilascia per selezionare il destinatario"
+        "no-peers_data-drop-bg": "Rilascia per selezionare il destinatario",
+        "webrtc-requirement": "Per usare questa istanza di PairDrop, devi attivare WebRTC!"
     },
     "dialogs": {
         "auto-accept-instructions-2": "per accettare automaticamente tutti i files inviati da quel dispositivo.",

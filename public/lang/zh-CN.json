@@ -12,7 +12,8 @@
         "cancel-share-mode": "完成",
         "join-public-room_title": "暂时加入公共房间",
         "language-selector_title": "设置语言",
-        "edit-share-mode": "编辑"
+        "edit-share-mode": "编辑",
+        "expand_title": "展开标题按钮行"
     },
     "instructions": {
         "x-instructions_data-drop-peer": "释放以发送到此设备",
@@ -114,7 +115,11 @@
         "github_title": "PairDrop 在 GitHub 上开源",
         "claim": "最简单的跨设备传输方案",
         "buy-me-a-coffee_title": "帮我买杯咖啡！",
-        "tweet_title": "关于 PairDrop 的推特"
+        "tweet_title": "关于 PairDrop 的推特",
+        "bluesky_title": "在 BlueSky 上关注",
+        "privacypolicy_title": "打开隐私政策",
+        "mastodon_title": "在 Maston 上推广 PairDrop",
+        "custom_title": "关注我们"
     },
     "notifications": {
         "display-name-changed-permanently": "展示的名字已经永久变更",

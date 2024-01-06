@@ -58,7 +58,7 @@
         "room-url-copied-to-clipboard": "Link către sala publică copiat în clipboard"
     },
     "header": {
-        "cancel-share-mode": "Gata",
+        "cancel-share-mode": "Anulare",
         "theme-auto_title": "Adaptează tema la sistem",
         "install_title": "Instalează PairDrop",
         "theme-dark_title": "Utilizați mereu tema întunecoasă",
@@ -69,13 +69,15 @@
         "language-selector_title": "Setează Limba",
         "about_title": "Despre PairDrop",
         "about_aria-label": "Deschide Despre PairDrop",
-        "theme-light_title": "Utilizați mereu tema luminoasă"
+        "theme-light_title": "Utilizați mereu tema luminoasă",
+        "expand_title": "Extindeți rândul de butoane antet",
+        "edit-share-mode": "Editați"
     },
     "instructions": {
         "x-instructions_mobile": "Atingeți pentru a trimite fișiere sau atingeți lung pentru a trimite un mesaj",
-        "x-instructions-share-mode_desktop": "Clic pentru a trimite",
+        "x-instructions-share-mode_desktop": "Faceți clic pentru a trimite {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "și {{count}} alte fișiere",
-        "x-instructions-share-mode_mobile": "Atinge pentru a trimite",
+        "x-instructions-share-mode_mobile": "Atingeți pentru a trimite {{descriptor}}",
         "activate-share-mode-base": "Deschideți PairDrop pe alte dispozitive pentru a trimite",
         "no-peers-subtitle": "Împerecheați dispozitive sau intrați într-o cameră publică pentru a fi descoperit în alte rețele",
         "activate-share-mode-shared-text": "text partajat",
@@ -83,7 +85,11 @@
         "no-peers-title": "Deschideți PairDrop pe alte dispozitive pentru a trimite fișiere",
         "x-instructions_data-drop-peer": "Eliberare pentru a trimite la peer",
         "x-instructions_data-drop-bg": "Eliberați pentru a selecta recipientul",
-        "no-peers_data-drop-bg": "Eliberare pentru a selecta recipientul"
+        "no-peers_data-drop-bg": "Eliberați pentru a selecta destinatarul",
+        "activate-share-mode-shared-files-plural": "{{count}} fișiere partajate",
+        "activate-share-mode-shared-file": "fișier partajat",
+        "activate-share-mode-and-other-file": "și încă 1 fișier",
+        "webrtc-requirement": "Pentru a utiliza această instanță PairDrop, WebRTC trebuie să fie activat!"
     },
     "peer-ui": {
         "processing": "Procesarea…",
@@ -95,7 +101,7 @@
         "transferring": "Transferul…"
     },
     "dialogs": {
-        "base64-paste-to-send": "Lipiți aici pentru a trimite {{type}}",
+        "base64-paste-to-send": "Inserați clipboard aici pentru a distribui {{type}}",
         "auto-accept-instructions-2": "pentru a accepta automat toate fișierele trimise de la dispozitivul respectiv.",
         "receive-text-title": "Mesaj primit",
         "edit-paired-devices-title": "Editați dispozitivele asociate",
@@ -111,7 +117,7 @@
         "join": "Alătură-te",
         "title-image-plural": "Imagini",
         "send": "Trimite",
-        "base64-tap-to-paste": "Atinge aici pentru a lipi {{type}}",
+        "base64-tap-to-paste": "Atingeți aici pentru a distribui {{type}}",
         "base64-text": "text",
         "copy": "Copiază",
         "file-other-description-image": "și 1 altă imagine",
@@ -125,7 +131,7 @@
         "title-image": "Imagine",
         "file-other-description-file-plural": "și {{count}} alte fișiere",
         "would-like-to-share": "ar dori să împărtășească",
-        "send-message-to": "Trimite un mesaj la",
+        "send-message-to": "La:",
         "language-selector-title": "Setați Limba",
         "pair": "Cuplu",
         "hr-or": "SAU",
@@ -144,7 +150,16 @@
         "enter-room-id-from-another-device": "Introdu ID-ul camerei de pe un alt dispozitiv pentru a intra în cameră.",
         "message_title": "Inserați mesajul de trimis",
         "pair-devices-qr-code_title": "Dați clic pentru a copia link-ul pentru a asocia acest dispozitiv",
-        "public-room-qr-code_title": "Dați clic pentru a copia link-ul în sala publică"
+        "public-room-qr-code_title": "Dați clic pentru a copia link-ul în sala publică",
+        "message_placeholder": "Text",
+        "close-toast_title": "Închideți notificarea",
+        "share-text-checkbox": "Afișați întotdeauna acest dialog atunci când partajați text",
+        "base64-title-files": "Distribuie fisiere",
+        "approve": "aprobă",
+        "paired-device-removed": "Dispozitivul asociat a fost eliminat.",
+        "share-text-title": "Partajați un mesaj text",
+        "share-text-subtitle": "Editați mesajul înainte de a-l trimite:",
+        "base64-title-text": "Partajați textul"
     },
     "about": {
         "claim": "Cel mai simplu mod de a transfera fișiere între dispozitive",
@@ -152,7 +167,11 @@
         "close-about_aria-label": "Închide Despre PairDrop",
         "buy-me-a-coffee_title": "Cumpără-mi o cafea!",
         "github_title": "PairDrop pe GitHub",
-        "faq_title": "Întrebări frecvente"
+        "faq_title": "Întrebări frecvente",
+        "bluesky_title": "Urmărește-ne pe BlueSky",
+        "privacypolicy_title": "Deschideți politica noastră de confidențialitate",
+        "mastodon_title": "Scrieți despre PairDrop pe Mastodon",
+        "custom_title": "Urmăriți-ne"
     },
     "document-titles": {
         "file-transfer-requested": "Transfer de fișiere cerut",

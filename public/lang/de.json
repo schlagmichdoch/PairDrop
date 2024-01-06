@@ -152,7 +152,7 @@
         "x-instructions_desktop": "Klicke, um Dateien zu senden oder benutze einen Rechtsklick, um eine Nachricht zu senden",
         "no-peers-title": "Öffne PairDrop auf anderen Geräten, um Dateien zu senden",
         "no-peers_data-drop-bg": "Hier ablegen, um Empfänger auszuwählen",
-        "no-peers-subtitle": "Kopple Geräte oder betrete einen öffentlichen Raum, um in anderen Netzwerken sichtbar zu sein",
+        "no-peers-subtitle": "Kopple Geräte oder betritt einen öffentlichen Raum, um in anderen Netzwerken sichtbar zu sein",
         "x-instructions-share-mode_desktop": "Klicke zum Senden von {{descriptor}}",
         "x-instructions-share-mode_mobile": "Tippe zum Senden von {{descriptor}}",
         "x-instructions_data-drop-peer": "Hier ablegen, um an Peer zu senden",
