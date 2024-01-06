@@ -24,7 +24,7 @@ This opens PairDrop in the default browser where you can choose the receiver.
 ```bash
 pairdrop -h
 ```
-```bash
+```
 Send files or text with PairDrop via command-line interface.
 Current domain: https://pairdrop-dev.onrender.com/
 
@@ -35,44 +35,61 @@ Send text:		pairdrop -t "text"
 Specify domain:		pairdrop -d "https://pairdrop.net/"
 Show this help text:	pairdrop (-h|--help)
 
-This pairdrop-cli version was released alongside v1.10.0
+This pairdrop-cli version was released alongside v1.10.4
 ```
 
 <br>
 
 ### Setup
-Download the bash file: [pairdrop-cli/pairdrop](/pairdrop-cli/pairdrop).
 
-#### Linux
+#### Linux / Mac
 1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
-2. Unzip the archive to a folder of your choice e.g. `/usr/local/bin/pairdrop-cli/`
-3. Make sure the bash file `/usr/local/bin/pairdrop-cli/pairdrop` is executable. Otherwise, use `chmod +x pairdrop`
-4. Add absolute path of the folder to PATH variable to make `pairdrop` available globally by executing
-   `export PATH=$PATH:/usr/local/bin/pairdrop-cli/`
-
-<br>
-
-#### Mac
-1. add bash file to `/usr/local/bin`
+   ```shell
+   wget "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.4/pairdrop-cli.zip"
+   ```
+   or
+   ```shell
+   curl -LO "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.4/pairdrop-cli.zip"
+   ```
+2. Unzip the archive to a folder of your choice e.g. `/usr/share/pairdrop-cli/`
+   ```shell
+   sudo unzip pairdrop-cli.zip -d /usr/share/pairdrop-cli/
+   ```
+3. Copy the file _.pairdrop-cli-config.example_ to _.pairdrop-cli-config_
+   ```shell
+   sudo cp /usr/share/pairdrop-cli/.pairdrop-cli-config.example /usr/share/pairdrop-cli/.pairdrop-cli-config
+   ```
+4. Make the bash file _pairdrop_ executable
+   ```shell
+   sudo chmod +x /usr/share/pairdrop-cli/pairdrop
+   ```
+5. Add a symlink to /usr/local/bin/ to include _pairdrop_ to _PATH_
+   ```shell
+   sudo ln -s /usr/share/pairdrop-cli/pairdrop /usr/local/bin/pairdrop
+   ```
 
 <br>
 
 #### Windows
 1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
 2. Put file in a preferred folder e.g. `C:\Program Files\pairdrop-cli`
-3. Search for and open `Edit environment variables for your account`
-4. Click `Environment Variables…`
-5. Under *System Variables* select `Path` and click *Edit...*
-6. Click *New*, insert the preferred folder (`C:\Program Files\pairdrop-cli`), click *OK* until all windows are closed
-7. Reopen Command prompt window
+3. Inside this folder, copy the file _.pairdrop-cli-config.example_ to _.pairdrop-cli-config_
+4. Search for and open `Edit environment variables for your account`
+5. Click `Environment Variables…`
+6. Under _System Variables_ select `Path` and click _Edit..._
+7. Click _New_, insert the preferred folder (`C:\Program Files\pairdrop-cli`), click *OK* until all windows are closed
+8. Reopen Command prompt window
 
-<br>
+**Requirements**
 
-### Requirements
 As Windows cannot execute bash scripts natively, you need to install [Git Bash](https://gitforwindows.org/).
-Then, you can also use pairdrop-cli from the default Windows Command Prompt \
-by using the shell file instead of the bash file: `pairdrop.sh -h` which then itself executes \
-pairdrop-cli (the bash file) via the Git Bash.
+
+Then, you can also use pairdrop-cli from the default Windows Command Prompt 
+by using the shell file instead of the bash file which then itself executes 
+_pairdrop-cli_ (the bash file) via the Git Bash.
+```shell
+pairdrop.sh -h
+```
 
 <br>
 
@@ -82,14 +99,15 @@ pairdrop-cli (the bash file) via the Git Bash.
 It is possible to send multiple files with PairDrop via the context menu by adding pairdrop-cli to Windows `Send to` menu:
 1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
 2. Unzip the archive to a folder of your choice e.g. `C:\Program Files\pairdrop-cli\`
-3. Copy the shortcut _send with PairDrop.lnk_
-4. Hit Windows Key+R, type: `shell:sendto` and hit Enter.
-5. Paste the copied shortcut into the directory
-6. Open the properties window of the shortcut and edit the link field to point to _send-with-pairdrop.ps1_ located in the folder you used in step 2: \
+3. Inside this folder, copy the file _.pairdrop-cli-config.example_ to _.pairdrop-cli-config_
+4. Copy the shortcut _send with PairDrop.lnk_
+5. Hit Windows Key+R, type: `shell:sendto` and hit Enter.
+6. Paste the copied shortcut into the directory
+7. Open the properties window of the shortcut and edit the link field to point to _send-with-pairdrop.ps1_ located in the folder you used in step 2: \
    `"C:\Program Files\PowerShell\7\pwsh.exe" -File "C:\Program Files\pairdrop-cli\send-with-pairdrop.ps1"`
-7. You are done! You can now send multiple files and directories directly via PairDrop:
+8. You are done! You can now send multiple files and directories directly via PairDrop:
 
-> _context menu > Send to > PairDrop_
+   _context menu_ > _Send to_ > _PairDrop_
 
 ##### Requirements
 As Windows cannot execute bash scripts natively, you need to install [Git Bash](https://gitforwindows.org/).
@@ -100,14 +118,18 @@ As Windows cannot execute bash scripts natively, you need to install [Git Bash](
 
 ### Registering to open files with PairDrop
 It is possible to send multiple files with PairDrop via the context menu by adding pairdrop-cli to Nautilus `Scripts` menu:
-1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
-2. Unzip the archive to a folder of your choice e.g. `/usr/local/bin/pairdrop-cli/`
-3. Copy the shell file _send-with-pairdrop.sh_ to `/home/<user>/.local/share/nautilus/scripts/`
-4. Edit the shell file and edit the variable `pathToPairDropCli` to point to the pairdrop-cli executable from step 2 (e.g. `/usr/local/bin/pairdrop-cli/pairdrop`) 
-5. Make sure the shell file `/home/<user>/.local/share/nautilus/scripts/send-with-pairdrop.sh` is executable. Otherwise, use `chmod +x send-with-pairdrop.sh`
-6. You are done! You can now send multiple files and directories directly via PairDrop:
+1. Register _pairdrop_ as executable via [guide above](#linux).
+2. Copy the shell file _send-with-pairdrop_ to `~/.local/share/nautilus/scripts/` to include it in the context menu
+   ```shell
+   cp /usr/share/pairdrop-cli/send-with-pairdrop ~/.local/share/nautilus/scripts/
+   ```
+3. Make the shell file _send-with-pairdrop_ executable
+   ```shell
+   chmod +x ~/.local/share/nautilus/scripts/send-with-pairdrop`
+   ```
+4. You are done! You can now send multiple files and directories directly via PairDrop:
 
-> _context menu > Scripts > send-with-pairdrop.sh_
+   _context menu_ > _Scripts_ > _send-with-pairdrop_
 
 <br>
 
@@ -115,6 +137,6 @@ It is possible to send multiple files with PairDrop via the context menu by addi
 The [File Handling API](https://learn.microsoft.com/en-us/microsoft-edge/progressive-web-apps-chromium/how-to/handle-files)
 was implemented, but it was removed as default file associations were overwritten ([#17](https://github.com/schlagmichdoch/PairDrop/issues/17),
 [#116](https://github.com/schlagmichdoch/PairDrop/issues/116) [#190](https://github.com/schlagmichdoch/PairDrop/issues/190))
-and it only worked with explicitly specified file types and not with directories at all.
+and it only worked with explicitly specified file types and couldn't handle directories at all.
 
 [< Back](/README.md)

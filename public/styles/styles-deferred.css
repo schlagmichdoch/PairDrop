@@ -16,6 +16,7 @@
     max-height: 350px;
     word-break: break-word;
     word-wrap: anywhere;
+    white-space: pre-wrap;
 }
 
 .textarea:before {
@@ -335,6 +336,7 @@ x-dialog x-paper {
     display: flex;
     margin: auto;
     flex-direction: column;
+    width: 100%;
     max-width: 450px;
     z-index: 3;
     border-radius: 30px;
@@ -380,10 +382,6 @@ x-dialog:not([show]) {
 
 x-dialog:not([show]) x-paper {
     transform: scale(0.1);
-}
-
-x-dialog a {
-    color: var(--primary-color);
 }
 
 /* Pair Devices Dialog & Public Room Dialog */
@@ -784,7 +782,7 @@ x-dialog x-paper {
     background-color: var(--bg-color-secondary) !important;
 }
 
-.textarea * {
+.textarea *:not(a) {
     margin: 0 !important;
     padding: 0 !important;
     color: unset !important;
@@ -795,6 +793,10 @@ x-dialog x-paper {
     font-size: inherit !important;
     font-style: unset !important;
     font-weight: unset !important;
+}
+
+x-dialog a {
+    color: var(--primary-color);
 }
 
 /* Image/Video/Audio Preview */

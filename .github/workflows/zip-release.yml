@@ -26,9 +26,8 @@ jobs:
       - name: Archive Release
         uses: thedoctor0/zip-release@b57d897cb5d60cb78b51a507f63fa184cfe35554 # v0.7.6
         with:
-          type: 'zip'
           filename: 'pairdrop-cli.zip'
-          path: 'pairdrop-cli'
+          directory: 'pairdrop-cli'
           exclusions: '*.git* /*node_modules/* .editorconfig'
       - name: Upload Release
         uses: ncipollo/release-action@6c75be85e571768fa31b40abf38de58ba0397db5 # v1.13.0

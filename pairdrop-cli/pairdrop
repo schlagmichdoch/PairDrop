@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# PairDrop version when this file was last changed
+version="v1.10.4"
+
 ############################################################
 # Help                                                     #
 ############################################################
@@ -17,7 +20,7 @@ help()
    echo -e "Specify domain:\t\t$(basename "$0") -d \"https://pairdrop.net/\""
    echo -e "Show this help text:\t$(basename "$0") (-h|--help)"
    echo
-   echo "This pairdrop-cli version was released alongside v1.10.0"
+   echo "This pairdrop-cli version was released alongside ${version}"
 }
 
 openPairDrop()
@@ -337,12 +340,15 @@ popd  > '/dev/null';
 
 config_path="${script_path}/.pairdrop-cli-config"
 
+# If config file does not exist, try to create it. If it fails log error message and exit
 [ ! -f "$config_path" ] &&
   specifyDomain "https://pairdrop.net/" &&
   [ ! -f "$config_path" ] &&
-  echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this 'pairdrop' bash file"
+  echo "Could not create config file. Add 'DOMAIN=https://pairdrop.net/' to a file called .pairdrop-cli-config in the same file as this 'pairdrop' bash file (${script_path})" &&
+  exit
 
-[ ! -f "$config_path" ] || export "$(grep -v '^#' "$config_path" | xargs)"
+# Read config variables
+export "$(grep -v '^#' "$config_path" | xargs)"
 
 setOs
 
