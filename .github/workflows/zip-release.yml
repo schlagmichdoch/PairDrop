@@ -32,5 +32,5 @@ jobs:
       - name: Upload Release
         uses: ncipollo/release-action@6c75be85e571768fa31b40abf38de58ba0397db5 # v1.13.0
         with:
-          artifacts: "pairdrop-cli.zip"
+          artifacts: "pairdrop-cli/pairdrop-cli.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
