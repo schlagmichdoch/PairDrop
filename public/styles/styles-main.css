@@ -120,6 +120,7 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
+    scrollbar-width: none;
 }
 
 .full {
