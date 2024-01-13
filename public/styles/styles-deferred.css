@@ -1,0 +1,818 @@
+/* All styles in this sheet are not needed on page load and deferred */
+
+/* Text Input */
+.textarea {
+    box-sizing: border-box;
+    border: none;
+    outline: none;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    display: block;
+    overflow: auto;
+    resize: none;
+    line-height: 16px;
+    max-height: 350px;
+    word-break: break-word;
+    word-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.textarea:before {
+    opacity: 0.5;
+}
+
+/* Peers */
+
+x-peers:has(> x-peer) {
+    --peers-per-row: 10;
+}
+
+@media screen and (min-height: 505px) and (max-height: 649px) and (max-width: 426px),
+screen and (min-height: 486px) and (max-height: 631px) and (min-width: 426px) {
+    x-peers:has(> x-peer) {
+        --peers-per-row: 3;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(7)) {
+        --peers-per-row: 4;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(10)) {
+        --peers-per-row: 5;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(13)) {
+        --peers-per-row: 6;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(16)) {
+        --peers-per-row: 7;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(19)) {
+        --peers-per-row: 8;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(22)) {
+        --peers-per-row: 9;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(25)) {
+        --peers-per-row: 10;
+    }
+}
+
+@media screen and (min-height: 649px) and (max-width: 425px),
+screen and (min-height: 631px) and (min-width: 426px) {
+    x-peers:has(> x-peer) {
+        --peers-per-row: 3;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(10)) {
+        --peers-per-row: 4;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(13)) {
+        --peers-per-row: 5;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(16)) {
+        --peers-per-row: 6;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(19)) {
+        --peers-per-row: 7;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(22)) {
+        --peers-per-row: 8;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(25)) {
+        --peers-per-row: 9;
+    }
+
+    x-peers:has(> x-peer:nth-of-type(28)) {
+        --peers-per-row: 10;
+    }
+}
+
+/* Peer */
+
+x-peer {
+    padding: 8px;
+    align-content: start;
+    flex-wrap: wrap;
+}
+
+x-peer input[type="file"] {
+    visibility: hidden;
+    position: absolute;
+}
+
+x-peer label {
+    width: var(--peer-width);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    position: relative;
+}
+
+x-peer x-icon {
+    --icon-size: 40px;
+    margin-bottom: 4px;
+    transition: transform 150ms;
+    will-change: transform;
+    display: flex;
+    flex-direction: column;
+}
+
+x-peer .icon-wrapper {
+    width: var(--icon-size);
+    padding: 12px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    background-image: linear-gradient(45deg, var(--accent-color) 40%, color-mix(in srgb, var(--accent-color) 70%, white) 100%);
+    color: white;
+    display: flex;
+}
+
+x-peer.type-secret .icon-wrapper {
+    --accent-color: var(--paired-device-color);
+}
+
+x-peer:not(.type-ip):not(.type-secret).type-public-id .icon-wrapper {
+    --accent-color: var(--public-room-color);
+}
+
+.highlight-wrapper {
+    align-self: center;
+    align-items: center;
+    margin: 7px auto 0;
+    height: 6px;
+}
+
+.highlight {
+    width: 15px;
+    height: 6px;
+    border-radius: 4px;
+    margin-left: 1px;
+    margin-right: 1px;
+    --highlight-color: var(--badge-color);
+    background-color: var(--highlight-color);
+    background-image: linear-gradient(180deg, var(--highlight-color) 0%, color-mix(in srgb, var(--highlight-color) 90%, black));
+}
+
+.highlight-room-ip {
+    --highlight-color: var(--primary-color);
+}
+
+.highlight-room-secret {
+    --highlight-color: var(--paired-device-color);
+}
+
+.highlight-room-public-id {
+    --highlight-color: var(--public-room-color);
+}
+
+x-peer:not(.type-ip) .highlight-room-ip {
+    display: none;
+}
+
+x-peer:not(.type-secret) .highlight-room-secret {
+    display: none;
+}
+
+x-peer:not(.type-public-id) .highlight-room-public-id {
+    display: none;
+}
+
+x-peer:not([status]):hover x-icon,
+x-peer:not([status]):focus x-icon {
+    transform: scale(1.05);
+}
+
+x-peer[status] x-icon {
+    box-shadow: none;
+    opacity: 0.8;
+    transform: scale(1);
+}
+
+x-peer.ws-peer {
+    margin-top: -1.5px;
+}
+
+x-peer.ws-peer .progress {
+    margin-top: 3px;
+}
+
+x-peer.ws-peer .icon-wrapper{
+    border: solid 3px var(--ws-peer-color);
+}
+
+x-peer.ws-peer .highlight-wrapper {
+    margin-top: 3px;
+}
+
+#websocket-fallback {
+    opacity: 0.5;
+}
+
+#websocket-fallback > span:nth-of-type(2) {
+    border-bottom: solid 2px var(--ws-peer-color);
+}
+
+.device-descriptor {
+    width: 100%;
+    text-align: center;
+}
+
+.device-descriptor > div {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+}
+
+.status,
+.device-name {
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+x-peer:not([status]) .status,
+x-peer[status] .device-name {
+    display: none;
+}
+
+x-peer[status] {
+    pointer-events: none;
+}
+
+x-peer x-icon {
+    animation: pop 600ms ease-out 1;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0.7);
+    }
+
+    40% {
+        transform: scale(1.2);
+    }
+}
+
+x-peer[drop] x-icon {
+    transform: scale(1.1);
+}
+
+/* Checkboxes as slider */
+
+.switch {
+    display: inline-block;
+    height: 20px;
+    position: relative;
+    width: 30px;
+}
+
+.switch input {
+    display:none;
+}
+
+.slider {
+    background-color: rgba(128, 128, 128, 0.5);
+    cursor: pointer;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    position: absolute;
+    transition: .4s;
+}
+
+.slider:before {
+    background-color: #fff;
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(10px);
+}
+
+.slider.round {
+    border-radius: 20px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Dialog */
+
+x-dialog x-background {
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 30;
+    transition: opacity 300ms;
+    will-change: opacity;
+    padding: 10px 5px 20px;
+    overflow: scroll
+}
+
+x-dialog x-paper {
+    position: relative;
+    display: flex;
+    margin: auto;
+    flex-direction: column;
+    width: 100%;
+    max-width: 450px;
+    z-index: 3;
+    border-radius: 30px;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition: transform 300ms;
+    will-change: transform;
+}
+
+x-paper > .row:first-of-type {
+    background-color: var(--accent-color);
+    margin-bottom: 5px;
+}
+
+x-paper .dialog-title {
+    color: white;
+}
+
+#pair-device-dialog,
+#edit-paired-devices-dialog {
+    --accent-color: var(--paired-device-color);
+}
+
+#public-room-dialog {
+    --accent-color: var(--public-room-color);
+}
+
+#pair-device-dialog ::-moz-selection,
+#pair-device-dialog ::selection {
+    color: black;
+    background: var(--paired-device-color);
+}
+
+#public-room-dialog ::-moz-selection,
+#public-room-dialog ::selection {
+    color: black;
+    background: var(--public-room-color);
+}
+
+x-dialog:not([show]) {
+    pointer-events: none;
+}
+
+x-dialog:not([show]) x-paper {
+    transform: scale(0.1);
+}
+
+/* Pair Devices Dialog & Public Room Dialog */
+
+.input-key-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.input-key-container > input {
+    width: 45px;
+    height: 45px;
+    font-size: 30px;
+    padding: 0;
+    text-align: center;
+    text-transform: uppercase;
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: -moz-flex !important;
+    display: -ms-flexbox !important;
+    display: flex !important;
+    -webkit-justify-content: center;
+    -ms-justify-content: center;
+    justify-content: center;
+}
+
+.input-key-container > input {
+    margin: 0 3px;
+}
+
+.input-key-container.six-chars > input:nth-of-type(4) {
+    margin-left: 5%;
+}
+
+.key {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+    display: inline-block;
+    font-size: 45px;
+    letter-spacing: 18px;
+    text-indent: 15px;
+    margin: 10px 0;
+}
+
+.key-qr-code {
+    width: fit-content;
+    align-self: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.key-instructions {
+    flex-direction: column;
+    margin: 0;
+}
+
+x-dialog h2 {
+    margin-top: 5px;
+    margin-bottom: 0;
+}
+
+x-dialog hr {
+    height: 1px;
+    border: none;
+    width: 100%;
+    background-color: var(--border-color);
+}
+
+.hr-note {
+    margin-top: 13px;
+    margin-bottom: 21px;
+}
+
+.hr-note hr {
+    margin-bottom: -1px;
+}
+
+.hr-note > div {
+    height: 0;
+    transform: translateY(-10px);
+}
+
+
+.hr-note > div > span {
+    padding: 3px 10px;
+    border-radius: 20px;
+    color: rgb(var(--text-color));
+    background-color: var(--dialog-bg-color);
+    border: var(--border-color) solid 3px;
+    text-transform: uppercase;
+}
+
+/* Edit Paired Devices Dialog */
+.paired-devices-wrapper:empty:before {
+    content: attr(data-empty);
+}
+
+.paired-devices-wrapper:empty {
+    padding: 10px;
+}
+
+.paired-devices-wrapper {
+    margin-top: -5px;
+    border-bottom: solid 4px var(--paired-device-color);
+    max-height: 65vh;
+    overflow: scroll;
+}
+
+.paired-device {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    align-items: center;
+}
+
+.paired-device:empty {
+    padding: 47px;
+}
+
+.paired-device:not(:last-child) {
+    border-bottom: solid 4px var(--paired-device-color);
+}
+
+.paired-device > .display-name,
+.paired-device > .device-name {
+    width: 100%;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    align-self: center;
+    border-bottom: solid 2px rgba(128, 128, 128, 0.5);
+    opacity: 1;
+}
+
+.paired-device > .button-wrapper > * {
+    min-height: 38px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.paired-device > .button-wrapper > :not(:last-child) {
+    border-right: solid 1px rgba(128, 128, 128, 0.5);
+}
+
+.paired-device > .button-wrapper > :not(:first-child) {
+    border-left: solid 1px rgba(128, 128, 128, 0.5);
+}
+
+.paired-device * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* button row*/
+.btn-row .btn {
+    margin: 3px;
+    flex-grow: 1;
+    height: 50px;
+    width: 120px; /* fixed width needed to ensure same width for all buttons */
+}
+
+x-paper > .btn-row {
+    margin: 5px 10px 10px;
+}
+
+.language-buttons > .btn {
+    border-top: solid var(--lang-hr-color) 2px;
+    padding: 7px;
+    font-size: 12px;
+}
+
+.language-buttons > .btn:last-of-type {
+    border-bottom: solid var(--lang-hr-color) 2px;
+}
+
+/* Ensure click event target is always button and never span */
+.language-buttons span {
+    z-index: -1;
+}
+
+.language-buttons > .current:after {
+    position: absolute;
+    right: 20px;
+    content: "✓";
+    color: var(--primary-color);
+    font-size: 20px;
+}
+
+.file-description {
+    max-width: 100%;
+}
+
+.file-description span {
+    display: inline;
+    word-break: normal;
+}
+
+.file-name {
+    font-style: italic;
+    max-width: 100%;
+    margin-top: 5px;
+}
+
+.file-stem {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 1px;
+}
+
+/* Send Text Dialog */
+x-dialog .dialog-subheader {
+    padding-top: 16px;
+    padding-bottom: 16px;
+}
+
+.display-name-wrapper {
+    padding-bottom: 0;
+}
+
+#send-text-dialog,
+#receive-text-dialog {
+    font-size: 16px; /* prevents auto-zoom on edit */
+}
+
+.textarea.overflowing {
+    --shadow-color-rgb: var(--shadow-color-secondary-rgb);
+    --shadow-color-cover-rgb: var(--shadow-color-secondary-cover-rgb);
+}
+
+#edit-paired-devices-dialog {
+    --shadow-color-rgb: var(--shadow-color-dialog-rgb);
+    --shadow-color-cover-rgb: var(--shadow-color-dialog-cover-rgb);
+}
+
+/* Receive Text Dialog */
+
+#receive-text-dialog #text {
+    word-break: break-all;
+    max-height: 400px;
+    padding: 10px;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+}
+
+#receive-text-dialog #text a:hover {
+    text-decoration: underline;
+}
+
+#receive-text-dialog h3 {
+    /* Select the received text when double-clicking the dialog */
+    user-select: none;
+    pointer-events: none;
+}
+
+/* Do not call it 'share-panel', 'share-pannel' or 'sharepanel' as iOS Safari does not show any element with these classnames... */
+
+.shr-panel {
+    min-width: 250px;
+    max-width: calc(100vw - 20px);
+    overflow: hidden;
+    color: white;
+    background-color: var(--primary-color);
+    background-image: linear-gradient(225deg, var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 60%, black) 100%);
+}
+
+.shr-panel > div {
+    margin: 4px 2px;
+}
+
+.shr-panel > div:not(:first-child) {
+    margin-top: 2px;
+}
+
+.shr-panel .thumb > div {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border-radius: 6px;
+    margin-right: 6px;
+}
+
+.shr-panel .thumb > .text-thumb > svg {
+    width: 18px;
+    height: 36px;
+}
+
+.shr-panel .thumb > .file-thumb > svg {
+    width: 36px;
+    height: 36px;
+}
+
+.shr-panel .thumb > .image-thumb {
+    background-size: cover;
+    background-position: center;
+}
+
+.shr-panel .btn {
+    height: 36px;
+}
+
+.share-descriptor {
+    justify-content: center;
+}
+
+.share-descriptor > span {
+    display: inline;
+    margin-bottom: 0;
+    margin-top: 0;
+    height: 20px;
+    max-width: 15rem;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.share-descriptor > span:first-child {
+    font-weight: bold;
+}
+
+.share-descriptor > span:not(:first-child) {
+    font-size: small;
+}
+
+#base64-paste-btn,
+#base64-paste-dialog .textarea {
+    width: 100%;
+    height: 40vh;
+    border: solid 12px #438cff;
+    margin: 6px;
+}
+
+#base64-paste-dialog .textarea {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#base64-paste-dialog .textarea::before {
+    font-size: 14px;
+    letter-spacing: 0.12em;
+    color: var(--primary-color);
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: pre-wrap;
+}
+
+/* Peer loading Indicator */
+
+.progress {
+    width: 80px;
+    height: 80px;
+    position: absolute;
+    top: -8px;
+    clip: rect(0px, 80px, 80px, 40px);
+    --progress: rotate(0deg);
+    transition: transform 200ms;
+}
+
+.circle {
+    width: 72px;
+    height: 72px;
+    border: 4px solid var(--primary-color);
+    border-radius: 40px;
+    position: absolute;
+    clip: rect(0px, 40px, 80px, 0px);
+    will-change: transform;
+    transform: var(--progress);
+}
+
+.over50 {
+    clip: rect(auto, auto, auto, auto);
+}
+
+.over50 .circle.right {
+    transform: rotate(180deg);
+}
+
+/*
+    Color Themes
+*/
+
+/* Colored Elements */
+
+x-dialog x-paper {
+    background-color: var(--dialog-bg-color);
+}
+
+.textarea {
+    color: rgb(var(--text-color)) !important;
+    background-color: var(--bg-color-secondary) !important;
+}
+
+.textarea *:not(a) {
+    margin: 0 !important;
+    padding: 0 !important;
+    color: unset !important;
+    background: unset !important;
+    border: unset !important;
+    opacity: unset !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+    font-style: unset !important;
+    font-weight: unset !important;
+}
+
+x-dialog a {
+    color: var(--primary-color);
+}
+
+/* Image/Video/Audio Preview */
+.file-preview {
+    margin-bottom: 15px;
+}
+
+.file-preview:empty {
+    display: none;
+}
+
+.file-preview > img,
+.file-preview > audio,
+.file-preview > video {
+    max-width: 100%;
+    max-height: 40vh;
+    margin: auto;
+    display: block;
+}

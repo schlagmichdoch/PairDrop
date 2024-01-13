@@ -1,12 +1,16 @@
 version: "3"
 services:
-  node:
-    image: "node:lts-alpine"
-    user: "node"
-    working_dir: /home/node/app
-    volumes:
-      - ./:/home/node/app
-    command: ash -c "npm i && npm run start:prod"
+  pairdrop:
+    image: "lscr.io/linuxserver/pairdrop:latest"
+    container_name: pairdrop
     restart: unless-stopped
+    environment:
+      - PUID=1000 # UID to run the application as
+      - PGID=1000 # GID to run the application as
+      - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+      - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
+      - RTC_CONFIG=false # Set to the path of a file that specifies the STUN/TURN servers.
+      - DEBUG_MODE=false # Set to true to debug container and peer connections.
+      - TZ=Etc/UTC # Time Zone
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000" # Web UI. Change the port number before the last colon e.g. `127.0.0.1:9000:3000`

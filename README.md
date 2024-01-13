@@ -67,6 +67,7 @@ Connect to others in complex network situations, or over the Internet.
 * Multiple files are transferred at once with an overall progress indicator.
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
+* [Send files directly from context menu on Ubuntu (using Nautilus)](/docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
 * [Send files directly from the context menu on Windows](docs/how-to.md#send-files-directly-from-context-menu-on-windows)
 * [Send directly from the "Share" menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
 * [Send directly from the "Share" menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
