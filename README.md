@@ -29,7 +29,7 @@ Send a file from your phone to your laptop?
 <br>Share photos in original quality with friends using Android and iOS?
 <br>Share private files peer-to-peer between Linux systems?
 
-<img src="docs/pairdrop_screenshot_mobile.gif" alt="Gif of Screenshots that show PairDrop in use" style="width: 300px">
+<img src="docs/pairdrop_screenshot_mobile.gif" alt="Screenshot GIF showing PairDrop in use" style="width: 300px">
 
 ## Differences to the [Snapdrop](https://github.com/RobinLinus/snapdrop) it is based on
 <details><summary>List view</summary>
