@@ -29,7 +29,7 @@ Send a file from your phone to your laptop?
 <br>Share photos in original quality with friends using Android and iOS?
 <br>Share private files peer-to-peer between Linux systems?
 
-<img src="docs/pairdrop_screenshot_mobile.gif" style="max-height: 50vh">
+<img src="docs/pairdrop_screenshot_mobile.gif" alt="Gif of Screenshots that show PairDrop in use" style="width: 300px">
 
 ## Differences to the [Snapdrop](https://github.com/RobinLinus/snapdrop) it is based on
 <details><summary>List view</summary>
@@ -67,7 +67,7 @@ Connect to others in complex network situations, or over the Internet.
 * Multiple files are transferred at once with an overall progress indicator.
 
 ### Send Files or Text Directly From Share Menu, Context Menu or CLI
-* [Send files directly from context menu on Ubuntu (using Nautilus)](/docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
+* [Send files directly from context menu on Ubuntu (using Nautilus)](docs/how-to.md#send-multiple-files-and-directories-directly-from-context-menu-on-ubuntu-using-nautilus)
 * [Send files directly from the context menu on Windows](docs/how-to.md#send-files-directly-from-context-menu-on-windows)
 * [Send directly from the "Share" menu on iOS](docs/how-to.md#send-directly-from-share-menu-on-ios)
 * [Send directly from the "Share" menu on Android](docs/how-to.md#send-directly-from-share-menu-on-android)
@@ -92,7 +92,7 @@ Connect to others in complex network situations, or over the Internet.
 
 ## Translate PairDrop on [Hosted Weblate](https://hosted.weblate.org/engage/pairdrop/)
 <a href="https://hosted.weblate.org/engage/pairdrop/">
-<img src="https://hosted.weblate.org/widget/pairdrop/horizontal-blue.svg" alt="Translation status" />
+<img src="https://hosted.weblate.org/widget/pairdrop/horizontal-blue.svg" alt="Translation status" style="width: 300px" />
 </a>
 
 ## Built with the following awesome technologies:
@@ -103,6 +103,8 @@ Connect to others in complex network situations, or over the Internet.
 * [IndexedDB API](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API) storage handling
 * [zip.js](https://gildas-lormeau.github.io/zip.js/) library
 * [cyrb53](https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js) super-fast hash function
+* [NoSleep](https://github.com/richtr/NoSleep.js) display sleep, add wake lock ([MIT](licenses/MIT-NoSleep))
+* [heic2any](https://github.com/alexcorvi/heic2any) HEIC/HEIF to PNG/GIF/JPEG ([MIT](licenses/MIT-heic2any))
 * [Weblate](https://weblate.org/) web-based localization tool
 
 [FAQ](docs/faq.md)
