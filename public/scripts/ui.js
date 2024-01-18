@@ -590,10 +590,12 @@ class PeerUI {
     _onFilesSelected(e) {
         const $input = e.target;
         const files = $input.files;
-        Events.fire('files-selected', {
-            files: files,
-            to: this._peer.id
-        });
+        if (files.length > 0) {
+            Events.fire('files-selected', {
+                files: files,
+                to: this._peer.id
+            });
+        }
         $input.files = null; // reset input
     }
 
