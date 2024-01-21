@@ -69,7 +69,9 @@
         "language-selector_title": "Atur Bahasa",
         "about_title": "Tentang PairDrop",
         "about_aria-label": "Buka Tentang PairDrop",
-        "theme-light_title": "Selalu gunakan tema terang"
+        "theme-light_title": "Selalu gunakan tema terang",
+        "edit-share-mode": "Sunting",
+        "expand_title": "Perluas baris tombol header"
     },
     "instructions": {
         "x-instructions_mobile": "Ketuk untuk mengirim file atau ketuk lama untuk mengirim pesan",
@@ -83,7 +85,11 @@
         "no-peers-title": "Buka PairDrop di perangkat lain untuk berkirim file",
         "x-instructions_data-drop-peer": "Lepaskan untuk mengirim ke rekan",
         "x-instructions_data-drop-bg": "Lepaskan untuk memilih penerima",
-        "no-peers_data-drop-bg": "Lepaskan untuk memilih penerima"
+        "no-peers_data-drop-bg": "Lepaskan untuk memilih penerima",
+        "activate-share-mode-and-other-file": "dan 1 file lainnya",
+        "activate-share-mode-shared-file": "file yang dibagikan",
+        "activate-share-mode-shared-files-plural": "{{count}} file yang dibagikan",
+        "webrtc-requirement": "Untuk menggunakan instance PairDrop ini, WebRTC harus diaktifkan!"
     },
     "peer-ui": {
         "processing": "Memproses…",
@@ -111,7 +117,7 @@
         "join": "Gabung",
         "title-image-plural": "Gambar",
         "send": "Kirim",
-        "base64-tap-to-paste": "Ketuk di sini untuk menempelkan {{type}}",
+        "base64-tap-to-paste": "Ketuk di sini untuk membagikan{{type}}",
         "base64-text": "teks",
         "copy": "Salin",
         "file-other-description-image": "dan 1 gambar lainnya",
@@ -125,7 +131,7 @@
         "title-image": "Gambar",
         "file-other-description-file-plural": "dan {{count}} file lainnya",
         "would-like-to-share": "ingin berbagi",
-        "send-message-to": "Kirim pesan ke",
+        "send-message-to": "Ke:",
         "language-selector-title": "Pilih Bahasa",
         "pair": "Pasangkan",
         "hr-or": "ATAU",
@@ -144,7 +150,11 @@
         "enter-room-id-from-another-device": "Masukkan room ID dari perangkat lain untuk bergabung dengan room.",
         "message_title": "Masukkan pesan untuk dikirim",
         "pair-devices-qr-code_title": "Klik untuk menyalin tautan untuk memasangkan perangkat ini",
-        "public-room-qr-code_title": "Klik untuk menyalin tautan ke ruang publik"
+        "public-room-qr-code_title": "Klik untuk menyalin tautan ke ruang publik",
+        "base64-title-files": "Bagikan File",
+        "base64-title-text": "Bagikan Teks",
+        "message_placeholder": "Teks",
+        "paired-device-removed": "Perangkat yang dipasangkan telah dihapus."
     },
     "about": {
         "claim": "Cara termudah untuk mentransfer file lintas perangkat",

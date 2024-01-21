@@ -69,7 +69,9 @@
         "language-selector_title": "言語を設定",
         "about_title": "PairDropについて",
         "about_aria-label": "PairDropについてを開く",
-        "theme-light_title": "常にライトテーマを使用する"
+        "theme-light_title": "常にライトテーマを使用する",
+        "edit-share-mode": "編集",
+        "expand_title": "ヘッダーボタン列を拡大する"
     },
     "instructions": {
         "x-instructions_mobile": "タップしてファイルを送信または長押ししてメッセージを送信します",
@@ -83,7 +85,11 @@
         "no-peers-title": "他のデバイスでPairDropを開いてファイルを送信します",
         "x-instructions_data-drop-peer": "離すとこの相手に送信します",
         "x-instructions_data-drop-bg": "送信したい相手の上で離してください",
-        "no-peers_data-drop-bg": "送信したい相手の上で離してください"
+        "no-peers_data-drop-bg": "送信したい相手の上で離してください",
+        "activate-share-mode-and-other-file": "もう1つの別のファイル",
+        "activate-share-mode-shared-file": "共有されたファイル",
+        "activate-share-mode-shared-files-plural": "{{count}}個の共有されたファイル",
+        "webrtc-requirement": "このPairDropインスタンスを使用するには、WebRTCを有効にする必要があります！"
     },
     "peer-ui": {
         "processing": "処理中…",
@@ -144,7 +150,16 @@
         "enter-room-id-from-another-device": "他のデバイスに表示された参加したいルームのIDを入力します。",
         "message_title": "送信するメッセージを挿入",
         "pair-devices-qr-code_title": "クリックしてこのデバイスをペア設定するリンクをコピー",
-        "public-room-qr-code_title": "クリックしてパブリックルームへのリンクをコピー"
+        "public-room-qr-code_title": "クリックしてパブリックルームへのリンクをコピー",
+        "paired-device-removed": "ペア設定されたデバイスが削除されました。",
+        "message_placeholder": "テキスト",
+        "base64-title-files": "共有されたファイル",
+        "base64-title-text": "テキストを共有",
+        "approve": "承諾",
+        "share-text-subtitle": "送信する前にメッセージを編集する:",
+        "share-text-checkbox": "テキストを共有するときに常にこのダイアログを表示する",
+        "close-toast_title": "通知を閉じる",
+        "share-text-title": "テキストメッセージを共有します"
     },
     "about": {
         "claim": "デバイス間でファイルを転送する最も簡単な方法",
@@ -152,7 +167,11 @@
         "close-about_aria-label": "PairDropについてを閉じる",
         "buy-me-a-coffee_title": "コーヒーをおごってください！",
         "github_title": "GitHubでPairDropを見る",
-        "faq_title": "FAQ"
+        "faq_title": "FAQ",
+        "mastodon_title": "MastodonにPairDropについて書く",
+        "bluesky_title": "BlueSkyでフォロー",
+        "custom_title": "フォロー",
+        "privacypolicy_title": "プライバシーポリシーを開く"
     },
     "document-titles": {
         "file-transfer-requested": "ファイルの転送がリクエストされました",

@@ -12,7 +12,8 @@
         "cancel-share-mode": "Bitti",
         "join-public-room_title": "Geçici olarak genel odaya katılın",
         "language-selector_title": "Dili Seç",
-        "edit-share-mode": "Düzenle"
+        "edit-share-mode": "Düzenle",
+        "expand_title": "Başlık düğmesi satırını genişlet"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Alıcıyı seçmek için bırakın",
@@ -166,7 +167,11 @@
         "close-about_aria-label": "PairDrop Hakkında'yı Kapat",
         "buy-me-a-coffee_title": "Bana bir kahve al!",
         "github_title": "GitHub'da PairDrop",
-        "faq_title": "Sıkça sorulan sorular"
+        "faq_title": "Sıkça sorulan sorular",
+        "custom_title": "Bizi takip edin",
+        "privacypolicy_title": "Gizlilik politikamızı açın",
+        "mastodon_title": "Mastodon'da PairDrop hakkında yazın",
+        "bluesky_title": "Bizi BlueSky'da takip edin"
     },
     "document-titles": {
         "file-transfer-requested": "Dosya Transferi Talep Edildi",
