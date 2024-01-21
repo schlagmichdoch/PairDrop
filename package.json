@@ -1,6 +1,6 @@
 {
   "name": "pairdrop",
-  "version": "1.10.1",
+  "version": "1.10.5",
   "type": "module",
   "description": "",
   "main": "server/index.js",
@@ -15,7 +15,7 @@
     "express-rate-limit": "^7.1.5",
     "ua-parser-js": "^1.0.37",
     "unique-names-generator": "^4.3.0",
-    "ws": "^8.15.0"
+    "ws": "^8.16.0"
   },
   "engines": {
     "node": ">=15"

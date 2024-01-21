@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.10.1';
+const cacheVersion = 'v1.10.5';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
 const relativePathsToCache = [
@@ -193,7 +193,7 @@ const evaluateRequestData = function (request) {
 
                     const objectStoreRequest = objectStore.add(fileObjects[i]);
                     objectStoreRequest.onsuccess = _ => {
-                        if (i === fileObjects.length - 1) resolve(pairDropUrl + '?share-target=files');
+                        if (i === fileObjects.length - 1) resolve(pairDropUrl + '?share_target=files');
                     }
                 }
             }
@@ -202,7 +202,7 @@ const evaluateRequestData = function (request) {
             }
         }
         else {
-            let urlArgument = '?share-target=text';
+            let urlArgument = '?share_target=text';
 
             if (title) urlArgument += `&title=${title}`;
             if (text) urlArgument += `&text=${text}`;
