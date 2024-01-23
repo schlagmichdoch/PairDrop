@@ -62,6 +62,10 @@ html {
     justify-content: center;
 }
 
+#center {
+    scrollbar-width: none;
+}
+
 .grow {
     flex-grow: 1;
 }
