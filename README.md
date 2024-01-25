@@ -128,6 +128,14 @@ Thanks a lot for supporting free and open software!
 <img src="https://hosted.weblate.org/widget/pairdrop/pairdrop-spa/open-graph.png" alt="Translation status" style="width: 300px" />
 </a>
 
+## Related Projects
+
+Thanks for the great work of <a href="https://github.com/RobinLinus/snapdrop" target="_blank">Snapdrop</a> from which Pairdrop was forked
+
+Theres also a great App <a href="https://github.com/fm-sys/snapdrop-android" target="_blank">Pairdrop / Snapdrop for Android</a>
+
+And a nice Web Extension <a href="https://github.com/ueen/PairdropWebExtension" target="_blank">Pairdrop Web Extension</a>
+
 ## How to contribute
 
 Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a
