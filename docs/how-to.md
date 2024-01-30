@@ -125,7 +125,7 @@ It is possible to send multiple files with PairDrop via the context menu by addi
    ```
 3. Make the shell file _send-with-pairdrop_ executable
    ```shell
-   chmod +x ~/.local/share/nautilus/scripts/send-with-pairdrop`
+   chmod +x ~/.local/share/nautilus/scripts/send-with-pairdrop
    ```
 4. You are done! You can now send multiple files and directories directly via PairDrop:
 
