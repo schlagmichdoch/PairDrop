@@ -2021,8 +2021,8 @@ class ReceiveTextDialog extends Dialog {
         if (text.length < 2000) {
             // replace URLs with actual links
             this.$text.innerHTML = this.$text.innerHTML
-                .replace(/(^|(?<=(<br>|\s)))(https?:\/\/|www.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%]){2,}\.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%.]){2,})/g,
-                (url) => {
+                .replace(/(^|<br>|\s|")((https?:\/\/|www.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%]){2,}\.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%.]){2,}))/g,
+                (match, whitespace, url) => {
                         let link = url;
 
                         // prefix www.example.com with http protocol to prevent it from being a relative link
@@ -2030,7 +2030,13 @@ class ReceiveTextDialog extends Dialog {
                             link = "http://" + link
                         }
 
-                        return `<a href="${link}" target="_blank">${url}</a>`;
+                        // Check if link is valid
+                        if (isUrlValid(link)) {
+                            return `${whitespace}<a href="${link}" target="_blank">${url}</a>`;
+                        }
+                        else {
+                            return match;
+                        }
                 });
         }
 

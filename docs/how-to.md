@@ -45,11 +45,11 @@ This pairdrop-cli version was released alongside v1.10.4
 #### Linux / Mac
 1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
    ```shell
-   wget "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.5/pairdrop-cli.zip"
+   wget "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.6/pairdrop-cli.zip"
    ```
    or
    ```shell
-   curl -LO "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.5/pairdrop-cli.zip"
+   curl -LO "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.6/pairdrop-cli.zip"
    ```
 2. Unzip the archive to a folder of your choice e.g. `/usr/share/pairdrop-cli/`
    ```shell
@@ -125,7 +125,7 @@ It is possible to send multiple files with PairDrop via the context menu by addi
    ```
 3. Make the shell file _send-with-pairdrop_ executable
    ```shell
-   chmod +x ~/.local/share/nautilus/scripts/send-with-pairdrop`
+   chmod +x ~/.local/share/nautilus/scripts/send-with-pairdrop
    ```
 4. You are done! You can now send multiple files and directories directly via PairDrop:
 

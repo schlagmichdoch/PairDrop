@@ -584,3 +584,13 @@ async function decodeBase64Text(base64) {
 
     return decodeURIComponent(escape(window.atob(base64)))
 }
+
+function isUrlValid(url) {
+    try {
+        let urlObj = new URL(url);
+        return true;
+    }
+    catch (e) {
+        return false;
+    }
+}
