@@ -41,7 +41,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@31cebacef4805868f9ce9a0cb03ee36c32df2ac4 # v5.3.0
         with:
-          images: ${{ env.DOCKERHUB_REPO }}/${{ env.APP_NAME }}
+          images: ${{ env.DOCKERHUB_REPO }}
       # 构建 Docker 并推送到 Docker hub
       - name: Build and push
         id: docker_build
