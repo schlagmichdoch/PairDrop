@@ -255,15 +255,15 @@ class PersistentStorage {
         })
     }
 
-    static updateRoomSecretNames(roomSecret, displayName, deviceName) {
-        return this.updateRoomSecret(roomSecret, undefined, displayName, deviceName);
+    static updateRoomSecretDisplayName(roomSecret, displayName) {
+        return this.updateRoomSecret(roomSecret, null, displayName, null);
     }
 
     static updateRoomSecretAutoAccept(roomSecret, autoAccept) {
-        return this.updateRoomSecret(roomSecret, undefined, undefined, undefined, autoAccept);
+        return this.updateRoomSecret(roomSecret, null, null, null, autoAccept);
     }
 
-    static updateRoomSecret(roomSecret, updatedRoomSecret = undefined, updatedDisplayName = undefined, updatedDeviceName = undefined, updatedAutoAccept = undefined) {
+    static updateRoomSecret(roomSecret, updatedRoomSecret = null, updatedDisplayName = null, updatedDeviceName = null, updatedAutoAccept = null) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = e => {
@@ -278,10 +278,10 @@ class PersistentStorage {
                         const objectStore = transaction.objectStore('room_secrets');
                         // Do not use `updatedRoomSecret ?? roomSecretEntry.entry.secret` to ensure compatibility with older browsers
                         const updatedRoomSecretEntry = {
-                            'secret': updatedRoomSecret !== undefined ? updatedRoomSecret : roomSecretEntry.entry.secret,
-                            'display_name': updatedDisplayName !== undefined ? updatedDisplayName : roomSecretEntry.entry.display_name,
-                            'device_name': updatedDeviceName !== undefined ? updatedDeviceName : roomSecretEntry.entry.device_name,
-                            'auto_accept': updatedAutoAccept !== undefined ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
+                            'secret': updatedRoomSecret !== null ? updatedRoomSecret : roomSecretEntry.entry.secret,
+                            'display_name': updatedDisplayName !== null ? updatedDisplayName : roomSecretEntry.entry.display_name,
+                            'device_name': updatedDeviceName !== null ? updatedDeviceName : roomSecretEntry.entry.device_name,
+                            'auto_accept': updatedAutoAccept !== null ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
                         };
 
                         const objectStoreRequestUpdate = objectStore.put(updatedRoomSecretEntry, roomSecretEntry.key);

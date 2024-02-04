@@ -350,7 +350,7 @@ class Peer {
     // Is overwritten in expanding classes
     _send(message) {}
 
-    sendDisplayName(displayName) {
+    _sendDisplayName(displayName) {
         this.sendJSON({type: 'display-name-changed', displayName: displayName});
     }
 
@@ -756,15 +756,23 @@ class Peer {
     }
 
     _onDisplayNameChanged(message) {
-        const displayNameHasChanged = this._displayName !== message.displayName
+        const displayNameHasChanged = message.displayName !== this._displayName;
 
-        if (message.displayName && displayNameHasChanged) {
-            this._displayName = message.displayName;
+        if (!message.displayName || !displayNameHasChanged) return;
+
+        this._displayName = message.displayName;
+
+        const roomSecret = this._getPairSecret();
+
+        if (roomSecret) {
+            PersistentStorage
+                .updateRoomSecretDisplayName(roomSecret, message.displayName)
+                .then(roomSecretEntry => {
+                    console.log(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
+                })
         }
 
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
-
-        if (!displayNameHasChanged) return;
         Events.fire('notify-peer-display-name-changed', this._peerId);
     }
 }
@@ -985,7 +993,7 @@ class RTCPeer extends Peer {
                 await this._handleRemoteCandidate(message.candidate);
                 break;
             default:
-                console.warn(this.name, 'Unknown message type:', message.type);
+                console.warn('Unknown signalType:', message.signalType);
                 break;
         }
     }
@@ -1060,8 +1068,8 @@ class RTCPeer extends Peer {
         this._server.send(message);
     }
 
-    sendDisplayName(displayName) {
-        super.sendDisplayName(displayName);
+    _sendDisplayName(displayName) {
+        super._sendDisplayName(displayName);
     }
 
     getConnectionHash() {
@@ -1403,7 +1411,7 @@ class PeersManager {
     _notifyPeerDisplayNameChanged(peerId) {
         const peer = this.peers[peerId];
         if (!peer) return;
-        this.peers[peerId].sendDisplayName(this._displayName);
+        this.peers[peerId]._sendDisplayName(this._displayName);
     }
 
     _onDisplayName(displayName) {

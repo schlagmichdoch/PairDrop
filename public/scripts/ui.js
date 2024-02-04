@@ -43,7 +43,7 @@ class PeersUI {
         Events.on('activate-share-mode', e => this._activateShareMode(e.detail.files, e.detail.text));
         Events.on('translation-loaded', _ => this._reloadShareMode());
         Events.on('room-type-removed', e => this._onRoomTypeRemoved(e.detail.peerId, e.detail.roomType));
-
+        Events.on('room-secret-added', e => this._onRoomSecretAdded(e.detail.peerId, e.detail.roomSecret));
 
         this.$shareModeCancelBtn.addEventListener('click', _ => this._deactivateShareMode());
 
@@ -166,6 +166,23 @@ class PeersUI {
         if (!peerUI) return;
 
         peerUI._removeRoomId(roomType);
+    }
+
+
+    _onRoomSecretAdded(peerId, roomSecret) {
+        // If a device is paired that is already connected we must update the displayName saved for the roomSecret
+        // here as the "display-name-changed" message has already been received
+        const peerUI = this.peerUIs[peerId];
+
+        if (!peerUI || !peerUI._connected) return;
+
+        const displayName = peerUI._displayName();
+
+        PersistentStorage
+            .updateRoomSecretDisplayName(roomSecret, displayName)
+            .then(roomSecretEntry => {
+                console.log(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
+            })
     }
 
     _onSetProgress(progress) {
@@ -1530,13 +1547,8 @@ class PairDeviceDialog extends Dialog {
     }
 
     _onPairPeerJoined(peer, roomSecret) {
-        // if devices are paired that are already connected we must save the names at this point
-        const $peer = $(peer.id);
-        let displayName, deviceName;
-        if ($peer) {
-            displayName = $peer.ui._peer.name.displayName;
-            deviceName = $peer.ui._peer.name.deviceName;
-        }
+        const displayName = peer.name.displayName;
+        const deviceName = peer.name.deviceName;
 
         PersistentStorage
             .addRoomSecret(roomSecret, displayName, deviceName)
@@ -1552,6 +1564,7 @@ class PairDeviceDialog extends Dialog {
                 Events.fire('notify-user', Localization.getTranslation("notifications.pairing-not-persistent"));
                 PersistentStorage.logBrowserNotCapable();
             });
+        Events.fire('room-secret-added', {peerId: peer.id, roomSecret: roomSecret})
     }
 
     _onPublicRoomJoinKeyInvalid() {
