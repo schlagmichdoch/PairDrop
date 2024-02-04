@@ -16,7 +16,7 @@ class PeersUI {
         this.$shareModeCancelBtn = $$('.shr-panel .cancel-btn');
         this.$shareModeEditBtn = $$('.shr-panel .edit-btn');
 
-        this.peers = {};
+        this.peerUIs = {};
 
         this.shareMode = {};
         this.shareMode.active = false;
@@ -24,9 +24,9 @@ class PeersUI {
         this.shareMode.files = [];
         this.shareMode.text = "";
 
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
-        Events.on('peer-added', _ => this._evaluateOverflowingPeers());
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail.peer, e.detail.roomType, e.detail.roomId));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
+        Events.on('peer-connecting', e => this._onPeerConnecting(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
         Events.on('set-progress', e => this._onSetProgress(e.detail));
@@ -47,17 +47,17 @@ class PeersUI {
 
         this.$shareModeCancelBtn.addEventListener('click', _ => this._deactivateShareMode());
 
-        Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
+        Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e.detail.peerId, e.detail.displayName));
 
         Events.on('ws-config', e => this._evaluateRtcSupport(e.detail))
     }
 
     _evaluateRtcSupport(wsConfig) {
         if (wsConfig.wsFallback) {
-            this.$wsFallbackWarning.hidden = false;
+            this.$wsFallbackWarning.removeAttribute("hidden");
         }
         else {
-            this.$wsFallbackWarning.hidden = true;
+            this.$wsFallbackWarning.setAttribute("hidden", true);
             if (!window.isRtcSupported) {
                 alert(Localization.getTranslation("instructions.webrtc-requirement"));
             }
@@ -65,15 +65,17 @@ class PeersUI {
     }
 
     _changePeerDisplayName(peerId, displayName) {
-        this.peers[peerId].name.displayName = displayName;
-        const peerIdNode = $(peerId);
-        if (peerIdNode && displayName) peerIdNode.querySelector('.name').textContent = displayName;
-        this._redrawPeerRoomTypes(peerId);
+        const peerUI = this.peerUIs[peerId];
+
+        if (!peerUI) return;
+
+        peerUI._setDisplayName(displayName);
     }
 
-    _onPeerDisplayNameChanged(e) {
-        if (!e.detail.displayName) return;
-        this._changePeerDisplayName(e.detail.peerId, e.detail.displayName);
+    _onPeerDisplayNameChanged(peerId, displayName) {
+        if (!peerId || !displayName) return;
+
+        this._changePeerDisplayName(peerId, displayName);
     }
 
     async _onKeyDown(e) {
@@ -89,50 +91,48 @@ class PeersUI {
         }
     }
 
-    _onPeerJoined(msg) {
-        this._joinPeer(msg.peer, msg.roomType, msg.roomId);
+    _onPeerJoined(peer, roomType, roomId) {
+        this._joinPeer(peer, roomType, roomId);
     }
 
     _joinPeer(peer, roomType, roomId) {
-        const existingPeer = this.peers[peer.id];
-        if (existingPeer) {
-            // peer already exists. Abort but add roomType to GUI
-            existingPeer._roomIds[roomType] = roomId;
-            this._redrawPeerRoomTypes(peer.id);
+        const existingPeerUI = this.peerUIs[peer.id];
+        if (existingPeerUI) {
+            // peerUI already exists. Abort but add roomType to GUI
+            existingPeerUI._addRoomId(roomType, roomId);
             return;
         }
 
-        peer._isSameBrowser = () => BrowserTabsConnector.peerIsSameBrowser(peer.id);
-        peer._roomIds = {};
-
-        peer._roomIds[roomType] = roomId;
-        this.peers[peer.id] = peer;
-    }
-
-    _onPeerConnected(peerId, connectionHash) {
-        if (!this.peers[peerId] || $(peerId)) return;
-
-        const peer = this.peers[peerId];
-
-        new PeerUI(peer, connectionHash, {
+        const peerUI = new PeerUI(peer, roomType, roomId, {
             active: this.shareMode.active,
             descriptor: this.shareMode.descriptor,
         });
+        this.peerUIs[peer.id] = peerUI;
     }
 
-    _redrawPeerRoomTypes(peerId) {
-        const peer = this.peers[peerId];
-        const peerNode = $(peerId);
+    _onPeerConnected(peerId, connectionHash) {
+        const peerUI = this.peerUIs[peerId];
 
-        if (!peer || !peerNode) return;
+        if (!peerUI) return;
 
-        peerNode.classList.remove('type-ip', 'type-secret', 'type-public-id', 'type-same-browser');
+        peerUI._peerConnected(true, connectionHash);
 
-        if (peer._isSameBrowser()) {
-            peerNode.classList.add(`type-same-browser`);
-        }
+        this._addPeerUIIfMissing(peerUI);
+    }
 
-        Object.keys(peer._roomIds).forEach(roomType => peerNode.classList.add(`type-${roomType}`));
+    _addPeerUIIfMissing(peerUI) {
+        if (this.$xPeers.contains(peerUI.$el)) return;
+
+        this.$xPeers.appendChild(peerUI.$el);
+        this._evaluateOverflowingPeers();
+    }
+
+    _onPeerConnecting(peerId) {
+        const peerUI = this.peerUIs[peerId];
+
+        if (!peerUI) return;
+
+        peerUI._peerConnected(false);
     }
 
     _evaluateOverflowingPeers() {
@@ -149,26 +149,31 @@ class PeersUI {
     }
 
     _onPeerDisconnected(peerId) {
-        const $peer = $(peerId);
-        if (!$peer) return;
-        $peer.remove();
+        const peerUI = this.peerUIs[peerId];
+
+        if (!peerUI) return;
+
+        peerUI._removeDom();
+
+        delete this.peerUIs[peerId];
+
         this._evaluateOverflowingPeers();
     }
 
     _onRoomTypeRemoved(peerId, roomType) {
-        const peer = this.peers[peerId];
+        const peerUI = this.peerUIs[peerId];
 
-        if (!peer) return;
+        if (!peerUI) return;
 
-        delete peer._roomIds[roomType];
-
-        this._redrawPeerRoomTypes(peerId)
+        peerUI._removeRoomId(roomType);
     }
 
     _onSetProgress(progress) {
-        const $peer = $(progress.peerId);
-        if (!$peer) return;
-        $peer.ui.setProgress(progress.progress, progress.status)
+        const peerUI = this.peerUIs[progress.peerId];
+
+        if (!peerUI) return;
+
+        peerUI.setProgress(progress.progress, progress.status);
     }
 
     _onDrop(e) {
@@ -392,35 +397,52 @@ class PeersUI {
 class PeerUI {
 
     static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
-    static _shareMode = {
-        active: false,
-        descriptor: ""
-    };
 
-    constructor(peer, connectionHash, shareMode) {
+    constructor(peer, roomType, roomId, shareMode = {active: false, descriptor: ""}) {
         this.$xInstructions = $$('x-instructions');
-        this.$xPeers = $$('x-peers');
 
         this._peer = peer;
-        this._connectionHash =
-            `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
+        this._connectionHash = "";
+        this._connected = false;
 
-        // This is needed if the ShareMode is started BEFORE the PeerUI is drawn.
-        PeerUI._shareMode = shareMode;
+        this._roomIds = {}
+        this._roomIds[roomType] = roomId;
 
+        this._shareMode = shareMode;
+
+        this._createCallbacks();
         this._initDom();
-
-        this.$xPeers.appendChild(this.$el);
-        Events.fire('peer-added');
 
         // ShareMode
         Events.on('share-mode-changed', e => this._onShareModeChanged(e.detail.active, e.detail.descriptor));
     }
 
+    _initDom() {
+        this.$el = document.createElement('x-peer');
+        this.$el.id = this._peer.id;
+        this.$el.ui = this;
+        this.$el.classList.add('center');
+
+        this.html();
+
+        this.$label = this.$el.querySelector('label');
+        this.$input = this.$el.querySelector('input');
+        this.$displayName = this.$el.querySelector('.name');
+
+        this.updateTypesClassList();
+
+        this.setStatus("connect");
+
+        this._evaluateShareMode();
+        this._bindListeners();
+    }
+
+    _removeDom() {
+        this.$el.remove();
+    }
+
     html() {
-        let title= PeerUI._shareMode.active
-            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor})
-            : Localization.getTranslation("peer-ui.click-to-send");
+        let title= Localization.getTranslation("peer-ui.click-to-send");
 
         this.$el.innerHTML = `
             <label class="column center pointer" title="${title}">
@@ -449,41 +471,37 @@ class PeerUI {
         this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
         this.$el.querySelector('.name').textContent = this._displayName();
         this.$el.querySelector('.device-name').textContent = this._deviceName();
-
-        this.$label = this.$el.querySelector('label');
-        this.$input = this.$el.querySelector('input');
     }
 
-    addTypesToClassList() {
-        if (this._peer._isSameBrowser()) {
+    updateTypesClassList() {
+        // Remove all classes
+        this.$el.classList.remove('type-ip', 'type-secret', 'type-public-id', 'type-same-browser', 'ws-peer');
+
+        // Add classes accordingly
+        Object.keys(this._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+
+        if (BrowserTabsConnector.peerIsSameBrowser(this._peer.id)) {
             this.$el.classList.add(`type-same-browser`);
         }
 
-        Object.keys(this._peer._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
-
-        if (!this._peer.rtcSupported || !window.isRtcSupported) this.$el.classList.add('ws-peer');
+        if (!this._peer.rtcSupported || !window.isRtcSupported) {
+            this.$el.classList.add('ws-peer');
+        }
     }
 
-    _initDom() {
-        this.$el = document.createElement('x-peer');
-        this.$el.id = this._peer.id;
-        this.$el.ui = this;
-        this.$el.classList.add('center');
+    _addRoomId(roomType, roomId) {
+        this._roomIds[roomType] = roomId;
+        this.updateTypesClassList();
+    }
 
-        this.addTypesToClassList();
-
-        this.html();
-
-        this._createCallbacks();
-
-        this._evaluateShareMode();
-        this._bindListeners();
+    _removeRoomId(roomType) {
+        delete this._roomIds[roomType];
+        this.updateTypesClassList();
     }
 
     _onShareModeChanged(active = false, descriptor = "") {
-        // This is needed if the ShareMode is started AFTER the PeerUI is drawn.
-        PeerUI._shareMode.active = active;
-        PeerUI._shareMode.descriptor = descriptor;
+        this._shareMode.active = active;
+        this._shareMode.descriptor = descriptor;
 
         this._evaluateShareMode();
         this._bindListeners();
@@ -491,12 +509,12 @@ class PeerUI {
 
     _evaluateShareMode() {
         let title;
-        if (!PeerUI._shareMode.active) {
+        if (!this._shareMode.active) {
             title = Localization.getTranslation("peer-ui.click-to-send");
             this.$input.removeAttribute('disabled');
         }
         else {
-            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor});
+            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: this._shareMode.descriptor});
             this.$input.setAttribute('disabled', true);
         }
         this.$label.setAttribute('title', title);
@@ -517,7 +535,7 @@ class PeerUI {
     }
 
     _bindListeners() {
-        if(!PeerUI._shareMode.active) {
+        if(!this._shareMode.active) {
             // Remove Events Share mode
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
@@ -559,6 +577,37 @@ class PeerUI {
         });
     }
 
+    _peerConnected(connected = true, connectionHash = "") {
+        if (connected) {
+            this._connected = true;
+
+            // on reconnect
+            this.setStatus(this.oldStatus);
+            this.oldStatus = null;
+
+            this._connectionHash = connectionHash;
+        }
+        else {
+            this._connected = false;
+
+            if (!this.oldStatus && this.currentStatus !== "connect") {
+                // save old status when reconnecting
+                this.oldStatus = this.currentStatus;
+            }
+            this.setStatus("connect");
+
+            this._connectionHash = "";
+        }
+    }
+
+    getConnectionHashWithSpaces()  {
+        if (this._connectionHash.length !== 16) {
+            return ""
+        }
+
+        return `${this._connectionHash.substring(0, 4)} ${this._connectionHash.substring(4, 8)} ${this._connectionHash.substring(8, 12)} ${this._connectionHash.substring(12, 16)}`;
+    }
+
     _displayName() {
         return this._peer.name.displayName;
     }
@@ -567,13 +616,26 @@ class PeerUI {
         return this._peer.name.deviceName;
     }
 
+    _setDisplayName(displayName) {
+        this._peer.name.displayName = displayName;
+        this.$displayName.textContent = displayName;
+    }
+
+    _roomTypes() {
+        return Object.keys(this._roomIds);
+    }
+
     _badgeClassName() {
-        const roomTypes = Object.keys(this._peer._roomIds);
-        return roomTypes.includes('secret')
-            ? 'badge-room-secret'
-            : roomTypes.includes('ip')
-                ? 'badge-room-ip'
-                : 'badge-room-public-id';
+        const roomTypes = this._roomTypes();
+        if (roomTypes.includes('secret')) {
+            return 'badge-room-secret';
+        }
+        else if (roomTypes.includes('ip')) {
+            return 'badge-room-ip';
+        }
+        else {
+            return 'badge-room-public-id';
+        }
     }
 
     _icon() {
@@ -590,6 +652,7 @@ class PeerUI {
     _onFilesSelected(e) {
         const $input = e.target;
         const files = $input.files;
+
         Events.fire('files-selected', {
             files: files,
             to: this._peer.id
@@ -599,40 +662,54 @@ class PeerUI {
 
     setProgress(progress, status) {
         const $progress = this.$el.querySelector('.progress');
+
         if (0.5 < progress && progress < 1) {
             $progress.classList.add('over50');
         }
         else {
             $progress.classList.remove('over50');
         }
-        if (progress < 1) {
-            if (status !== this.currentStatus) {
-                let statusName = {
-                    "prepare": Localization.getTranslation("peer-ui.preparing"),
-                    "transfer": Localization.getTranslation("peer-ui.transferring"),
-                    "process": Localization.getTranslation("peer-ui.processing"),
-                    "wait": Localization.getTranslation("peer-ui.waiting")
-                }[status];
 
-                this.$el.setAttribute('status', status);
-                this.$el.querySelector('.status').innerText = statusName;
-                this.currentStatus = status;
-            }
-        }
-        else {
-            this.$el.removeAttribute('status');
-            this.$el.querySelector('.status').innerHTML = '';
+        if (progress === 1) {
             progress = 0;
-            this.currentStatus = null;
+            status = null;
         }
+
+        this.setStatus(status);
+
         const degrees = `rotate(${360 * progress}deg)`;
         $progress.style.setProperty('--progress', degrees);
     }
 
-    _onDrop(e) {
-        e.preventDefault();
+    setStatus(status) {
+        if (!status) {
+            this.$el.removeAttribute('status');
+            this.$el.querySelector('.status').innerHTML = '';
+            this.currentStatus = null;
+            NoSleepUI.disableIfPeersIdle();
+            return;
+        }
 
-        if (PeerUI._shareMode.active || Dialog.anyDialogShown()) return;
+        if (status === this.currentStatus) return;
+
+        let statusName = {
+            "connect": Localization.getTranslation("peer-ui.connecting"),
+            "prepare": Localization.getTranslation("peer-ui.preparing"),
+            "transfer": Localization.getTranslation("peer-ui.transferring"),
+            "receive": Localization.getTranslation("peer-ui.receiving"),
+            "process": Localization.getTranslation("peer-ui.processing"),
+            "wait": Localization.getTranslation("peer-ui.waiting")
+        }[status];
+
+        this.$el.setAttribute('status', status);
+        this.$el.querySelector('.status').innerText = statusName;
+        this.currentStatus = status;
+    }
+
+    _onDrop(e) {
+        if (this._shareMode.active || Dialog.anyDialogShown()) return;
+
+        e.preventDefault();
 
         if (e.dataTransfer.files.length > 0) {
             Events.fire('files-selected', {
@@ -1315,8 +1392,8 @@ class PairDeviceDialog extends Dialog {
         Events.on('ws-disconnected', _ => this.hide());
         Events.on('pair-device-initiated', e => this._onPairDeviceInitiated(e.detail));
         Events.on('pair-device-joined', e => this._onPairDeviceJoined(e.detail.peerId, e.detail.roomSecret));
-        Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
+        Events.on('peers', e => this._onPeers(e.detail.peers, e.detail.roomType, e.detail.roomId));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail.peer, e.detail.roomType, e.detail.roomId));
         Events.on('pair-device-join-key-invalid', _ => this._onPublicRoomJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._onPairDeviceCanceled(e.detail));
         Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
@@ -1426,18 +1503,19 @@ class PairDeviceDialog extends Dialog {
         };
     }
 
-    _onPeers(message) {
-        message.peers.forEach(messagePeer => {
-            this._evaluateJoinedPeer(messagePeer.id, message.roomType, message.roomId);
+    _onPeers(peers, roomType, roomId) {
+        peers.forEach(messagePeer => {
+            this._evaluateJoinedPeer(messagePeer, roomType, roomId);
         });
     }
 
-    _onPeerJoined(message) {
-        this._evaluateJoinedPeer(message.peer.id, message.roomType, message.roomId);
+    _onPeerJoined(peer, roomType, roomId) {
+        this._evaluateJoinedPeer(peer, roomType, roomId);
     }
 
-    _evaluateJoinedPeer(peerId, roomType, roomId) {
+    _evaluateJoinedPeer(peer, roomType, roomId) {
         const noPairPeerSaved = !Object.keys(this.pairPeer);
+        const peerId = peer.id;
 
         if (!peerId || !roomType || !roomId || noPairPeerSaved) return;
 
@@ -1447,13 +1525,13 @@ class PairDeviceDialog extends Dialog {
 
         if (!samePeerId || !sameRoomSecret || !typeIsSecret) return;
 
-        this._onPairPeerJoined(peerId, roomId);
+        this._onPairPeerJoined(peer, roomId);
         this.pairPeer = {};
     }
 
-    _onPairPeerJoined(peerId, roomSecret) {
+    _onPairPeerJoined(peer, roomSecret) {
         // if devices are paired that are already connected we must save the names at this point
-        const $peer = $(peerId);
+        const $peer = $(peer.id);
         let displayName, deviceName;
         if ($peer) {
             displayName = $peer.ui._peer.name.displayName;
@@ -1531,11 +1609,11 @@ class EditPairedDevicesDialog extends Dialog {
         super('edit-paired-devices-dialog');
         this.$pairedDevicesWrapper = this.$el.querySelector('.paired-devices-wrapper');
         this.$footerBadgePairedDevices = $$('.discovery-wrapper .badge-room-secret');
+        this.$editPairedDevices = $('edit-paired-devices');
 
-        $('edit-paired-devices').addEventListener('click', _ => this._onEditPairedDevices());
+        this.$editPairedDevices.addEventListener('click', _ => this._onEditPairedDevices());
         this.$footerBadgePairedDevices.addEventListener('click', _ => this._onEditPairedDevices());
 
-        Events.on('peer-display-name-changed', e => this._onPeerDisplayNameChanged(e));
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
@@ -1641,23 +1719,6 @@ class EditPairedDevicesDialog extends Dialog {
                     })
             });
     }
-
-    _onPeerDisplayNameChanged(e) {
-        const peerId = e.detail.peerId;
-        const peerNode = $(peerId);
-
-        if (!peerNode) return;
-
-        const peer = peerNode.ui._peer;
-
-        if (!peer || !peer._roomIds["secret"]) return;
-
-        PersistentStorage
-            .updateRoomSecretNames(peer._roomIds["secret"], peer.name.displayName, peer.name.deviceName)
-            .then(roomSecretEntry => {
-                console.log(`Successfully updated DisplayName and DeviceName for roomSecretEntry ${roomSecretEntry.key}`);
-            })
-    }
 }
 
 class PublicRoomDialog extends Dialog {
@@ -1692,7 +1753,7 @@ class PublicRoomDialog extends Dialog {
         Events.on('keydown', e => this._onKeyDown(e));
         Events.on('public-room-created', e => this._onPublicRoomCreated(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('peer-joined', e => this._onPeerJoined(e.detail));
+        Events.on('peer-joined', e => this._onPeerJoined(e.detail.peer, e.detail.roomId));
         Events.on('public-room-id-invalid', e => this._onPublicRoomIdInvalid(e.detail));
         Events.on('public-room-left', _ => this._onPublicRoomLeft());
         this.$el.addEventListener('paste', e => this._onPaste(e));
@@ -1828,15 +1889,15 @@ class PublicRoomDialog extends Dialog {
         });
     }
 
-    _onPeerJoined(message) {
-        this._evaluateJoinedPeer(message.peer.id, message.roomId);
+    _onPeerJoined(peer, roomId) {
+        this._evaluateJoinedPeer(peer.id, roomId);
     }
 
     _evaluateJoinedPeer(peerId, roomId) {
         const isInitiatedRoomId = roomId === this.roomId;
         const isJoinedRoomId = roomId === this.roomIdJoin;
 
-        if (!peerId || !roomId || !(isInitiatedRoomId || isJoinedRoomId)) return;
+        if (!peerId || !roomId || (!isInitiatedRoomId && !isJoinedRoomId)) return;
 
         this.hide();
 
@@ -2624,11 +2685,12 @@ class NoSleepUI {
     static enable() {
         if (!this._interval) {
             NoSleepUI._nosleep.enable();
-            NoSleepUI._interval = setInterval(() => NoSleepUI.disable(), 10000);
+            // Disable after 10s if all peers are idle
+            NoSleepUI._interval = setInterval(() => NoSleepUI.disableIfPeersIdle(), 10000);
         }
     }
 
-    static disable() {
+    static disableIfPeersIdle() {
         if ($$('x-peer[status]') === null) {
             clearInterval(NoSleepUI._interval);
             NoSleepUI._nosleep.disable();
