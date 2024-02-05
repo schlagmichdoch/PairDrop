@@ -181,7 +181,7 @@ class PeersUI {
         PersistentStorage
             .updateRoomSecretDisplayName(roomSecret, displayName)
             .then(roomSecretEntry => {
-                console.log(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
+                Logger.debug(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
             })
     }
 
@@ -306,7 +306,7 @@ class PeersUI {
 
                     this.$shareModeImageThumb.removeAttribute('hidden');
                 } catch (e) {
-                    console.error(e);
+                    Logger.error(e);
                     this.$shareModeFileThumb.removeAttribute('hidden');
                 }
             } else {
@@ -338,7 +338,7 @@ class PeersUI {
         this.shareMode.files = files;
         this.shareMode.text = text;
 
-        console.log('Share mode activated.');
+        Logger.debug('Share mode activated.');
 
         Events.fire('share-mode-changed', {
             active: true,
@@ -386,7 +386,7 @@ class PeersUI {
         this.$shareModeEditBtn.removeEventListener('click', this._editShareTextCallback);
         this.$shareModeEditBtn.setAttribute('hidden', true);
 
-        console.log('Share mode deactivated.')
+        Logger.debug('Share mode deactivated.')
         Events.fire('share-mode-changed', { active: false });
     }
 
@@ -1062,7 +1062,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$shareBtn.onclick = _ => {
                 navigator.share({files: files})
                     .catch(err => {
-                        console.error(err);
+                        Logger.error(err);
                     });
             }
         }
@@ -1099,7 +1099,7 @@ class ReceiveFileDialog extends ReceiveDialog {
                 minutes = minutes.length < 2 ? "0" + minutes : minutes;
                 filenameDownload = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
             } catch (e) {
-                console.error(e);
+                Logger.error(e);
                 downloadZipped = false;
             }
         }
@@ -1148,10 +1148,10 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.createPreviewElement(files[0])
             .then(canPreview => {
                 if (canPreview) {
-                    console.log('the file is able to preview');
+                    Logger.debug('the file is able to preview');
                 }
                 else {
-                    console.log('the file is not able to preview');
+                    Logger.debug('the file is not able to preview');
                 }
             })
             .catch(r => console.error(r));
@@ -2291,7 +2291,7 @@ class Base64Dialog extends Dialog {
             this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
         }
         else {
-            console.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
+            Logger.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")
             this.$pasteBtn.setAttribute('hidden', true);
             this.$fallbackTextarea.setAttribute('placeholder', Localization.getTranslation("dialogs.base64-paste-to-send", null, {type: translateType}));
             this.$fallbackTextarea.removeAttribute('hidden');
@@ -2323,7 +2323,7 @@ class Base64Dialog extends Dialog {
         }
         catch(e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-content-incorrect"));
-            console.log("Clipboard content is incorrect.")
+            Logger.warn("Clipboard content is incorrect.")
         }
         this.hide();
     }
@@ -2342,7 +2342,7 @@ class Base64Dialog extends Dialog {
         }
         catch (e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.text-content-incorrect"));
-            console.log("Text content incorrect.");
+            Logger.warn("Text content incorrect.");
         }
 
         this.hide();
@@ -2357,7 +2357,7 @@ class Base64Dialog extends Dialog {
         }
         catch (e) {
             Events.fire('notify-user', Localization.getTranslation("notifications.file-content-incorrect"));
-            console.log("File content incorrect.");
+            Logger.warn("File content incorrect.");
         }
 
         this.hide();
@@ -2380,10 +2380,11 @@ class AboutUI {
         this.$blueskyBtn = $('bluesky-btn');
         this.$customBtn = $('custom-btn');
         this.$privacypolicyBtn = $('privacypolicy-btn');
-        Events.on('config', e => this._onConfig(e.detail.buttons));
+        Events.on('config-loaded', _ => this._onConfigLoaded());
     }
 
-    async _onConfig(btnConfig) {
+    async _onConfigLoaded() {
+        const btnConfig = window._config.buttons
         await this._evaluateBtnConfig(this.$donationBtn, btnConfig.donation_button);
         await this._evaluateBtnConfig(this.$twitterBtn, btnConfig.twitter_button);
         await this._evaluateBtnConfig(this.$mastodonBtn, btnConfig.mastodon_button);
@@ -2674,7 +2675,7 @@ class WebFileHandlersUI {
         if (!"launchQueue" in window) return;
 
         launchQueue.setConsumer(async launchParams => {
-            console.log("Launched with: ", launchParams);
+            Logger.log("Launched with: ", launchParams);
 
             if (!launchParams.files.length) return;
 

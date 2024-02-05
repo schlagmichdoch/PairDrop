@@ -238,7 +238,7 @@ class FooterUI {
 
         if (!displayName) return;
 
-        console.log("Retrieved edited display name:", displayName)
+        Logger.debug("Retrieved edited display name:", displayName)
         Events.fire('self-display-name-changed', displayName);
     }
 
@@ -275,7 +275,7 @@ class FooterUI {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-permanently"));
                 })
                 .catch(_ => {
-                    console.log("This browser does not support IndexedDB. Use localStorage instead.");
+                    Logger.debug("This browser does not support IndexedDB. Use localStorage instead.");
                     localStorage.setItem('edited_display_name', newDisplayName);
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
@@ -287,7 +287,7 @@ class FooterUI {
         else {
             PersistentStorage.delete('edited_display_name')
                 .catch(_ => {
-                    console.log("This browser does not support IndexedDB. Use localStorage instead.")
+                    Logger.debug("This browser does not support IndexedDB. Use localStorage instead.")
                     localStorage.removeItem('edited_display_name');
                 })
                 .finally(() => {

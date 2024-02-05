@@ -67,7 +67,7 @@ class Localization {
         Localization.$htmlRoot.setAttribute('lang', locale);
 
 
-        console.log("Page successfully translated",
+        Logger.debug("Page successfully translated",
             `System language: ${Localization.systemLocale}`,
             `Selected language: ${locale}`
         );
@@ -145,7 +145,7 @@ class Localization {
             translation = translationObj[lastKey];
 
         } catch (e) {
-            console.error(e);
+            Logger.error(e);
         }
 
         if (!translation) {
@@ -179,7 +179,7 @@ class Localization {
         }
         catch (e) {
             // Log warnings and help calls
-            console.warn(e);
+            Logger.warn(e);
             Localization.logTranslationMissingOrBroken(key, attr, data, useDefault);
             Localization.logHelpCallKey(key, attr);
             Localization.logHelpCall();
@@ -192,7 +192,7 @@ class Localization {
             else {
                 // Is not default locale yet
                 // Get translation for default language with same arguments
-                console.log(`Using default language ${Localization.defaultLocale.toUpperCase()} instead.`);
+                Logger.debug(`Using default language ${Localization.defaultLocale.toUpperCase()} instead.`);
                 translation = this.getTranslation(key, attr, data, true);
             }
         }
@@ -205,11 +205,11 @@ class Localization {
             ? Localization.defaultLocale.toUpperCase()
             : Localization.locale.toUpperCase();
 
-        console.warn(`Missing or broken translation for language ${usedLocale}.\n`, 'key:', key, 'attr:', attr, 'data:', data);
+        Logger.warn(`Missing or broken translation for language ${usedLocale}.\n`, 'key:', key, 'attr:', attr, 'data:', data);
     }
 
     static logHelpCall() {
-        console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
+        Logger.warn("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
     }
 
     static logHelpCallKey(key, attr) {
@@ -219,7 +219,7 @@ class Localization {
             ? key
             : `${key}_${attr}`;
 
-        console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${locale}/?q=${keyComplete}`);
+        Logger.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${locale}/?q=${keyComplete}`);
     }
 
     static escapeHTML(unsafeText) {

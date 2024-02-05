@@ -10,7 +10,7 @@ class BrowserTabsConnector {
     }
 
     _onMessage(e) {
-        console.log('Broadcast:', e.data)
+        Logger.debug('Broadcast:', e.data)
         switch (e.data.type) {
             case 'self-display-name-changed':
                 Events.fire('self-display-name-changed', e.data.detail);

@@ -27,16 +27,16 @@ class ServerConnection {
     }
 
     _getConfig() {
-        console.log("Loading config...")
+        Logger.log("Loading config...")
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             xhr.addEventListener("load", () => {
                 if (xhr.status === 200) {
                     // Config received
                     let config = JSON.parse(xhr.responseText);
-                    console.log("Config loaded:", config)
-                    this._config = config;
-                    Events.fire('config', config);
+                    Logger.log("Config loaded:", config)
+                    window._config = config;
+                    Events.fire('config-loaded');
                     resolve()
                 } else if (xhr.status < 200 || xhr.status >= 300) {
                     retry(xhr);
@@ -86,7 +86,7 @@ class ServerConnection {
     }
 
     _onOpen() {
-        console.log('WS: server connected');
+        Logger.log('WS: server connected');
         Events.fire('ws-connected');
         if (this._isReconnect) {
             Events.fire('notify-user', Localization.getTranslation("notifications.connected"));
@@ -136,7 +136,9 @@ class ServerConnection {
 
     _onMessage(message) {
         const messageJSON = JSON.parse(message);
-        if (messageJSON.type !== 'ping' && messageJSON.type !== 'ws-relay') console.log('WS receive:', messageJSON);
+        if (messageJSON.type !== 'ping' && messageJSON.type !== 'ws-relay') {
+            Logger.debug('WS receive:', messageJSON);
+        }
         switch (messageJSON.type) {
             case 'ws-config':
                 this._setWsConfig(messageJSON.wsConfig);
@@ -195,17 +197,19 @@ class ServerConnection {
                     Events.fire('ws-relay', {peerId: messageJSON.sender.id, message: message});
                 }
                 else {
-                    console.log("WS receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
+                    Logger.warn("WS receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
                 }
                 break;
             default:
-                console.error('WS receive: unknown message type', messageJSON);
+                Logger.error('WS receive: unknown message type', messageJSON);
         }
     }
 
     send(msg) {
         if (!this._isConnected()) return;
-        if (msg.type !== 'pong' && msg.type !== 'ws-relay') console.log("WS send:", msg)
+        if (msg.type !== 'pong' && msg.type !== 'ws-relay') {
+            Logger.debug("WS send:", msg)
+        }
         this._socket.send(JSON.stringify(msg));
     }
 
@@ -223,7 +227,7 @@ class ServerConnection {
             .addPeerIdToLocalStorage()
             .then(peerId => {
                 if (!peerId) return;
-                console.log("successfully added peerId to localStorage");
+                Logger.debug("successfully added peerId to localStorage");
 
                 // Only now join rooms
                 Events.fire('join-ip-room');
@@ -239,8 +243,8 @@ class ServerConnection {
     _endpoint() {
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         // Check whether the instance specifies another signaling server otherwise use the current instance for signaling
-        let wsServerDomain = this._config.signalingServer
-            ? this._config.signalingServer
+        let wsServerDomain = window._config.signalingServer
+            ? window._config.signalingServer
             : location.host + location.pathname;
 
         let wsUrl = new URL(protocol + '://' + wsServerDomain + 'server');
@@ -264,7 +268,7 @@ class ServerConnection {
         BrowserTabsConnector
             .removePeerIdFromLocalStorage(peerId)
             .then(_ => {
-                console.log("successfully removed peerId from localStorage");
+                Logger.debug("successfully removed peerId from localStorage");
             });
 
         if (!this._socket) return;
@@ -277,7 +281,7 @@ class ServerConnection {
     }
 
     _onDisconnect() {
-        console.log('WS: server disconnected');
+        Logger.log('WS: server disconnected');
         setTimeout(() => {
             this._isReconnect = true;
             Events.fire('ws-disconnected');
@@ -303,7 +307,7 @@ class ServerConnection {
     }
 
     _onError(e) {
-        console.error(e);
+        Logger.error(e);
     }
 
     _reconnect() {
@@ -385,7 +389,9 @@ class Peer {
             PersistentStorage
                 .deleteRoomSecret(this._getPairSecret())
                 .then(deletedRoomSecret => {
-                    if (deletedRoomSecret) console.log("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
+                    if (deletedRoomSecret) {
+                        Logger.debug("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
+                    }
                 });
         }
 
@@ -398,7 +404,7 @@ class Peer {
             &&  this._isCaller) {
             // increase security by initiating the increase of the roomSecret length
             // from 64 chars (<v1.7.0) to 256 chars (v1.7.0+)
-            console.log('RoomSecret is regenerated to increase security')
+            Logger.debug('RoomSecret is regenerated to increase security')
             Events.fire('regenerate-room-secret', this._getPairSecret());
         }
     }
@@ -467,7 +473,7 @@ class Peer {
             try {
                 dataUrl = await getThumbnailAsDataUrl(files[0], 400, null, 0.9);
             } catch (e) {
-                console.error(e);
+                Logger.error(e);
             }
         }
 
@@ -525,7 +531,7 @@ class Peer {
             this._sendTransferAbortion();
             return;
         }
-        console.log("Resend requested from offset:", offset)
+        Logger.debug("Resend requested from offset:", offset)
         this._chunker._resendFromOffset(offset);
     }
 
@@ -570,7 +576,7 @@ class Peer {
                 this._onDisplayNameChanged(message);
                 break;
             default:
-                console.warn('RTC: Unknown message type:', message.type);
+                Logger.warn('RTC: Unknown message type:', message.type);
         }
     }
 
@@ -681,7 +687,7 @@ class Peer {
         let size = Math.round(10 * fileBlob.size / 1000000) / 10;
         let speed = Math.round(100 * fileBlob.size / 1000000 / duration) / 100;
 
-        console.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
+        Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
         this._sendMessage({type: 'file-transfer-complete', success: true, size: size, duration: duration, speed: speed});
 
@@ -715,12 +721,12 @@ class Peer {
         this._chunker = null;
 
         if (!message.success) {
-            console.warn('File could not be sent');
+            Logger.warn('File could not be sent');
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
             return;
         }
 
-        console.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
+        Logger.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
 
         if (this._filesQueue.length) {
             this._dequeueFile();
@@ -776,7 +782,7 @@ class Peer {
             PersistentStorage
                 .updateRoomSecretDisplayName(roomSecret, message.displayName)
                 .then(roomSecretEntry => {
-                    console.log(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
+                    Logger.debug(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
                 })
         }
 
@@ -855,7 +861,7 @@ class RTCPeer extends Peer {
         this._evaluatePendingInboundMessages()
             .then((count) => {
                 if (count) {
-                    console.log("Pending inbound messages evaluated.");
+                    Logger.debug("Pending inbound messages evaluated.");
                 }
             });
     }
@@ -874,36 +880,36 @@ class RTCPeer extends Peer {
     }
 
     async _onNegotiationNeeded() {
-        console.log('RTC: Negotiation needed');
+        Logger.debug('RTC: Negotiation needed');
 
         if (this._isCaller) {
             // Creating offer if required
-            console.log('RTC: Creating offer');
+            Logger.debug('RTC: Creating offer');
             const description = await this._conn.createOffer();
             await this._handleLocalDescription(description);
         }
     }
 
     _onSignalingStateChanged() {
-        console.log('RTC: Signaling state changed:', this._conn.signalingState);
+        Logger.debug('RTC: Signaling state changed:', this._conn.signalingState);
     }
 
     _onIceConnectionStateChange() {
-        console.log('RTC: ICE connection state changed:', this._conn.iceConnectionState);
+        Logger.debug('RTC: ICE connection state changed:', this._conn.iceConnectionState);
     }
 
     _onIceGatheringStateChanged() {
-        console.log('RTC: ICE gathering state changed:', this._conn.iceConnectionState);
+        Logger.debug('RTC: ICE gathering state changed:', this._conn.iceConnectionState);
     }
 
     _onConnectionStateChange() {
-        console.log('RTC: Connection state changed:', this._conn.connectionState);
+        Logger.debug('RTC: Connection state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
             case 'disconnected':
                 this._refresh();
                 break;
             case 'failed':
-                console.warn('RTC connection failed');
+                Logger.warn('RTC connection failed');
                 // Todo: if error is "TURN server needed" -> fallback to WS if activated
                 this._refresh();
         }
@@ -914,7 +920,7 @@ class RTCPeer extends Peer {
     }
 
     _onIceCandidateError(error) {
-        console.error(error);
+        Logger.error(error);
     }
 
     _openMessageChannel() {
@@ -944,7 +950,7 @@ class RTCPeer extends Peer {
     }
 
     _onChannelOpened(e) {
-        console.log(`RTC: Channel ${e.target.label} opened with`, this._peerId);
+        Logger.debug(`RTC: Channel ${e.target.label} opened with`, this._peerId);
 
         // wait until all channels are open
         if (!this._stable()) return;
@@ -962,30 +968,30 @@ class RTCPeer extends Peer {
     }
 
     _onChannelClosed(e) {
-        console.log(`RTC: Channel ${e.target.label} closed`, this._peerId);
+        Logger.debug(`RTC: Channel ${e.target.label} closed`, this._peerId);
         this._refresh();
     }
 
     _onChannelError(e) {
-        console.warn(`RTC: Channel ${e.target.label} error`, this._peerId);
-        console.error(e.error);
+        Logger.warn(`RTC: Channel ${e.target.label} error`, this._peerId);
+        Logger.error(e.error);
     }
 
 
     async _handleLocalDescription(localDescription) {
         await this._conn.setLocalDescription(localDescription);
 
-        console.log("RTC: Sending local description");
+        Logger.debug("RTC: Sending local description");
         this._sendSignal({ signalType: 'description', description: localDescription });
     }
 
     async _handleRemoteDescription(remoteDescription) {
-        console.log("RTC: Received remote description");
+        Logger.debug("RTC: Received remote description");
         await this._conn.setRemoteDescription(remoteDescription);
 
         if (!this._isCaller) {
             // Creating answer if required
-            console.log('RTC: Creating answer');
+            Logger.debug('RTC: Creating answer');
             const localDescription = await this._conn.createAnswer();
             await this._handleLocalDescription(localDescription);
         }
@@ -994,7 +1000,7 @@ class RTCPeer extends Peer {
     _handleLocalCandidate(candidate) {
         if (this.localIceCandidatesSent) return;
 
-        console.log("RTC: Local candidate created", candidate);
+        Logger.debug("RTC: Local candidate created", candidate);
 
         if (candidate === null) {
             this.localIceCandidatesSent = true;
@@ -1007,7 +1013,7 @@ class RTCPeer extends Peer {
     async _handleRemoteCandidate(candidate) {
         if (this.remoteIceCandidatesReceived) return;
 
-        console.log("RTC: Received remote candidate", candidate);
+        Logger.debug("RTC: Received remote candidate", candidate);
 
         if (candidate === null) {
             this.remoteIceCandidatesReceived = true;
@@ -1021,7 +1027,7 @@ class RTCPeer extends Peer {
         let inboundMessagesEvaluatedCount = 0;
         while (this.pendingInboundMessages.length > 0) {
             const message = this.pendingInboundMessages.shift();
-            console.log("Evaluate pending inbound message:", message);
+            Logger.debug("Evaluate pending inbound message:", message);
             await this._onServerSignalMessage(message);
             inboundMessagesEvaluatedCount++;
         }
@@ -1042,7 +1048,7 @@ class RTCPeer extends Peer {
                 await this._handleRemoteCandidate(message.candidate);
                 break;
             default:
-                console.warn('Unknown signalType:', message.signalType);
+                Logger.warn('Unknown signalType:', message.signalType);
                 break;
         }
     }
@@ -1115,7 +1121,7 @@ class RTCPeer extends Peer {
     }
 
     _sendViaMessageChannel(message) {
-        console.log('RTC Send:', message);
+        Logger.debug('RTC Send:', message);
         this._messageChannel.send(JSON.stringify(message));
     }
 
@@ -1147,12 +1153,11 @@ class RTCPeer extends Peer {
     }
 
     _onMessage(message) {
-        // Todo: Test speed increase without prints? --> print only on debug mode via URL argument `?debug_mode=true`
-        console.log('RTC Receive:', JSON.parse(message));
+        Logger.debug('RTC Receive:', JSON.parse(message));
         try {
             message = JSON.parse(message);
         } catch (e) {
-            console.warn("RTCPeer: Received JSON is malformed");
+            Logger.warn("RTCPeer: Received JSON is malformed");
             return;
         }
         super._onMessage(message);
@@ -1255,7 +1260,7 @@ class WSPeer extends Peer {
     }
 
     _onMessage(message) {
-        console.log('WS Receive:', message);
+        Logger.debug('WS Receive:', message);
         super._onMessage(message);
     }
 
@@ -1273,7 +1278,7 @@ class WSPeer extends Peer {
             message = JSON.parse(message).message;
         }
         catch (e) {
-            console.warn("WSPeer: Received JSON is malformed");
+            Logger.warn("WSPeer: Received JSON is malformed");
             return;
         }
 
@@ -1383,7 +1388,7 @@ class PeersManager {
             this.peers[peerId] = new WSPeer(this._server, isCaller, peerId, roomType, roomId);
         }
         else {
-            console.warn("Websocket fallback is not activated on this instance.\n" +
+            Logger.warn("Websocket fallback is not activated on this instance.\n" +
                 "Activate WebRTC in this browser or ask the admin of this instance to activate the websocket fallback.")
         }
     }
@@ -1423,7 +1428,7 @@ class PeersManager {
 
     _onPeerLeft(message) {
         if (this._peerExists(message.peerId) && !this._webRtcSupported(message.peerId)) {
-            console.log('WSPeer left:', message.peerId);
+            Logger.debug('WSPeer left:', message.peerId);
         }
         if (message.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
@@ -1436,7 +1441,7 @@ class PeersManager {
                     .removeOtherPeerIdsFromLocalStorage()
                     .then(peerIds => {
                         if (!peerIds) return;
-                        console.log("successfully removed other peerIds from localStorage");
+                        Logger.debug("successfully removed other peerIds from localStorage");
                     });
             }
         }
@@ -1514,7 +1519,7 @@ class PeersManager {
         PersistentStorage
             .updateRoomSecret(message.oldRoomSecret, message.newRoomSecret)
             .then(_ => {
-                console.log("successfully regenerated room secret");
+                Logger.debug("successfully regenerated room secret");
                 Events.fire("room-secrets", [message.newRoomSecret]);
             })
     }

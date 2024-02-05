@@ -539,7 +539,7 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
             let dataUrl = canvas.toDataURL("image/jpeg", quality);
             resolve(dataUrl);
         } catch (e) {
-            console.error(e);
+            Logger.error(e);
             reject(new Error(`Could not create an image thumbnail from type ${file.type}`));
         }
     })

@@ -1,3 +1,23 @@
+class Logger {
+
+    static debug(message, ...optionalParams) {
+        if (window.debugMode) {
+            console.debug("DEBUG:", message, ...optionalParams);
+        }
+    }
+    static log(message, ...optionalParams) {
+        console.log("LOG:", message, ...optionalParams);
+    }
+
+    static warn(message, ...optionalParams) {
+        console.warn("WARN:", message, ...optionalParams);
+    }
+
+    static error(message, ...optionalParams) {
+        console.error("ERROR:", message, ...optionalParams);
+    }
+}
+
 class PairDrop {
 
     constructor() {
@@ -34,14 +54,14 @@ class PairDrop {
 
         this.initialize()
             .then(_ => {
-                console.log("Initialization completed.");
+                Logger.log("Initialization completed.");
             });
     }
 
     async initialize() {
         // Translate page before fading in
         await this.localization.setInitialTranslation()
-        console.log("Initial translation successful.");
+        Logger.log("Initial translation successful.");
 
         // Show "Loading..." until connected to WsServer
         await this.footerUI.showLoading();
@@ -56,16 +76,16 @@ class PairDrop {
         await this.backgroundCanvas.fadeIn();
 
         // Load deferred assets
-        console.log("Load deferred assets...");
+        Logger.log("Load deferred assets...");
         await this.loadDeferredAssets();
-        console.log("Loading of deferred assets completed.");
+        Logger.log("Loading of deferred assets completed.");
 
-        console.log("Hydrate UI...");
+        Logger.log("Hydrate UI...");
         await this.hydrate();
-        console.log("UI hydrated.");
+        Logger.log("UI hydrated.");
 
         // Evaluate url params as soon as ws is connected
-        console.log("Evaluate URL params as soon as websocket connection is established.");
+        Logger.log("Evaluate URL params as soon as websocket connection is established.");
         Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
     }
 
@@ -74,7 +94,7 @@ class PairDrop {
             navigator.serviceWorker
                 .register('service-worker.js')
                 .then(serviceWorker => {
-                    console.log('Service Worker registered');
+                    Logger.log('Service Worker registered');
                     window.serviceWorker = serviceWorker
                 });
         }
@@ -133,10 +153,10 @@ class PairDrop {
         return new Promise( async (resolve) => {
             try {
                 await this.loadStyleSheet(url);
-                console.log(`Stylesheet loaded successfully: ${url}`);
+                Logger.log(`Stylesheet loaded successfully: ${url}`);
                 resolve();
             } catch (error) {
-                console.error('Error loading stylesheet:', error);
+                Logger.error('Error loading stylesheet:', error);
             }
         });
     }
@@ -156,10 +176,10 @@ class PairDrop {
         return new Promise( async (resolve) => {
             try {
                 await this.loadScript(url);
-                console.log(`Script loaded successfully: ${url}`);
+                Logger.log(`Script loaded successfully: ${url}`);
                 resolve();
             } catch (error) {
-                console.error('Error loading script:', error);
+                Logger.error('Error loading script:', error);
             }
         });
     }
@@ -229,12 +249,17 @@ class PairDrop {
                 this.publicRoomDialog._createPublicRoom();
             }
         }
+        else if (urlParams.has("debug") && urlParams.get("debug") === "true") {
+            window.debugMode = true;
+        }
 
-        // remove url params from url
-        const urlWithoutParams = getUrlWithoutArguments();
-        window.history.replaceState({}, "Rewrite URL", urlWithoutParams);
+        if (!window.debugMode) {
+            // remove url params from url
+            const urlWithoutParams = getUrlWithoutArguments();
+            window.history.replaceState({}, "Rewrite URL", urlWithoutParams);
+        }
 
-        console.log("URL params evaluated.");
+        Logger.log("URL params evaluated.");
     }
 }
 
