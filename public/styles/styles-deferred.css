@@ -105,6 +105,8 @@ x-peer {
     padding: 8px;
     align-content: start;
     flex-wrap: wrap;
+    transition: transform 150ms;
+    will-change: transform;
 }
 
 x-peer input[type="file"] {
@@ -122,8 +124,6 @@ x-peer label {
 x-peer x-icon {
     --icon-size: 40px;
     margin-bottom: 4px;
-    transition: transform 150ms;
-    will-change: transform;
     display: flex;
     flex-direction: column;
 }
@@ -149,7 +149,7 @@ x-peer:not(.type-ip):not(.type-secret).type-public-id .icon-wrapper {
 .highlight-wrapper {
     align-self: center;
     align-items: center;
-    margin: 7px auto 0;
+    margin: 10px auto 0;
     height: 6px;
 }
 
@@ -188,14 +188,16 @@ x-peer:not(.type-public-id) .highlight-room-public-id {
     display: none;
 }
 
-x-peer:not([status]):hover x-icon,
-x-peer:not([status]):focus x-icon {
+x-peer:not([status]):hover,
+x-peer:not([status]):focus {
     transform: scale(1.05);
 }
 
 x-peer[status] x-icon {
     box-shadow: none;
-    opacity: 0.8;
+}
+
+x-peer[status] {
     transform: scale(1);
 }
 
@@ -238,7 +240,7 @@ x-peer.ws-peer .highlight-wrapper {
 
 .status,
 .device-name {
-    opacity: 0.7;
+    color: color-mix(in srgb, rgb(var(--text-color)) 30%, grey);
     white-space: nowrap;
 }
 
@@ -251,7 +253,7 @@ x-peer[status] {
     pointer-events: none;
 }
 
-x-peer x-icon {
+x-peer {
     animation: pop 600ms ease-out 1;
 }
 
