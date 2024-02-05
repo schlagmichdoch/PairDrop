@@ -64,7 +64,6 @@
         "pairing-cleared": "Todos los dispositivos han sido desemparejados",
         "notifications-enabled": "Notificaciones habilitadas",
         "online-requirement-pairing": "Debes estar en línea para emparejar dispositivos",
-        "ios-memory-limit": "Enviar archivos a iOS sólo admite hasta 200 MB a la vez",
         "online-requirement-public-room": "Debes estar en línea para crear una sala pública",
         "copied-text-error": "Error al escribir en el portapapeles. ¡Cópielo manualmente!",
         "download-successful": "{{descriptor}} descargado",

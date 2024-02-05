@@ -586,12 +586,6 @@ class Peer {
             this._sendMessage({type: 'files-transfer-response', accepted: false});
             return;
         }
-        if (window.iOS && request.totalSize >= 200*1024*1024) {
-            // iOS Safari can only put 400MB at once to memory.
-            // Request to send them in chunks of 200MB instead:
-            this._sendMessage({type: 'files-transfer-response', accepted: false, reason: 'ios-memory-limit'});
-            return;
-        }
 
         this._pendingRequest = request;
 
@@ -743,9 +737,6 @@ class Peer {
         if (!message.accepted) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
             this._filesRequested = null;
-            if (message.reason === 'ios-memory-limit') {
-                Events.fire('notify-user', Localization.getTranslation("notifications.ios-memory-limit"));
-            }
             return;
         }
         Events.fire('file-transfer-accepted');

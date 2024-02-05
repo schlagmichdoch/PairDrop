@@ -145,7 +145,6 @@
         "pairing-cleared": "Tüm cihazlar eşleştirmeden çıkarıldı",
         "notifications-enabled": "Bildirimler etkinleştirildi",
         "online-requirement-pairing": "Cihazları eşleştirmek için çevrimiçi olmanız lazım",
-        "ios-memory-limit": "iOS'a tek seferde sadece 200MB'a kadar dosya gönderebilirsin",
         "online-requirement-public-room": "Genel oda oluşturmak için çevrimiçi olmanız lazım",
         "room-url-copied-to-clipboard": "Genel oda bağlantı linki panoya kopyalandı",
         "copied-text-error": "Panoya kopyalanamadı. Lütfen manuel olarak kopyalayın!",

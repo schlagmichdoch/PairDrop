@@ -129,7 +129,6 @@
         "pairing-cleared": "Tutti i dispositivi sono stati dissociati",
         "notifications-enabled": "Notifiche attivate",
         "online-requirement-pairing": "Devi essere online per abbinare dispositivi",
-        "ios-memory-limit": "L'invio di file a dispositivi iOS è possibile solo 200 MB alla volta",
         "online-requirement-public-room": "Devi essere online per creare una stanza pubblica",
         "copied-text-error": "Scrittura negli appunti fallita. Copia manualmente!",
         "download-successful": "{{descriptor}} scaricato",

@@ -154,7 +154,6 @@
         "files-incorrect": "文件不正确",
         "file-transfer-completed": "文件传输已完成",
         "connecting": "连接中…",
-        "ios-memory-limit": "向 iOS 发送文件 一次最多只能发送 200 MB",
         "rate-limit-join-key": "已达连接限制。请等待 10秒 后再试。",
         "public-room-left": "已退出公共房间 {{publicRoomId}}",
         "copied-to-clipboard-error": "无法复制。请手动复制。",

@@ -48,7 +48,6 @@
         "pairing-cleared": "جميع الأجهزة غير مقترنة",
         "notifications-enabled": "تم تمكين الإشعارات",
         "online-requirement-pairing": "يجب أن تكون متصلاً بالإنترنت لإقران الأجهزة",
-        "ios-memory-limit": "لا يمكن إرسال ملفات إلى iOS إلا بحجم يصل إلى 200 ميجابايت مرة واحدة",
         "online-requirement-public-room": "يجب أن تكون متصلاً بالإنترنت لإنشاء غرفة عامة",
         "copied-text-error": "فشلت الكتابة من الحافظة. انسخ يدويًا!",
         "download-successful": "تم تحميل {{descriptor}}",
