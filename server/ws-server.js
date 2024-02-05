@@ -89,22 +89,12 @@ export default class PairDropWsServer {
                 this._onLeavePublicRoom(sender);
                 break;
             case 'signal':
-                this._signalAndRelay(sender, message);
+                this._signalAndWsRelay(sender, message);
                 break;
-            case 'request':
-            case 'header':
-            case 'partition':
-            case 'partition-received':
-            case 'progress':
-            case 'files-transfer-response':
-            case 'file-transfer-complete':
-            case 'message-transfer-complete':
-            case 'text':
-            case 'display-name-changed':
-            case 'ws-chunk':
+            case 'ws-relay':
                 // relay ws-fallback
                 if (this._conf.wsFallback) {
-                    this._signalAndRelay(sender, message);
+                    this._signalAndWsRelay(sender, message);
                 }
                 else {
                     console.log("Websocket fallback is not activated on this instance.")
@@ -112,7 +102,7 @@ export default class PairDropWsServer {
         }
     }
 
-    _signalAndRelay(sender, message) {
+    _signalAndWsRelay(sender, message) {
         const room = message.roomType === 'ip'
             ? sender.ip
             : message.roomId;
