@@ -441,7 +441,7 @@ class Peer {
         if (this._digester) {
             // Reconnection during receiving of file. Send request for restart
             const offset = this._digester._bytesReceived;
-            this._requestResendFromOffset(offset);
+            this._sendResendRequest(offset);
         }
     }
 
@@ -511,14 +511,22 @@ class Peer {
     // Is overwritten in expanding classes
     _sendFile(file) {}
 
-    _requestResendFromOffset(offset) {
-        this._sendMessage({ type: 'request-resend-from-offset', offset: offset });
+    _sendResendRequest(offset) {
+        this._sendMessage({ type: 'resend-request', offset: offset });
     }
 
-    _onRequestResendFromOffset(offset) {
-        console.log("Restart requested from offset:", offset)
-        if (!this._chunker) return;
-        this._chunker._restartFromOffset(offset);
+    _sendTransferAbortion() {
+        this._sendMessage({type: 'file-transfer-complete', success: false});
+    }
+
+
+    _onResendRequest(offset) {
+        if (!this._chunker) {
+            this._sendTransferAbortion();
+            return;
+        }
+        console.log("Resend requested from offset:", offset)
+        this._chunker._resendFromOffset(offset);
     }
 
     _sendProgress(progress) {
@@ -540,11 +548,11 @@ class Peer {
             case 'progress':
                 this._onProgress(message.progress);
                 break;
-            case 'bytes-received-confirmation':
-                this._onBytesReceivedConfirmation(message.bytesReceived);
+            case 'receive-confirmation':
+                this._onReceiveConfirmation(message.bytesReceived);
                 break;
-            case 'request-resend-from-offset':
-                this._onRequestResendFromOffset(message.offset);
+            case 'resend-request':
+                this._onResendRequest(message.offset);
                 break;
             case 'files-transfer-response':
                 this._onFileTransferRequestResponded(message);
@@ -567,7 +575,7 @@ class Peer {
     }
 
     _onFilesTransferRequest(request) {
-        if (this._requestPending) {
+        if (this._pendingRequest) {
             // Only accept one request at a time per peer
             this._sendMessage({type: 'files-transfer-response', accepted: false});
             return;
@@ -579,7 +587,7 @@ class Peer {
             return;
         }
 
-        this._requestPending = request;
+        this._pendingRequest = request;
 
         if (this._autoAccept) {
             // auto accept if set via Edit Paired Devices Dialog
@@ -597,26 +605,29 @@ class Peer {
     _respondToFileTransferRequest(accepted) {
         this._sendMessage({type: 'files-transfer-response', accepted: accepted});
         if (accepted) {
-            this._requestAccepted = this._requestPending;
+            this._acceptedRequest = this._pendingRequest;
             this._totalBytesReceived = 0;
             this._busy = true;
             this._filesReceived = [];
         }
-        this._requestPending = null;
+        this._pendingRequest = null;
     }
 
     _onFileHeader(header) {
-        if (this._requestAccepted && this._requestAccepted.header.length) {
-            this._lastProgress = 0;
-            this._timeStart = Date.now();
-            this._addFileDigester(header);
+        if (!this._acceptedRequest || !this._acceptedRequest.header.length) {
+            this._sendTransferAbortion();
+            return;
         }
+
+        this._lastProgress = 0;
+        this._timeStart = Date.now();
+        this._addFileDigester(header);
     }
 
     _addFileDigester(header) {}
 
-    _sendBytesReceivedConfirmation(bytesReceived) {
-        this._sendMessage({type: 'bytes-received-confirmation', bytesReceived: bytesReceived});
+    _sendReceiveConfirmation(bytesReceived) {
+        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceived});
     }
 
     _abortTransfer() {
@@ -657,13 +668,13 @@ class Peer {
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
     }
 
-    _onBytesReceivedConfirmation(bytesReceived) {
+    _onReceiveConfirmation(bytesReceived) {
         if (!this._chunker) return;
-        this._chunker._onBytesReceived(bytesReceived);
+        this._chunker._onReceiveConfirmation(bytesReceived);
     }
 
     async _onFileReceived(fileBlob) {
-        const acceptedHeader = this._requestAccepted.header.shift();
+        const acceptedHeader = this._acceptedRequest.header.shift();
         this._totalBytesReceived += fileBlob.size;
 
         let duration = (Date.now() - this._timeStart) / 1000;
@@ -672,7 +683,7 @@ class Peer {
 
         console.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
-        this._sendMessage({type: 'file-transfer-complete', size: size, duration: duration, speed: speed});
+        this._sendMessage({type: 'file-transfer-complete', success: true, size: size, duration: duration, speed: speed});
 
         const sameSize = fileBlob.size === acceptedHeader.size;
         const sameName = fileBlob.name === acceptedHeader.name
@@ -685,7 +696,7 @@ class Peer {
 
         this._filesReceived.push(fileBlob);
 
-        if (this._requestAccepted.header.length) return;
+        if (this._acceptedRequest.header.length) return;
 
         // We are done receiving
         this._busy = false;
@@ -693,8 +704,8 @@ class Peer {
         Events.fire('files-received', {
             peerId: this._peerId,
             files: this._filesReceived,
-            imagesOnly: this._requestAccepted.imagesOnly,
-            totalSize: this._requestAccepted.totalSize
+            imagesOnly: this._acceptedRequest.imagesOnly,
+            totalSize: this._acceptedRequest.totalSize
         });
         this._filesReceived = [];
         this._requestAccepted = null;
@@ -702,6 +713,12 @@ class Peer {
 
     _onFileTransferCompleted(message) {
         this._chunker = null;
+
+        if (!message.success) {
+            console.warn('File could not be sent');
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+            return;
+        }
 
         console.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
 
@@ -1143,7 +1160,7 @@ class RTCPeer extends Peer {
 
     _addFileDigester(header) {
         this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
-            this._requestAccepted.totalSize,
+            this._acceptedRequest.totalSize,
             this._totalBytesReceived,
             fileBlob => this._onFileReceived(fileBlob)
         );
@@ -1244,10 +1261,10 @@ class WSPeer extends Peer {
 
     _addFileDigester(header) {
         this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
-            this._requestAccepted.totalSize,
+            this._acceptedRequest.totalSize,
             this._totalBytesReceived,
             fileBlob => this._onFileReceived(fileBlob),
-            bytesReceived => this._sendBytesReceivedConfirmation(bytesReceived)
+            bytesReceived => this._sendReceiveConfirmation(bytesReceived)
         );
     }
 
@@ -1573,9 +1590,9 @@ class FileChunker {
 
     _onChunkRead(chunk) {}
 
-    _onBytesReceived(bytesReceived) {}
+    _onReceiveConfirmation(bytesReceived) {}
 
-    _restartFromOffset(offset) {
+    _resendFromOffset(offset) {
         this._bytesSent = offset;
         this._readChunk();
     }
@@ -1619,7 +1636,7 @@ class FileChunkerRTC extends FileChunker {
         this._readChunk();
     }
 
-    _onBytesReceived(bytesReceived) {
+    _onReceiveConfirmation(bytesReceived) {
         this._bytesReceived = bytesReceived;
     }
 }
@@ -1643,7 +1660,7 @@ class FileChunkerWS extends FileChunker {
         this._readChunk();
     }
 
-    _onBytesReceived(bytesReceived) {
+    _onReceiveConfirmation(bytesReceived) {
         this._bytesReceived = bytesReceived;
         this._readChunk();
     }
@@ -1651,18 +1668,18 @@ class FileChunkerWS extends FileChunker {
 
 class FileDigester {
 
-    constructor(meta, totalSize, totalBytesReceived, fileCompleteCallback, bytesReceivedCallback = null) {
+    constructor(meta, totalSize, totalBytesReceived, fileCompleteCallback, receiveConfirmationCallback = null) {
         this._buffer = [];
         this._bytesReceived = 0;
         this._bytesReceivedSinceLastTime = 0;
         this._maxBytesWithoutConfirmation = 1048576; // 1 MB
-        this._bytesReceivedCallback = bytesReceivedCallback
         this._size = meta.size;
         this._name = meta.name;
         this._mime = meta.mime;
         this._totalSize = totalSize;
         this._totalBytesReceived = totalBytesReceived;
         this._onFileCompleteCallback = fileCompleteCallback;
+        this._receiveConfimationCallback = receiveConfirmationCallback;
     }
 
     unchunk(chunk) {
@@ -1671,8 +1688,8 @@ class FileDigester {
         this._bytesReceivedSinceLastTime += chunk.byteLength || chunk.size;
 
         // If more than half of maxBytesWithoutConfirmation received -> request more
-        if (this._bytesReceivedCallback && 2 * this._bytesReceivedSinceLastTime > this._maxBytesWithoutConfirmation) {
-            this._bytesReceivedCallback(this._bytesReceived);
+        if (this._receiveConfimationCallback && 2 * this._bytesReceivedSinceLastTime > this._maxBytesWithoutConfirmation) {
+            this._receiveConfimationCallback(this._bytesReceived);
             this._bytesReceivedSinceLastTime = 0;
         }
 
