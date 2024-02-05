@@ -673,28 +673,28 @@ class Peer {
         this._chunker._onReceiveConfirmation(bytesReceived);
     }
 
-    async _onFileReceived(fileBlob) {
+    async _onFileReceived(file) {
         const acceptedHeader = this._acceptedRequest.header.shift();
-        this._totalBytesReceived += fileBlob.size;
+        this._totalBytesReceived += file.size;
 
         let duration = (Date.now() - this._timeStart) / 1000;
-        let size = Math.round(10 * fileBlob.size / 1000000) / 10;
-        let speed = Math.round(100 * fileBlob.size / 1000000 / duration) / 100;
+        let size = Math.round(10 * file.size / 1000000) / 10;
+        let speed = Math.round(100 * file.size / 1000000 / duration) / 100;
 
         Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
         this._sendMessage({type: 'file-transfer-complete', success: true, size: size, duration: duration, speed: speed});
 
-        const sameSize = fileBlob.size === acceptedHeader.size;
-        const sameName = fileBlob.name === acceptedHeader.name
+        const sameSize = file.size === acceptedHeader.size;
+        const sameName = file.name === acceptedHeader.name
         if (!sameSize || !sameName) {
             this._abortTransfer();
         }
 
         // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', fileBlob);
+        Events.fire('file-received', file);
 
-        this._filesReceived.push(fileBlob);
+        this._filesReceived.push(file);
 
         if (this._acceptedRequest.header.length) return;
 
@@ -1276,7 +1276,6 @@ class WSPeer extends Peer {
         if (message.type === 'chunk') {
             const data = base64ToArrayBuffer(message.chunk);
             this._onData(data);
-
         }
         else {
             this._onMessage(message);
@@ -1577,14 +1576,28 @@ class FileChunker {
     }
 
     _readChunk() {
-        if (this._currentlySending || this._isFileEnd()) return;
+        if (this._currentlySending || !this._bufferHasSpaceForChunk() || this._isFileEnd()) return;
 
         this._currentlySending = true;
         const chunk = this._file.slice(this._bytesSent, this._bytesSent + this._chunkSize);
         this._reader.readAsArrayBuffer(chunk);
     }
 
-    _onChunkRead(chunk) {}
+    _onChunkRead(chunk) {
+        if (!chunk.byteLength) return;
+
+        this._currentlySending = false;
+
+        this._onChunk(chunk);
+        this._bytesSent += chunk.byteLength;
+
+        // Pause sending when reaching the high watermark or file end
+        if (!this._bufferHasSpaceForChunk() || this._isFileEnd()) return;
+
+        this._readChunk();
+    }
+
+    _bufferHasSpaceForChunk() {}
 
     _onReceiveConfirmation(bytesReceived) {}
 
@@ -1610,26 +1623,16 @@ class FileChunkerRTC extends FileChunker {
         this._peerConnection = peerConnection;
         this._dataChannel = dataChannel;
 
-        this._highWatermark = 4194304; // 4 MB
-        this._lowWatermark = 1048576; // 1 MB
+        this._highWatermark = 10485760; // 10 MB
+        this._lowWatermark = 4194304; // 4 MB
 
         // Set buffer threshold
         this._dataChannel.bufferedAmountLowThreshold = this._lowWatermark;
         this._dataChannel.addEventListener('bufferedamountlow', _ => this._readChunk());
     }
 
-    _onChunkRead(chunk) {
-        if (!chunk.byteLength) return;
-
-        this._currentlySending = false;
-
-        this._onChunk(chunk);
-        this._bytesSent += chunk.byteLength;
-
-        // Pause sending when reaching the high watermark or file end
-        if (this._dataChannel.bufferedAmount > this._highWatermark || this._isFileEnd()) return;
-
-        this._readChunk();
+    _bufferHasSpaceForChunk() {
+        return this._dataChannel.bufferedAmount + this._chunkSize < this._highWatermark;
     }
 
     _onReceiveConfirmation(bytesReceived) {
@@ -1643,17 +1646,12 @@ class FileChunkerWS extends FileChunker {
         super(file, onChunkCallback);
     }
 
-    _onChunkRead(chunk) {
-        this._currentlySending = false;
+    _bytesCurrentlySent() {
+        return this._bytesSent - this._bytesReceived;
+    }
 
-        this._onChunk(chunk);
-        this._bytesSent += chunk.byteLength;
-
-        // if too many bytes sent without confirmation by receiver or if end of file -> abort
-        const bytesCurrentlySent = this._bytesSent - this._bytesReceived;
-        if (bytesCurrentlySent > this._maxBytesSentWithoutConfirmation - this._chunkSize || this._isFileEnd()) return;
-
-        this._readChunk();
+    _bufferHasSpaceForChunk() {
+        return this._bytesCurrentlySent() + this._chunkSize <= this._maxBytesSentWithoutConfirmation;
     }
 
     _onReceiveConfirmation(bytesReceived) {
@@ -1695,12 +1693,13 @@ class FileDigester {
         if (this._bytesReceived < this._size) return;
 
         // we are done
-        const blob = new Blob(this._buffer)
-        this._buffer = null;
-        this._onFileCompleteCallback(new File([blob], this._name, {
+        const file = new File(this._buffer, this._name, {
             type: this._mime,
             lastModified: new Date().getTime()
-        }));
+        })
+
+        this._buffer = [];
+        this._onFileCompleteCallback(file);
     }
 
 }
