@@ -62,6 +62,24 @@ window.isMobile = window.iOS || window.android;
 
 
 // Helper functions
+
+const audioPlayer = (() => {
+    const blop = document.getElementById('blop');
+    blop.addEventListener('ended', _ => {
+        blop.muted = true
+    });
+
+
+    return {
+        playBlop() {
+            if (window.isMobile) return;
+
+            blop.muted = false;
+            blop.play();
+        }
+    }
+})();
+
 const zipper = (() => {
 
     let zipWriter;

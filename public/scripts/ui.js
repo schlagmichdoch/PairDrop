@@ -991,7 +991,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             badgeClassName: badgeClassName
         });
 
-        window.blop.play();
+        audioPlayer.playBlop();
 
         await this._nextFiles();
     }
@@ -2068,7 +2068,7 @@ class ReceiveTextDialog extends Dialog {
     }
 
     _onText(text, peerId) {
-        window.blop.play();
+        audioPlayer.playBlop();
         this._receiveTextQueue.push({text: text, peerId: peerId});
         this._setDocumentTitleMessages();
         if (this.isShown()) return;
