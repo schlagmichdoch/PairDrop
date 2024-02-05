@@ -1564,7 +1564,7 @@ class FileChunker {
     }
 
     _readChunk() {
-        if (this._currentlySending) return;
+        if (this._currentlySending || this._isFileEnd()) return;
 
         this._currentlySending = true;
         const chunk = this._file.slice(this._bytesSent, this._bytesSent + this._chunkSize);
@@ -1606,6 +1606,8 @@ class FileChunkerRTC extends FileChunker {
     }
 
     _onChunkRead(chunk) {
+        if (!chunk.byteLength) return;
+
         this._currentlySending = false;
 
         this._onChunk(chunk);
