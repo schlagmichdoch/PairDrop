@@ -2696,7 +2696,7 @@ class NoSleepUI {
     }
 
     static enable() {
-        if (!this._interval) {
+        if (!NoSleepUI._interval) {
             NoSleepUI._nosleep.enable();
             // Disable after 10s if all peers are idle
             NoSleepUI._interval = setInterval(() => NoSleepUI.disableIfPeersIdle(), 10000);
