@@ -2591,7 +2591,7 @@ class Notifications {
 
 
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
-        Events.on('files-received', e => this._downloadNotification(e.detail.files));
+        Events.on('files-received', e => this._downloadNotification(e.detail.files, e.detail.imagesOnly));
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
     }
 
@@ -2647,31 +2647,30 @@ class Notifications {
         }
     }
 
-    _downloadNotification(files) {
-        if (document.visibilityState !== 'visible') {
-            let imagesOnly = files.every(file => file.type.split('/')[0] === 'image');
-            let title;
+    _downloadNotification(files, imagesOnly) {
+        if (document.visibilityState === 'visible') return;
 
-            if (files.length === 1) {
-                title = `${files[0].name}`;
+        let title, fileOther;
+        const fileName = files[0].name;
+
+        if (files.length === 1) {
+            title = `${fileName}`;
+        }
+        else {
+            if (files.length === 2) {
+                fileOther = imagesOnly
+                    ? Localization.getTranslation("dialogs.file-other-description-image")
+                    : Localization.getTranslation("dialogs.file-other-description-file");
             }
             else {
-                let fileOther;
-                if (files.length === 2) {
-                    fileOther = imagesOnly
-                        ? Localization.getTranslation("dialogs.file-other-description-image")
-                        : Localization.getTranslation("dialogs.file-other-description-file");
-                }
-                else {
-                    fileOther = imagesOnly
-                        ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
-                        : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
-                }
-                title = `${files[0].name} ${fileOther}`
+                fileOther = imagesOnly
+                    ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
+                    : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
             }
-            const notification = this._notify(title, Localization.getTranslation("notifications.click-to-download"));
-            this._bind(notification, _ => this._download(notification));
+            title = `${fileName} ${fileOther}`
         }
+        const notification = this._notify(title, Localization.getTranslation("notifications.click-to-download"));
+        this._bind(notification, _ => this._download(notification));
     }
 
     _requestNotification(request, peerId) {
