@@ -939,26 +939,28 @@ class ReceiveDialog extends Dialog {
 
     _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
         let fileOther = "";
-
         if (files.length === 2) {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image")
                 : Localization.getTranslation("dialogs.file-other-description-file");
         }
-        else if (files.length >= 2) {
+        else if (files.length > 2) {
             fileOther = imagesOnly
                 ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
                 : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
         }
 
-        this.$fileOther.innerText = fileOther;
-
         const fileName = files[0].name;
         const fileNameSplit = fileName.split('.');
         const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
-        this.$fileStem.innerText = fileName.substring(0, fileName.length - fileExtension.length);
+        const fileStem = fileName.substring(0, fileName.length - fileExtension.length);
+
+        const fileSize = this._formatFileSize(totalSize);
+
+        this.$fileOther.innerText = fileOther;
+        this.$fileStem.innerText = fileStem;
         this.$fileExtension.innerText = fileExtension;
-        this.$fileSize.innerText = this._formatFileSize(totalSize);
+        this.$fileSize.innerText = fileSize;
         this.$displayName.innerText = displayName;
         this.$displayName.title = connectionHash;
         this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
@@ -1005,6 +1007,55 @@ class ReceiveFileDialog extends ReceiveDialog {
         await this._displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
     }
 
+    canShareFilesViaMenu(files) {
+        return window.isMobile && !!navigator.share && navigator.canShare({files});
+    }
+
+    async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
+        const descriptor = this._getDescriptor(files, imagesOnly);
+        const documentTitleTranslation = files.length === 1
+            ? `${ Localization.getTranslation("document-titles.file-received") } - PairDrop`
+            : `${ Localization.getTranslation("document-titles.file-received-plural", null, {count: files.length}) } - PairDrop`;
+
+        // If possible, share via menu - else download files
+        const shareViaMenu = this.canShareFilesViaMenu(files);
+
+        this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
+        this._setTitle(descriptor);
+
+        await this._addFileToPreviewBox(files[0]);
+
+        document.title = documentTitleTranslation;
+        changeFavicon("images/favicon-96x96-notification.png");
+
+        if (shareViaMenu) {
+            await this._setViaShareMenu(files);
+        }
+        else {
+            await this._setViaDownload(peerId, files, totalSize, descriptor);
+        }
+
+        Events.fire('set-progress', {peerId: peerId, progress: 1, status: null});
+    }
+
+    _getDescriptor(files, imagesOnly) {
+        let descriptor;
+        if (files.length === 1) {
+            descriptor = imagesOnly
+                ? Localization.getTranslation("dialogs.title-image")
+                : Localization.getTranslation("dialogs.title-file");
+        }
+        else {
+            descriptor = imagesOnly
+                ? Localization.getTranslation("dialogs.title-image-plural")
+                : Localization.getTranslation("dialogs.title-file-plural");
+        }
+        return descriptor;
+    }
+
+    _setTitle(descriptor) {
+        this.$receiveTitle.innerText = Localization.getTranslation("dialogs.receive-title", null, {descriptor: descriptor});
+    }
     createPreviewElement(file) {
         return new Promise((resolve, reject) => {
             try {
@@ -1016,163 +1067,240 @@ class ReceiveFileDialog extends ReceiveDialog {
                 }
 
                 if (Object.keys(previewElement).indexOf(mime) === -1) {
-                    resolve(false);
+                    reject('Preview is only supported for images, audio and video');
+                    return;
                 }
-                else {
-                    let element = document.createElement(previewElement[mime]);
-                    element.controls = true;
-                    element.onload = _ => {
-                        this.$previewBox.appendChild(element);
-                        resolve(true);
-                    };
-                    element.onloadeddata = _ => {
-                        this.$previewBox.appendChild(element);
-                        resolve(true);
-                    };
-                    element.onerror = _ => {
-                        reject(`${mime} preview could not be loaded from type ${file.type}`);
-                    };
-                    element.src = URL.createObjectURL(file);
-                }
+
+                let element = document.createElement(previewElement[mime]);
+                let timeout = setTimeout(_ => {
+                    reject('Preview could not be loaded: timeout', file.type);
+                }, 1000);
+
+                element.controls = true;
+                element.onload = _ => {
+                    clearTimeout(timeout);
+                    resolve(element);
+                };
+                element.onloadeddata = _ => {
+                    clearTimeout(timeout);
+                    resolve(element);
+                };
+                element.onerror = _ => {
+                    clearTimeout(timeout);
+                    reject('Preview could not be loaded from type', file.type);
+                };
+                element.src = URL.createObjectURL(file);
             } catch (e) {
-                reject(`preview could not be loaded from type ${file.type}`);
+                reject('Preview could not be loaded from type', file.type);
             }
         });
     }
 
-    async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
-        this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
-
-        let descriptor, url, filenameDownload;
-        if (files.length === 1) {
-            descriptor = imagesOnly
-                ? Localization.getTranslation("dialogs.title-image")
-                : Localization.getTranslation("dialogs.title-file");
-        }
-        else {
-            descriptor = imagesOnly
-                ? Localization.getTranslation("dialogs.title-image-plural")
-                : Localization.getTranslation("dialogs.title-file-plural");
-        }
-        this.$receiveTitle.innerText = Localization.getTranslation("dialogs.receive-title", null, {descriptor: descriptor});
-
-        const canShare = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files});
-        if (canShare) {
-            this.$shareBtn.removeAttribute('hidden');
-            this.$shareBtn.onclick = _ => {
-                navigator.share({files: files})
-                    .catch(err => {
-                        Logger.error(err);
-                    });
-            }
-        }
-
-        let downloadZipped = false;
-        if (files.length > 1) {
-            downloadZipped = true;
-            try {
-                let bytesCompleted = 0;
-                zipper.createNewZipWriter();
-                for (let i=0; i<files.length; i++) {
-                    await zipper.addFile(files[i], {
-                        onprogress: (progress) => {
-                            Events.fire('set-progress', {
-                                peerId: peerId,
-                                progress: (bytesCompleted + progress) / totalSize,
-                                status: 'process'
-                            })
-                        }
-                    });
-                    bytesCompleted += files[i].size;
-                }
-                url = await zipper.getBlobURL();
-
-                let now = new Date(Date.now());
-                let year = now.getFullYear().toString();
-                let month = (now.getMonth()+1).toString();
-                month = month.length < 2 ? "0" + month : month;
-                let date = now.getDate().toString();
-                date = date.length < 2 ? "0" + date : date;
-                let hours = now.getHours().toString();
-                hours = hours.length < 2 ? "0" + hours : hours;
-                let minutes = now.getMinutes().toString();
-                minutes = minutes.length < 2 ? "0" + minutes : minutes;
-                filenameDownload = `PairDrop_files_${year+month+date}_${hours+minutes}.zip`;
-            } catch (e) {
-                Logger.error(e);
-                downloadZipped = false;
-            }
-        }
-
-        this.$downloadBtn.removeAttribute('disabled');
-        this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download");
-        this.$downloadBtn.onclick = _ => {
-            if (downloadZipped) {
-                let tmpZipBtn = document.createElement("a");
-                tmpZipBtn.download = filenameDownload;
-                tmpZipBtn.href = url;
-                tmpZipBtn.click();
-            }
-            else {
-                this._downloadFilesIndividually(files);
-            }
-
-            if (!canShare) {
-                this.$downloadBtn.innerText = Localization.getTranslation("dialogs.download-again");
-            }
-            Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
-
-            // Prevent clicking the button multiple times
-            this.$downloadBtn.style.pointerEvents = "none";
-            setTimeout(() => this.$downloadBtn.style.pointerEvents = "unset", 2000);
-        };
-
-        document.title = files.length === 1
-            ? `${ Localization.getTranslation("document-titles.file-received") } - PairDrop`
-            : `${ Localization.getTranslation("document-titles.file-received-plural", null, {count: files.length}) } - PairDrop`;
-        changeFavicon("images/favicon-96x96-notification.png");
-
-        Events.fire('set-progress', {peerId: peerId, progress: 1, status: 'process'})
-        this.show();
+    _disableButton($button, duration) {
+        $button.style.pointerEvents = "none";
 
         setTimeout(() => {
-            // wait for the dialog to be shown
-            if (canShare) {
-                this.$shareBtn.click();
-            }
-            else {
-                this.$downloadBtn.click();
-            }
-        }, 500);
-
-        this.createPreviewElement(files[0])
-            .then(canPreview => {
-                if (canPreview) {
-                    Logger.debug('the file is able to preview');
-                }
-                else {
-                    Logger.debug('the file is not able to preview');
-                }
-            })
-            .catch(r => console.error(r));
+            $button.style.pointerEvents = "unset";
+        }, duration);
     }
 
-    _downloadFilesIndividually(files) {
+    async _setShareButton(files) {
+        this.$shareBtn.onclick = _ => {
+            navigator.share({files: files})
+                .catch(err => {
+                    Logger.error(err);
+                });
+
+            // Prevent clicking the button multiple times
+            this._disableButton(this.$shareBtn, 2000);
+        }
+        this.$shareBtn.removeAttribute('disabled');
+        this.$shareBtn.removeAttribute('hidden');
+    }
+
+    async _setDownloadButton(peerId, files, totalSize, descriptor) {
+        let downloadTranslation = Localization.getTranslation("dialogs.download")
+        let downloadSuccessfulTranslation = Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor});
+
+        this.$downloadBtn.innerText = downloadTranslation;
+        this.$downloadBtn.removeAttribute('disabled');
+        this.$downloadBtn.removeAttribute('hidden');
+
+        let zipFileUrl, zipFileName;
+
+        const tooBigToZip = window.iOS && totalSize > 256000000;
+        this.sendAsZip = false;
+        if (files.length > 1 && !tooBigToZip) {
+            zipFileName = this._createZipFilename()
+            zipFileUrl = await this._createZipFile(files, zipProgress => {
+                Events.fire('set-progress', {
+                    peerId: peerId,
+                    progress: zipProgress / totalSize,
+                    status: 'process'
+                })
+            })
+
+            this.sendAsZip = !!zipFileUrl;
+        }
+
+        // If single file or zipping failed -> download files individually -> else download zip
+        if (this.sendAsZip) {
+            this._setDownloadButtonToZip(zipFileUrl, zipFileName, downloadSuccessfulTranslation);
+        } else {
+            this._setDownloadButtonToFiles(files, downloadSuccessfulTranslation, downloadTranslation);
+        }
+    }
+
+    _setDownloadButtonToZip(zipFileUrl, zipFileName, downloadSuccessfulTranslation) {
+        this.downloadSuccessful = false;
+        this.$downloadBtn.onclick = _ => {
+            this._downloadFileFromUrl(zipFileUrl, zipFileName)
+
+            Events.fire('notify-user', downloadSuccessfulTranslation);
+            this.downloadSuccessful = true;
+
+            this.hide();
+        };
+    }
+
+    _setDownloadButtonToFiles(files, downloadSuccessfulTranslation, downloadTranslation) {
+        this.downloadSuccessful = false;
+        let i = 0;
+
+        this.$downloadBtn.innerText = `${downloadTranslation} ${i + 1}/${files.length}`;
+
+        this.$downloadBtn.onclick = _ => {
+            this._disableButton(this.$shareBtn, 2000);
+
+            this._downloadFiles([files[i]]);
+
+            if (i < files.length - 1) {
+                i++;
+                this.$downloadBtn.innerText = `${downloadTranslation} ${i + 1}/${files.length}`;
+                return
+            }
+
+            Events.fire('notify-user', downloadSuccessfulTranslation);
+            this.downloadSuccessful = true;
+
+            this.hide()
+        };
+    }
+
+    async _addFileToPreviewBox(file) {
+        try {
+            const previewElement = await this.createPreviewElement(file)
+            this.$previewBox.appendChild(previewElement);
+        }
+        catch (e) {
+            Logger.log(e);
+        }
+    }
+
+    _downloadFileFromUrl(url, name) {
+        let tmpZipBtn = document.createElement("a");
+        tmpZipBtn.download = name;
+        tmpZipBtn.href = url;
+        tmpZipBtn.click();
+    }
+
+    _downloadFiles(files) {
         let tmpBtn = document.createElement("a");
-        for (let i=0; i<files.length; i++) {
+        for (let i = 0; i < files.length; i++) {
             tmpBtn.download = files[i].name;
             tmpBtn.href = URL.createObjectURL(files[i]);
             tmpBtn.click();
         }
     }
 
+    async _createZipFile(files, onProgressCallback) {
+        try {
+            let bytesCompleted = 0;
+
+            zipper.createNewZipWriter();
+
+            for (let i = 0; i < files.length; i++) {
+                await zipper.addFile(files[i], {
+                    onprogress: (progress) => onProgressCallback(bytesCompleted + progress)
+                });
+                bytesCompleted += files[i].size;
+            }
+
+            return await zipper.getBlobURL();
+        }
+        catch (e) {
+            Logger.error(e);
+            return false;
+        }
+    }
+
+    _createZipFilename() {
+        let now = new Date(Date.now());
+        let year = now.getFullYear().toString();
+        let month = (now.getMonth()+1).toString();
+        let date = now.getDate().toString();
+        let hours = now.getHours().toString();
+        let minutes = now.getMinutes().toString();
+
+        // Pad single letter strings with preceding "0"
+        month = month.length < 2 ? "0" + month : month;
+        date = date.length < 2 ? "0" + date : date;
+        hours = hours.length < 2 ? "0" + hours : hours;
+        minutes = minutes.length < 2 ? "0" + minutes : minutes;
+
+        return `PairDrop_files_${year}${month}${date}_${hours}${minutes}.zip`;
+    }
+
+    async _setViaShareMenu(files) {
+        await this._setShareButton(files);
+
+        // always show dialog
+        this.show();
+        // open share menu automatically
+        setTimeout(() => {
+            this.$shareBtn.click();
+        }, 500);
+    }
+
+    async _setViaDownload(peerId, files, totalSize, descriptor) {
+        await this._setDownloadButton(peerId, files, totalSize, descriptor);
+
+        if (!this.sendAsZip && files.length !== 1) {
+            this.show();
+            return;
+        }
+
+        // download automatically if zipped or if only one file is received
+        this.$downloadBtn.click();
+        // if automatic download fails -> show dialog
+        setTimeout(() => {
+            if (!this.downloadSuccessful) {
+                this.show();
+            }
+        }, 1000);
+    }
+
+    _tidyUpButtons() {
+        this.$shareBtn.setAttribute('disabled', true);
+        this.$shareBtn.setAttribute('hidden', true);
+        this.$shareBtn.onclick = null;
+        this.$downloadBtn.setAttribute('disabled', true);
+        this.$downloadBtn.setAttribute('hidden', true);
+        this.$downloadBtn.onclick = null;
+    }
+
+    _tidyUpPreviewBox() {
+        this.$previewBox.innerHTML = '';
+    }
+
     hide() {
         super.hide();
         setTimeout(async () => {
-            this.$shareBtn.setAttribute('hidden', true);
-            this.$downloadBtn.setAttribute('disabled', true);
-            this.$previewBox.innerHTML = '';
+            this._tidyUpButtons();
+            this._tidyUpPreviewBox();
+
             this._busy = false;
+
             await this._nextFiles();
         }, 300);
     }
@@ -1213,29 +1341,31 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this._showRequestDialog(request, peerId)
     }
 
+    _addThumbnailToPreviewBox(thumbnailData) {
+        if (thumbnailData && thumbnailData.substring(0, 22) === "data:image/jpeg;base64") {
+            let element = document.createElement('img');
+            element.src = thumbnailData;
+            this.$previewBox.appendChild(element)
+        }
+    }
+
     _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
 
-        const displayName = $(peerId).ui._displayName();
-        const connectionHash = $(peerId).ui._connectionHash;
-
-        const badgeClassName = $(peerId).ui._badgeClassName();
-
-        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize, badgeClassName);
-
-        if (request.thumbnailDataUrl && request.thumbnailDataUrl.substring(0, 22) === "data:image/jpeg;base64") {
-            let element = document.createElement('img');
-            element.src = request.thumbnailDataUrl;
-            this.$previewBox.appendChild(element)
-        }
-
-        const transferRequestTitle= request.imagesOnly
+        const transferRequestTitleTranslation = request.imagesOnly
             ? Localization.getTranslation('document-titles.image-transfer-requested')
             : Localization.getTranslation('document-titles.file-transfer-requested');
 
-        this.$receiveTitle.innerText = transferRequestTitle;
+        const displayName = $(peerId).ui._displayName();
+        const connectionHash = $(peerId).ui._connectionHash;
+        const badgeClassName = $(peerId).ui._badgeClassName();
 
-        document.title =  `${transferRequestTitle} - PairDrop`;
+        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize, badgeClassName);
+        this._addThumbnailToPreviewBox(request.thumbnailDataUrl);
+
+        this.$receiveTitle.innerText = transferRequestTitleTranslation;
+
+        document.title =  `${transferRequestTitleTranslation} - PairDrop`;
         changeFavicon("images/favicon-96x96-notification.png");
 
         this.$acceptRequestBtn.removeAttribute('disabled');
@@ -1249,6 +1379,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         })
         if (accepted) {
             Events.fire('set-progress', {peerId: this.correspondingPeerId, progress: 0, status: 'wait'});
+            // Todo: only on big files?
             NoSleepUI.enable();
         }
         this.hide();
