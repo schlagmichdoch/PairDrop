@@ -715,7 +715,8 @@ class PeerUI {
             "transfer": Localization.getTranslation("peer-ui.transferring"),
             "receive": Localization.getTranslation("peer-ui.receiving"),
             "process": Localization.getTranslation("peer-ui.processing"),
-            "wait": Localization.getTranslation("peer-ui.waiting")
+            "wait": Localization.getTranslation("peer-ui.waiting"),
+            "complete": Localization.getTranslation("peer-ui.complete")
         }[status];
 
         this.$el.setAttribute('status', status);

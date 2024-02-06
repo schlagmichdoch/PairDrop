@@ -180,6 +180,7 @@
         "waiting": "Waiting…",
         "processing": "Processing…",
         "transferring": "Transferring…",
-        "receiving": "Receiving…"
+        "receiving": "Receiving…",
+        "complete": "Transfer complete"
     }
 }

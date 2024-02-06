@@ -329,14 +329,14 @@ class Peer {
         this._filesQueue = [];
         this._busy = false;
 
+        this._state = 'idle'; // 'idle', 'prepare', 'wait', 'receive', 'transfer', 'text-sent'
+
         // evaluate auto accept
         this._evaluateAutoAccept();
     }
 
-    // Is overwritten in expanding classes
     _onServerSignalMessage(message) {}
 
-    // Is overwritten in expanding classes
     _refresh() {}
 
     _onDisconnected() {}
@@ -345,10 +345,8 @@ class Peer {
         this._isCaller = isCaller;
     }
 
-    // Is overwritten in expanding classes
     _sendMessage(message) {}
 
-    // Is overwritten in expanding classes
     _sendData(data) {}
 
     _sendDisplayName(displayName) {
@@ -444,10 +442,28 @@ class Peer {
     }
 
     _onPeerConnected() {
-        if (this._digester) {
+        this._sendCurrentState();
+    }
+
+    _sendCurrentState() {
+        this._sendMessage({type: 'state', state: this._state})
+    }
+
+    _onReceiveState(peerState) {
+        if (this._state === "receive") {
+            if (peerState !== "transfer" || !this._digester) {
+                this._abortTransfer();
+                return;
+            }
             // Reconnection during receiving of file. Send request for restart
             const offset = this._digester._bytesReceived;
             this._sendResendRequest(offset);
+            return
+        }
+
+        if (this._state === "transfer" && peerState !== "receive") {
+            this._abortTransfer();
+            return;
         }
     }
 
@@ -455,7 +471,8 @@ class Peer {
         let header = [];
         let totalSize = 0;
         let imagesOnly = true
-        for (let i=0; i<files.length; i++) {
+        this._state = 'prepare';
+        for (let i = 0; i < files.length; i++) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 0.8*i/files.length, status: 'prepare'})
             header.push({
                 name: files[i].name,
@@ -488,6 +505,7 @@ class Peer {
             thumbnailDataUrl: dataUrl
         });
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'})
+        this._state = 'wait';
     }
 
     sendFiles() {
@@ -527,7 +545,7 @@ class Peer {
 
 
     _onResendRequest(offset) {
-        if (!this._chunker) {
+        if (this._state !== 'transfer' || !this._chunker) {
             this._sendTransferAbortion();
             return;
         }
@@ -549,7 +567,7 @@ class Peer {
                 this._onFilesTransferRequest(message);
                 break;
             case 'header':
-                this._onFileHeader(message);
+                this._onHeader(message);
                 break;
             case 'progress':
                 this._onProgress(message.progress);
@@ -564,7 +582,7 @@ class Peer {
                 this._onFileTransferRequestResponded(message);
                 break;
             case 'file-transfer-complete':
-                this._onFileTransferCompleted(message);
+                this._onFileTransferComplete(message);
                 break;
             case 'message-transfer-complete':
                 this._onMessageTransferCompleted();
@@ -574,6 +592,9 @@ class Peer {
                 break;
             case 'display-name-changed':
                 this._onDisplayNameChanged(message);
+                break;
+            case 'state':
+                this._onReceiveState(message.state);
                 break;
             default:
                 Logger.warn('RTC: Unknown message type:', message.type);
@@ -613,12 +634,13 @@ class Peer {
         this._pendingRequest = null;
     }
 
-    _onFileHeader(header) {
+    _onHeader(header) {
         if (!this._acceptedRequest || !this._acceptedRequest.header.length) {
             this._sendTransferAbortion();
             return;
         }
 
+        this._state = 'receive';
         this._lastProgress = 0;
         this._timeStart = Date.now();
         this._addFileDigester(header);
@@ -631,16 +653,18 @@ class Peer {
     }
 
     _abortTransfer() {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
-        Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
-        this._filesReceived = [];
-        this._requestAccepted = null;
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: null});
+        this._state = 'idle';
+        this._busy = false;
+        this._chunker = null;
+        this._pendingRequest = null;
+        this._acceptedRequest = null;
         this._digester = null;
-        throw new Error("Received files differ from requested files. Abort!");
+        this._filesReceived = [];
     }
 
     _onChunkReceived(chunk) {
-        if(!this._digester || !(chunk.byteLength || chunk.size)) return;
+        if(this._state !== 'receive' || !this._digester || !(chunk.byteLength || chunk.size)) return;
 
         this._digester.unchunk(chunk);
 
@@ -648,6 +672,7 @@ class Peer {
 
         if (progress > 1) {
             this._abortTransfer();
+            Logger.error("Too many bytes received. Abort!");
             return;
         }
 
@@ -665,42 +690,46 @@ class Peer {
     }
 
     _onProgress(progress) {
+        if (this._state !== 'transfer') return;
+        
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
     }
 
     _onReceiveConfirmation(bytesReceived) {
-        if (!this._chunker) return;
+        if (!this._chunker || this._state !== 'transfer') return;
         this._chunker._onReceiveConfirmation(bytesReceived);
     }
 
-    async _onFileReceived(file) {
+    _fitsHeader(file) {
+        if (!this._acceptedRequest) {
+            return false;
+        }
+        
+        // Check if file fits to header
         const acceptedHeader = this._acceptedRequest.header.shift();
-        this._totalBytesReceived += file.size;
-
-        let duration = (Date.now() - this._timeStart) / 1000;
-        let size = Math.round(10 * file.size / 1000000) / 10;
-        let speed = Math.round(100 * file.size / 1000000 / duration) / 100;
-
-        Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
-
-        this._sendMessage({type: 'file-transfer-complete', success: true, size: size, duration: duration, speed: speed});
 
         const sameSize = file.size === acceptedHeader.size;
         const sameName = file.name === acceptedHeader.name
-        if (!sameSize || !sameName) {
-            this._abortTransfer();
-        }
+        return sameSize && sameName;
+    }
+
+    _logTransferSpeed(size, duration, speed) {
+        Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
+    }
+
+    _singleFileTransferComplete(file, duration, size, speed) {
+        this._totalBytesReceived += file.size;
+        this._sendMessage({type: 'file-transfer-complete', success: true, duration: duration, size: size, speed: speed});
 
         // include for compatibility with 'Snapdrop & PairDrop for Android' app
         Events.fire('file-received', file);
 
         this._filesReceived.push(file);
+    }
 
-        if (this._acceptedRequest.header.length) return;
-
-        // We are done receiving
-        this._busy = false;
+    _allFilesTransferComplete() {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
+        this._state = 'idle';
         Events.fire('files-received', {
             peerId: this._peerId,
             files: this._filesReceived,
@@ -708,15 +737,43 @@ class Peer {
             totalSize: this._acceptedRequest.totalSize
         });
         this._filesReceived = [];
-        this._requestAccepted = null;
+        this._acceptedRequest = null;
+        this._busy = false;
     }
 
-    _onFileTransferCompleted(message) {
+    async _onFileReceived(file) {
+        if (!this._fitsHeader(file)) {
+            this._abortTransfer();
+            Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
+            Logger.error("Received files differ from requested files. Abort!");
+            return;
+        }
+
+        const duration = (Date.now() - this._timeStart) / 1000;
+        const size = Math.round(10 * file.size / 1000000) / 10;
+        const speed = Math.round(100 * file.size / 1000000 / duration) / 100;
+
+        // Log speed
+        this._logTransferSpeed(duration, size, speed);
+
+        // File transfer complete
+        this._singleFileTransferComplete(file, duration, size, speed);
+
+        if (this._acceptedRequest.header.length) return;
+
+        // We are done receiving
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer'});
+        this._allFilesTransferComplete();
+    }
+
+    _onFileTransferComplete(message) {
         this._chunker = null;
 
         if (!message.success) {
             Logger.warn('File could not be sent');
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+
+            this._state = 'idle';
             return;
         }
 
@@ -728,36 +785,48 @@ class Peer {
         }
 
         // No more files in queue. Transfer is complete
+        this._state = 'idle';
         this._busy = false;
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'complete'});
         Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
         Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
     }
 
     _onFileTransferRequestResponded(message) {
-        if (!message.accepted) {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
+        if (!message.accepted || this._state !== 'wait') {
+            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: null});
+            this._state = 'idle';
             this._filesRequested = null;
             return;
         }
         Events.fire('file-transfer-accepted');
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
+        this._state = 'transfer';
         this.sendFiles();
     }
 
     _onMessageTransferCompleted() {
+        if (this._state !== 'text-sent') return;
+        this._state = 'idle';
         Events.fire('notify-user', Localization.getTranslation("notifications.message-transfer-completed"));
     }
 
     sendText(text) {
+        this._state = 'text-sent';
         const unescaped = btoa(unescape(encodeURIComponent(text)));
         this._sendMessage({ type: 'text', text: unescaped });
     }
 
     _onTextReceived(message) {
         if (!message.text) return;
-        const escaped = decodeURIComponent(escape(atob(message.text)));
-        Events.fire('text-received', { text: escaped, peerId: this._peerId });
-        this._sendMessage({ type: 'message-transfer-complete' });
+        try {
+            const escaped = decodeURIComponent(escape(atob(message.text)));
+            Events.fire('text-received', { text: escaped, peerId: this._peerId });
+            this._sendMessage({ type: 'message-transfer-complete' });
+        }
+        catch (e) {
+            Logger.error(e);
+        }
     }
 
     _onDisplayNameChanged(message) {
@@ -1133,7 +1202,6 @@ class RTCPeer extends Peer {
     }
 
     async _sendFile(file) {
-        this._sendHeader(file);
         this._chunker = new FileChunkerRTC(
             file,
             chunk => this._sendData(chunk),
@@ -1141,6 +1209,8 @@ class RTCPeer extends Peer {
             this._dataChannel
         );
         this._chunker._readChunk();
+        this._sendHeader(file);
+        this._state = 'transfer';
     }
 
     _onMessage(message) {
