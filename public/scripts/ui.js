@@ -446,10 +446,16 @@ class PeerUI {
 
         this.html();
 
+        this.$icon = this.$el.querySelector('svg use');
+        this.$displayName = this.$el.querySelector('.name');
+        this.$deviceName = this.$el.querySelector('.device-name');
         this.$label = this.$el.querySelector('label');
         this.$input = this.$el.querySelector('input');
-        this.$displayName = this.$el.querySelector('.name');
         this.$progress = this.$el.querySelector('.progress');
+
+        this.$icon.setAttribute('xlink:href', this._icon());
+        this.$displayName.textContent = this._displayName();
+        this.$deviceName.textContent = this._deviceName();
 
         this.updateTypesClassList();
 
@@ -489,10 +495,6 @@ class PeerUI {
                     <div class="status font-body2"></div>
                 </div>
             </label>`;
-
-        this.$el.querySelector('svg use').setAttribute('xlink:href', this._icon());
-        this.$el.querySelector('.name').textContent = this._displayName();
-        this.$el.querySelector('.device-name').textContent = this._deviceName();
     }
 
     updateTypesClassList() {
@@ -544,8 +546,6 @@ class PeerUI {
 
     _createCallbacks() {
         this._callbackInput = e => this._onFilesSelected(e);
-        this._callbackClickSleep = _ => NoSleepUI.enable();
-        this._callbackTouchStartSleep = _ => NoSleepUI.enable();
         this._callbackDrop = e => this._onDrop(e);
         this._callbackDragEnd = e => this._onDragEnd(e);
         this._callbackDragLeave = e => this._onDragEnd(e);
@@ -562,9 +562,7 @@ class PeerUI {
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
             // Add Events Normal Mode
-            this.$el.querySelector('input').addEventListener('change', this._callbackInput);
-            this.$el.addEventListener('click', this._callbackClickSleep);
-            this.$el.addEventListener('touchstart', this._callbackTouchStartSleep);
+            this.$input.addEventListener('change', this._callbackInput);
             this.$el.addEventListener('drop', this._callbackDrop);
             this.$el.addEventListener('dragend', this._callbackDragEnd);
             this.$el.addEventListener('dragleave', this._callbackDragLeave);
@@ -575,8 +573,7 @@ class PeerUI {
         }
         else {
             // Remove Events Normal Mode
-            this.$el.removeEventListener('click', this._callbackClickSleep);
-            this.$el.removeEventListener('touchstart', this._callbackTouchStartSleep);
+            this.$input.removeEventListener('change', this._callbackInput);
             this.$el.removeEventListener('drop', this._callbackDrop);
             this.$el.removeEventListener('dragend', this._callbackDragEnd);
             this.$el.removeEventListener('dragleave', this._callbackDragLeave);
@@ -677,6 +674,13 @@ class PeerUI {
 
         if (files.length === 0) return;
 
+        let totalSize = 0;
+        for (let i = 0; i < files.length; i++) {
+            totalSize += files[i].size;
+        }
+        // Prevent device from sleeping
+        NoSleepUI.enable();
+
         Events.fire('files-selected', {
             files: files,
             to: this._peer.id
@@ -724,7 +728,7 @@ class PeerUI {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
             this._currentStatus = null;
-            NoSleepUI.disableIfPeersIdle();
+            NoSleepUI.disableIfIdle();
             return;
         }
 
@@ -1346,9 +1350,11 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
 
+        this._filesTransferRequestQueue = [];
+        this._currentRequest = null;
+
         Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
         Events.on('keydown', e => this._onKeyDown(e));
-        this._filesTransferRequestQueue = [];
     }
 
     _onKeyDown(e) {
@@ -1366,9 +1372,13 @@ class ReceiveRequestDialog extends ReceiveDialog {
     }
 
     _dequeueRequests() {
-        if (!this._filesTransferRequestQueue.length) return;
+        if (!this._filesTransferRequestQueue.length) {
+            this._currentRequest = null;
+            return;
+        }
         let {request, peerId} = this._filesTransferRequestQueue.shift();
-        this._showRequestDialog(request, peerId)
+        this._currentRequest = request;
+        this._showRequestDialog(request, peerId);
     }
 
     _addThumbnailToPreviewBox(thumbnailData) {
@@ -1409,7 +1419,8 @@ class ReceiveRequestDialog extends ReceiveDialog {
         })
         if (accepted) {
             Events.fire('set-progress', {peerId: this.correspondingPeerId, progress: 0, status: 'wait'});
-            // Todo: only on big files?
+
+            // Prevent device from sleeping
             NoSleepUI.enable();
         }
         this.hide();
@@ -2856,20 +2867,20 @@ class WebFileHandlersUI {
 class NoSleepUI {
     constructor() {
         NoSleepUI._nosleep = new NoSleep();
+        NoSleepUI._active = false;
     }
 
     static enable() {
-        if (!NoSleepUI._interval) {
-            NoSleepUI._nosleep.enable();
-            // Disable after 10s if all peers are idle
-            NoSleepUI._interval = setInterval(() => NoSleepUI.disableIfPeersIdle(), 10000);
-        }
+        if (NoSleepUI._active) return;
+
+        NoSleepUI._nosleep.enable();
+        NoSleepUI._active = true;
     }
 
-    static disableIfPeersIdle() {
-        if ($$('x-peer[status]') === null) {
-            clearInterval(NoSleepUI._interval);
-            NoSleepUI._nosleep.disable();
-        }
+    static disableIfIdle() {
+        if ($$('x-peer[status]')) return;
+
+        NoSleepUI._nosleep.disable();
+        NoSleepUI._active = false;
     }
 }
