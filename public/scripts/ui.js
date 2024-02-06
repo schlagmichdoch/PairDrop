@@ -422,6 +422,10 @@ class PeerUI {
         this._connectionHash = "";
         this._connected = false;
 
+        this._currentProgress = 0;
+        this._currentStatus = null
+        this._oldStatus = null;
+
         this._roomIds = {}
         this._roomIds[roomType] = roomId;
 
@@ -445,6 +449,7 @@ class PeerUI {
         this.$label = this.$el.querySelector('label');
         this.$input = this.$el.querySelector('input');
         this.$displayName = this.$el.querySelector('.name');
+        this.$progress = this.$el.querySelector('.progress');
 
         this.updateTypesClassList();
 
@@ -599,17 +604,17 @@ class PeerUI {
             this._connected = true;
 
             // on reconnect
-            this.setStatus(this.oldStatus);
-            this.oldStatus = null;
+            this.setStatus(this._oldStatus);
+            this._oldStatus = null;
 
             this._connectionHash = connectionHash;
         }
         else {
             this._connected = false;
 
-            if (!this.oldStatus && this.currentStatus !== "connect") {
+            if (!this._oldStatus && this._currentStatus !== "connect") {
                 // save old status when reconnecting
-                this.oldStatus = this.currentStatus;
+                this._oldStatus = this._currentStatus;
             }
             this.setStatus("connect");
 
@@ -678,36 +683,50 @@ class PeerUI {
     }
 
     setProgress(progress, status) {
-        const $progress = this.$el.querySelector('.progress');
-
-        if (0.5 < progress && progress < 1) {
-            $progress.classList.add('over50');
-        }
-        else {
-            $progress.classList.remove('over50');
-        }
-
-        if (progress === 1) {
-            progress = 0;
-            status = null;
-        }
+        clearTimeout(this.resetProgressTimeout);
 
         this.setStatus(status);
 
+        const progressSpillsOverHalf = this._currentProgress < 0.5 && 0.5 <= progress;
+
+        if (progress === 0 || progressSpillsOverHalf) {
+            this.$progress.classList.remove('animate');
+        }
+        else {
+            this.$progress.classList.add('animate');
+        }
+
+        if (0.5 <= progress && progress < 1) {
+            this.$progress.classList.add('over50');
+        }
+        else {
+            this.$progress.classList.remove('over50');
+        }
+
         const degrees = `rotate(${360 * progress}deg)`;
-        $progress.style.setProperty('--progress', degrees);
+        this.$progress.style.setProperty('--progress', degrees);
+
+        this._currentProgress = progress
+
+        if (progress === 1) {
+            this.resetProgressTimeout = setTimeout(() => this.setProgress(0, null), 200);
+        }
     }
 
     setStatus(status) {
+        if (status === this._currentStatus) return;
+
+        clearTimeout(this.statusTimeout);
+
         if (!status) {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
-            this.currentStatus = null;
+            this._currentStatus = null;
             NoSleepUI.disableIfPeersIdle();
             return;
         }
 
-        if (status === this.currentStatus) return;
+        this.$el.classList.add('blink');
 
         let statusName = {
             "connect": Localization.getTranslation("peer-ui.connecting"),
@@ -719,9 +738,17 @@ class PeerUI {
             "complete": Localization.getTranslation("peer-ui.complete")
         }[status];
 
+        if (status === "complete") {
+            this.$el.classList.remove('blink');
+
+            this.statusTimeout = setTimeout(() => {
+                this.setProgress(0, null);
+            }, 10000);
+        }
+
         this.$el.setAttribute('status', status);
         this.$el.querySelector('.status').innerText = statusName;
-        this.currentStatus = status;
+        this._currentStatus = status;
     }
 
     _onDrop(e) {

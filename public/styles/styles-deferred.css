@@ -188,12 +188,12 @@ x-peer:not(.type-public-id) .highlight-room-public-id {
     display: none;
 }
 
-x-peer:not([status]):hover,
-x-peer:not([status]):focus {
+x-peer:not([status].blink):hover,
+x-peer:not([status].blink):focus {
     transform: scale(1.05);
 }
 
-x-peer[status] x-icon {
+x-peer[status].blink x-icon {
     box-shadow: none;
 }
 
@@ -249,12 +249,16 @@ x-peer[status] .device-name {
     display: none;
 }
 
-x-peer[status] {
+x-peer[status].blink {
     pointer-events: none;
 }
 
 x-peer {
     animation: pop 600ms ease-out 1;
+}
+
+x-peer[status]:not(.blink) .status {
+    color: var(--primary-color);
 }
 
 @keyframes pop {
@@ -747,7 +751,6 @@ x-dialog .dialog-subheader {
     top: -8px;
     clip: rect(0px, 80px, 80px, 40px);
     --progress: rotate(0deg);
-    transition: transform 200ms;
 }
 
 .circle {
@@ -759,6 +762,10 @@ x-dialog .dialog-subheader {
     clip: rect(0px, 40px, 80px, 0px);
     will-change: transform;
     transform: var(--progress);
+}
+
+.animate .circle {
+    transition: transform 200ms;
 }
 
 .over50 {
