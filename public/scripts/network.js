@@ -1799,9 +1799,12 @@ class FileDigester {
     }
 
     processFileViaMemory() {
+        // Loads complete file into RAM which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
+        if (window.iOS && this._totalSize > 250000000) {
+            alert('File is bigger than 250 MB and might crash the page on iOS. To be able to use a more efficient method use https and avoid private tabs as they have restricted functionality.')
+        }
         Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) to prevent this.');
 
-        // Loads complete file into RAM which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
         const file = new File(this._buffer, this._name, {
             type: this._mime,
             lastModified: new Date().getTime()
