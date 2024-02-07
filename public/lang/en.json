@@ -179,8 +179,9 @@
         "preparing": "Preparing…",
         "waiting": "Waiting…",
         "processing": "Processing…",
-        "transferring": "Transferring…",
+        "transferring": "Sending…",
         "receiving": "Receiving…",
-        "complete": "Transfer complete"
+        "transfer-complete": "Sent",
+        "receive-complete": "Received"
     }
 }

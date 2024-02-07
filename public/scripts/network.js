@@ -653,7 +653,7 @@ class Peer {
     }
 
     _abortTransfer() {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: null});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
         this._state = 'idle';
         this._busy = false;
         this._chunker = null;
@@ -728,7 +728,6 @@ class Peer {
     }
 
     _allFilesTransferComplete() {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
         this._state = 'idle';
         Events.fire('files-received', {
             peerId: this._peerId,
@@ -762,7 +761,7 @@ class Peer {
         if (this._acceptedRequest.header.length) return;
 
         // We are done receiving
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'receive'});
         this._allFilesTransferComplete();
     }
 
@@ -787,14 +786,14 @@ class Peer {
         // No more files in queue. Transfer is complete
         this._state = 'idle';
         this._busy = false;
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'complete'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer-complete'});
         Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
         Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
     }
 
     _onFileTransferRequestResponded(message) {
         if (!message.accepted || this._state !== 'wait') {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: null});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
             this._state = 'idle';
             this._filesRequested = null;
             return;
@@ -1853,5 +1852,4 @@ class FileDigester {
             }
         }
     }
-
 }

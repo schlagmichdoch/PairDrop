@@ -190,7 +190,7 @@ class PeersUI {
 
         if (!peerUI) return;
 
-        peerUI.setProgress(progress.progress, progress.status);
+        peerUI.setProgressOrQueue(progress.progress, progress.status);
     }
 
     _onDrop(e) {
@@ -425,6 +425,8 @@ class PeerUI {
         this._currentProgress = 0;
         this._currentStatus = null
         this._oldStatus = null;
+
+        this._progressQueue = [];
 
         this._roomIds = {}
         this._roomIds[roomType] = roomId;
@@ -688,35 +690,93 @@ class PeerUI {
         $input.files = null; // reset input
     }
 
-    setProgress(progress, status) {
-        clearTimeout(this.resetProgressTimeout);
+    setProgressOrQueue(progress, status) {
+        if (this._progressQueue.length > 0) {
+            // add to queue
+            this._progressQueue.push({progress: progress, status: status});
 
+            for (let i = 0; i < this._progressQueue.length; i++) {
+                if (this._progressQueue[i].progress <= progress) {
+                    // if progress is higher than progress in queue -> overwrite in queue and cut queue at this position
+                    this._progressQueue[i].progress = progress;
+                    this._progressQueue[i].status = status;
+                    this._progressQueue = this._progressQueue.slice(0, i + 1);
+                    break;
+                }
+            }
+            return;
+        }
+
+        this.setProgress(progress, status);
+    }
+
+    setNextProgress() {
+        if (this._progressQueue.length > 0) {
+            setTimeout(() => {
+                let next = this._progressQueue.shift()
+                this.setProgress(next.progress, next.status);
+            }, 250); // 200 ms animation + buffer
+        }
+    }
+
+    setProgress(progress, status) {
         this.setStatus(status);
 
-        const progressSpillsOverHalf = this._currentProgress < 0.5 && 0.5 <= progress;
+        const progressSpillsOverHalf = this._currentProgress < 0.5 && 0.5 < progress; // 0.5 slips through
+        const progressSpillsOverFull = progress <= 0.5 && 0.5 <= this._currentProgress && this._currentProgress < 1;
 
-        if (progress === 0 || progressSpillsOverHalf) {
-            this.$progress.classList.remove('animate');
+        if (progressSpillsOverHalf) {
+            this._progressQueue.unshift({progress: progress, status: status});
+            this.setProgress(0.5, status);
+            return;
+        } else if (progressSpillsOverFull) {
+            this._progressQueue.unshift({progress: progress, status: status});
+            this.setProgress(1, status);
+            return;
         }
-        else {
+
+        if (progress === 0) {
+            this._currentProgress = 0;
+            this.$progress.classList.remove('animate');
+            this.$progress.classList.remove('over50');
+            this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
+            this.setNextProgress();
+            return;
+        }
+
+        if (progress < this._currentProgress && status !== this._currentStatus) {
+            // reset progress
+            this._progressQueue.unshift({progress: progress, status: status});
+            this.setProgress(0, status);
+            return;
+        }
+
+        if (progress === 0) {
+            this.$progress.classList.remove('animate');
+            this.$progress.classList.remove('over50');
+            this.$progress.classList.add('animate');
+        } else if (this._currentProgress === 0.5) {
+            this.$progress.classList.remove('animate');
+            this.$progress.classList.add('over50');
             this.$progress.classList.add('animate');
         }
 
-        if (0.5 <= progress && progress < 1) {
-            this.$progress.classList.add('over50');
-        }
-        else {
-            this.$progress.classList.remove('over50');
+        if (this._currentProgress < progress) {
+            this.$progress.classList.add('animate');
+        } else {
+            this.$progress.classList.remove('animate');
         }
 
-        const degrees = `rotate(${360 * progress}deg)`;
-        this.$progress.style.setProperty('--progress', degrees);
+        this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
 
         this._currentProgress = progress
 
         if (progress === 1) {
-            this.resetProgressTimeout = setTimeout(() => this.setProgress(0, null), 200);
+            // reset progress
+            this._progressQueue.unshift({progress: 0, status: status});
         }
+
+        this.setNextProgress();
     }
 
     setStatus(status) {
@@ -732,8 +792,6 @@ class PeerUI {
             return;
         }
 
-        this.$el.classList.add('blink');
-
         let statusName = {
             "connect": Localization.getTranslation("peer-ui.connecting"),
             "prepare": Localization.getTranslation("peer-ui.preparing"),
@@ -741,20 +799,24 @@ class PeerUI {
             "receive": Localization.getTranslation("peer-ui.receiving"),
             "process": Localization.getTranslation("peer-ui.processing"),
             "wait": Localization.getTranslation("peer-ui.waiting"),
-            "complete": Localization.getTranslation("peer-ui.complete")
+            "transfer-complete": Localization.getTranslation("peer-ui.transfer-complete"),
+            "receive-complete": Localization.getTranslation("peer-ui.receive-complete")
         }[status];
 
-        if (status === "complete") {
+        this.$el.setAttribute('status', status);
+        this.$el.querySelector('.status').innerText = statusName;
+        this._currentStatus = status;
+
+        if (status === "transfer-complete" || status === "receive-complete") {
             this.$el.classList.remove('blink');
 
             this.statusTimeout = setTimeout(() => {
                 this.setProgress(0, null);
             }, 10000);
         }
-
-        this.$el.setAttribute('status', status);
-        this.$el.querySelector('.status').innerText = statusName;
-        this._currentStatus = status;
+        else {
+            this.$el.classList.add('blink');
+        }
     }
 
     _onDrop(e) {
@@ -1069,7 +1131,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             await this._setViaDownload(peerId, files, totalSize, descriptor);
         }
 
-        Events.fire('set-progress', {peerId: peerId, progress: 1, status: null});
+        Events.fire('set-progress', {peerId: peerId, progress: 1, status: "receive-complete"});
     }
 
     _getDescriptor(files, imagesOnly) {
@@ -1167,14 +1229,16 @@ class ReceiveFileDialog extends ReceiveDialog {
         const tooBigToZip = window.iOS && totalSize > 256000000;
         this.sendAsZip = false;
         if (files.length > 1 && !tooBigToZip) {
-            zipFileName = this._createZipFilename()
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
+
             zipFileUrl = await this._createZipFile(files, zipProgress => {
                 Events.fire('set-progress', {
                     peerId: peerId,
                     progress: zipProgress / totalSize,
                     status: 'process'
                 })
-            })
+            });
+            zipFileName = this._createZipFilename()
 
             this.sendAsZip = !!zipFileUrl;
         }
@@ -1308,6 +1372,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 
         // download automatically if zipped or if only one file is received
         this.$downloadBtn.click();
+
         // if automatic download fails -> show dialog
         setTimeout(() => {
             if (!this.downloadSuccessful) {
