@@ -1742,7 +1742,7 @@ class FileDigester {
         this._mime = meta.mime;
         this._totalSize = totalSize;
         this._totalBytesReceived = totalBytesReceived;
-        this._onFileCompleteCallback = fileCompleteCallback;
+        this._fileCompleteCallback = fileCompleteCallback;
         this._receiveConfimationCallback = receiveConfirmationCallback;
     }
 
@@ -1763,13 +1763,95 @@ class FileDigester {
         if (this._bytesReceived < this._size) return;
 
         // we are done
+        if (!window.Worker && !window.isSecureContext) {
+            this.processFileViaMemory();
+            return;
+        }
+
+        this.processFileViaWorker();
+    }
+
+    processFileViaMemory() {
+        Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) to prevent this.');
+
+        // Loads complete file into RAM which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
         const file = new File(this._buffer, this._name, {
             type: this._mime,
             lastModified: new Date().getTime()
         })
+        this._fileCompleteCallback(file);
+    }
 
-        this._buffer = [];
-        this._onFileCompleteCallback(file);
+    processFileViaWorker() {
+        // Use service worker to prevent loading the complete file into RAM
+        const fileWorker = new Worker("scripts/sw-file-digester.js");
+
+        let i = 0;
+        let offset = 0;
+
+        const _this = this;
+
+        function sendPart(buffer, offset) {
+            fileWorker.postMessage({
+                type: "part",
+                name: _this._name,
+                buffer: buffer,
+                offset: offset
+            });
+        }
+
+        function getFile() {
+            fileWorker.postMessage({
+                type: "get-file",
+                name: _this._name,
+            });
+        }
+
+        function onPart(part) {
+            // remove old chunk from buffer
+            _this._buffer[i] = null;
+
+            if (i < _this._buffer.length - 1) {
+                // process next chunk
+                offset += part.byteLength;
+                i++;
+                sendPart(_this._buffer[i], offset);
+                return;
+            }
+
+            // File processing complete -> retrieve completed file
+            getFile();
+        }
+
+        function onFile(file) {
+            _this._buffer = [];
+            fileWorker.terminate();
+            _this._fileCompleteCallback(file);
+        }
+
+        function onError(error) {
+            // an error occurred. Use memory method instead.
+            Logger.error(error);
+            Logger.warn('Failed to process file via service-worker. Do not use Firefox private mode to prevent this.')
+            fileWorker.terminate();
+            _this.processFileViaMemory();
+        }
+
+        sendPart(this._buffer[i], offset);
+
+        fileWorker.onmessage = (e) => {
+            switch (e.data.type) {
+                case "part":
+                    onPart(e.data.part);
+                    break;
+                case "file":
+                    onFile(e.data.file);
+                    break;
+                case "error":
+                    onError(e.data.error);
+                    break;
+            }
+        }
     }
 
 }

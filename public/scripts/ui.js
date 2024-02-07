@@ -1143,6 +1143,8 @@ class ReceiveFileDialog extends ReceiveDialog {
             navigator.share({files: files})
                 .catch(err => {
                     Logger.error(err);
+                    // Todo: tidy up, setDownloadButton instead and show warning to user
+                    //          Differentiate: "File too big to be shared. It can be downloaded instead." and "Error while sharing. It can be downloaded instead."
                 });
 
             // Prevent clicking the button multiple times
