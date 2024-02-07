@@ -664,7 +664,10 @@ class Peer {
     }
 
     _onChunkReceived(chunk) {
-        if(this._state !== 'receive' || !this._digester || !(chunk.byteLength || chunk.size)) return;
+        if(this._state !== 'receive' || !this._digester || !(chunk.byteLength || chunk.size)) {
+            this._sendCurrentState();
+            return;
+        }
 
         this._digester.unchunk(chunk);
 
@@ -690,13 +693,19 @@ class Peer {
     }
 
     _onProgress(progress) {
-        if (this._state !== 'transfer') return;
+        if (this._state !== 'transfer') {
+            this._sendCurrentState();
+            return;
+        }
         
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
     }
 
     _onReceiveConfirmation(bytesReceived) {
-        if (!this._chunker || this._state !== 'transfer') return;
+        if (!this._chunker || this._state !== 'transfer') {
+            this._sendCurrentState();
+            return;
+        }
         this._chunker._onReceiveConfirmation(bytesReceived);
     }
 
@@ -704,7 +713,7 @@ class Peer {
         if (!this._acceptedRequest) {
             return false;
         }
-        
+
         // Check if file fits to header
         const acceptedHeader = this._acceptedRequest.header.shift();
 
@@ -740,7 +749,12 @@ class Peer {
         this._busy = false;
     }
 
-    async _onFileReceived(file) {
+    async _fileReceived(file) {
+        if (this._state !== "receive") {
+            this._sendCurrentState();
+            return;
+        }
+
         if (!this._fitsHeader(file)) {
             this._abortTransfer();
             Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
@@ -766,6 +780,11 @@ class Peer {
     }
 
     _onFileTransferComplete(message) {
+        if (this._state !== "transfer") {
+            this._sendCurrentState();
+            return;
+        }
+
         this._chunker = null;
 
         if (!message.success) {
@@ -792,12 +811,18 @@ class Peer {
     }
 
     _onFileTransferRequestResponded(message) {
-        if (!message.accepted || this._state !== 'wait') {
+        if (this._state !== 'wait') {
+            this._sendCurrentState();
+            return;
+        }
+
+        if (!message.accepted) {
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
             this._state = 'idle';
             this._filesRequested = null;
             return;
         }
+
         Events.fire('file-transfer-accepted');
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
         this._state = 'transfer';
@@ -805,7 +830,10 @@ class Peer {
     }
 
     _onMessageTransferCompleted() {
-        if (this._state !== 'text-sent') return;
+        if (this._state !== 'text-sent') {
+            this._sendCurrentState();
+            return;
+        }
         this._state = 'idle';
         Events.fire('notify-user', Localization.getTranslation("notifications.message-transfer-completed"));
     }
@@ -1227,7 +1255,7 @@ class RTCPeer extends Peer {
         this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
             this._acceptedRequest.totalSize,
             this._totalBytesReceived,
-            fileBlob => this._onFileReceived(fileBlob)
+            fileBlob => this._fileReceived(fileBlob)
         );
     }
 
@@ -1328,7 +1356,7 @@ class WSPeer extends Peer {
         this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
             this._acceptedRequest.totalSize,
             this._totalBytesReceived,
-            fileBlob => this._onFileReceived(fileBlob),
+            fileBlob => this._fileReceived(fileBlob),
             bytesReceived => this._sendReceiveConfirmation(bytesReceived)
         );
     }
