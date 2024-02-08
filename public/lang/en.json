@@ -161,7 +161,9 @@
         "message-transfer-completed": "Message transfer completed",
         "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close PairDrop?",
         "rate-limit-join-key": "Rate limit reached. Wait 10 seconds and try again.",
-        "selected-peer-left": "Selected peer left"
+        "selected-peer-left": "Selected peer left",
+        "error-sharing-size": "Files too big to be shared. They can be downloaded instead.",
+        "error-sharing-default": "Error while sharing. It can be downloaded instead."
     },
     "document-titles": {
         "file-received": "File Received",
