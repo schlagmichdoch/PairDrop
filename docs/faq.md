@@ -120,7 +120,7 @@ you can [start the PairDrop instance with an activated WebSocket fallback](https
 
 Files are sent directly between peers.
 PairDrop doesn't even use a database.
-If curious, study [the server](https://github.com/schlagmichdoch/pairdrop/blob/master/index.js).
+If curious, study [the server](https://github.com/schlagmichdoch/PairDrop/blob/master/server/index.js).
 WebRTC encrypts the files in transit.
 
 If the devices are on the same network,
