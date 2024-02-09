@@ -172,30 +172,33 @@ class PeersUI {
     }
 
     _onDrop(e) {
-        e.preventDefault();
-
         if (this.shareMode.active || Dialog.anyDialogShown()) return;
 
-        if (!$$('x-peer') || !$$('x-peer').contains(e.target)) {
-            if (e.dataTransfer.files.length > 0) {
-                Events.fire('activate-share-mode', {files: e.dataTransfer.files});
-            } else {
-                for (let i=0; i<e.dataTransfer.items.length; i++) {
-                    if (e.dataTransfer.items[i].type === "text/plain") {
-                        e.dataTransfer.items[i].getAsString(text => {
-                            Events.fire('activate-share-mode', {text: text});
-                        });
-                    }
-                }
-            }
-        }
+        e.preventDefault();
+
         this._onDragEnd();
+
+        if ($$('x-peer') || !$$('x-peer').contains(e.target)) return; // dropped on peer
+
+        const files = e.dataTransfer.files;
+        const text = e.dataTransfer.getData("text");
+
+        if (files.length > 0) {
+            Events.fire('activate-share-mode', {
+                files: files
+            });
+        }
+        else if(text.length > 0) {
+            Events.fire('activate-share-mode', {
+                text: text
+            });
+        }
     }
 
     _onDragOver(e) {
-        e.preventDefault();
-
         if (this.shareMode.active || Dialog.anyDialogShown()) return;
+
+        e.preventDefault();
 
         this.$xInstructions.setAttribute('drop-bg', true);
         this.$xNoPeers.setAttribute('drop-bg', true);
@@ -590,6 +593,9 @@ class PeerUI {
     _onFilesSelected(e) {
         const $input = e.target;
         const files = $input.files;
+
+        if (files.length === 0) return;
+
         Events.fire('files-selected', {
             files: files,
             to: this._peer.id
@@ -630,29 +636,28 @@ class PeerUI {
     }
 
     _onDrop(e) {
-        e.preventDefault();
-
         if (PeerUI._shareMode.active || Dialog.anyDialogShown()) return;
 
-        if (e.dataTransfer.files.length > 0) {
-            Events.fire('files-selected', {
-                files: e.dataTransfer.files,
-                to: this._peer.id
-            });
-        } else {
-            for (let i=0; i<e.dataTransfer.items.length; i++) {
-                if (e.dataTransfer.items[i].type === "text/plain") {
-                    e.dataTransfer.items[i].getAsString(text => {
-                        Events.fire('send-text', {
-                            text: text,
-                            to: this._peer.id
-                        });
-                    });
-                }
-            }
-        }
+        e.preventDefault();
 
         this._onDragEnd();
+
+        const peerId = this._peer.id;
+        const files = e.dataTransfer.files;
+        const text = e.dataTransfer.getData("text");
+
+        if (files.length > 0) {
+            Events.fire('files-selected', {
+                files: files,
+                to: peerId
+            });
+        }
+        else if (text.length > 0) {
+            Events.fire('send-text', {
+                text: text,
+                to: peerId
+            });
+        }
     }
 
     _onDragOver() {
@@ -1896,6 +1901,8 @@ class SendTextDialog extends Dialog {
         this.$submit = this.$el.querySelector('button[type="submit"]');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
         this.$text.addEventListener('input', _ => this._onInput());
+        this.$text.addEventListener('paste', e => this._onPaste(e));
+        this.$text.addEventListener('drop', e => this._onDrop(e));
 
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         Events.on('keydown', e => this._onKeyDown(e));
@@ -1912,6 +1919,40 @@ class SendTextDialog extends Dialog {
 
             this._send();
         }
+    }
+
+    async _onDrop(e) {
+        e.preventDefault()
+
+        const text = e.dataTransfer.getData("text");
+        const selection = window.getSelection();
+
+        if (selection.rangeCount) {
+            selection.deleteFromDocument();
+            selection.getRangeAt(0).insertNode(document.createTextNode(text));
+        }
+
+        this._onInput();
+    }
+
+    async _onPaste(e) {
+        e.preventDefault()
+
+        const text = (e.clipboardData || window.clipboardData).getData('text');
+        const selection = window.getSelection();
+
+        if (selection.rangeCount) {
+            selection.deleteFromDocument();
+            const textNode = document.createTextNode(text);
+            const range = document.createRange();
+            range.setStart(textNode, textNode.length);
+            range.collapse(true);
+            selection.getRangeAt(0).insertNode(textNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+
+        this._onInput();
     }
 
     _textEmpty() {
@@ -1997,12 +2038,22 @@ class ReceiveTextDialog extends Dialog {
         window.blop.play();
         this._receiveTextQueue.push({text: text, peerId: peerId});
         this._setDocumentTitleMessages();
+        changeFavicon("images/favicon-96x96-notification.png");
+
         if (this.isShown()) return;
+
         this._dequeueRequests();
     }
 
     _dequeueRequests() {
-        if (!this._receiveTextQueue.length) return;
+        if (!this._receiveTextQueue.length) {
+            this.$text.innerHTML = "";
+            return;
+        }
+
+        this._setDocumentTitleMessages();
+        changeFavicon("images/favicon-96x96-notification.png");
+
         let {text, peerId} = this._receiveTextQueue.shift();
         this._showReceiveTextDialog(text, peerId);
     }
@@ -2013,41 +2064,68 @@ class ReceiveTextDialog extends Dialog {
         this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;
-        this.$text.classList.remove('text-center');
 
-        // Beautify text if text is short
-        if (text.length < 2000) {
-            // replace URLs with actual links
-            this.$text.innerHTML = this.$text.innerHTML
-                .replace(/(^|<br>|\s|")((https?:\/\/|www.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%]){2,}\.)(([a-z]|[A-Z]|[0-9]|[\-_~:\/?#\[\]@!$&'()*+,;=%.]){2,}))/g,
-                (match, whitespace, url) => {
-                        let link = url;
+        // Beautify text if text is not too long
+        if (this.$text.innerText.length <= 300000) {
+            // Hacky workaround to replace URLs with link nodes in all cases
+            // 1. Use text variable, find all valid URLs via regex and replace URLs with placeholder
+            // 2. Use html variable, find placeholders with regex and replace them with link nodes
 
-                        // prefix www.example.com with http protocol to prevent it from being a relative link
-                        if (link.startsWith('www')) {
-                            link = "http://" + link
-                        }
+            let $textShadow = document.createElement('div');
+            $textShadow.innerText = text;
 
-                        // Check if link is valid
-                        if (isUrlValid(link)) {
-                            return `${whitespace}<a href="${link}" target="_blank">${url}</a>`;
+            let linkNodes = {};
+            let searchHTML = $textShadow.innerHTML;
+            const p = "@";
+            const pRgx = new RegExp(`${p}\\d+`, 'g');
+            let occP = searchHTML.match(pRgx) || [];
+
+            let m = 0;
+
+            const allowedDomainChars = "a-zA-Z0-9áàäčçđéèêŋńñóòôöšŧüžæøåëìíîïðùúýþćěłřśţźǎǐǒǔǥǧǩǯəʒâûœÿãõāēīōūăąĉċďĕėęĝğġģĥħĩĭįıĵķĸĺļľņňŏőŕŗŝşťũŭůűųŵŷżאבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ";
+            const urlRgx = new RegExp(`(^|\\n|\\s|["><\\-_~:\\/?#\\[\\]@!$&'()*+,;=%.])(((https?:\\/\\/)?(?:[${allowedDomainChars}](?:[${allowedDomainChars}-]{0,61}[${allowedDomainChars}])?\\.)+[${allowedDomainChars}][${allowedDomainChars}-]{0,61}[${allowedDomainChars}])(:?\\d*)\\/?([${allowedDomainChars}_\\/\\-#.]*)(\\?([${allowedDomainChars}\\-_~:\\/?#\\[\\]@!$&'()*+,;=%.]*))?)`, 'g');
+
+            $textShadow.innerText = text.replace(urlRgx,
+                (match, whitespaceOrSpecial, url, g3, scheme) => {
+                    let link = url;
+
+                    // prefix www.example.com with http protocol to prevent it from being a relative link
+                    if (!scheme && link.startsWith('www')) {
+                        link = "http://" + link
+                    }
+
+                    if (isUrlValid(link)) {
+                        // link is valid -> replace with link node placeholder
+
+                        // find linkNodePlaceholder that is not yet present in text node
+                        m++;
+                        while (occP.includes(`${p}${m}`)) {
+                            m++;
                         }
-                        else {
-                            return match;
-                        }
+                        let linkNodePlaceholder = `${p}${m}`;
+
+                        // add linkNodePlaceholder to text node and save a reference to linkNodes object
+                        linkNodes[linkNodePlaceholder] = `<a href="${link}" target="_blank">${url}</a>`;
+                        return `${whitespaceOrSpecial}${linkNodePlaceholder}`;
+                    }
+                    // link is not valid -> do not replace
+                    return match;
+                });
+
+
+            this.$text.innerHTML = $textShadow.innerHTML.replace(pRgx,
+                (m) => {
+                    let urlNode = linkNodes[m];
+                    return urlNode ? urlNode : m;
                 });
         }
 
         this._evaluateOverflowing(this.$text);
-
-        this._setDocumentTitleMessages();
-
-        changeFavicon("images/favicon-96x96-notification.png");
         this.show();
     }
 
     _setDocumentTitleMessages() {
-        document.title = !this._receiveTextQueue.length
+        document.title = this._receiveTextQueue.length <= 1
             ? `${ Localization.getTranslation("document-titles.message-received") } - PairDrop`
             : `${ Localization.getTranslation("document-titles.message-received-plural", null, {count: this._receiveTextQueue.length + 1}) } - PairDrop`;
     }
