@@ -1813,6 +1813,13 @@ class FileDigester {
             });
         }
 
+        function deleteFile() {
+            fileWorker.postMessage({
+                type: "delete-file",
+                name: _this._name
+            })
+        }
+
         function onPart(part) {
             // remove old chunk from buffer
             _this._buffer[i] = null;
@@ -1831,16 +1838,23 @@ class FileDigester {
 
         function onFile(file) {
             _this._buffer = [];
-            fileWorker.terminate();
             _this._fileCompleteCallback(file);
+            deleteFile();
+        }
+
+        function onFileDeleted() {
+            // File Digestion complete -> Tidy up
+            fileWorker.terminate();
         }
 
         function onError(error) {
-            // an error occurred. Use memory method instead.
+            // an error occurred.
             Logger.error(error);
             Logger.warn('Failed to process file via service-worker. Do not use Firefox private mode to prevent this.')
-            fileWorker.terminate();
+
+            // Use memory method instead and tidy up.
             _this.processFileViaMemory();
+            fileWorker.terminate();
         }
 
         sendPart(this._buffer[i], offset);
@@ -1852,6 +1866,9 @@ class FileDigester {
                     break;
                 case "file":
                     onFile(e.data.file);
+                    break;
+                case "file-deleted":
+                    onFileDeleted();
                     break;
                 case "error":
                     onError(e.data.error);

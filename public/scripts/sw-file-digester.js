@@ -7,6 +7,9 @@ self.addEventListener('message', async e => {
             case "get-file":
                 await this.onGetFile(e.data.name);
                 break;
+            case "delete-file":
+                await this.onDeleteFile(e.data.name);
+                break;
         }
     }
     catch (e) {
@@ -32,7 +35,9 @@ async function onPart(fileName, buffer, offset) {
     // Write the message to the end of the file.
     let encodedMessage = new DataView(buffer);
     accessHandle.write(encodedMessage, { at: offset });
-    accessHandle.close();
+
+    // Always close FileSystemSyncAccessHandle if done.
+    accessHandle.close();    accessHandle.close();
 
     self.postMessage({type: "part", part: encodedMessage});
     encodedMessage = null;
@@ -43,6 +48,19 @@ async function onGetFile(fileName) {
     let file = await fileHandle.getFile();
 
     self.postMessage({type: "file", file: file});
-    file = null;
-    // Todo: delete file from storage
+}
+
+async function onDeleteFile(fileName) {
+    const accessHandle = await getAccessHandle(fileName);
+
+    // Truncate the file to 0 bytes
+    accessHandle.truncate(0);
+
+    // Persist changes to disk.
+    accessHandle.flush();
+
+    // Always close FileSystemSyncAccessHandle if done.
+    accessHandle.close();
+
+    self.postMessage({type: "file-deleted"});
 }
