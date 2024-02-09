@@ -807,15 +807,10 @@ class PeerUI {
         this.$el.querySelector('.status').innerText = statusName;
         this._currentStatus = status;
 
-        if (status === "transfer-complete" || status === "receive-complete") {
-            this.$el.classList.remove('blink');
-
+        if (status.indexOf("-complete") || status === "receive-complete") {
             this.statusTimeout = setTimeout(() => {
                 this.setProgress(0, null);
             }, 10000);
-        }
-        else {
-            this.$el.classList.add('blink');
         }
     }
 
