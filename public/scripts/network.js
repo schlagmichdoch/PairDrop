@@ -333,13 +333,44 @@ class Peer {
 
         // evaluate auto accept
         this._evaluateAutoAccept();
+
+        Events.on('beforeunload', e => this._onBeforeUnload(e));
+        Events.on('pagehide', _ => this._onPageHide());
     }
 
-    _onServerSignalMessage(message) {}
+    _reset() {
+        this._state = 'idle';
+        this._busy = false;
+        this._chunker = null;
+        this._pendingRequest = null;
+        this._acceptedRequest = null;
+        this._digester = null;
+        this._filesReceived = [];
+        this._totalBytesReceived = 0;
+    }
 
     _refresh() {}
 
-    _onDisconnected() {}
+    _disconnect() {
+        Events.fire('peer-disconnected', this._peerId);
+    }
+
+    _onDisconnected() {
+        this._reset();
+    }
+
+    _onBeforeUnload(e) {
+        if (this._busy) {
+            e.preventDefault();
+            return Localization.getTranslation("notifications.unfinished-transfers-warning");
+        }
+    }
+
+    _onPageHide() {
+        this._disconnect();
+    }
+
+    _onServerSignalMessage(message) {}
 
     _setIsCaller(isCaller) {
         this._isCaller = isCaller;
@@ -659,14 +690,7 @@ class Peer {
 
     _abortTransfer() {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
-        this._state = 'idle';
-        this._busy = false;
-        this._chunker = null;
-        this._pendingRequest = null;
-        this._acceptedRequest = null;
-        this._digester = null;
-        this._filesReceived = [];
-        this._totalBytesReceived = 0;
+        this._reset();
     }
 
     _onChunkReceived(chunk) {
@@ -885,9 +909,6 @@ class RTCPeer extends Peer {
 
         this.pendingInboundMessages = [];
         this.pendingOutboundMessages = [];
-
-        Events.on('beforeunload', e => this._onBeforeUnload(e));
-        Events.on('pagehide', _ => this._onPageHide());
 
         this._connect();
     }
@@ -1137,9 +1158,6 @@ class RTCPeer extends Peer {
         }
     }
 
-    _disconnect() {
-        Events.fire('peer-disconnected', this._peerId);
-    }
 
     _refresh() {
         Events.fire('peer-connecting', this._peerId);
@@ -1149,6 +1167,7 @@ class RTCPeer extends Peer {
     }
 
     _onDisconnected() {
+        super._onDisconnected();
         this._closeChannelAndConnection();
     }
 
@@ -1182,17 +1201,6 @@ class RTCPeer extends Peer {
         }
         this.localIceCandidatesSent = false;
         this.remoteIceCandidatesReceived = false;
-    }
-
-    _onBeforeUnload(e) {
-        if (this._busy) {
-            e.preventDefault();
-            return Localization.getTranslation("notifications.unfinished-transfers-warning");
-        }
-    }
-
-    _onPageHide() {
-        this._disconnect();
     }
 
     _sendMessage(message) {
@@ -1368,6 +1376,7 @@ class WSPeer extends Peer {
     }
 
     _onDisconnected() {
+        super._onDisconnected();
         this.signalSuccessful = false;
     }
 
