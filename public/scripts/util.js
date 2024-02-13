@@ -82,39 +82,47 @@ const audioPlayer = (() => {
 
 const zipper = (() => {
 
-    let zipWriter;
     return {
-        createNewZipWriter() {
-            zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true, level: 0 });
-        },
-        addFile(file, options) {
-            return zipWriter.add(file.name, new zip.BlobReader(file), options);
-        },
-        async getBlobURL() {
-            if (zipWriter) {
-                const blobURL = URL.createObjectURL(await zipWriter.close());
-                zipWriter = null;
-                return blobURL;
+        async getObjectUrlOfZipFile(files, onZipProgressCallback){
+            try {
+                const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
+
+                let bytesProcessed = 0;
+                for (let i = 0; i < files.length; i++) {
+                    await zipWriter.add(
+                        files[i].name,
+                        new zip.BlobReader(files[i]),
+                        {
+                            onprogress: (progress) => onZipProgressCallback(bytesProcessed + progress)
+                        }
+                    );
+                    bytesProcessed += files[i].size;
+                }
+
+                return URL.createObjectURL(await zipWriter.close());
             }
-            else {
-                throw new Error("Zip file closed");
-            }
-        },
-        async getZipFile(filename = "archive.zip") {
-            if (zipWriter) {
-                const file = new File([await zipWriter.close()], filename, {type: "application/zip"});
-                zipWriter = null;
-                return file;
-            }
-            else {
-                throw new Error("Zip file closed");
+            catch (e) {
+                Logger.error(e);
+                return false;
             }
         },
         async getEntries(file, options) {
-            return await (new zip.ZipReader(new zip.BlobReader(file))).getEntries(options);
+            try {
+                return await (new zip.ZipReader(new zip.BlobReader(file))).getEntries(options);
+            }
+            catch (e) {
+                Logger.error(e);
+                return false;
+            }
         },
         async getData(entry, options) {
-            return await entry.getData(new zip.BlobWriter(), options);
+            try {
+                return await entry.getData(new zip.BlobWriter(), options);
+            }
+            catch (e) {
+                Logger.error(e);
+                return false;
+            }
         },
     };
 

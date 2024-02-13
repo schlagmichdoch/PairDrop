@@ -1231,23 +1231,31 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     async _processDataAsZip() {
-        let zipFileUrl, zipFileName;
+        let zipObjectUrl = "";
+        let zipName = "";
         let sendAsZip = false;
 
         const tooBigToZip = window.iOS && this._data.totalSize > 256000000;
-        if (this._data.files.length > 1 && !tooBigToZip) {
-            zipFileUrl = await this._createZipFile(this._data.files, zipProgress => {
-                Events.fire('set-progress', {
-                    peerId: this._data.peerId,
-                    progress: zipProgress / this._data.totalSize,
-                    status: 'process'
-                })
-            });
-            zipFileName = this._createZipFilename()
 
-            sendAsZip = !!zipFileUrl;
+        if (this._data.files.length > 1 && !tooBigToZip) {
+            Events.fire('set-progress', {
+                peerId: this._data.peerId,
+                progress: 0,
+                status: 'process'
+            });
+
+            zipObjectUrl = await zipper.getObjectUrlOfZipFile(this._data.files,zipProgress => {
+                    Events.fire('set-progress', {
+                        peerId: this._data.peerId,
+                        progress: zipProgress / this._data.totalSize,
+                        status: 'process'
+                    });
+                });
+            zipName = this._createZipFilename();
+
+            sendAsZip = !!zipObjectUrl;
         }
-        return {sendAsZip, zipFileUrl, zipFileName};
+        return {sendAsZip, zipObjectUrl, zipName};
     }
 
     _setDownloadButtonToZip(zipFileUrl, zipFileName) {
@@ -1318,27 +1326,6 @@ class ReceiveFileDialog extends ReceiveDialog {
         }
     }
 
-    async _createZipFile(files, onProgressCallback) {
-        try {
-            let bytesCompleted = 0;
-
-            zipper.createNewZipWriter();
-
-            for (let i = 0; i < files.length; i++) {
-                await zipper.addFile(files[i], {
-                    onprogress: (progress) => onProgressCallback(bytesCompleted + progress)
-                });
-                bytesCompleted += files[i].size;
-            }
-
-            return await zipper.getBlobURL();
-        }
-        catch (e) {
-            Logger.error(e);
-            return false;
-        }
-    }
-
     _createZipFilename() {
         let now = new Date(Date.now());
         let year = now.getFullYear().toString();
@@ -1373,11 +1360,11 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$downloadBtn.removeAttribute('disabled');
         this.$downloadBtn.removeAttribute('hidden');
 
-        let {sendAsZip, zipFileUrl, zipFileName} = await this._processDataAsZip();
+        let {sendAsZip, zipObjectUrl, zipName} = await this._processDataAsZip();
 
         // If single file or zipping failed -> download files individually -> else download zip
         if (sendAsZip) {
-            this._setDownloadButtonToZip(zipFileUrl, zipFileName);
+            this._setDownloadButtonToZip(zipObjectUrl, zipName);
         } else {
             this._setDownloadButtonToFiles(this._data.files);
         }
