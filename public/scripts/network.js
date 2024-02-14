@@ -810,6 +810,14 @@ class Peer {
             this._sendState();
             return;
         }
+
+        if (!this._fitsAcceptedHeader(header)) {
+            this._abortTransfer();
+            Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
+            Logger.error("Received files differ from requested files. Abort!");
+            return;
+        }
+
         this._timeStart = Date.now();
 
         this._addFileDigester(header);
@@ -870,34 +878,36 @@ class Peer {
     }
 
     async _fileReceived(file) {
-        if (!this._fitsHeader(file)) {
-            this._abortTransfer();
-            Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
-            Logger.error("Received files differ from requested files. Abort!");
-            return;
-        }
-
         // File transfer complete
         this._singleFileReceiveComplete(file);
 
-        if (this._acceptedRequest.header.length) return;
+        // If less files received than header accepted -> wait for next file
+        if (this._filesReceived.length < this._acceptedRequest.header.length) return;
 
         // We are done receiving
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'receive'});
         this._allFilesReceiveComplete();
     }
 
-    _fitsHeader(file) {
+    _fitsAcceptedHeader(header) {
         if (!this._acceptedRequest) {
             return false;
         }
 
-        // Check if file fits to header
-        const acceptedHeader = this._acceptedRequest.header.shift();
+        const positionFile = this._filesReceived.length;
 
-        const sameSize = file.size === acceptedHeader.size;
-        const sameName = file.name === acceptedHeader.name
-        return sameSize && sameName;
+        if (positionFile > this._acceptedRequest.header.length - 1) {
+            return false;
+        }
+
+        // Check if file header fits
+        const acceptedHeader = this._acceptedRequest.header[positionFile];
+
+        const sameSize = header.size === acceptedHeader.size;
+        const sameType = header.mime === acceptedHeader.mime;
+        const sameName = header.name === acceptedHeader.name;
+
+        return sameSize && sameType && sameName;
     }
 
     _singleFileReceiveComplete(file) {
