@@ -669,15 +669,13 @@ git clone https://github.com/schlagmichdoch/PairDrop.git && cd PairDrop
 git checkout dev
 ```
 ```bash
-docker compose -f docker-compose-dev.yml up -d
+docker compose -f docker-compose-dev.yml up --no-deps --build
 ```
 
 Now point your web browser to `http://localhost:8080`.
 
-- To restart the containers, run `docker compose restart`.
-- To stop the containers, run `docker compose stop`.
 - To debug the Node.js server, run `docker logs pairdrop`.
-
+- After changes to the code you have to rerun the `docker compose` command
 
 <br>
 
