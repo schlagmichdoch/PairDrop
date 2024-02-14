@@ -1215,6 +1215,14 @@ class ReceiveFileDialog extends ReceiveDialog {
                 .catch(async err => {
                     Logger.error(err);
 
+                    if (err.name === 'AbortError' && err.message === 'Abort due to cancellation of share.') {
+                        return;
+                    }
+                    else if (err.name === 'NotAllowedError' && err.message === 'The request is not allowed by the user agent or the platform in the current context, possibly because the user denied permission.') {
+                        return;
+                    }
+
+                    // Fallback to download
                     if (err.name === 'AbortError' && err.message === 'Abort due to error while reading files.') {
                         Events.fire('notify-user', Localization.getTranslation("notifications.error-sharing-size"));
                     }
@@ -1222,7 +1230,6 @@ class ReceiveFileDialog extends ReceiveDialog {
                         Events.fire('notify-user', Localization.getTranslation("notifications.error-sharing-default"));
                     }
 
-                    // Fallback to download
                     this._tidyUpButtons();
                     await this._setupDownload()
                 });
