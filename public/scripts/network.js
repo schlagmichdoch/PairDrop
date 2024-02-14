@@ -1173,12 +1173,9 @@ class RTCPeer extends Peer {
     }
 
     _handleLocalCandidate(candidate) {
-        if (this.localIceCandidatesSent) return;
-
         Logger.debug("RTC: Local candidate created", candidate);
 
         if (candidate === null) {
-            this.localIceCandidatesSent = true;
             return;
         }
 
@@ -1186,12 +1183,9 @@ class RTCPeer extends Peer {
     }
 
     async _handleRemoteCandidate(candidate) {
-        if (this.remoteIceCandidatesReceived) return;
-
         Logger.debug("RTC: Received remote candidate", candidate);
 
         if (candidate === null) {
-            this.remoteIceCandidatesReceived = true;
             return;
         }
 
@@ -1272,8 +1266,6 @@ class RTCPeer extends Peer {
             this._conn.close();
             this._conn = null;
         }
-        this.localIceCandidatesSent = false;
-        this.remoteIceCandidatesReceived = false;
     }
 
     _sendMessage(message) {
