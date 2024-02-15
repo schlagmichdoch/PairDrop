@@ -1,14 +1,17 @@
 self.addEventListener('message', async e => {
     try {
         switch (e.data.type) {
+            case "check-support":
+                await checkSupport();
+                break;
             case "part":
-                await this.onPart(e.data.name, e.data.buffer, e.data.offset);
+                await onPart(e.data.name, e.data.buffer, e.data.offset);
                 break;
             case "get-file":
-                await this.onGetFile(e.data.name);
+                await onGetFile(e.data.name);
                 break;
             case "delete-file":
-                await this.onDeleteFile(e.data.name);
+                await onDeleteFile(e.data.name);
                 break;
         }
     }
@@ -16,6 +19,16 @@ self.addEventListener('message', async e => {
         self.postMessage({type: "error", error: e});
     }
 })
+
+async function checkSupport() {
+    try {
+        await getAccessHandle("test.txt");
+        self.postMessage({type: "support", supported: true});
+    }
+    catch (e) {
+        self.postMessage({type: "support", supported: false});
+    }
+}
 
 async function getFileHandle(fileName) {
     const root = await navigator.storage.getDirectory();

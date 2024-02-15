@@ -164,7 +164,7 @@
         "selected-peer-left": "Selected peer left",
         "error-sharing-size": "Files too big to be shared. They can be downloaded instead.",
         "error-sharing-default": "Error while sharing. It can be downloaded instead.",
-        "ram-exceed-ios": "File is bigger than 250 MB and will crash the page on iOS. Use https to prevent this."
+        "ram-exceed-ios": "One of the files is bigger than 250 MB and will crash the page on iOS. Use https and do not use private tabs on the iOS device to prevent this."
     },
     "document-titles": {
         "file-received": "File Received",

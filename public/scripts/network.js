@@ -484,7 +484,7 @@ class Peer {
 
     _sendData(data) {}
 
-    _onMessage(message) {
+    async _onMessage(message) {
         switch (message.type) {
             case 'display-name-changed':
                 this._onDisplayNameChanged(message);
@@ -493,7 +493,7 @@ class Peer {
                 this._onState(message.state);
                 break;
             case 'transfer-request':
-                this._onTransferRequest(message);
+                await this._onTransferRequest(message);
                 break;
             case 'transfer-request-response':
                 this._onTransferRequestResponse(message);
@@ -740,44 +740,44 @@ class Peer {
     }
 
     // File Receiver Only
-    _onTransferRequest(request) {
+    async _onTransferRequest(request) {
+        // Only accept one request at a time per peer
         if (this._pendingRequest) {
-            // Only accept one request at a time per peer
             this._sendTransferRequestResponse(false);
             return;
         }
 
+        // Check if each file must be loaded into RAM completely. This might lead to a page crash (Memory limit iOS Safari: ~380 MB)
+        if (!(await FileDigesterWorker.isSupported())) {
+            Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) and do not use private tabs to prevent this.');
+
+            // Check if page will crash on iOS
+            if (window.iOS && await this._filesTooBigForSwOnIOS(request.header)) {
+                Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
+
+                // Would exceed RAM -> decline request
+                this._sendTransferRequestResponse(false, 'ram-exceed-ios');
+                return;
+            }
+        }
+
         this._pendingRequest = request;
 
-        if (!window.Worker || !window.isSecureContext) {
-            // Each file must be loaded into RAM completely which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
-            Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) to prevent this.');
-        }
-
-        if (window.iOS && this._filesTooBigForIos(request.header)) {
-            // Page will crash. Decline request
-            Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
-            this._sendTransferRequestResponse(false, 'ram-exceed-ios');
-            return;
-        }
-
+        // Automatically accept request if auto-accept is set to true via the Edit Paired Devices Dialog
         if (this._autoAccept) {
-            // auto accept if set via Edit Paired Devices Dialog
             this._sendTransferRequestResponse(true);
             return;
         }
 
-        // default behavior: show user transfer request
+        // Default behavior: show transfer request to user
         Events.fire('files-transfer-request', {
             request: request,
             peerId: this._peerId
         });
     }
 
-    _filesTooBigForIos(files) {
-        if (window.Worker && window.isSecureContext) {
-            return false;
-        }
+    async _filesTooBigForSwOnIOS(files) {
+        // Files over 250 MB crash safari if not handled via a service worker
         for (let i = 0; i < files.length; i++) {
             if (files[i].size > 250000000) {
                 return true;
@@ -1313,7 +1313,7 @@ class RTCPeer extends Peer {
         this._state = Peer.STATE_TRANSFER_PROCEEDING;
     }
 
-    _onMessage(message) {
+    async _onMessage(message) {
         Logger.debug('RTC Receive:', JSON.parse(message));
         try {
             message = JSON.parse(message);
@@ -1321,7 +1321,7 @@ class RTCPeer extends Peer {
             Logger.warn("RTCPeer: Received JSON is malformed");
             return;
         }
-        super._onMessage(message);
+        await super._onMessage(message);
     }
 
     getConnectionHash() {
@@ -1412,9 +1412,9 @@ class WSPeer extends Peer {
         this._sendSignal(true);
     }
 
-    _onMessage(message) {
+    async _onMessage(message) {
         Logger.debug('WS Receive:', message);
-        super._onMessage(message);
+        await super._onMessage(message);
     }
 
     _onWsRelay(message) {
@@ -1847,12 +1847,14 @@ class FileDigester {
         if (this._bytesReceived < this._size) return;
 
         // We are done receiving. Preferably use a file worker to process the file to prevent exceeding of available RAM
-        if (!window.Worker && !window.isSecureContext) {
-            this.processFileViaMemory();
-            return;
-        }
-
-        this.processFileViaWorker();
+        FileDigesterWorker.isSupported()
+            .then(supported => {
+                if (!supported) {
+                    this.processFileViaMemory();
+                    return;
+                }
+                this.processFileViaWorker();
+            });
     }
 
     processFileViaMemory() {
@@ -1865,88 +1867,146 @@ class FileDigester {
     }
 
     processFileViaWorker() {
-        // Use service worker to prevent loading the complete file into RAM
-        const fileWorker = new Worker("scripts/sw-file-digester.js");
-
-        let i = 0;
-        let offset = 0;
-
-        const _this = this;
-
-        function sendPart(buffer, offset) {
-            fileWorker.postMessage({
-                type: "part",
-                name: _this._name,
-                buffer: buffer,
-                offset: offset
-            });
-        }
-
-        function getFile() {
-            fileWorker.postMessage({
-                type: "get-file",
-                name: _this._name,
-            });
-        }
-
-        function deleteFile() {
-            fileWorker.postMessage({
-                type: "delete-file",
-                name: _this._name
+        const fileDigesterWorker = new FileDigesterWorker();
+        fileDigesterWorker.digestFileBuffer(this._buffer, this._name)
+            .then(file => {
+                this._fileCompleteCallback(file);
             })
-        }
+            .catch(reason => {
+                Logger.warn(reason);
+                this.processFileViaWorker();
+            })
+    }
+}
 
-        function onPart(part) {
-            if (i < _this._buffer.length - 1) {
-                // process next chunk
-                offset += part.byteLength;
-                i++;
-                sendPart(_this._buffer[i], offset);
+class FileDigesterWorker {
+
+    constructor() {
+        // Use service worker to prevent loading the complete file into RAM
+        this.fileWorker = new Worker("scripts/sw-file-digester.js");
+
+        this.fileWorker.onmessage = (e) => {
+            switch (e.data.type) {
+                case "support":
+                    this.onSupport(e.data.supported);
+                    break;
+                case "part":
+                    this.onPart(e.data.part);
+                    break;
+                case "file":
+                    this.onFile(e.data.file);
+                    break;
+                case "file-deleted":
+                    this.onFileDeleted();
+                    break;
+                case "error":
+                    this.onError(e.data.error);
+                    break;
+            }
+        }
+    }
+
+    static isSupported() {
+        // Check if web worker is supported and supports specific functions
+        return new Promise(async resolve => {
+            if (!window.Worker || !window.isSecureContext) {
+                resolve(false);
                 return;
             }
 
-            // File processing complete -> retrieve completed file
-            getFile();
+            const fileDigesterWorker = new FileDigesterWorker();
+
+            resolve(await fileDigesterWorker.checkSupport());
+
+            fileDigesterWorker.fileWorker.terminate();
+        })
+    }
+
+    checkSupport() {
+        return new Promise(resolve => {
+            this.resolveSupport = resolve;
+            this.fileWorker.postMessage({
+                type: "check-support"
+            });
+        })
+    }
+
+    onSupport(supported) {
+        if (!this.resolveSupport) return;
+
+        this.resolveSupport(supported);
+        this.resolveSupport = null;
+    }
+
+    digestFileBuffer(buffer, fileName) {
+        return new Promise((resolve, reject) => {
+            this.resolveFile = resolve;
+            this.rejectFile = reject;
+
+            this.i = 0;
+            this.offset = 0;
+
+            this.buffer = buffer;
+            this.fileName = fileName;
+
+            this.sendPart(this.buffer[0], 0);
+        })
+    }
+
+
+    sendPart(buffer, offset) {
+        this.fileWorker.postMessage({
+            type: "part",
+            name: this.fileName,
+            buffer: buffer,
+            offset: offset
+        });
+    }
+
+    getFile() {
+        this.fileWorker.postMessage({
+            type: "get-file",
+            name: this.fileName,
+        });
+    }
+
+    deleteFile() {
+        this.fileWorker.postMessage({
+            type: "delete-file",
+            name: this.fileName
+        })
+    }
+
+    onPart(part) {
+        if (this.i < this.buffer.length - 1) {
+            // process next chunk
+            this.offset += part.byteLength;
+            this.i++;
+            this.sendPart(this.buffer[this.i], this.offset);
+            return;
         }
 
-        function onFile(file) {
-            _this._buffer = [];
-            _this._fileCompleteCallback(file);
-            deleteFile();
-        }
+        // File processing complete -> retrieve completed file
+        this.getFile();
+    }
 
-        function onFileDeleted() {
-            // File Digestion complete -> Tidy up
-            fileWorker.terminate();
-        }
+    onFile(file) {
+        this.buffer = [];
+        this.resolveFile(file);
+        this.deleteFile();
+    }
 
-        function onError(error) {
-            // an error occurred.
-            Logger.error(error);
-            Logger.warn('Failed to process file via service-worker. Do not use Firefox private mode to prevent this.')
+    onFileDeleted() {
+        // File Digestion complete -> Tidy up
+        this.fileWorker.terminate();
+    }
 
-            // Use memory method instead and terminate service worker.
-            fileWorker.terminate();
-            _this.processFileViaMemory();
-        }
+    onError(error) {
+        // an error occurred.
+        Logger.error(error);
 
-        sendPart(this._buffer[i], offset);
-
-        fileWorker.onmessage = (e) => {
-            switch (e.data.type) {
-                case "part":
-                    onPart(e.data.part);
-                    break;
-                case "file":
-                    onFile(e.data.file);
-                    break;
-                case "file-deleted":
-                    onFileDeleted();
-                    break;
-                case "error":
-                    onError(e.data.error);
-                    break;
-            }
-        }
+        // Use memory method instead and terminate service worker.
+        this.fileWorker.terminate();
+        this.rejectFile("Failed to process file via service-worker. Do not use Firefox private mode to prevent this.");
     }
 }
