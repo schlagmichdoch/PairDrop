@@ -878,7 +878,7 @@ class Peer {
         this._sendMessage({ type: 'receive-progress', progress: progress });
     }
 
-    async _fileReceived(file) {
+    _fileReceived(file) {
         // File transfer complete
         this._singleFileReceiveComplete(file);
 
@@ -912,7 +912,10 @@ class Peer {
     }
 
     _singleFileReceiveComplete(file) {
+        this._digester._fileCompleteCallback = null;
+        this._digester._sendReceiveConfimationCallback = null;
         this._digester = null;
+
         this._totalBytesReceived += file.size;
 
         const duration = (Date.now() - this._timeStart) / 1000; // s
@@ -1894,9 +1897,6 @@ class FileDigester {
         }
 
         function onPart(part) {
-            // remove old chunk from buffer
-            _this._buffer[i] = null;
-
             if (i < _this._buffer.length - 1) {
                 // process next chunk
                 offset += part.byteLength;
@@ -1925,9 +1925,9 @@ class FileDigester {
             Logger.error(error);
             Logger.warn('Failed to process file via service-worker. Do not use Firefox private mode to prevent this.')
 
-            // Use memory method instead and tidy up.
-            _this.processFileViaMemory();
+            // Use memory method instead and terminate service worker.
             fileWorker.terminate();
+            _this.processFileViaMemory();
         }
 
         sendPart(this._buffer[i], offset);
