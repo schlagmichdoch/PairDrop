@@ -185,6 +185,7 @@
         "transferring": "Sending…",
         "receiving": "Receiving…",
         "transfer-complete": "Sent",
-        "receive-complete": "Received"
+        "receive-complete": "Received",
+        "error": "Error"
     }
 }

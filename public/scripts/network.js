@@ -590,7 +590,7 @@ class Peer {
     }
 
     _abortTransfer() {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'error'});
         this._reset();
     }
 
@@ -847,22 +847,23 @@ class Peer {
     }
 
     _onChunkReceived(chunk) {
-        if(this._state !== Peer.STATE_RECEIVE_PROCEEDING || !this._digester || !(chunk.byteLength || chunk.size)) {
+        if (this._state !== Peer.STATE_RECEIVE_PROCEEDING || !this._digester || !chunk.byteLength) {
             this._sendState();
             return;
         }
 
-        this._digester.unchunk(chunk);
-
-        let progress = (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize;
-
-        if (isNaN(progress)) progress = 1
-
-        if (progress > 1) {
+        try {
+            this._digester.unchunk(chunk);
+        }
+        catch (e) {
             this._abortTransfer();
-            Logger.error("Too many bytes received. Abort!");
+            Logger.error(e);
             return;
         }
+
+        let progress = this._digester
+            ? (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize
+            : 1;
 
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive'});
 
@@ -1834,8 +1835,12 @@ class FileDigester {
 
     unchunk(chunk) {
         this._buffer.push(chunk);
-        this._bytesReceived += chunk.byteLength || chunk.size;
-        this._bytesReceivedSinceLastTime += chunk.byteLength || chunk.size;
+        this._bytesReceived += chunk.byteLength;
+        this._bytesReceivedSinceLastTime += chunk.byteLength;
+
+        if (this._bytesReceived > this._size) {
+            throw new Error("Too many bytes received. Abort!");
+        }
 
         // If more than half of maxBytesWithoutConfirmation received -> send confirmation
         if (2 * this._bytesReceivedSinceLastTime > this._maxBytesWithoutConfirmation) {
@@ -1843,6 +1848,7 @@ class FileDigester {
             this._bytesReceivedSinceLastTime = 0;
         }
 
+        // File not completely received -> Wait for next chunk.
         if (this._bytesReceived < this._size) return;
 
         // We are done receiving. Preferably use a file worker to process the file to prevent exceeding of available RAM

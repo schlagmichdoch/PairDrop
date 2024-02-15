@@ -729,7 +729,8 @@ class PeerUI {
             this._progressQueue.unshift({progress: progress, status: status});
             this.setProgress(0.5, status);
             return;
-        } else if (progressSpillsOverFull) {
+        }
+        else if (progressSpillsOverFull) {
             this._progressQueue.unshift({progress: progress, status: status});
             this.setProgress(1, status);
             return;
@@ -755,7 +756,8 @@ class PeerUI {
             this.$progress.classList.remove('animate');
             this.$progress.classList.remove('over50');
             this.$progress.classList.add('animate');
-        } else if (this._currentProgress === 0.5) {
+        }
+        else if (this._currentProgress === 0.5) {
             this.$progress.classList.remove('animate');
             this.$progress.classList.add('over50');
             this.$progress.classList.add('animate');
@@ -763,7 +765,8 @@ class PeerUI {
 
         if (this._currentProgress < progress) {
             this.$progress.classList.add('animate');
-        } else {
+        }
+        else {
             this.$progress.classList.remove('animate');
         }
 
@@ -800,14 +803,15 @@ class PeerUI {
             "process": Localization.getTranslation("peer-ui.processing"),
             "wait": Localization.getTranslation("peer-ui.waiting"),
             "transfer-complete": Localization.getTranslation("peer-ui.transfer-complete"),
-            "receive-complete": Localization.getTranslation("peer-ui.receive-complete")
+            "receive-complete": Localization.getTranslation("peer-ui.receive-complete"),
+            "error": Localization.getTranslation("peer-ui.error")
         }[status];
 
         this.$el.setAttribute('status', status);
         this.$el.querySelector('.status').innerText = statusName;
         this._currentStatus = status;
 
-        if (status.indexOf("-complete") || status === "receive-complete") {
+        if (["transfer-complete", "receive-complete", "error"].includes(status)) {
             this.statusTimeout = setTimeout(() => {
                 this.setProgress(0, null);
             }, 10000);

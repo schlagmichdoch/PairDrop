@@ -188,8 +188,8 @@ x-peer:not(.type-public-id) .highlight-room-public-id {
     display: none;
 }
 
-x-peer:is(:not([status]), [status$=-complete]):hover,
-x-peer:is(:not([status]), [status$=-complete]):focus {
+x-peer:is(:not([status]), [status$=-complete], [status=error]):hover,
+x-peer:is(:not([status]), [status$=-complete], [status=error]):focus {
     transform: scale(1.05);
 }
 
@@ -249,7 +249,7 @@ x-peer[status] .device-name {
     display: none;
 }
 
-x-peer[status]:not([status$=-complete]) {
+x-peer[status]:not([status$=-complete]):not([status=error]) {
     pointer-events: none;
 }
 
@@ -259,6 +259,10 @@ x-peer {
 
 x-peer[status$=-complete] .status {
     color: var(--primary-color);
+}
+
+x-peer[status=error] .status {
+    color: var(--error-color);
 }
 
 @keyframes pop {
