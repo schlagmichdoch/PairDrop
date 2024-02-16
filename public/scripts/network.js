@@ -359,6 +359,9 @@ class Peer {
         this._totalBytesReceived = 0;
         this._digester = null;
         this._filesReceived = [];
+
+        // disable NoSleep if idle
+        Events.fire('evaluate-no-sleep');
     }
 
     _refresh() {}
@@ -1484,6 +1487,8 @@ class PeersManager {
         Events.on('ws-disconnected', _ => this._onWsDisconnected());
         Events.on('ws-relay', e => this._onWsRelay(e.detail.peerId, e.detail.message));
         Events.on('ws-config', e => this._onWsConfig(e.detail));
+
+        Events.on('evaluate-no-sleep', _ => this._onEvaluateNoSleep());
     }
 
     _onWsConfig(wsConfig) {
@@ -1493,6 +1498,15 @@ class PeersManager {
     _onSignal(message) {
         const peerId = message.sender.id;
         this.peers[peerId]._onServerSignalMessage(message);
+    }
+
+    _onEvaluateNoSleep() {
+        // Evaluate if NoSleep should be disabled
+        for (let i = 0; i < this.peers.length; i++) {
+            if (this.peers[i]._busy) return;
+        }
+
+        NoSleepUI.disable();
     }
 
     _refreshPeer(isCaller, peerId, roomType, roomId) {

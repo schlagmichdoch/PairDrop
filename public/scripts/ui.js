@@ -791,7 +791,6 @@ class PeerUI {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
             this._currentStatus = null;
-            NoSleepUI.disableIfIdle();
             return;
         }
 
@@ -2968,9 +2967,7 @@ class NoSleepUI {
         NoSleepUI._active = true;
     }
 
-    static disableIfIdle() {
-        if ($$('x-peer[status]')) return;
-
+    static disable() {
         NoSleepUI._nosleep.disable();
         NoSleepUI._active = false;
     }
