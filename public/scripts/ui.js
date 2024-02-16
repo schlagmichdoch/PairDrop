@@ -1444,6 +1444,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this._currentRequest = null;
 
         Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
+        Events.on('files-transfer-request-abort', e => this._onRequestFileTransferAbort(e.detail.peerId));
         Events.on('keydown', e => this._onKeyDown(e));
     }
 
@@ -1459,6 +1460,22 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this._filesTransferRequestQueue.push({request: request, peerId: peerId});
         if (this.isShown()) return;
         this._dequeueRequests();
+    }
+
+    _onRequestFileTransferAbort(peerId) {
+        // Remove file transfer request from this peer from queue
+        for (let i = 0; i < this._filesTransferRequestQueue.length; i++) {
+            if (this._filesTransferRequestQueue[i].peerId === peerId) {
+                this._filesTransferRequestQueue.splice(i, 1);
+                break;
+            }
+        }
+
+        // Hide dialog if the currently open transfer request is from this peer
+        if (this.isShown() && this.correspondingPeerId === peerId) {
+            this.hide();
+            Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
+        }
     }
 
     _dequeueRequests() {
@@ -2724,6 +2741,7 @@ class Notifications {
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
         Events.on('files-received', e => this._downloadNotification(e.detail.files, e.detail.imagesOnly));
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
+        // Todo on 'files-transfer-request-abort' remove notification
     }
 
     async _requestPermission() {

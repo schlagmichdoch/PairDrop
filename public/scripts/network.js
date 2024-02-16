@@ -321,6 +321,7 @@ class Peer {
     static STATE_IDLE = 'idle';
     static STATE_PREPARE = 'prepare';
     static STATE_TRANSFER_REQUEST_SENT = 'transfer-request-sent';
+    static STATE_TRANSFER_REQUEST_RECEIVED = 'transfer-request-received';
     static STATE_RECEIVE_PROCEEDING = 'receive-proceeding';
     static STATE_TRANSFER_PROCEEDING = 'transfer-proceeding';
     static STATE_TEXT_SENT = 'text-sent';
@@ -493,7 +494,7 @@ class Peer {
                 this._onDisplayNameChanged(message);
                 break;
             case 'state':
-                this._onState(message.state);
+                await this._onState(message.state);
                 break;
             case 'transfer-request':
                 await this._onTransferRequest(message);
@@ -556,23 +557,29 @@ class Peer {
         this._sendMessage({type: 'state', state: this._state})
     }
 
-    _onState(peerState) {
-        if (this._state === Peer.STATE_RECEIVE_PROCEEDING) {
-            this._onStateReceiver(peerState);
+    async _onState(peerState) {
+        if (this._state === Peer.STATE_TRANSFER_PROCEEDING) {
+            this._onStateIfSender(peerState);
         }
-        else if (this._state === Peer.STATE_TRANSFER_PROCEEDING) {
-            this._onStateSender(peerState);
+        else if (this._state === Peer.STATE_RECEIVE_PROCEEDING) {
+            this._onStateIfReceiver(peerState);
+        }
+        else if (this._state === Peer.STATE_TRANSFER_REQUEST_SENT) {
+            await this._onStateIfTransferRequestSent(peerState);
+        }
+        else if (this._state === Peer.STATE_TRANSFER_REQUEST_RECEIVED) {
+            this._onStateIfTransferRequestReceived(peerState);
         }
     }
 
-    _onStateSender(peerState) {
+    _onStateIfSender(peerState) {
         // this peer is sender
         if (peerState !== Peer.STATE_RECEIVE_PROCEEDING) {
             this._abortTransfer();
         }
     }
 
-    _onStateReceiver(peerState) {
+    _onStateIfReceiver(peerState) {
         // this peer is receiver
         switch (peerState) {
             case Peer.STATE_TRANSFER_REQUEST_SENT:
@@ -589,6 +596,25 @@ class Peer {
                 break;
             default:
                 this._abortTransfer();
+        }
+    }
+
+    async _onStateIfTransferRequestSent(peerState) {
+        // This peer has sent a transfer request
+        // If other peer is still idle -> send request again
+        if (peerState === Peer.STATE_IDLE) {
+            await this._sendFileTransferRequest(this._filesRequested);
+        }
+    }
+
+    _onStateIfTransferRequestReceived(peerState) {
+        // This peer has received a transfer request
+        // If other peer is not in "STATE_TRANSFER_REQUEST_SENT" anymore -> reset and hide request from user
+        if (peerState !== Peer.STATE_TRANSFER_REQUEST_SENT) {
+            this._reset();
+            Events.fire('files-transfer-request-abort', {
+                peerId: this._peerId
+            })
         }
     }
 
@@ -625,7 +651,8 @@ class Peer {
             }
         }
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'prepare'})
+        this._state = Peer.STATE_TRANSFER_REQUEST_SENT;
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
 
         this._filesRequested = files;
 
@@ -636,8 +663,6 @@ class Peer {
             thumbnailDataUrl: dataUrl
         });
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'})
-        this._state = Peer.STATE_TRANSFER_REQUEST_SENT;
     }
     
     _onTransferRequestResponse(message) {
@@ -764,6 +789,7 @@ class Peer {
             }
         }
 
+        this._state = Peer.STATE_TRANSFER_REQUEST_RECEIVED;
         this._pendingRequest = request;
 
         // Automatically accept request if auto-accept is set to true via the Edit Paired Devices Dialog
