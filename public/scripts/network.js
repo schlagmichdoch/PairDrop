@@ -890,8 +890,9 @@ class Peer {
             return;
         }
 
+        // While transferring -> round progress to 4th digit. After transferring, set it to 1.
         let progress = this._digester
-            ? (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize
+            ? Math.floor(1e4 * (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize) / 1e4
             : 1;
 
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive'});
