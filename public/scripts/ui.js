@@ -1115,7 +1115,13 @@ class ReceiveFileDialog extends ReceiveDialog {
             : `${ Localization.getTranslation("document-titles.file-received-plural", null, {count: this._data.files.length}) } - PairDrop`;
 
         // If possible, share via menu - else download files
-        const shareViaMenu = this.canShareFilesViaMenu(this._data.files);
+        let shareViaMenu = this.canShareFilesViaMenu(this._data.files);
+
+        if (shareViaMenu && this._filesTooBigForRam()) {
+            // Files too big to share on iOS -> Download instead
+            shareViaMenu = false;
+            Events.fire('notify-user', Localization.getTranslation("notifications.error-sharing-size"));
+        }
 
         this._parseFileData(
             this._data.displayName,
@@ -1140,6 +1146,11 @@ class ReceiveFileDialog extends ReceiveDialog {
         }
 
         Events.fire('set-progress', {peerId: this._data.peerId, progress: 0, status: "receive-complete"});
+    }
+
+    _filesTooBigForRam() {
+        // Pages crash on iOS if RAM exceeds 250 MB
+        return window.iOS && this._data.totalSize > 250000000;
     }
 
     _getDescriptor(files, imagesOnly) {
@@ -1246,9 +1257,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         let zipName = "";
         let sendAsZip = false;
 
-        const tooBigToZip = window.iOS && this._data.totalSize > 256000000;
-
-        if (this._data.files.length > 1 && !tooBigToZip) {
+        if (this._data.files.length > 1 && !this._filesTooBigForRam()) {
             Events.fire('set-progress', {
                 peerId: this._data.peerId,
                 progress: 0,
@@ -1373,7 +1382,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 
         let {sendAsZip, zipObjectUrl, zipName} = await this._processDataAsZip();
 
-        // If single file or zipping failed -> download files individually -> else download zip
+        // If single file or zipping failed or file size exceeds memory -> download files individually -> else download zip
         if (sendAsZip) {
             this._setDownloadButtonToZip(zipObjectUrl, zipName);
         } else {
