@@ -423,8 +423,8 @@ class PeerUI {
         this._connected = false;
 
         this._currentProgress = 0;
-        this._currentStatus = null
-        this._oldStatus = null;
+        this._currentStatus = 'idle';
+        this._oldStatus = 'idle';
 
         this._progressQueue = [];
 
@@ -460,8 +460,6 @@ class PeerUI {
         this.$deviceName.textContent = this._deviceName();
 
         this.updateTypesClassList();
-
-        this.setStatus("connect");
 
         this._evaluateShareMode();
         this._bindListeners();
@@ -602,7 +600,7 @@ class PeerUI {
         if (connected) {
             this._connected = true;
 
-            // on reconnect
+            // on reconnect: reset status to saved status
             this.setStatus(this._oldStatus);
             this._oldStatus = null;
 
@@ -611,11 +609,11 @@ class PeerUI {
         else {
             this._connected = false;
 
+            // when connecting: / connection is lost: save old status
             if (!this._oldStatus && this._currentStatus !== "connect") {
-                // save old status when reconnecting
                 this._oldStatus = this._currentStatus;
+                this.setStatus("connect");
             }
-            this.setStatus("connect");
 
             this._connectionHash = "";
         }
@@ -755,12 +753,12 @@ class PeerUI {
             return;
         }
 
-        if (progress === 0) {
+        if (progress < 0.5) {
             this.$progress.classList.remove('animate');
             this.$progress.classList.remove('over50');
             this.$progress.classList.add('animate');
         }
-        else if (this._currentProgress === 0.5) {
+        else if (progress > 0.5 && this._currentProgress === 0.5) {
             this.$progress.classList.remove('animate');
             this.$progress.classList.add('over50');
             this.$progress.classList.add('animate');
@@ -773,14 +771,13 @@ class PeerUI {
             this.$progress.classList.remove('animate');
         }
 
-        this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
-
         if (progress === 1) {
             // reset progress
             this._progressQueue.unshift({progress: 0, status: status});
         }
 
         this._currentProgress = progress;
+        this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
 
         this.setNextProgress();
     }
@@ -792,7 +789,7 @@ class PeerUI {
 
         clearTimeout(this.statusTimeout);
 
-        if (!status) {
+        if (status === 'idle') {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerText = '';
             return;
@@ -820,7 +817,7 @@ class PeerUI {
 
         if (status.endsWith("-complete") || status === "error") {
             this.statusTimeout = setTimeout(() => {
-                this.setProgress(0, null);
+                this.setStatus("idle");
             }, 10000);
         }
     }

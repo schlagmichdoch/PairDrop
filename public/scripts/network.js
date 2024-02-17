@@ -756,7 +756,7 @@ class Peer {
             if (message.reason === 'ram-exceed-ios') {
                 Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
             }
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
             this._reset();
             return;
         }
@@ -844,7 +844,7 @@ class Peer {
 
         if (!message.success) {
             Logger.warn('File could not be sent');
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
             this._reset();
             return;
         }
@@ -1024,6 +1024,7 @@ class Peer {
 
         // We are done receiving
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'receive'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
         this._allFilesReceiveComplete();
     }
 
