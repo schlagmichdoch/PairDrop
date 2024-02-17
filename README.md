@@ -119,9 +119,9 @@ Connect to others in complex network situations, or over the Internet.
 <br />
 
 PairDrop is libre, and always will be. \
-I footed the bill for the domain and the server, and you can help create great softeare by supporting me. \
-Please use BuyMeACoffee via the button above. \
-Thanks a lot for supporting copylefted libre software!
+If you find it useful and want to support free and open-source software, please consider donating using the button above. \
+I footed the bill for the domain and the server, and you can help create and maintain great software by supporting me. \
+Thank you very much for your contribution!
 
 ## Contributing
 Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a
