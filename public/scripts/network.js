@@ -350,6 +350,14 @@ class Peer {
         this._state = Peer.STATE_IDLE;
         this._busy = false;
 
+        clearInterval(this._transferStatusInterval);
+
+        this._transferStatusInterval = null;
+        this._bytesTotal = 0;
+        this._bytesReceivedFiles = 0;
+        this._timeStart = null;
+        this._byteLogs = [];
+
         // tidy up sender
         this._filesRequested = null;
         this._chunker = null;
@@ -357,7 +365,6 @@ class Peer {
         // tidy up receiver
         this._pendingRequest = null;
         this._acceptedRequest = null;
-        this._totalBytesReceived = 0;
         this._digester = null;
         this._filesReceived = [];
 
@@ -623,6 +630,79 @@ class Peer {
         this._reset();
     }
 
+    _addLog(bytesReceivedCurrentFile) {
+        const now = Date.now();
+
+        // Add log
+        this._byteLogs.push({
+            time: now,
+            bytesReceived: this._bytesReceivedFiles + bytesReceivedCurrentFile
+        });
+
+        // Always include at least 5 entries (2.5 MB) to increase precision
+        if (this._byteLogs.length < 5) return;
+
+        // Move running average to calculate with a window of 20s
+        while (now - this._byteLogs[0].time > 20000) {
+            this._byteLogs.shift();
+        }
+    }
+
+    _setTransferStatus(status) {
+        const secondsSinceStart = Math.round((Date.now() - this._timeStartTransferComplete) / 1000);
+
+        // Wait for 10s to only show info on longer transfers and to increase precision
+        if (secondsSinceStart < 10) return;
+
+        // mode: 0 -> speed, 1 -> time left, 2 -> receive/transfer
+        const mode = Math.round((secondsSinceStart - 10) / 5) % 3;
+
+        if (mode === 0) {
+            status = this._getSpeedString();
+        }
+        else if (mode === 1) {
+            status = this._getTimeString();
+        }
+
+        this._transferStatusString = status;
+    }
+
+    _calculateSpeedKbPerSecond() {
+        const timeDifferenceSeconds = (this._byteLogs[this._byteLogs.length - 1].time - this._byteLogs[0].time) / 1000;
+        const bytesDifferenceKB = (this._byteLogs[this._byteLogs.length - 1].bytesReceived - this._byteLogs[0].bytesReceived) / 1000;
+        return bytesDifferenceKB / timeDifferenceSeconds;
+    }
+
+    _calculateBytesLeft() {
+        return this._bytesTotal - this._byteLogs[this._byteLogs.length - 1].bytesReceived;
+    }
+
+    _calculateSecondsLeft() {
+        return Math.ceil(this._calculateBytesLeft() / this._calculateSpeedKbPerSecond() / 1000);
+    }
+
+    _getSpeedString() {
+        const speedKBs = this._calculateSpeedKbPerSecond();
+        if (speedKBs >= 1000) {
+            let speedMBs = Math.round(speedKBs / 100) / 10;
+            return `${speedMBs} MB/s`; // e.g. "2.2 MB/s"
+        }
+
+        return `${speedKBs} kB/s`; // e.g. "522 kB/s"
+    }
+
+    _getTimeString() {
+        const seconds = this._calculateSecondsLeft();
+        if (seconds > 60) {
+            let minutes = Math.floor(seconds / 60);
+            let secondsLeft = Math.floor(seconds % 60);
+            return `${minutes} min ${secondsLeft}s`; // e.g. // "1min 20s"
+        }
+        else {
+            return `${seconds}s`; // e.g. "35s"
+        }
+    }
+
     // File Sender Only
     async _sendFileTransferRequest(files) {
         this._state = Peer.STATE_PREPARE;
@@ -655,6 +735,7 @@ class Peer {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
 
         this._filesRequested = files;
+        this._bytesTotal = totalSize;
 
         this._sendMessage({type: 'transfer-request',
             header: header,
@@ -691,7 +772,18 @@ class Peer {
             this._filesQueue.push(this._filesRequested[i]);
         }
         this._filesRequested = null
+
         if (this._busy) return;
+
+        this._byteLogs = [];
+        this._bytesReceivedFiles = 0;
+        this._timeStartTransferComplete = Date.now();
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
+
+        this._transferStatusString = 'transfer';
+        this._transferStatusInterval = setInterval(() => this._setTransferStatus('transfer'), 1000);
+
         this._dequeueFile();
     }
 
@@ -727,7 +819,7 @@ class Peer {
             return;
         }
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
     }
 
     _onReceiveConfirmation(bytesReceived) {
@@ -736,6 +828,8 @@ class Peer {
             return;
         }
         this._chunker._onReceiveConfirmation(bytesReceived);
+
+        this._addLog(bytesReceived);
     }
 
     _onFileReceiveComplete(message) {
@@ -743,6 +837,8 @@ class Peer {
             this._sendState();
             return;
         }
+
+        this._bytesReceivedFiles += this._chunker._file.size;
 
         this._chunker = null;
 
@@ -762,7 +858,7 @@ class Peer {
 
         // No more files in queue. Transfer is complete
         this._reset();
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer-complete'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer-complete'});
         Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
         Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
     }
@@ -822,16 +918,25 @@ class Peer {
             message.reason = reason;
         }
 
-        this._sendMessage(message);
-
         if (accepted) {
             this._state = Peer.STATE_RECEIVE_PROCEEDING;
             this._busy = true;
+            this._byteLogs = [];
+            this._filesReceived = [];
             this._acceptedRequest = this._pendingRequest;
             this._lastProgress = 0;
-            this._totalBytesReceived = 0;
-            this._filesReceived = [];
+
+            this._bytesTotal = this._acceptedRequest.totalSize;
+            this._bytesReceivedFiles = 0;
+
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'receive'});
+
+            this._timeStartTransferComplete = Date.now();
+            this._transferStatusString = 'receive';
+            this._transferStatusInterval = setInterval(() => this._setTransferStatus('receive'), 1000);
         }
+
+        this._sendMessage(message);
     }
 
     _onTransferHeader(header) {
@@ -847,7 +952,7 @@ class Peer {
             return;
         }
 
-        this._timeStart = Date.now();
+        this._timeStartTransferFile = Date.now();
 
         this._addFileDigester(header);
     }
@@ -859,8 +964,10 @@ class Peer {
         );
     }
 
-    _sendReceiveConfirmation(bytesReceived) {
-        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceived});
+    _sendReceiveConfirmation(bytesReceivedCurrentFile) {
+        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceivedCurrentFile});
+
+        this._addLog(bytesReceivedCurrentFile);
     }
 
     _sendResendRequest(offset) {
@@ -892,10 +999,10 @@ class Peer {
 
         // While transferring -> round progress to 4th digit. After transferring, set it to 1.
         let progress = this._digester
-            ? Math.floor(1e4 * (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize) / 1e4
+            ? Math.floor(1e4 * (this._bytesReceivedFiles + this._digester._bytesReceived) / this._acceptedRequest.totalSize) / 1e4
             : 1;
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
 
         // occasionally notify sender about our progress
         if (progress - this._lastProgress >= 0.005 || progress === 1) {
@@ -946,9 +1053,9 @@ class Peer {
         this._digester._sendReceiveConfimationCallback = null;
         this._digester = null;
 
-        this._totalBytesReceived += file.size;
+        this._bytesReceivedFiles += file.size;
 
-        const duration = (Date.now() - this._timeStart) / 1000; // s
+        const duration = (Date.now() - this._timeStartTransferFile) / 1000; // s
         const size = Math.round(10 * file.size / 1e6) / 10; // MB
         const speed = Math.round(100 * size / duration) / 100; // MB/s
 
