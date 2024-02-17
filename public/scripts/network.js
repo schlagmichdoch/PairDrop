@@ -355,7 +355,8 @@ class Peer {
         this._transferStatusInterval = null;
         this._bytesTotal = 0;
         this._bytesReceivedFiles = 0;
-        this._timeStart = null;
+        this._timeStartTransferComplete = null;
+        this._timeStartTransferFile = null;
         this._byteLogs = [];
 
         // tidy up sender
@@ -512,9 +513,6 @@ class Peer {
             case 'transfer-header':
                 this._onTransferHeader(message);
                 break;
-            case 'receive-progress':
-                this._onReceiveProgress(message.progress);
-                break;
             case 'receive-confirmation':
                 this._onReceiveConfirmation(message.bytesReceived);
                 break;
@@ -630,13 +628,13 @@ class Peer {
         this._reset();
     }
 
-    _addLog(bytesReceivedCurrentFile) {
+    _addLog(bytesReceivedTotal) {
         const now = Date.now();
 
         // Add log
         this._byteLogs.push({
             time: now,
-            bytesReceived: this._bytesReceivedFiles + bytesReceivedCurrentFile
+            bytesReceived: bytesReceivedTotal
         });
 
         // Always include at least 5 entries (2.5 MB) to increase precision
@@ -813,15 +811,6 @@ class Peer {
         this._chunker._resendFromOffset(offset);
     }
 
-    _onReceiveProgress(progress) {
-        if (this._state !== Peer.STATE_TRANSFER_PROCEEDING) {
-            this._sendState();
-            return;
-        }
-
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
-    }
-
     _onReceiveConfirmation(bytesReceived) {
         if (!this._chunker || this._state !== Peer.STATE_TRANSFER_PROCEEDING) {
             this._sendState();
@@ -829,7 +818,12 @@ class Peer {
         }
         this._chunker._onReceiveConfirmation(bytesReceived);
 
-        this._addLog(bytesReceived);
+        const bytesReceivedTotal = this._bytesReceivedFiles + bytesReceived;
+        const progress = Math.round(1e4 * bytesReceivedTotal / this._bytesTotal) / 1e4;
+
+        this._addLog(bytesReceivedTotal);
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
     }
 
     _onFileReceiveComplete(message) {
@@ -964,10 +958,15 @@ class Peer {
         );
     }
 
-    _sendReceiveConfirmation(bytesReceivedCurrentFile) {
-        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceivedCurrentFile});
+    _sendReceiveConfirmation(bytesReceived) {
+        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceived});
 
-        this._addLog(bytesReceivedCurrentFile);
+        const bytesReceivedTotal = this._bytesReceivedFiles + bytesReceived;
+        const progress = Math.round(1e4 * bytesReceivedTotal / this._bytesTotal) / 1e4;
+
+        this._addLog(bytesReceivedTotal);
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
     }
 
     _sendResendRequest(offset) {
@@ -994,25 +993,7 @@ class Peer {
         catch (e) {
             this._abortTransfer();
             Logger.error(e);
-            return;
         }
-
-        // While transferring -> round progress to 4th digit. After transferring, set it to 1.
-        let progress = this._digester
-            ? Math.floor(1e4 * (this._bytesReceivedFiles + this._digester._bytesReceived) / this._acceptedRequest.totalSize) / 1e4
-            : 1;
-
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
-
-        // occasionally notify sender about our progress
-        if (progress - this._lastProgress >= 0.005 || progress === 1) {
-            this._lastProgress = progress;
-            this._sendProgress(progress);
-        }
-    }
-
-    _sendProgress(progress) {
-        this._sendMessage({ type: 'receive-progress', progress: progress });
     }
 
     _fileReceived(file) {
