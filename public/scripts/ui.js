@@ -29,7 +29,7 @@ class PeersUI {
         Events.on('peer-connecting', e => this._onPeerConnecting(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('set-progress', e => this._onSetProgress(e.detail.peerId, e.detail.progress, e.detail.status));
+        Events.on('set-progress', e => this._onSetProgress(e.detail.peerId, e.detail.progress, e.detail.status, e.detail.statusText));
 
         Events.on('drop', e => this._onDrop(e));
         Events.on('keydown', e => this._onKeyDown(e));
@@ -185,12 +185,12 @@ class PeersUI {
             })
     }
 
-    _onSetProgress(peerId, progress, status) {
+    _onSetProgress(peerId, progress, status, statusText) {
         const peerUI = this.peerUIs[peerId];
 
         if (!peerUI) return;
 
-        peerUI.setProgressOrQueue(progress, status);
+        peerUI.queueProgressStatus(progress, status, statusText);
     }
 
     _onDrop(e) {
@@ -601,19 +601,19 @@ class PeerUI {
             this._connected = true;
 
             // on reconnect: reset status to saved status
-            this.setStatus(this._oldStatus);
-            this._oldStatus = null;
+            this.queueProgressStatus(null, this._oldStatus);
+            this._oldStatus = 'idle';
 
             this._connectionHash = connectionHash;
         }
         else {
             this._connected = false;
 
-            // when connecting: / connection is lost: save old status
-            if (!this._oldStatus && this._currentStatus !== "connect") {
+            // when connecting: / connection is lost during transfer: save old status
+            if (this._isTransferringStatus(this._currentStatus)) {
                 this._oldStatus = this._currentStatus;
-                this.setStatus("connect");
             }
+            this.queueProgressStatus(null, "connect");
 
             this._connectionHash = "";
         }
@@ -688,71 +688,89 @@ class PeerUI {
         $input.files = null; // reset input
     }
 
-    setProgressOrQueue(progress, status) {
-        if (this._progressQueue.length > 0) {
-            if (progress) {
-                // if progress is higher than progress in queue -> overwrite in queue and cut queue at this position
-                for (let i = 0; i < this._progressQueue.length; i++) {
-                    if (this._progressQueue[i].progress <= progress) {
-                        this._progressQueue[i].progress = progress;
-                        this._progressQueue[i].status = status;
-                        this._progressQueue.splice(i + 1);
-                        return;
-                    }
-                }
+    queueProgressStatus(progress = null, status = null, statusText = null) {
+        clearTimeout(this._progressIdleTimeout);
+
+        // if progress is higher than progress in queue -> overwrite in queue and cut queue at this position
+        for (let i = 0; i < this._progressQueue.length; i++) {
+            if (this._progressQueue[i].progress <= progress && this._progressQueue[i].status === status) {
+                this._progressQueue[i] = {progress, status, statusText};
+                this._progressQueue.splice(i + 1);
+                return;
             }
-            // add to queue
-            this._progressQueue.push({progress: progress, status: status});
+        }
+        this._progressQueue.push({progress, status, statusText});
+
+        // only dequeue if not already dequeuing
+        if (this._progressAnimatingTimeout) return;
+
+        this.dequeueProgressStatus();
+    }
+
+    setNextProgressStatus() {
+        if (!this._progressQueue.length) {
+            // Queue is empty
+            this._progressAnimatingTimeout = null;
             return;
         }
 
-        this.setProgress(progress, status);
+        // Queue is not empty -> set next progress
+        this.dequeueProgressStatus();
     }
 
-    setNextProgress() {
-        if (!this._progressQueue.length) return;
+    dequeueProgressStatus() {
+        clearTimeout(this._progressAnimatingTimeout);
 
-        setTimeout(() => {
-            let next = this._progressQueue.shift()
-            this.setProgress(next.progress, next.status);
-        }, 250); // 200 ms animation + buffer
-    }
+        let {progress, status, statusText} = this._progressQueue.shift();
 
-    setProgress(progress, status) {
-        this.setStatus(status);
+        // On complete status: set progress to 0 after 250ms and status to idle after 10s
+        if (this._isCompletedStatus(status)) {
+            this._progressQueue.unshift({progress: 0});
+            this._progressIdleTimeout = setTimeout(() => this.setStatus("idle"), 10000);
+        }
 
-        if (progress === null) return;
+        // After animation has finished -> set next progress in queue
+        this._progressAnimatingTimeout = setTimeout(() => this.setNextProgressStatus(), 250); // 200 ms animation + buffer
+
+
+        // Only change status if explicitly set
+        if (status) {
+            this.setStatus(status, statusText);
+        }
+
+        // Only change progress if explicitly set and differs from current
+        if (progress === null || progress === this._currentProgress) return;
 
         const progressSpillsOverHalf = this._currentProgress < 0.5 && 0.5 < progress; // 0.5 slips through
         const progressSpillsOverFull = progress <= 0.5 && 0.5 <= this._currentProgress && this._currentProgress < 1;
 
+        // If spills over half: go to 0.5 first
+        // If spills over full: go to 1 first
         if (progressSpillsOverHalf) {
-            this._progressQueue.unshift({progress: progress, status: status});
-            this.setProgress(0.5, status);
+            this._progressQueue.unshift({progress: 0.5}, {progress: progress});
+            this.dequeueProgressStatus();
             return;
         }
         else if (progressSpillsOverFull) {
-            this._progressQueue.unshift({progress: progress, status: status});
-            this.setProgress(1, status);
+            this._progressQueue.unshift({progress: 1}, {progress: progress});
+            this.dequeueProgressStatus();
             return;
         }
 
-        if (progress === 0) {
-            this._currentProgress = 0;
-            this.$progress.classList.remove('animate');
-            this.$progress.classList.remove('over50');
-            this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
-            this.setNextProgress();
+        // Clear progress after setting it to 1
+        if (progress === 1) {
+            this._progressQueue.unshift({progress: 0});
+        }
+
+        // Set progress to 1 before setting to 0 if not error
+        if (progress === 0 && this._currentProgress !== 1 && status !== 'error') {
+            this._progressQueue.unshift({progress: 1});
+            this.dequeueProgressStatus();
             return;
         }
 
-        if (progress < this._currentProgress && status !== this._currentStatus) {
-            // reset progress
-            this._progressQueue.unshift({progress: progress, status: status});
-            this.setProgress(0, status);
-            return;
-        }
-
+        // under 0.5 -> remove second circle
+        // over 0.5 -> add second circle
         if (progress < 0.5) {
             this.$progress.classList.remove('animate');
             this.$progress.classList.remove('over50');
@@ -764,30 +782,22 @@ class PeerUI {
             this.$progress.classList.add('animate');
         }
 
-        if (progress > this._currentProgress) {
-            this.$progress.classList.add('animate');
-        }
-        else {
+        // Do not animate when setting progress to lower value
+        if (progress < this._currentProgress && this._currentProgress === 1) {
             this.$progress.classList.remove('animate');
         }
 
-        if (progress === 1) {
-            // reset progress
-            this._progressQueue.unshift({progress: 0, status: status});
+        // If document is in background do not animate to prevent flickering on focus
+        if (!document.hasFocus()) {
+            this.$progress.classList.remove('animate');
         }
 
         this._currentProgress = progress;
         this.$progress.style.setProperty('--progress', `rotate(${360 * progress}deg)`);
-
-        this.setNextProgress();
     }
 
-    setStatus(status) {
-        if (status === this._currentStatus) return;
-
+    setStatus(status, statusText = null) {
         this._currentStatus = status;
-
-        clearTimeout(this.statusTimeout);
 
         if (status === 'idle') {
             this.$el.removeAttribute('status');
@@ -795,31 +805,30 @@ class PeerUI {
             return;
         }
 
-        let statusText = {
-            "connect": Localization.getTranslation("peer-ui.connecting"),
-            "prepare": Localization.getTranslation("peer-ui.preparing"),
-            "transfer": Localization.getTranslation("peer-ui.transferring"),
-            "receive": Localization.getTranslation("peer-ui.receiving"),
-            "process": Localization.getTranslation("peer-ui.processing"),
-            "wait": Localization.getTranslation("peer-ui.waiting"),
-            "transfer-complete": Localization.getTranslation("peer-ui.transfer-complete"),
-            "receive-complete": Localization.getTranslation("peer-ui.receive-complete"),
-            "error": Localization.getTranslation("peer-ui.error")
-        }[status];
-
-        if (statusText) {
-            this.$el.setAttribute('status', status);
-            this.$el.querySelector('.status').innerText = statusText;
-        }
-        else {
-            this.$el.querySelector('.status').innerText = status;
+        if (!statusText) {
+            statusText = {
+                "connect": Localization.getTranslation("peer-ui.connecting"),
+                "prepare": Localization.getTranslation("peer-ui.preparing"),
+                "transfer": Localization.getTranslation("peer-ui.transferring"),
+                "receive": Localization.getTranslation("peer-ui.receiving"),
+                "process": Localization.getTranslation("peer-ui.processing"),
+                "wait": Localization.getTranslation("peer-ui.waiting"),
+                "transfer-complete": Localization.getTranslation("peer-ui.transfer-complete"),
+                "receive-complete": Localization.getTranslation("peer-ui.receive-complete"),
+                "error": Localization.getTranslation("peer-ui.error")
+            }[status];
         }
 
-        if (status.endsWith("-complete") || status === "error") {
-            this.statusTimeout = setTimeout(() => {
-                this.setStatus("idle");
-            }, 10000);
-        }
+        this.$el.setAttribute('status', status);
+        this.$el.querySelector('.status').innerText = statusText;
+    }
+
+    _isCompletedStatus(status) {
+        return status && (status.endsWith("-complete") || status === "error")
+    }
+
+    _isTransferringStatus(status) {
+        return status !== "connect" && !this._isCompletedStatus(status);
     }
 
     _onDrop(e) {

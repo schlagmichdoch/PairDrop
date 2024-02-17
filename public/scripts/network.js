@@ -350,7 +350,7 @@ class Peer {
         this._state = Peer.STATE_IDLE;
         this._busy = false;
 
-        clearInterval(this._transferStatusInterval);
+        clearInterval(this._updateStatusTextInterval);
 
         this._transferStatusInterval = null;
         this._bytesTotal = 0;
@@ -646,23 +646,24 @@ class Peer {
         }
     }
 
-    _setTransferStatus(status) {
+    _updateStatusText() {
         const secondsSinceStart = Math.round((Date.now() - this._timeStartTransferComplete) / 1000);
 
         // Wait for 10s to only show info on longer transfers and to increase precision
         if (secondsSinceStart < 10) return;
 
-        // mode: 0 -> speed, 1 -> time left, 2 -> receive/transfer
+        // mode: 0 -> speed, 1 -> time left, 2 -> receive/transfer (statusText = null)
         const mode = Math.round((secondsSinceStart - 10) / 5) % 3;
+        let statusText = null;
 
         if (mode === 0) {
-            status = this._getSpeedString();
+            statusText = this._getSpeedString();
         }
         else if (mode === 1) {
-            status = this._getTimeString();
+            statusText = this._getTimeString();
         }
 
-        this._transferStatusString = status;
+        this._statusText = statusText;
     }
 
     _calculateSpeedKbPerSecond() {
@@ -676,7 +677,7 @@ class Peer {
     }
 
     _calculateSecondsLeft() {
-        return Math.ceil(this._calculateBytesLeft() / this._calculateSpeedKbPerSecond() / 1000);
+        return Math.round(this._calculateBytesLeft() / this._calculateSpeedKbPerSecond() / 1000);
     }
 
     _getSpeedString() {
@@ -779,8 +780,8 @@ class Peer {
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
 
-        this._transferStatusString = 'transfer';
-        this._transferStatusInterval = setInterval(() => this._setTransferStatus('transfer'), 1000);
+        this._statusText = null;
+        this._updateStatusTextInterval = setInterval(() => this._updateStatusText(), 1000);
 
         this._dequeueFile();
     }
@@ -823,7 +824,7 @@ class Peer {
 
         this._addLog(bytesReceivedTotal);
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer', statusText: this._statusText});
     }
 
     _onFileReceiveComplete(message) {
@@ -918,7 +919,6 @@ class Peer {
             this._byteLogs = [];
             this._filesReceived = [];
             this._acceptedRequest = this._pendingRequest;
-            this._lastProgress = 0;
 
             this._bytesTotal = this._acceptedRequest.totalSize;
             this._bytesReceivedFiles = 0;
@@ -926,8 +926,8 @@ class Peer {
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'receive'});
 
             this._timeStartTransferComplete = Date.now();
-            this._transferStatusString = 'receive';
-            this._transferStatusInterval = setInterval(() => this._setTransferStatus('receive'), 1000);
+            this._statusText = null;
+            this._updateStatusTextInterval = setInterval(() => this._updateStatusText(), 1000);
         }
 
         this._sendMessage(message);
@@ -966,7 +966,7 @@ class Peer {
 
         this._addLog(bytesReceivedTotal);
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: this._transferStatusString});
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive', statusText: this._statusText});
     }
 
     _sendResendRequest(offset) {

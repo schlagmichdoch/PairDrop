@@ -769,7 +769,7 @@ x-dialog .dialog-subheader {
 }
 
 .animate .circle {
-    transition: transform 200ms;
+    transition: transform 200ms linear;
 }
 
 .over50 {
