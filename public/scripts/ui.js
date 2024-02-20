@@ -25,7 +25,7 @@ class PeersUI {
         this.shareMode.text = "";
 
         Events.on('peer-joined', e => this._onPeerJoined(e.detail.peer, e.detail.roomType, e.detail.roomId));
-        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash, e.detail.connectionType));
         Events.on('peer-connecting', e => this._onPeerConnecting(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
@@ -110,12 +110,12 @@ class PeersUI {
         this.peerUIs[peer.id] = peerUI;
     }
 
-    _onPeerConnected(peerId, connectionHash) {
+    _onPeerConnected(peerId, connectionHash, connectionType) {
         const peerUI = this.peerUIs[peerId];
 
         if (!peerUI) return;
 
-        peerUI._peerConnected(true, connectionHash);
+        peerUI._peerConnected(true, connectionHash, connectionType);
 
         this._addPeerUIIfMissing(peerUI);
     }
@@ -474,14 +474,18 @@ class PeerUI {
     }
 
     html() {
-        let title= Localization.getTranslation("peer-ui.click-to-send");
+        const titleLabelTranslation= Localization.getTranslation("peer-ui.click-to-send");
+        const titleTurnTranslation= Localization.getTranslation("peer-ui.turn-indicator");
 
         this.$el.innerHTML = `
-            <label class="column center pointer" title="${title}">
+            <label class="column center pointer" title="${titleLabelTranslation}">
                 <input type="file" multiple/>
                 <x-icon>
                     <div class="icon-wrapper" shadow="1">
                         <svg class="icon"><use xlink:href="#"/></svg>
+                        <div class="turn-indicator-wrapper center" title="${titleTurnTranslation}">
+                            <svg class="turn-indicator"><use xlink:href="#turn-indicator"/></svg>
+                        </div>
                     </div>
                     <div class="highlight-wrapper center">
                         <div class="highlight highlight-room-ip" shadow="1"></div>
@@ -524,6 +528,15 @@ class PeerUI {
         }
         else {
             this.$el.classList.remove('ws-peer');
+        }
+    }
+
+    _updateTurnClass() {
+        if (this._connectionType === "relay") {
+            this.$el.classList.add('turn');
+        }
+        else {
+            this.$el.classList.remove('turn');
         }
     }
 
@@ -610,7 +623,7 @@ class PeerUI {
         });
     }
 
-    _peerConnected(connected = true, connectionHash = "") {
+    _peerConnected(connected, connectionHash = "", connectionType = "") {
         if (connected) {
             this._connected = true;
 
@@ -619,9 +632,11 @@ class PeerUI {
             this._oldStatus = null;
 
             this._connectionHash = connectionHash;
+            this._connectionType = connectionType;
 
             this._updateSameBrowserClass();
             this._updateWsPeerClass();
+            this._updateTurnClass();
         }
         else {
             this._connected = false;
@@ -633,6 +648,7 @@ class PeerUI {
             this.setStatus("connect");
 
             this._connectionHash = "";
+            this._connectionType = "";
         }
     }
 

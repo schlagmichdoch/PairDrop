@@ -279,6 +279,40 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
+x-peer:not(.turn) .turn-indicator-wrapper {
+    display: none;
+}
+
+x-peer .turn-indicator-wrapper {
+    z-index: 0;
+    display: flex;
+    position: absolute;
+    top: 43px;
+    right: 23px;
+    width: 22px;
+    height: 22px;
+}
+
+x-peer .turn-indicator-wrapper:before {
+    z-index: -1;
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: white;
+    border-radius: 50%;
+    border: solid 2px var(--primary-color);
+}
+
+x-peer .turn-indicator {
+    margin: auto;
+    width: calc(var(--icon-size) / 3);
+    height: calc(var(--icon-size) / 3);
+    fill: var(--primary-color);
+}
+
 /* Checkboxes as slider */
 
 .switch {
