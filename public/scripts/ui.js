@@ -459,7 +459,9 @@ class PeerUI {
         this.$displayName.textContent = this._displayName();
         this.$deviceName.textContent = this._deviceName();
 
-        this.updateTypesClassList();
+        this._updateRoomTypeClasses();
+        this._updateSameBrowserClass();
+        this._updateWsPeerClass();
 
         this.setStatus("connect");
 
@@ -499,30 +501,40 @@ class PeerUI {
             </label>`;
     }
 
-    updateTypesClassList() {
+    _updateRoomTypeClasses() {
         // Remove all classes
-        this.$el.classList.remove('type-ip', 'type-secret', 'type-public-id', 'type-same-browser', 'ws-peer');
+        this.$el.classList.remove('type-ip', 'type-secret', 'type-public-id');
 
         // Add classes accordingly
         Object.keys(this._roomIds).forEach(roomType => this.$el.classList.add(`type-${roomType}`));
+    }
 
+    _updateSameBrowserClass() {
         if (BrowserTabsConnector.peerIsSameBrowser(this._peer.id)) {
-            this.$el.classList.add(`type-same-browser`);
+            this.$el.classList.add('same-browser');
         }
+        else {
+            this.$el.classList.remove('same-browser');
+        }
+    }
 
+    _updateWsPeerClass() {
         if (!this._peer.rtcSupported || !window.isRtcSupported) {
             this.$el.classList.add('ws-peer');
+        }
+        else {
+            this.$el.classList.remove('ws-peer');
         }
     }
 
     _addRoomId(roomType, roomId) {
         this._roomIds[roomType] = roomId;
-        this.updateTypesClassList();
+        this._updateRoomTypeClasses();
     }
 
     _removeRoomId(roomType) {
         delete this._roomIds[roomType];
-        this.updateTypesClassList();
+        this._updateRoomTypeClasses();
     }
 
     _onShareModeChanged(active = false, descriptor = "") {
@@ -607,6 +619,9 @@ class PeerUI {
             this._oldStatus = null;
 
             this._connectionHash = connectionHash;
+
+            this._updateSameBrowserClass();
+            this._updateWsPeerClass();
         }
         else {
             this._connected = false;
