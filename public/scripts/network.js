@@ -331,6 +331,8 @@ class Peer {
         this._isCaller = isCaller;
         this._peerId = peerId;
 
+        this._maxMessageSize = 65536; // 64 KB
+
         this._roomIds = {};
         this._updateRoomIds(roomType, roomId);
 
@@ -352,14 +354,15 @@ class Peer {
 
         // tidy up sender
         this._filesRequested = null;
+        this._requestSent = null;
         this._chunker = null;
 
         // tidy up receiver
-        this._pendingRequest = null;
-        this._acceptedRequest = null;
+        this._requestPending = null;
+        this._requestAccepted = null;
         this._totalBytesReceived = 0;
         this._digester = null;
-        this._filesReceived = [];
+        this._filesReceived = null;
 
         // disable NoSleep if idle
         Events.fire('evaluate-no-sleep');
@@ -497,7 +500,7 @@ class Peer {
                 await this._onState(message.state);
                 break;
             case 'transfer-request':
-                await this._onTransferRequest(message);
+                await this._onTransferRequest(message.request);
                 break;
             case 'transfer-request-response':
                 this._onTransferRequestResponse(message);
@@ -624,7 +627,7 @@ class Peer {
     }
 
     // File Sender Only
-    async _sendFileTransferRequest(files) {
+    async _sendFileTransferRequest(files, fileIsMessage = false) {
         this._state = Peer.STATE_PREPARE;
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'prepare'});
 
@@ -642,6 +645,13 @@ class Peer {
             if (files[i].type.split('/')[0] !== 'image') imagesOnly = false;
         }
 
+        // request type 'images', 'files' or 'message
+        const filesType = fileIsMessage
+            ? 'message'
+            : imagesOnly
+                ? 'images'
+                : 'files';
+
         let dataUrl = "";
         if (files[0].type.split('/')[0] === 'image') {
             try {
@@ -654,13 +664,18 @@ class Peer {
         this._state = Peer.STATE_TRANSFER_REQUEST_SENT;
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
 
-        this._filesRequested = files;
-
-        this._sendMessage({type: 'transfer-request',
+        const request = {
             header: header,
             totalSize: totalSize,
-            imagesOnly: imagesOnly,
+            filesType: filesType,
             thumbnailDataUrl: dataUrl
+        };
+        
+        this._filesRequested = files;
+        this._requestSent = request;
+        
+        this._sendMessage({type: 'transfer-request',
+            request: request
         });
 
     }
@@ -675,7 +690,7 @@ class Peer {
             if (message.reason === 'ram-exceed-ios') {
                 Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
             }
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
             this._reset();
             return;
         }
@@ -748,7 +763,7 @@ class Peer {
 
         if (!message.success) {
             Logger.warn('File could not be sent');
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: null});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
             this._reset();
             return;
         }
@@ -760,6 +775,9 @@ class Peer {
             return;
         }
 
+        // If files sent was message -> abort and wait for text-received message
+        if (this._requestSent.filesType === 'message') return;
+
         // No more files in queue. Transfer is complete
         this._reset();
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer-complete'});
@@ -770,7 +788,7 @@ class Peer {
     // File Receiver Only
     async _onTransferRequest(request) {
         // Only accept one request at a time per peer
-        if (this._pendingRequest) {
+        if (this._requestPending) {
             this._sendTransferRequestResponse(false);
             return;
         }
@@ -790,7 +808,7 @@ class Peer {
         }
 
         this._state = Peer.STATE_TRANSFER_REQUEST_RECEIVED;
-        this._pendingRequest = request;
+        this._requestPending = request;
 
         // Automatically accept request if auto-accept is set to true via the Edit Paired Devices Dialog
         if (this._autoAccept) {
@@ -827,7 +845,7 @@ class Peer {
         if (accepted) {
             this._state = Peer.STATE_RECEIVE_PROCEEDING;
             this._busy = true;
-            this._acceptedRequest = this._pendingRequest;
+            this._requestAccepted = this._requestPending;
             this._lastProgress = 0;
             this._totalBytesReceived = 0;
             this._filesReceived = [];
@@ -892,7 +910,7 @@ class Peer {
 
         // While transferring -> round progress to 4th digit. After transferring, set it to 1.
         let progress = this._digester
-            ? Math.floor(1e4 * (this._totalBytesReceived + this._digester._bytesReceived) / this._acceptedRequest.totalSize) / 1e4
+            ? Math.floor(1e4 * (this._totalBytesReceived + this._digester._bytesReceived) / this._requestAccepted.totalSize) / 1e4
             : 1;
 
         Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive'});
@@ -913,26 +931,34 @@ class Peer {
         this._singleFileReceiveComplete(file);
 
         // If less files received than header accepted -> wait for next file
-        if (this._filesReceived.length < this._acceptedRequest.header.length) return;
+        if (this._filesReceived.length < this._requestAccepted.header.length) return;
 
         // We are done receiving
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'receive'});
+
+        // If filesType is 'message' evaluate files as text
+        if (this._requestAccepted.filesType === 'message') {
+            this._textReceivedAsFile();
+            return;
+        }
+
+        // fileType is 'images' or 'files'
         this._allFilesReceiveComplete();
     }
 
     _fitsAcceptedHeader(header) {
-        if (!this._acceptedRequest) {
+        if (!this._requestAccepted) {
             return false;
         }
 
         const positionFile = this._filesReceived.length;
 
-        if (positionFile > this._acceptedRequest.header.length - 1) {
+        if (positionFile > this._requestAccepted.header.length - 1) {
             return false;
         }
 
         // Check if file header fits
-        const acceptedHeader = this._acceptedRequest.header[positionFile];
+        const acceptedHeader = this._requestAccepted.header[positionFile];
 
         const sameSize = header.size === acceptedHeader.size;
         const sameType = header.mime === acceptedHeader.mime;
@@ -955,8 +981,11 @@ class Peer {
         // Log speed from request to receive
         Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
-        // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', file);
+        // Prevent App from downloading message txt file
+        if (this._requestAccepted.filesType !== 'message') {
+            // include for compatibility with 'Snapdrop & PairDrop for Android' app
+            Events.fire('file-received', file);
+        }
 
         this._filesReceived.push(file);
 
@@ -967,39 +996,88 @@ class Peer {
         Events.fire('files-received', {
             peerId: this._peerId,
             files: this._filesReceived,
-            imagesOnly: this._acceptedRequest.imagesOnly,
-            totalSize: this._acceptedRequest.totalSize
+            filesType: this._requestAccepted.filesType,
+            totalSize: this._requestAccepted.totalSize
         });
         this._reset();
     }
 
     // Message Sender Only
-    _sendText(text) {
+
+    _base64encode(text) {
+        return btoa(unescape(encodeURIComponent(text)));
+    }
+
+    async _sendText(text) {
         this._state = Peer.STATE_TEXT_SENT;
-        const unescaped = btoa(unescape(encodeURIComponent(text)));
-        this._sendMessage({ type: 'text', text: unescaped });
+
+        // Send text base64 encoded
+        const base64encoded = this._base64encode(text);
+        const message = {type: 'text', text: base64encoded};
+
+        // If text too big for connection -> send as file instead
+        if (JSON.stringify(message).length > this._maxMessageSize) {
+            await this._sendTextAsFile(text);
+            return;
+        }
+
+        this._sendMessage(message);
+    }
+
+    async _sendTextAsFile(text) {
+        // send text in chunks by using the file transfer api
+        const file = new File([text], "pairdrop-message.txt", { type: 'text/plain' });
+        await this._sendFileTransferRequest([file], true);
     }
 
     _onTextReceiveComplete() {
-        if (this._state !== Peer.STATE_TEXT_SENT) {
+        if (this._state !== Peer.STATE_TEXT_SENT && this._state !== Peer.STATE_TRANSFER_PROCEEDING) {
             this._sendState();
             return;
         }
         this._reset();
+        Events.fire('set-progress', { peerId: this._peerId, progress: 0, status: 'idle' });
         Events.fire('notify-user', Localization.getTranslation("notifications.message-transfer-completed"));
     }
 
     // Message Receiver Only
-    _onText(message) {
-        if (!message.text) return;
+    _base64decodeMessage(base64encoded){
+        let decoded = "";
         try {
-            const escaped = decodeURIComponent(escape(atob(message.text)));
-            Events.fire('text-received', { text: escaped, peerId: this._peerId });
-            this._sendMessage({ type: 'text-receive-complete' });
+            decoded = decodeURIComponent(escape(atob(base64encoded)));
         }
         catch (e) {
             Logger.error(e);
         }
+        return decoded;
+    }
+
+    _onText(message) {
+        if (this._state !== Peer.STATE_IDLE) {
+            this._abortTransfer();
+            return;
+        }
+
+        if (!message.text) return;
+
+        const text = this._base64decodeMessage(message.text);
+
+        Events.fire('text-received', { text: text, peerId: this._peerId });
+        this._sendMessage({ type: 'text-receive-complete' });
+    }
+
+    _textReceivedAsFile() {
+        // Use FileReader to unpack text from file
+        const reader = new FileReader();
+        reader.addEventListener("load", _ => {
+                Events.fire('text-received', { text: reader.result, peerId: this._peerId });
+            });
+
+        reader.readAsText(this._filesReceived[0]);
+
+        Events.fire('set-progress', { peerId: this._peerId, progress: 1, status: 'idle' });
+        this._sendMessage({ type: 'text-receive-complete' });
+        this._reset();
     }
 }
 
@@ -1114,6 +1192,9 @@ class RTCPeer extends Peer {
     _onConnectionStateChange() {
         Logger.debug('RTC: Connection state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
+            case 'connected':
+                this._setMaxMessageSize();
+                break;
             case 'disconnected':
                 this._refresh();
                 break;
@@ -1331,6 +1412,12 @@ class RTCPeer extends Peer {
         this._server.send(message);
     }
 
+    _setMaxMessageSize() {
+        this._maxMessageSize = this._conn && this._conn.sctp
+            ? this._conn.sctp.maxMessageSize
+            : 262144; // 256 kB
+    }
+
     async _sendFile(file) {
         this._chunker = new FileChunkerRTC(
             file,
@@ -1388,6 +1475,8 @@ class WSPeer extends Peer {
 
         this.rtcSupported = false;
         this.signalSuccessful = false;
+
+        this._maxMessageSize = 65536; // 64 KB
 
         if (!this._isCaller) return; // we will listen for a caller
 
@@ -1607,8 +1696,8 @@ class PeersManager {
         await this.peers[message.to]._sendFileTransferRequest(files);
     }
 
-    _onSendText(message) {
-        this.peers[message.to]._sendText(message.text);
+    async _onSendText(message) {
+        await this.peers[message.to]._sendText(message.text);
     }
 
     _onPeerLeft(message) {
@@ -1813,7 +1902,7 @@ class FileChunkerRTC extends FileChunker {
 
         this._chunkSize = peerConnection && peerConnection.sctp
             ? Math.min(peerConnection.sctp.maxMessageSize, 1048576) // 1 MB max
-            : 262144; // 256 KB
+            : 262144; // 256 kB
 
         this._peerConnection = peerConnection;
         this._dataChannel = dataChannel;
