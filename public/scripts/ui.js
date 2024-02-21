@@ -2319,6 +2319,11 @@ class SendTextDialog extends Dialog {
             text: this.$text.innerText
         });
         this.hide();
+    }
+
+    hide() {
+        super.hide();
+        this.$submit.setAttribute('disabled', true);
         setTimeout(() => this.$text.innerText = "", 300);
     }
 }
