@@ -8,13 +8,13 @@ class ServerConnection {
             navigator.connection.addEventListener('change', _ => this._reconnect());
         }
 
-        Events.on('room-secrets', e => this.send({ type: 'room-secrets', roomSecrets: e.detail }));
-        Events.on('join-ip-room', _ => this.send({ type: 'join-ip-room'}));
-        Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
-        Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
-        Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
-        Events.on('pair-device-join', e => this._onPairDeviceJoin(e.detail));
-        Events.on('pair-device-cancel', _ => this.send({ type: 'pair-device-cancel' }));
+        Events.on('join-ip-room', _ => this._sendJoinIpRoom());
+        Events.on('room-secrets', e => this._sendRoomSecrets(e.detail));
+        Events.on('room-secrets-deleted', e => this._sendRoomSecretsDeleted(e.detail));
+        Events.on('regenerate-room-secret', e => this._sendRegenerateRoomSecret(e.detail));
+        Events.on('pair-device-initiate', _ => this._sendPairDeviceInitiate());
+        Events.on('pair-device-join', e => this._sendPairDeviceJoin(e.detail));
+        Events.on('pair-device-cancel', _ => this._sendPairDeviceCancel());
 
         Events.on('create-public-room', _ => this._onCreatePublicRoom());
         Events.on('join-public-room', e => this._onJoinPublicRoom(e.detail.roomId, e.detail.createIfInvalid));
@@ -93,7 +93,23 @@ class ServerConnection {
         }
     }
 
-    _onPairDeviceInitiate() {
+    _sendJoinIpRoom() {
+        this.send({ type: 'join-ip-room'});
+    }
+
+    _sendRoomSecrets(roomSecrets) {
+        this.send({ type: 'room-secrets', roomSecrets: roomSecrets });
+    }
+
+    _sendRoomSecretsDeleted(roomSecrets) {
+        this.send({ type: 'room-secrets-deleted', roomSecrets: roomSecrets});
+    }
+
+    _sendRegenerateRoomSecret(roomSecret) {
+        this.send({ type: 'regenerate-room-secret', roomSecret: roomSecret});
+    }
+
+    _sendPairDeviceInitiate() {
         if (!this._isConnected()) {
             Events.fire('notify-user', Localization.getTranslation("notifications.online-requirement-pairing"));
             return;
@@ -101,13 +117,17 @@ class ServerConnection {
         this.send({ type: 'pair-device-initiate' });
     }
 
-    _onPairDeviceJoin(pairKey) {
+    _sendPairDeviceJoin(pairKey) {
         if (!this._isConnected()) {
             // Todo: instead use pending outbound ws queue
-            setTimeout(() => this._onPairDeviceJoin(pairKey), 1000);
+            setTimeout(() => this._sendPairDeviceJoin(pairKey), 1000);
             return;
         }
         this.send({ type: 'pair-device-join', pairKey: pairKey });
+    }
+
+    _sendPairDeviceCancel() {
+        this.send({ type: 'pair-device-cancel' });
     }
 
     _onCreatePublicRoom() {
