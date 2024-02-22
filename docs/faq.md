@@ -7,17 +7,34 @@
 
 <br>
 
-if you are using a Chromium-based browser (Chrome, Edge, Vivaldi, Brave, etc.), you can easily install PairDrop PWA on your desktop 
-by clicking the install-button in the top-right corner while on [pairdrop.net](https://pairdrop.net).
+Here is a good guide on how to install PWAs on different platforms: \
+https://www.cdc.gov/niosh/mining/content/hearingloss/installPWA.html
+
+
+**Chromium-based browser on Desktop (Chrome, Edge, Vivaldi, Brave, etc.)** \
+Easily install PairDrop PWA on your desktop by clicking the install-button in the top-right corner while on [pairdrop.net](https://pairdrop.net).
 
 <img width="400" src="pwa-install.png" alt="Example on how to install a pwa with Edge">
 
+**Desktop Firefox** \
 On Firefox, PWAs are installable via [this browser extensions](https://addons.mozilla.org/de/firefox/addon/pwas-for-firefox/)
+
+**Android** \
+PWAs are installable only by using Google Chrome or Samsung Browser:
+1. Visit [pairdrop.net](https://pairdrop.net)
+2. Click _Install_ on the installation pop-up or use the three-dot-menu and click on _Add to Home screen_
+3. Click _Add_ on the pop-up
+
+**iOS** \
+PWAs are installable only by using Safari:
+1. Visit [pairdrop.net](https://pairdrop.net)
+2. Click on the share icon
+3. Click _Add to Home Screen_
+4. Click _Add_ in the top right corner
 
 <br>
 
-<b>Self-Hosted Instance?</b>
-
+**Self-Hosted Instance?** \
 To be able to install the PWA from a self-hosted instance, the connection needs to be [established through HTTPS](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Installable_PWAs).
 See [this host your own section](https://github.com/schlagmichdoch/PairDrop/blob/master/docs/host-your-own.md#testing-pwa-related-features) for more info.
 
@@ -227,7 +244,7 @@ and/or *Thinking, Fast and Slow* to learn more.
 
 <details>
 <summary style="font-size:1.25em;margin-top: 24px; margin-bottom: 16px; font-weight: var(--base-text-weight-semibold, 600); line-height: 1.25;">
-    Snapdrop and PairDrop are awesome. How can I support them? 
+    PairDrop is awesome. How can I support it? 
 </summary>
 
 <br>
@@ -235,8 +252,9 @@ and/or *Thinking, Fast and Slow* to learn more.
 * [Buy me a coffee](https://www.buymeacoffee.com/pairdrop) to pay for the domain and the server, and support libre software.
 * [File bugs, give feedback, submit suggestions](https://github.com/schlagmichdoch/pairdrop/issues)
 * Share PairDrop on social media.
-* Fix bugs and make a pull request. 
+* Fix bugs and create a pull request.
 * Do some security analysis and make suggestions.
+* Participate in [active discussions](https://github.com/schlagmichdoch/PairDrop/discussions)
 
 <br>
 
