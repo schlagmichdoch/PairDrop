@@ -137,6 +137,7 @@ class PairDrop {
             let stylesheet = document.createElement('link');
             stylesheet.rel = 'preload';
             stylesheet.as = 'style';
+            stylesheet.defer = true;
             stylesheet.href = url;
             stylesheet.onload = _ => {
                 stylesheet.onload = null;
