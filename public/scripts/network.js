@@ -1615,20 +1615,23 @@ class PeersManager {
         if (this._peerExists(message.peerId) && !this._webRtcSupported(message.peerId)) {
             Logger.debug('WSPeer left:', message.peerId);
         }
-        if (message.disconnect === true) {
-            // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
-            this._disconnectOrRemoveRoomTypeByPeerId(message.peerId, message.roomType);
+        else if (message.disconnect !== true) {
+            // if RTCPeer and disconnect is false -> abort and wait for reconnect
+            return;
+        }
 
-            // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
-            // Tidy up peerIds in localStorage
-            if (Object.keys(this.peers).length === 0) {
-                BrowserTabsConnector
-                    .removeOtherPeerIdsFromLocalStorage()
-                    .then(peerIds => {
-                        if (!peerIds) return;
-                        Logger.debug("successfully removed other peerIds from localStorage");
-                    });
-            }
+        // if user actively disconnected from PairDrop server or is WSPeer, disconnect all peer to peer connections immediately
+        this._disconnectOrRemoveRoomTypeByPeerId(message.peerId, message.roomType);
+
+        // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
+        // Tidy up peerIds in localStorage
+        if (Object.keys(this.peers).length === 0) {
+            BrowserTabsConnector
+                .removeOtherPeerIdsFromLocalStorage()
+                .then(peerIds => {
+                    if (!peerIds) return;
+                    Logger.debug("successfully removed other peerIds from localStorage");
+                });
         }
     }
 
