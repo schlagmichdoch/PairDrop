@@ -25,7 +25,7 @@ class PeersUI {
         this.shareMode.text = "";
 
         Events.on('peer-joined', e => this._onPeerJoined(e.detail.peer, e.detail.roomType, e.detail.roomId));
-        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash));
+        Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId, e.detail.connectionHash, e.detail.rtcSupported));
         Events.on('peer-connecting', e => this._onPeerConnecting(e.detail));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
@@ -110,12 +110,12 @@ class PeersUI {
         this.peerUIs[peer.id] = peerUI;
     }
 
-    _onPeerConnected(peerId, connectionHash) {
+    _onPeerConnected(peerId, connectionHash, rtcSupported) {
         const peerUI = this.peerUIs[peerId];
 
         if (!peerUI) return;
 
-        peerUI._peerConnected(true, connectionHash);
+        peerUI._peerConnected(true, connectionHash, rtcSupported);
 
         this._addPeerUIIfMissing(peerUI);
     }
@@ -598,7 +598,7 @@ class PeerUI {
         });
     }
 
-    _peerConnected(connected = true, connectionHash = "") {
+    _peerConnected(connected = true, connectionHash = "", rtcSupported = false) {
         if (connected) {
             this._connected = true;
 
@@ -606,7 +606,9 @@ class PeerUI {
             this.setStatus(this._oldStatus);
             this._oldStatus = null;
 
+            this._peer.rtcSupported = rtcSupported;
             this._connectionHash = connectionHash;
+            this.updateTypesClassList();
         }
         else {
             this._connected = false;

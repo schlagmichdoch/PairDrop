@@ -63,8 +63,8 @@ class ServerConnection {
     }
 
     _setWsConfig(wsConfig) {
-        this._wsConfig = wsConfig;
-        Events.fire('ws-config', wsConfig);
+        window._wsConfig = wsConfig;
+        Events.fire('ws-config-loaded');
     }
 
     _connect() {
@@ -137,7 +137,7 @@ class ServerConnection {
     _onMessage(message) {
         const messageJSON = JSON.parse(message);
         if (messageJSON.type !== 'ping' && messageJSON.type !== 'ws-relay') {
-            Logger.debug('WS receive:', messageJSON);
+            Logger.debug('WS Receive:', messageJSON);
         }
         switch (messageJSON.type) {
             case 'ws-config':
@@ -193,15 +193,15 @@ class ServerConnection {
                 break;
             case 'ws-relay':
                 // ws-fallback
-                if (this._wsConfig.wsFallback) {
+                if (window._wsConfig.wsFallback) {
                     Events.fire('ws-relay', {peerId: messageJSON.sender.id, message: message});
                 }
                 else {
-                    Logger.warn("WS receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
+                    Logger.warn("WS Receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
                 }
                 break;
             default:
-                Logger.error('WS receive: unknown message type', messageJSON);
+                Logger.error('WS Receive: unknown message type', messageJSON);
         }
     }
 
@@ -1005,14 +1005,16 @@ class Peer {
 
 class RTCPeer extends Peer {
 
-    constructor(serverConnection, isCaller, peerId, roomType, roomId, rtcConfig) {
+    constructor(serverConnection, isCaller, peerId, roomType, roomId) {
         super(serverConnection, isCaller, peerId, roomType, roomId);
 
         this.rtcSupported = true;
-        this.rtcConfig = rtcConfig;
+        this.rtcConfig = window._wsConfig.rtcConfig;
 
         this.pendingInboundServerSignalMessages = [];
         this.pendingOutboundMessages = [];
+
+        this.errorCount = 0;
 
         this._connect();
     }
@@ -1114,12 +1116,14 @@ class RTCPeer extends Peer {
     _onConnectionStateChange() {
         Logger.debug('RTC: Connection state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
+            case 'connected':
+                this.errorCount = 0;
+                break;
             case 'disconnected':
                 this._refresh();
                 break;
             case 'failed':
                 Logger.warn('RTC connection failed');
-                // Todo: if error is "TURN server needed" -> fallback to WS if activated
                 this._refresh();
         }
     }
@@ -1128,8 +1132,28 @@ class RTCPeer extends Peer {
         this._handleLocalCandidate(event.candidate);
     }
 
-    _onIceCandidateError(error) {
-        Logger.error(error);
+    _onIceCandidateError(event) {
+        this.errorCount++
+
+        // Todo: remove this
+        // Todo: test which errorCode is thrown on "TURN server needed" and what other codes are relevant
+        console.debug(this.errorCount, event.errorCode, event)
+
+        Logger.error(event);
+        if (event.errorCode === 701) {
+            this._retryOrFallback();
+        }
+    }
+
+    _retryOrFallback() {
+        // If fallback is activated, fallback to WS Peer if third retry fails
+        if (this.errorCount > 3 && window._wsConfig.wsFallback) {
+            Events.fire('fallback-to-ws', { peerId: this._peerId });
+            this._sendFallbackToWs();
+        }
+        else {
+            this._refresh();
+        }
     }
 
     _openMessageChannel() {
@@ -1164,7 +1188,7 @@ class RTCPeer extends Peer {
         // wait until all channels are open
         if (!this._stable()) return;
 
-        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+        Events.fire('peer-connected', { peerId: this._peerId, connectionHash: this.getConnectionHash(), rtcSupported: this.rtcSupported });
         super._onPeerConnected();
 
         this._sendPendingOutboundMessaged();
@@ -1325,6 +1349,20 @@ class RTCPeer extends Peer {
 
     _sendSignal(message) {
         message.type = 'signal';
+        this._sendMessageViaServer(message);
+    }
+
+    _sendFallbackToWs() {
+        const message = {
+            type: 'ws-relay',
+            message: {
+                type: 'fallback-to-ws'
+            }
+        };
+        this._sendMessageViaServer(message);
+    }
+
+    _sendMessageViaServer(message) {
         message.to = this._peerId;
         message.roomType = this._getRoomTypes()[0];
         message.roomId = this._roomIds[this._getRoomTypes()[0]];
@@ -1344,7 +1382,7 @@ class RTCPeer extends Peer {
     }
 
     async _onMessage(message) {
-        Logger.debug('RTC Receive:', JSON.parse(message));
+        Logger.debug('RTCPeer Receive:', JSON.parse(message));
         try {
             message = JSON.parse(message);
         } catch (e) {
@@ -1443,7 +1481,7 @@ class WSPeer extends Peer {
     }
 
     async _onMessage(message) {
-        Logger.debug('WS Receive:', message);
+        Logger.debug('WSPeer Receive:', message);
         await super._onMessage(message);
     }
 
@@ -1489,37 +1527,42 @@ class PeersManager {
     constructor(serverConnection) {
         this.peers = {};
         this._server = serverConnection;
+        // Initiation
         Events.on('signal', e => this._onSignal(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
+
+        // File / Message transfer
         Events.on('files-selected', e => this._onFilesSelected(e.detail));
         Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
         Events.on('send-text', e => this._onSendText(e.detail));
+
+        // Peer
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
 
-        // this device closes connection
+        // WS-Peer specific
+        Events.on('ws-disconnected', _ => this._onWsDisconnected());
+        Events.on('ws-relay', e => this._onWsRelay(e.detail.peerId, e.detail.message));
+        Events.on('fallback-to-ws', e => this._onFallbackToWs(e.detail.peerId));
+
+        // Rooms and secrets: this device closes connection
         Events.on('room-secrets-deleted', e => this._onRoomSecretsDeleted(e.detail));
         Events.on('leave-public-room', e => this._onLeavePublicRoom(e.detail));
 
-        // peer closes connection
+        // Rooms and secrets: other peer closes connection
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
 
+        // Room secret, displayname, auto-accept
         Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
         Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
         Events.on('auto-accept-updated', e => this._onAutoAcceptUpdated(e.detail.roomSecret, e.detail.autoAccept));
-        Events.on('ws-disconnected', _ => this._onWsDisconnected());
-        Events.on('ws-relay', e => this._onWsRelay(e.detail.peerId, e.detail.message));
-        Events.on('ws-config', e => this._onWsConfig(e.detail));
 
+        // NoSleep evaluation
         Events.on('evaluate-no-sleep', _ => this._onEvaluateNoSleep());
-    }
-
-    _onWsConfig(wsConfig) {
-        this._wsConfig = wsConfig;
     }
 
     _onSignal(message) {
@@ -1567,9 +1610,9 @@ class PeersManager {
 
     _createPeer(isCaller, peerId, roomType, roomId, rtcSupported) {
         if (window.isRtcSupported && rtcSupported) {
-            this.peers[peerId] = new RTCPeer(this._server, isCaller, peerId, roomType, roomId, this._wsConfig.rtcConfig);
+            this.peers[peerId] = new RTCPeer(this._server, isCaller, peerId, roomType, roomId);
         }
-        else if (this._wsConfig.wsFallback) {
+        else if (window._wsConfig.wsFallback) {
             this.peers[peerId] = new WSPeer(this._server, isCaller, peerId, roomType, roomId);
         }
         else {
@@ -1589,11 +1632,20 @@ class PeersManager {
     }
 
     _onWsRelay(peerId, message) {
-        if (!this._wsConfig.wsFallback) return;
+        if (!window._wsConfig.wsFallback) return;
 
         const peer = this.peers[peerId];
 
-        if (!peer || peer.rtcSupported) return;
+        if (!peer) return;
+
+        // Check if RTCPeer wants to fall back to WS fallback
+        if (peer.rtcSupported && JSON.parse(message).message.type === 'fallback-to-ws') {
+            this._onFallbackToWs(peerId);
+            return;
+        }
+
+        // Relay messages to WSPeers only
+        if (peer.rtcSupported) return;
 
         peer._onWsRelay(message);
     }
@@ -1648,12 +1700,34 @@ class PeersManager {
     }
 
     _onWsDisconnected() {
-        if (!this._wsConfig || !this._wsConfig.wsFallback) return;
+        if (!window._wsConfig || !window._wsConfig.wsFallback) return;
 
         for (const peerId in this.peers) {
             if (!this._webRtcSupported(peerId)) {
                 Events.fire('peer-disconnected', peerId);
             }
+        }
+    }
+
+    _onFallbackToWs(peerId) {
+        const peer = this.peers[peerId];
+
+        if (!peer || !window._wsConfig.wsFallback) return;
+
+        peer._onDisconnected();
+
+        const isCaller = peer._isCaller;
+        const roomType = peer._getRoomTypes()[0];
+        const roomId = peer._roomIds[roomType];
+
+        // create WSPeer with same arguments
+        this._createPeer(isCaller, peerId, roomType, roomId, false);
+
+        // add missing room ids
+        for (let i = 1; i < peer._roomIds.length; i++) {
+            let roomType = peer._getRoomTypes()[i];
+            let roomId = peer._roomIds[roomType];
+            this.peers[peerId]._updateRoomIds(roomType, roomId);
         }
     }
 
