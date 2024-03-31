@@ -39,7 +39,6 @@ Send a file from your phone to your laptop?
 * Connect to devices in complex network environments (public Wi-Fi, company network, iCloud Private Relay, VPN, etc.).
 * Connect to devices on your mobile hotspot.
 * Devices outside of your local network that are behind a NAT are auto-connected via the PairDrop TURN server.
-* Connect to devices on your mobile hotspot.
 * Devices from the local network, in the same public room, or previously paired are shown.
 
 #### Persistent Device Pairing
