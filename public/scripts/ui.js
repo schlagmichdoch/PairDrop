@@ -2017,6 +2017,7 @@ class ReceiveTextDialog extends Dialog {
 
         this.$displayName = this.$el.querySelector('.display-name');
         this._receiveTextQueue = [];
+        this._hideTimeout = null;
     }
 
     selectionEmpty() {
@@ -2040,17 +2041,12 @@ class ReceiveTextDialog extends Dialog {
         this._setDocumentTitleMessages();
         changeFavicon("images/favicon-96x96-notification.png");
 
-        if (this.isShown()) return;
+        if (this.isShown() || this._hideTimeout) return;
 
         this._dequeueRequests();
     }
 
     _dequeueRequests() {
-        if (!this._receiveTextQueue.length) {
-            this.$text.innerHTML = "";
-            return;
-        }
-
         this._setDocumentTitleMessages();
         changeFavicon("images/favicon-96x96-notification.png");
 
@@ -2145,9 +2141,16 @@ class ReceiveTextDialog extends Dialog {
 
     hide() {
         super.hide();
-        setTimeout(() => {
-            this._dequeueRequests();
-            this.$text.innerHTML = "";
+
+        // If queue is empty -> clear text field | else -> open next message
+        this._hideTimeout = setTimeout(() => {
+            if (!this._receiveTextQueue.length) {
+                this.$text.innerHTML = "";
+            }
+            else {
+                this._dequeueRequests();
+            }
+            this._hideTimeout = null;
         }, 500);
     }
 }
