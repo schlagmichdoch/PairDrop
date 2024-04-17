@@ -2147,7 +2147,6 @@ class ReceiveTextDialog extends Dialog {
         super.hide();
         setTimeout(() => {
             this._dequeueRequests();
-            this.$text.innerHTML = "";
         }, 500);
     }
 }
