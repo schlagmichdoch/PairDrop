@@ -71,9 +71,9 @@
     },
     "instructions": {
         "x-instructions_mobile": "انقر لإرسال الملفات أو انقر لفترة طويلة لإرسال رسالة",
-        "x-instructions-share-mode_desktop": "انقر للإرسال",
+        "x-instructions-share-mode_desktop": "انقر للإرسال {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "و{{count}} ملفات أخرى",
-        "x-instructions-share-mode_mobile": "انقر للإرسال",
+        "x-instructions-share-mode_mobile": "انقر للإرسال {{descriptor}}",
         "activate-share-mode-base": "افتح PairDrop على الأجهزة الأخرى للإرسال",
         "no-peers-subtitle": "قم بإقران الأجهزة أو ادخل إلى غرفة عامة لتتمكن من أن تكتشف على الشبكات الأخرى",
         "activate-share-mode-shared-text": "النص المشترك",
