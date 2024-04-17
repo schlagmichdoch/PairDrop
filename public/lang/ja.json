@@ -75,9 +75,9 @@
     },
     "instructions": {
         "x-instructions_mobile": "タップしてファイルを送信または長押ししてメッセージを送信します",
-        "x-instructions-share-mode_desktop": "クリックして送信",
+        "x-instructions-share-mode_desktop": "クリックして{{descriptor}}送信",
         "activate-share-mode-and-other-files-plural": "とその他{{count}}個のファイル",
-        "x-instructions-share-mode_mobile": "タップして送信",
+        "x-instructions-share-mode_mobile": "タップして{{descriptor}}送信",
         "activate-share-mode-base": "他のデバイスでPairDropを開いて送信します",
         "no-peers-subtitle": "デバイスをペア設定するかパブリックルームに参加すると、他のネットワーク上からも見つけられるようになります",
         "activate-share-mode-shared-text": "共有されたテキスト",
