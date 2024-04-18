@@ -32,17 +32,20 @@ const relativePathsToCache = [
     'lang/en.json',
     'lang/es.json',
     'lang/fr.json',
+    'lang/hu.json',
     'lang/id.json',
     'lang/it.json',
     'lang/ja.json',
     'lang/kn.json',
     'lang/nb.json',
     'lang/nl.json',
+    'lang/pl.json',
     'lang/pt-BR.json',
     'lang/ro.json',
     'lang/ru.json',
     'lang/tr.json',
-    'lang/zh-CN.json'
+    'lang/zh-CN.json',
+    'lang/zh-TW.json'
 ];
 const relativePathsNotToCache = [
     'config'
