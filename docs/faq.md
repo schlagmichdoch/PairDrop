@@ -165,7 +165,7 @@ you can [start the PairDrop instance with an activated WebSocket fallback](https
 
 Files are sent directly between peers.
 PairDrop doesn't even use a database.
-If curious, study [the server](https://github.com/schlagmichdoch/pairdrop/blob/master/index.js).
+If curious, study [the signaling server](https://github.com/schlagmichdoch/PairDrop/blob/master/server/ws-server.js).
 WebRTC encrypts the files in transit.
 
 If the devices are on the same network,
@@ -188,9 +188,8 @@ to learn more about STUN, TURN and WebRTC.
 <br>
 
 Yes. Your files are sent using WebRTC, encrypting them in transit.
-To ensure the connection is secure and there is no [MITM](https://wikiless.org/wiki/Man-in-the-middle_attack),
-compare the security number shown under the device name on both devices.
-The security number is different for every connection.
+Still you have to trust the PairDrop server. To ensure the connection is secure and there is no [MITM](https://wikiless.org/wiki/Man-in-the-middle_attack) there is a plan to make PairDrop
+zero trust by encrypting the signaling and implementing a verification process. See [issue #180](https://github.com/schlagmichdoch/PairDrop/issues/180) to keep updated.
 
 <br>
 
