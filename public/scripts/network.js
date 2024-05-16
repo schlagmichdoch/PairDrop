@@ -555,7 +555,7 @@ class Peer {
         }
 
         Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
-        Events.fire('notify-peer-display-name-changed', this._peerId);
+        Events.fire('notify-display-name-changed', { recipient: this._peerId });
     }
 
     _sendState() {
@@ -1576,34 +1576,49 @@ class WSPeer extends Peer {
 class PeersManager {
 
     constructor(serverConnection) {
-        this.peers = {};
         this._server = serverConnection;
+        this.peers = {};
+        this._device = {
+            originalDisplayName: '',
+            displayName: '',
+            publicRoomId: null
+        };
+
         Events.on('signal', e => this._onSignal(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('files-selected', e => this._onFilesSelected(e.detail));
-        Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
-        Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
 
+        // ROOMS
+        Events.on('join-public-room', e => this._onJoinPublicRoom(e.detail.roomId));
+
         // this device closes connection
         Events.on('room-secrets-deleted', e => this._onRoomSecretsDeleted(e.detail));
-        Events.on('leave-public-room', e => this._onLeavePublicRoom(e.detail));
+        Events.on('leave-public-room', _ => this._onLeavePublicRoom());
 
         // peer closes connection
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
-
         Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
+
+        // peer
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
-        Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
-        Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
+        Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail.displayName));
+        Events.on('notify-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail.recipient));
         Events.on('auto-accept-updated', e => this._onAutoAcceptUpdated(e.detail.roomSecret, e.detail.autoAccept));
+
+        // transfer
+        Events.on('send-text', e => this._onSendText(e.detail));
+        Events.on('files-selected', e => this._onFilesSelected(e.detail));
+        Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
+
+        // websocket connection
         Events.on('ws-disconnected', _ => this._onWsDisconnected());
         Events.on('ws-relay', e => this._onWsRelay(e.detail.peerId, e.detail.message));
         Events.on('ws-config', e => this._onWsConfig(e.detail));
 
+        // no-sleep
         Events.on('evaluate-no-sleep', _ => this._onEvaluateNoSleep());
     }
 
@@ -1753,17 +1768,29 @@ class PeersManager {
     }
 
     _onRoomSecretsDeleted(roomSecrets) {
-        for (let i=0; i<roomSecrets.length; i++) {
+        for (let i = 0; i < roomSecrets.length; i++) {
             this._disconnectOrRemoveRoomTypeByRoomId('secret', roomSecrets[i]);
         }
     }
 
-    _onLeavePublicRoom(publicRoomId) {
-        this._disconnectOrRemoveRoomTypeByRoomId('public-id', publicRoomId);
+    _onJoinPublicRoom(roomId) {
+        if (roomId !== this._device.publicRoomId) {
+            this._disconnectFromPublicRoom();
+        }
+        this._device.publicRoomId = roomId;
+    }
+
+    _onLeavePublicRoom() {
+        this._disconnectFromPublicRoom();
     }
 
     _onSecretRoomDeleted(roomSecret) {
         this._disconnectOrRemoveRoomTypeByRoomId('secret', roomSecret);
+    }
+
+    _disconnectFromPublicRoom() {
+        this._disconnectOrRemoveRoomTypeByRoomId('public-id', this._device.publicRoomId);
+        this._device.publicRoomId = null;
     }
 
     _disconnectOrRemoveRoomTypeByRoomId(roomType, roomId) {
@@ -1771,7 +1798,7 @@ class PeersManager {
 
         if (!peerIds.length) return;
 
-        for (let i=0; i<peerIds.length; i++) {
+        for (let i = 0; i < peerIds.length; i++) {
             this._disconnectOrRemoveRoomTypeByPeerId(peerIds[i], roomType);
         }
     }
@@ -1779,7 +1806,7 @@ class PeersManager {
     _disconnectOrRemoveRoomTypeByPeerId(peerId, roomType) {
         const peer = this.peers[peerId];
 
-        if (!peer) return;
+        if (!peer || !peer._getRoomTypes().includes(roomType)) return;
 
         if (peer._getRoomTypes().length > 1) {
             peer._removeRoomType(roomType);
@@ -1799,7 +1826,10 @@ class PeersManager {
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {
-        this._displayName = newDisplayName ? newDisplayName : this._originalDisplayName;
+        this._device.displayName = newDisplayName
+            ? newDisplayName
+            : this._device.originalDisplayName;
+
         for (const peerId in this.peers) {
             this._notifyPeerDisplayNameChanged(peerId);
         }
@@ -1808,21 +1838,33 @@ class PeersManager {
     _notifyPeerDisplayNameChanged(peerId) {
         const peer = this.peers[peerId];
         if (!peer) return;
-        this.peers[peerId]._sendDisplayName(this._displayName);
+        this.peers[peerId]._sendDisplayName(this._device.displayName);
     }
 
     _onDisplayName(displayName) {
-        this._originalDisplayName = displayName;
+        this._device.originalDisplayName = displayName;
         // if the displayName has not been changed (yet) set the displayName to the original displayName
-        if (!this._displayName) this._displayName = displayName;
+        if (!this._device.displayName) this._device.displayName = displayName;
     }
 
     _onAutoAcceptUpdated(roomSecret, autoAccept) {
-        const peerId = this._getPeerIdsFromRoomId(roomSecret)[0];
+        let peerIds = this._getPeerIdsFromRoomId(roomSecret);
+        const peerId = this._removePeerIdsSameBrowser(peerIds)[0];
 
         if (!peerId) return;
 
         this.peers[peerId]._setAutoAccept(autoAccept);
+    }
+
+    _removePeerIdsSameBrowser(peerIds) {
+        let peerIdsNotSameBrowser = [];
+        for (let i = 0; i < peerIds.length; i++) {
+            const peer = this.peers[peerIds[i]];
+            if (!peer._isSameBrowser()) {
+                peerIdsNotSameBrowser.push(peerIds[i]);
+            }
+        }
+        return peerIdsNotSameBrowser;
     }
 
     _getPeerIdsFromRoomId(roomId) {

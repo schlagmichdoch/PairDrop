@@ -205,7 +205,7 @@ class FooterUI {
         this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
 
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
-        Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
+        Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail.displayName));
 
         // Load saved display name on page load
         Events.on('ws-connected', _ => this._loadSavedDisplayName());
@@ -239,7 +239,7 @@ class FooterUI {
         if (!displayName) return;
 
         Logger.debug("Retrieved edited display name:", displayName)
-        Events.fire('self-display-name-changed', displayName);
+        Events.fire('self-display-name-changed', { displayName: displayName });
     }
 
     _onDisplayName(displayName){
@@ -280,8 +280,8 @@ class FooterUI {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-changed-temporarily"));
                 })
                 .finally(() => {
-                    Events.fire('self-display-name-changed', newDisplayName);
-                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: newDisplayName});
+                    Events.fire('self-display-name-changed', { displayName: newDisplayName });
+                    Events.fire('broadcast-self-display-name-changed', { displayName: newDisplayName });
                 });
         }
         else {
@@ -292,8 +292,8 @@ class FooterUI {
                 })
                 .finally(() => {
                     Events.fire('notify-user', Localization.getTranslation("notifications.display-name-random-again"));
-                    Events.fire('self-display-name-changed', '');
-                    Events.fire('broadcast-send', {type: 'self-display-name-changed', detail: ''});
+                    Events.fire('self-display-name-changed', { displayName: '' });
+                    Events.fire('broadcast-self-display-name-changed', { displayName: '' });
                 });
         }
     }
