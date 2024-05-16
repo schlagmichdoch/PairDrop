@@ -78,7 +78,7 @@ class Localization {
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
 
-        Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
+        Localization.translationsDefaultLocale = await Localization.fetchTranslationsFor(Localization.localeDefault);
 
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
 
