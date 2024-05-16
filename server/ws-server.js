@@ -251,7 +251,6 @@ export default class PairDropWsServer {
             return;
         }
 
-        this._leavePublicRoom(sender);
         this._joinPublicRoom(sender, message.publicRoomId);
     }
 
@@ -312,7 +311,7 @@ export default class PairDropWsServer {
 
     _joinPublicRoom(peer, publicRoomId) {
         // prevent joining of 2 public rooms simultaneously
-        this._leavePublicRoom(peer);
+        this._leavePublicRoom(peer, true);
 
         this._joinRoom(peer, 'public-id', publicRoomId);
 

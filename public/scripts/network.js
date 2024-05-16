@@ -1502,9 +1502,12 @@ class PeersManager {
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
 
+        // ROOMS
+        Events.on('join-public-room', e => this._onJoinPublicRoom(e.detail.roomId));
+
         // this device closes connection
         Events.on('room-secrets-deleted', e => this._onRoomSecretsDeleted(e.detail));
-        Events.on('leave-public-room', e => this._onLeavePublicRoom(e.detail));
+        Events.on('leave-public-room', _ => this._onLeavePublicRoom());
 
         // peer closes connection
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
@@ -1682,6 +1685,9 @@ class PeersManager {
     }
 
     _onJoinPublicRoom(roomId) {
+        if (roomId !== this._device.publicRoomId) {
+            this._disconnectFromPublicRoom();
+        }
         this._device.publicRoomId = roomId;
     }
 
