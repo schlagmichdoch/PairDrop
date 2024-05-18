@@ -1695,6 +1695,7 @@ class PairDeviceDialog extends Dialog {
         Events.on('pair-device-join-key-invalid', _ => this._onPublicRoomJoinKeyInvalid());
         Events.on('pair-device-canceled', e => this._onPairDeviceCanceled(e.detail));
         Events.on('evaluate-number-room-secrets', _ => this._evaluateNumberRoomSecrets())
+        Events.on('config-loaded', _ => this._evaluateNumberRoomSecrets())
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
         this.$el.addEventListener('paste', e => this._onPaste(e));
         this.$qrCode.addEventListener('click', _ => this._copyPairUrl());
@@ -1883,9 +1884,9 @@ class PairDeviceDialog extends Dialog {
 
     _evaluateNumberRoomSecrets() {
         PersistentStorage
-            .getAllRoomSecrets()
-            .then(roomSecrets => {
-                if (roomSecrets.length > 0) {
+            .getAllRoomSecretsCount()
+            .then(roomSecretsCount => {
+                if (roomSecretsCount > 0) {
                     this.$editPairedDevicesHeaderBtn.removeAttribute('hidden');
                     this.$footerInstructionsPairedDevices.removeAttribute('hidden');
                 }
