@@ -178,6 +178,7 @@
         "click-to-send-share-mode": "Click to send {{descriptor}}",
         "click-to-send": "Click to send files or right click to send a message",
         "connection-hash": "To verify the security of the end-to-end encryption, compare this security number on both devices",
+        "turn-indicator": "Transfer over the Internet",
         "connecting": "Connecting…",
         "preparing": "Preparing…",
         "waiting": "Waiting…",

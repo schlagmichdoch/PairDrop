@@ -1029,6 +1029,33 @@ class RTCPeer extends Peer {
             );
     }
 
+    async _connectionType() {
+        if (!this._conn) return "";
+
+        const stats = await this._conn.getStats(null);
+
+        let id;
+        stats.forEach((report) => {
+            if (report.type === "candidate-pair" && report.state === "succeeded") {
+                id = report.localCandidateId;
+            }
+        });
+
+        if (!id) return "";
+
+        let connectionType;
+        stats.forEach((report) => {
+            if (report.id === id) {
+                connectionType = report.candidateType;
+            }
+        });
+        return connectionType;
+    }
+
+    async _isTurn() {
+        return await this._connectionType() === "relay";
+    }
+
     _messageChannelOpen() {
         return this._messageChannel && this._messageChannel.readyState === 'open';
     }
@@ -1158,13 +1185,13 @@ class RTCPeer extends Peer {
         return channel;
     }
 
-    _onChannelOpened(e) {
+    async _onChannelOpened(e) {
         Logger.debug(`RTC: Channel ${e.target.label} opened with`, this._peerId);
 
         // wait until all channels are open
         if (!this._stable()) return;
 
-        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash(), connectionType: await this._connectionType()});
         super._onPeerConnected();
 
         this._sendPendingOutboundMessaged();
