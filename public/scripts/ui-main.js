@@ -214,6 +214,7 @@ class FooterUI {
     }
 
     async showLoading() {
+        // Show "Loading..." until connected to WsServer
         this.$displayName.setAttribute('placeholder', this.$displayName.dataset.placeholder);
     }
 

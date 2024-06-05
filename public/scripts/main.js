@@ -1,15 +1,10 @@
 class PairDrop {
 
     constructor() {
-        this.$headerNotificationBtn = $('notification');
-        this.$headerEditPairedDevicesBtn = $('edit-paired-devices');
-        this.$footerPairedDevicesBadge = $$('.discovery-wrapper .badge-room-secret');
-        this.$headerInstallBtn = $('install');
-
-        this.deferredStyles = [
+        this.stylesDeferred = [
             "styles/styles-deferred.css"
         ];
-        this.deferredScripts = [
+        this.scriptsDeferred = [
             "scripts/browser-tabs-connector.js",
             "scripts/util.js",
             "scripts/network.js",
@@ -20,18 +15,6 @@ class PairDrop {
             "scripts/heic2any.min.js"
         ];
 
-        this.registerServiceWorker();
-
-        Events.on('beforeinstallprompt', e => this.onPwaInstallable(e));
-
-        this.persistentStorage = new PersistentStorage();
-        this.localization = new Localization();
-        this.themeUI = new ThemeUI();
-        this.backgroundCanvas = new BackgroundCanvas();
-        this.headerUI = new HeaderUI();
-        this.centerUI = new CenterUI();
-        this.footerUI = new FooterUI();
-
         this.initialize()
             .then(_ => {
                 console.log("Initialization completed.");
@@ -39,44 +22,64 @@ class PairDrop {
     }
 
     async initialize() {
-        // Translate page before fading in
-        await this.localization.setInitialTranslation()
-        console.log("Initial translation successful.");
+        // Register Service Worker
+        console.log('Register Service Worker...');
+        await this.registerServiceWorker();
 
-        // Show "Loading..." until connected to WsServer
-        await this.footerUI.showLoading();
+        Events.on('beforeinstallprompt', e => this.onPwaInstallable(e));
 
-        // Evaluate css shifting UI elements and fade in UI elements
-        await this.evaluatePermissionsAndRoomSecrets();
-        await this.headerUI.evaluateOverflowing();
-        await this.headerUI.fadeIn();
-        await this.footerUI._evaluateFooterBadges();
-        await this.footerUI.fadeIn();
-        await this.centerUI.fadeIn();
-        await this.backgroundCanvas.fadeIn();
+        this.$headerNotificationBtn = $('notification');
+        this.$headerEditPairedDevicesBtn = $('edit-paired-devices');
+        this.$footerPairedDevicesBadge = $$('.discovery-wrapper .badge-room-secret');
+        this.$headerInstallBtn = $('install');
+
+        this.themeUI = new ThemeUI();
+        this.backgroundCanvas = new BackgroundCanvas();
+        this.headerUI = new HeaderUI();
+        this.centerUI = new CenterUI();
+        this.footerUI = new FooterUI();
+
+        // Translate page, initiate database, and evaluate what to show
+        await Promise.all([
+            PersistentStorage.initiate(),
+            Localization.initiate(),
+            this.evaluatePermissionsAndRoomSecrets()
+        ]);
+
+        // Evaluate css shifting UI elements and show loading placeholder
+        await Promise.all([
+            this.headerUI.evaluateOverflowing(),
+            this.footerUI._evaluateFooterBadges(),
+            this.footerUI.showLoading()
+        ]);
+
+        // Fade in UI elements
+        await Promise.all([
+            this.headerUI.fadeIn(),
+            this.footerUI.fadeIn(),
+            this.centerUI.fadeIn(),
+            this.backgroundCanvas.fadeIn()
+        ]);
+
+        // Evaluate url params as soon as client is connected to the websocket
+        console.log("Evaluate URL params as soon as websocket connection is established.");
+        Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
 
         // Load deferred assets
         console.log("Load deferred assets...");
         await this.loadDeferredAssets();
         console.log("Loading of deferred assets completed.");
 
+        // Hydrate UI
         console.log("Hydrate UI...");
         await this.hydrate();
         console.log("UI hydrated.");
-
-        // Evaluate url params as soon as ws is connected
-        console.log("Evaluate URL params as soon as websocket connection is established.");
-        Events.on('ws-connected', _ => this.evaluateUrlParams(), {once: true});
     }
 
-    registerServiceWorker() {
+    async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker
-                .register('service-worker.js')
-                .then(serviceWorker => {
-                    console.log('Service Worker registered');
-                    window.serviceWorker = serviceWorker
-                });
+            window.serviceWorker = await navigator.serviceWorker.register('service-worker.js');
+            console.log('Service Worker registered.');
         }
     }
 
@@ -105,11 +108,10 @@ class PairDrop {
         }
     }
 
-    loadDeferredAssets() {
-        const stylePromises = this.deferredStyles.map(url => this.loadAndApplyStylesheet(url));
-        const scriptPromises = this.deferredScripts.map(url => this.loadAndApplyScript(url));
-
-        return Promise.all([...stylePromises, ...scriptPromises]);
+    async loadDeferredAssets() {
+        const stylePromises = this.stylesDeferred.map(url => this.loadAndApplyStylesheet(url));
+        const scriptPromises = this.scriptsDeferred.map(url => this.loadAndApplyScript(url));
+        await Promise.all([...stylePromises, ...scriptPromises]);
     }
 
     loadStyleSheet(url) {

@@ -1,5 +1,5 @@
 class Localization {
-    constructor() {
+    static async initiate() {
         Localization.$htmlRoot = document.querySelector('html');
 
         Localization.defaultLocale = "en";
@@ -16,6 +16,8 @@ class Localization {
         Localization.initialLocale = storedLanguageCode && Localization.localeIsSupported(storedLanguageCode)
             ? storedLanguageCode
             : Localization.systemLocale;
+
+        await Localization.setInitialTranslation();
     }
 
     static localeIsSupported(locale) {
@@ -47,8 +49,9 @@ class Localization {
             || Localization.defaultLocale;
     }
 
-    async setInitialTranslation() {
-        await Localization.setTranslation(Localization.initialLocale)
+    static async setInitialTranslation() {
+        await Localization.setTranslation(Localization.initialLocale);
+        console.log("Initial translation successful.");
     }
 
     static async setTranslation(locale) {

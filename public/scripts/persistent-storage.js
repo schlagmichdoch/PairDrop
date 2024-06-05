@@ -1,5 +1,5 @@
 class PersistentStorage {
-    constructor() {
+    static async initiate() {
         if (!('indexedDB' in window)) {
             PersistentStorage.logBrowserNotCapable();
             return;
