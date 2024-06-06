@@ -156,7 +156,7 @@ self.addEventListener('activate', evt => {
         return evt.waitUntil(
             caches.keys()
                 .then(cacheNames => {
-                    return Promise.all(
+                    return Promise.allSettled(
                         cacheNames.map(cacheName => {
                             if (cacheName !== cacheTitle) {
                                 return caches.delete(cacheName);

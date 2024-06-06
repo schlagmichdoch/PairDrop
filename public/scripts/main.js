@@ -40,21 +40,21 @@ class PairDrop {
         this.footerUI = new FooterUI();
 
         // Translate page, initiate database, and evaluate what to show
-        await Promise.all([
+        await Promise.allSettled([
             PersistentStorage.initiate(),
             Localization.initiate(),
             this.evaluatePermissionsAndRoomSecrets()
         ]);
 
         // Evaluate css shifting UI elements and show loading placeholder
-        await Promise.all([
+        await Promise.allSettled([
             this.headerUI.evaluateOverflowing(),
             this.footerUI._evaluateFooterBadges(),
             this.footerUI.showLoading()
         ]);
 
         // Fade in UI elements
-        await Promise.all([
+        await Promise.allSettled([
             this.headerUI.fadeIn(),
             this.footerUI.fadeIn(),
             this.centerUI.fadeIn(),
@@ -111,7 +111,7 @@ class PairDrop {
     async loadDeferredAssets() {
         const stylePromises = this.stylesDeferred.map(url => this.loadAndApplyStylesheet(url));
         const scriptPromises = this.scriptsDeferred.map(url => this.loadAndApplyScript(url));
-        await Promise.all([...stylePromises, ...scriptPromises]);
+        await Promise.allSettled([...stylePromises, ...scriptPromises]);
     }
 
     loadStyleSheet(url) {
