@@ -82,7 +82,7 @@
         "copy": "Copier",
         "base64-processing": "Traitement…",
         "base64-tap-to-paste": "Appuyez ici pour partager {{type}}",
-        "base64-paste-to-send": "Coller ici pour partager {{type}}",
+        "base64-paste-to-send": "Coller le presse-papiers ici pour partager {{type}}",
         "base64-text": "texte",
         "base64-files": "fichiers",
         "file-other-description-image": "et 1 autre image",
@@ -119,7 +119,8 @@
         "faq_title": "Questions fréquemment posées",
         "bluesky_title": "Suis-nous sur BlueSky",
         "custom_title": "Suis-nous",
-        "privacypolicy_title": "Ouvert sur notre politique de confidentialité"
+        "privacypolicy_title": "Ouvert sur notre politique de confidentialité",
+        "mastodon_title": "Écrire à propos de PairDrop sur Mastodon"
     },
     "notifications": {
         "display-name-changed-permanently": "Le nom d'affichage est modifié de manière permanente",
