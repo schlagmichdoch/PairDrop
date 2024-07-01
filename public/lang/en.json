@@ -93,6 +93,7 @@
         "file-other-description-file": "and 1 other file",
         "file-other-description-image-plural": "and {{count}} other images",
         "file-other-description-file-plural": "and {{count}} other files",
+        "text-message-description": "A large text message",
         "title-image": "Image",
         "title-file": "File",
         "title-image-plural": "Images",
@@ -171,6 +172,7 @@
         "file-received-plural": "{{count}} Files Received",
         "file-transfer-requested": "File Transfer Requested",
         "image-transfer-requested": "Image Transfer Requested",
+        "message-transfer-requested": "Message Transfer Requested",
         "message-received": "Message Received",
         "message-received-plural": "{{count}} Messages Received"
     },

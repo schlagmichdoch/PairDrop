@@ -423,8 +423,8 @@ class PeerUI {
         this._connected = false;
 
         this._currentProgress = 0;
-        this._currentStatus = null
-        this._oldStatus = null;
+        this._currentStatus = 'idle';
+        this._oldStatus = 'idle';
 
         this._progressQueue = [];
 
@@ -604,14 +604,14 @@ class PeerUI {
 
             // on reconnect
             this.setStatus(this._oldStatus);
-            this._oldStatus = null;
+            this._oldStatus = 'idle';
 
             this._connectionHash = connectionHash;
         }
         else {
             this._connected = false;
 
-            if (!this._oldStatus && this._currentStatus !== "connect") {
+            if (this._oldStatus === 'idle' && this._currentStatus !== "connect") {
                 // save old status when reconnecting
                 this._oldStatus = this._currentStatus;
             }
@@ -787,10 +787,10 @@ class PeerUI {
 
         clearTimeout(this.statusTimeout);
 
-        if (!status) {
+        if (status === 'idle') {
             this.$el.removeAttribute('status');
             this.$el.querySelector('.status').innerHTML = '';
-            this._currentStatus = null;
+            this._currentStatus = 'idle';
             return;
         }
 
@@ -812,7 +812,7 @@ class PeerUI {
 
         if (["transfer-complete", "receive-complete", "error"].includes(status)) {
             this.statusTimeout = setTimeout(() => {
-                this.setProgress(0, null);
+                this.setProgress(0, 'idle');
             }, 10000);
         }
     }
@@ -1031,30 +1031,35 @@ class ReceiveDialog extends Dialog {
         }
     }
 
-    _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
-        let fileOther = "";
-        if (files.length === 2) {
-            fileOther = imagesOnly
-                ? Localization.getTranslation("dialogs.file-other-description-image")
-                : Localization.getTranslation("dialogs.file-other-description-file");
+    _parseFileData(displayName, connectionHash, files, filesType, totalSize, badgeClassName) {
+        if (filesType === 'message') {
+            this.$fileOther.innerText = Localization.getTranslation("dialogs.text-message-description");
         }
-        else if (files.length > 2) {
-            fileOther = imagesOnly
-                ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
-                : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
+        else {
+            let fileOther = "";
+            if (files.length === 2) {
+                fileOther = filesType === 'images'
+                    ? Localization.getTranslation("dialogs.file-other-description-image")
+                    : Localization.getTranslation("dialogs.file-other-description-file");
+            }
+            else if (files.length > 2) {
+                fileOther = filesType === 'images'
+                    ? Localization.getTranslation("dialogs.file-other-description-image-plural", null, {count: files.length - 1})
+                    : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
+            }
+
+            const fileName = files[0].name;
+            const fileNameSplit = fileName.split('.');
+            const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
+            const fileStem = fileName.substring(0, fileName.length - fileExtension.length);
+
+            this.$fileOther.innerText = fileOther;
+            this.$fileStem.innerText = fileStem;
+            this.$fileExtension.innerText = fileExtension;
         }
 
-        const fileName = files[0].name;
-        const fileNameSplit = fileName.split('.');
-        const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
-        const fileStem = fileName.substring(0, fileName.length - fileExtension.length);
+        this.$fileSize.innerText = this._formatFileSize(totalSize);
 
-        const fileSize = this._formatFileSize(totalSize);
-
-        this.$fileOther.innerText = fileOther;
-        this.$fileStem.innerText = fileStem;
-        this.$fileExtension.innerText = fileExtension;
-        this.$fileSize.innerText = fileSize;
         this.$displayName.innerText = displayName;
         this.$displayName.title = connectionHash;
         this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
@@ -1070,12 +1075,12 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$downloadBtn = this.$el.querySelector('#download-btn');
         this.$shareBtn = this.$el.querySelector('#share-btn');
 
-        Events.on('files-received', e => this._onFilesReceived(e.detail.peerId, e.detail.files, e.detail.imagesOnly, e.detail.totalSize));
+        Events.on('files-received', e => this._onFilesReceived(e.detail.peerId, e.detail.files, e.detail.filesType, e.detail.totalSize));
         this._filesDataQueue = [];
     }
 
-    async _onFilesReceived(peerId, files, imagesOnly, totalSize) {
-        const descriptor = this._getDescriptor(files, imagesOnly);
+    async _onFilesReceived(peerId, files, filesType, totalSize) {
+        const descriptor = this._getDescriptor(files, filesType);
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
         const badgeClassName = $(peerId).ui._badgeClassName();
@@ -1083,7 +1088,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this._filesDataQueue.push({
             peerId: peerId,
             files: files,
-            imagesOnly: imagesOnly,
+            filesType: filesType,
             totalSize: totalSize,
             descriptor: descriptor,
             displayName: displayName,
@@ -1126,7 +1131,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             this._data.displayName,
             this._data.connectionHash,
             this._data.files,
-            this._data.imagesOnly,
+            this._data.filesType,
             this._data.totalSize,
             this._data.badgeClassName
         );
@@ -1152,15 +1157,15 @@ class ReceiveFileDialog extends ReceiveDialog {
         return window.iOS && this._data.totalSize > 250000000;
     }
 
-    _getDescriptor(files, imagesOnly) {
+    _getDescriptor(files, filesType) {
         let descriptor;
         if (files.length === 1) {
-            descriptor = imagesOnly
+            descriptor = filesType === 'images'
                 ? Localization.getTranslation("dialogs.title-image")
                 : Localization.getTranslation("dialogs.title-file");
         }
         else {
-            descriptor = imagesOnly
+            descriptor = filesType === 'images'
                 ? Localization.getTranslation("dialogs.title-image-plural")
                 : Localization.getTranslation("dialogs.title-file-plural");
         }
@@ -1499,15 +1504,17 @@ class ReceiveRequestDialog extends ReceiveDialog {
     _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
 
-        const transferRequestTitleTranslation = request.imagesOnly
-            ? Localization.getTranslation('document-titles.image-transfer-requested')
-            : Localization.getTranslation('document-titles.file-transfer-requested');
+        const transferRequestTitleTranslation = request.filesType === 'message'
+            ? Localization.getTranslation('document-titles.message-transfer-requested')
+            : request.filesType === 'images'
+                ? Localization.getTranslation('document-titles.image-transfer-requested')
+                : Localization.getTranslation('document-titles.file-transfer-requested');
 
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
         const badgeClassName = $(peerId).ui._badgeClassName();
 
-        this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize, badgeClassName);
+        this._parseFileData(displayName, connectionHash, request.header, request.filesType, request.totalSize, badgeClassName);
         this._addThumbnailToPreviewBox(request.thumbnailDataUrl);
 
         this.$receiveTitle.innerText = transferRequestTitleTranslation;
@@ -2313,6 +2320,11 @@ class SendTextDialog extends Dialog {
             text: this.$text.innerText
         });
         this.hide();
+    }
+
+    hide() {
+        super.hide();
+        this.$submit.setAttribute('disabled', true);
         setTimeout(() => this.$text.innerText = "", 300);
     }
 }
@@ -2740,7 +2752,7 @@ class Notifications {
 
 
         Events.on('text-received', e => this._messageNotification(e.detail.text, e.detail.peerId));
-        Events.on('files-received', e => this._downloadNotification(e.detail.files, e.detail.imagesOnly));
+        Events.on('files-received', e => this._downloadNotification(e.detail.files, e.detail.filesType));
         Events.on('files-transfer-request', e => this._requestNotification(e.detail.request, e.detail.peerId));
         // Todo on 'files-transfer-request-abort' remove notification
     }
@@ -2824,31 +2836,26 @@ class Notifications {
     }
 
     _requestNotification(request, peerId) {
-        if (document.visibilityState !== 'visible') {
-            let imagesOnly = request.header.every(header => header.mime.split('/')[0] === 'image');
-            let displayName = $(peerId).querySelector('.name').textContent;
+        // Do not notify user if page is visible
+        if (document.visibilityState === 'visible') return;
 
-            let descriptor;
-            if (request.header.length === 1) {
-                descriptor = imagesOnly
-                    ? Localization.getTranslation("dialogs.title-image")
-                    : Localization.getTranslation("dialogs.title-file");
-            }
-            else {
-                descriptor = imagesOnly
-                    ? Localization.getTranslation("dialogs.title-image-plural")
-                    : Localization.getTranslation("dialogs.title-file-plural");
-            }
+        const clickToShowTranslation = Localization.getTranslation("notifications.click-to-show");
+        const displayName = $(peerId).querySelector('.name').textContent;
 
-            let title = Localization
-                .getTranslation("notifications.request-title", null, {
-                    name: displayName,
-                    count: request.header.length,
-                    descriptor: descriptor.toLowerCase()
-                });
+        const transferRequestTitleTranslation = request.filesType === 'message'
+            ? Localization.getTranslation('document-titles.message-transfer-requested')
+            : request.filesType === 'images'
+                ? Localization.getTranslation('document-titles.image-transfer-requested')
+                : Localization.getTranslation('document-titles.file-transfer-requested');
 
-            const notification = this._notify(title, Localization.getTranslation("notifications.click-to-show"));
-        }
+        let title = Localization
+            .getTranslation("notifications.request-title", null, {
+                name: displayName,
+                count: request.header.length,
+                descriptor: transferRequestTitleTranslation.toLowerCase()
+            });
+
+        this._notify(title, clickToShowTranslation);
     }
 
     _download(notification) {
