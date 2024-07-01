@@ -45,11 +45,11 @@ This pairdrop-cli version was released alongside v1.10.4
 #### Linux / Mac
 1. Download the latest _pairdrop-cli.zip_ from the [releases page](https://github.com/schlagmichdoch/PairDrop/releases)
    ```shell
-   wget "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.8/pairdrop-cli.zip"
+   wget "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.9/pairdrop-cli.zip"
    ```
    or
    ```shell
-   curl -LO "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.8/pairdrop-cli.zip"
+   curl -LO "https://github.com/schlagmichdoch/PairDrop/releases/download/v1.10.9/pairdrop-cli.zip"
    ```
 2. Unzip the archive to a folder of your choice e.g. `/usr/share/pairdrop-cli/`
    ```shell
