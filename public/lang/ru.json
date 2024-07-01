@@ -93,7 +93,9 @@
         "temporary-public-room-title": "Временная публичная комната",
         "message_title": "Вставьте сообщение для отправки",
         "pair-devices-qr-code_title": "Нажмите, чтобы скопировать ссылку для привязки этого устройства",
-        "public-room-qr-code_title": "Нажмите, чтобы скопировать ссылку на публичную комнату"
+        "public-room-qr-code_title": "Нажмите, чтобы скопировать ссылку на публичную комнату",
+        "message_placeholder": "Текст",
+        "paired-device-removed": "Связанное устройство удалено."
     },
     "about": {
         "close-about-aria-label": "Закрыть страницу \"О сервисе\"",
