@@ -3,8 +3,8 @@ class Localization {
         Localization.$htmlRoot = document.querySelector('html');
 
         Localization.defaultLocale = "en";
-        Localization.supportedLocales = ["ar", "ca", "de", "en", "es", "fr", "hu", "id", "it", "ja", "kn", "nb", "nl", "pl", "pt-BR", "ro", "ru", "tr", "zh-CN", "zh-TW"];
-        Localization.supportedLocalesRtl = ["ar"];
+        Localization.supportedLocales = ["ar", "be", "ca", "da", "de", "en", "es", "fr", "he", "hu", "id", "it", "ja", "kn", "nb", "nl", "pl", "pt-BR", "ro", "ru", "tr", "zh-CN", "zh-TW"];
+        Localization.supportedLocalesRtl = ["ar", "he"];
 
         Localization.translations = {};
         Localization.translationsDefaultLocale = {};
