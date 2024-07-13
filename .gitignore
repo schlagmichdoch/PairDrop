@@ -1,7 +1,7 @@
 node_modules
 .DS_Store
 fqdn.env
-/docker/certs
+/dev/certs
 qrcode-svg/
 turnserver.conf
 rtc_config.json
