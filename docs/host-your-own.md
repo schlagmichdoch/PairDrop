@@ -652,14 +652,6 @@ To run PairDrop including its own coturn-server you need to punch holes in the f
 
 <br>
 
-### Firewall
-To run PairDrop including its own coturn-server you need to punch holes in the firewall. These ports must be opened additionally:
-- 3478 tcp/udp
-- 5349 tcp/udp
-- 10000:20000 tcp/udp
-
-<br>
-
 ## Local Development
 
 ### Install
