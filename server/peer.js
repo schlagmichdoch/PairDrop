@@ -44,15 +44,18 @@ export default class Peer {
     _setIP(request) {
         if (request.headers['cf-connecting-ip']) {
             this.ip = request.headers['cf-connecting-ip'].split(/\s*,\s*/)[0];
-        } else if (request.headers['x-forwarded-for']) {
+        }
+        else if (request.headers['x-forwarded-for']) {
             this.ip = request.headers['x-forwarded-for'].split(/\s*,\s*/)[0];
-        } else {
-            this.ip = request.connection.remoteAddress;
+        }
+        else {
+            this.ip = request.socket.remoteAddress ?? '';
         }
 
         // remove the prefix used for IPv4-translated addresses
-        if (this.ip.substring(0,7) === "::ffff:")
+        if (this.ip.substring(0,7) === "::ffff:") {
             this.ip = this.ip.substring(7);
+        }
 
         let ipv6_was_localized = false;
         if (this.conf.ipv6Localize && this.ip.includes(':')) {
