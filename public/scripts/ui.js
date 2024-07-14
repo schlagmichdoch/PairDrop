@@ -1060,7 +1060,7 @@ class ReceiveDialog extends Dialog {
                 : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
         }
 
-        const fileName = files[0].name;
+        const fileName = files[0].displayName;
         const fileNameSplit = fileName.split('.');
         const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
         const fileStem = fileName.substring(0, fileName.length - fileExtension.length);
@@ -1331,7 +1331,7 @@ class ReceiveFileDialog extends ReceiveDialog {
             Events.fire('notify-user', downloadSuccessfulTranslation);
             this.downloadSuccessful = true;
 
-            this.hide()
+            this.hide();
         };
     }
 
@@ -1355,7 +1355,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     _downloadFiles(files) {
         let tmpBtn = document.createElement("a");
         for (let i = 0; i < files.length; i++) {
-            tmpBtn.download = files[i].name;
+            tmpBtn.download = files[i].displayName;
             tmpBtn.href = URL.createObjectURL(files[i]);
             tmpBtn.click();
         }
@@ -1435,6 +1435,7 @@ class ReceiveFileDialog extends ReceiveDialog {
 
     hide() {
         super.hide();
+
         setTimeout(async () => {
             this._tidyUpButtons();
             this._tidyUpPreviewBox();
@@ -2651,15 +2652,20 @@ class Base64Dialog extends Dialog {
         this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-processing");
     }
 
-    preparePasting(type) {
+    preparePasting(type, useFallback = false) {
         const translateType = type === 'text'
             ? Localization.getTranslation("dialogs.base64-text")
             : Localization.getTranslation("dialogs.base64-files");
 
-        if (navigator.clipboard.readText) {
+        if (navigator.clipboard.readText && !useFallback) {
             this.$pasteBtn.innerText = Localization.getTranslation("dialogs.base64-tap-to-paste", null, {type: translateType});
             this._clickCallback = _ => this.processClipboard(type);
-            this.$pasteBtn.addEventListener('click', _ => this._clickCallback());
+            this.$pasteBtn.addEventListener('click', _ => {
+                this._clickCallback()
+                    .catch(_ => {
+                        this.preparePasting(type, true);
+                    })
+            });
         }
         else {
             Logger.log("`navigator.clipboard.readText()` is not available on your browser.\nOn Firefox you can set `dom.events.asyncClipboard.readText` to true under `about:config` for convenience.")

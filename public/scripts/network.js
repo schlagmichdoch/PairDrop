@@ -352,7 +352,7 @@ class Peer {
 
         clearInterval(this._updateStatusTextInterval);
 
-        this._transferStatusInterval = null;
+        this._updateStatusTextInterval = null;
         this._bytesTotal = 0;
         this._bytesReceivedFiles = 0;
         this._timeStartTransferComplete = null;
@@ -366,8 +366,12 @@ class Peer {
         // tidy up receiver
         this._pendingRequest = null;
         this._acceptedRequest = null;
-        this._digester = null;
         this._filesReceived = [];
+
+        if (this._digester) {
+            this._digester.cleanUp();
+            this._digester = null;
+        }
 
         // disable NoSleep if idle
         Events.fire('evaluate-no-sleep');
@@ -625,6 +629,11 @@ class Peer {
 
     _abortTransfer() {
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'error'});
+
+        if (this._digester) {
+            this._digester.abort();
+        }
+
         this._reset();
     }
 
@@ -713,7 +722,7 @@ class Peer {
 
         for (let i = 0; i < files.length; i++) {
             header.push({
-                name: files[i].name,
+                displayName: files[i].name,
                 mime: files[i].type,
                 size: files[i].size
             });
@@ -796,7 +805,7 @@ class Peer {
         this._sendMessage({
             type: 'transfer-header',
             size: file.size,
-            name: file.name,
+            displayName: file.name,
             mime: file.type
         });
     }
@@ -866,8 +875,12 @@ class Peer {
             return;
         }
 
+        this.fileDigesterWorkerSupported = await SWFileDigester.isSupported();
+
+        Logger.debug('Digesting files via service workers is', this.fileDigesterWorkerSupported ? 'supported' : 'NOT supported');
+
         // Check if each file must be loaded into RAM completely. This might lead to a page crash (Memory limit iOS Safari: ~380 MB)
-        if (!(await FileDigesterWorker.isSupported())) {
+        if (!this.fileDigesterWorkerSupported) {
             Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) and do not use private tabs to prevent this.');
 
             // Check if page will crash on iOS
@@ -952,10 +965,25 @@ class Peer {
     }
 
     _addFileDigester(header) {
-        this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
-            fileBlob => this._fileReceived(fileBlob),
-            bytesReceived => this._sendReceiveConfirmation(bytesReceived)
-        );
+        this._digester = this.fileDigesterWorkerSupported
+            ?   new FileDigesterViaWorker(
+                    {
+                        size: header.size,
+                        name: header.displayName,
+                        mime: header.mime
+                    },
+                file => this._fileReceived(file),
+                    bytesReceived => this._sendReceiveConfirmation(bytesReceived)
+                )
+            :   new FileDigesterViaBuffer(
+                    {
+                        size: header.size,
+                        name: header.displayName,
+                        mime: header.mime
+                    },
+                    file => this._fileReceived(file),
+                    bytesReceived => this._sendReceiveConfirmation(bytesReceived)
+                );
     }
 
     _sendReceiveConfirmation(bytesReceived) {
@@ -1025,7 +1053,7 @@ class Peer {
 
         const sameSize = header.size === acceptedHeader.size;
         const sameType = header.mime === acceptedHeader.mime;
-        const sameName = header.name === acceptedHeader.name;
+        const sameName = header.displayName === acceptedHeader.displayName;
 
         return sameSize && sameType && sameName;
     }
@@ -1045,7 +1073,7 @@ class Peer {
         Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
         // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', file);
+        Events.fire('file-received', {name: file.displayName, size: file.size});
 
         this._filesReceived.push(file);
 
@@ -1605,6 +1633,9 @@ class PeersManager {
         Events.on('ws-config', e => this._onWsConfig(e.detail));
 
         Events.on('evaluate-no-sleep', _ => this._onEvaluateNoSleep());
+
+        // clean up on page hide
+        Events.on('pagehide', _ => this._onPageHide());
     }
 
     _onWsConfig(wsConfig) {
@@ -1623,6 +1654,13 @@ class PeersManager {
         }
 
         NoSleepUI.disable();
+    }
+
+    _onPageHide() {
+        // Clear OPFS directory ONLY if this is the last PairDrop Browser tab
+        if (!BrowserTabsConnector.isOnlyTab()) return;
+
+        SWFileDigester.clearDirectory();
     }
 
     _refreshPeer(isCaller, peerId, roomType, roomId) {
@@ -1947,7 +1985,6 @@ class FileChunkerWS extends FileChunker {
 class FileDigester {
 
     constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
-        this._buffer = [];
         this._bytesReceived = 0;
         this._bytesReceivedSinceLastTime = 0;
         this._maxBytesWithoutConfirmation = 1048576; // 1 MB
@@ -1958,8 +1995,9 @@ class FileDigester {
         this._sendReceiveConfimationCallback = sendReceiveConfirmationCallback;
     }
 
-    unchunk(chunk) {
-        this._buffer.push(chunk);
+    unchunk(chunk) {}
+
+    evaluateChunkSize(chunk) {
         this._bytesReceived += chunk.byteLength;
         this._bytesReceivedSinceLastTime += chunk.byteLength;
 
@@ -1972,68 +2010,150 @@ class FileDigester {
             this._sendReceiveConfimationCallback(this._bytesReceived);
             this._bytesReceivedSinceLastTime = 0;
         }
+    }
 
-        // File not completely received -> Wait for next chunk.
-        if (this._bytesReceived < this._size) return;
+    isFileReceivedCompletely() {
+        return this._bytesReceived >= this._size;
+    }
 
-        // We are done receiving. Preferably use a file worker to process the file to prevent exceeding of available RAM
-        FileDigesterWorker.isSupported()
-            .then(supported => {
-                if (!supported) {
-                    this.processFileViaMemory();
-                    return;
-                }
-                this.processFileViaWorker();
-            });
+    cleanUp() {}
+
+    abort() {}
+}
+
+class FileDigesterViaBuffer extends FileDigester {
+    constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
+        super(meta, fileCompleteCallback, sendReceiveConfirmationCallback);
+        this._buffer = [];
+    }
+
+    unchunk(chunk) {
+        this._buffer.push(chunk);
+        this.evaluateChunkSize(chunk);
+
+        // If file is not completely received -> Wait for next chunk.
+        if (!this.isFileReceivedCompletely()) return;
+
+        this.processFileViaMemory();
     }
 
     processFileViaMemory() {
         // Loads complete file into RAM which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
-        const file = new File(this._buffer, this._name, {
-            type: this._mime,
-            lastModified: new Date().getTime()
-        })
+        const file = new File(
+            this._buffer,
+            this._name,
+            {
+                type: this._mime,
+                lastModified: new Date().getTime()
+            }
+        );
+        file.displayName = this._name
+
         this._fileCompleteCallback(file);
     }
 
-    processFileViaWorker() {
-        const fileDigesterWorker = new FileDigesterWorker();
-        fileDigesterWorker.digestFileBuffer(this._buffer, this._name)
-            .then(file => {
-                this._fileCompleteCallback(file);
-            })
-            .catch(reason => {
-                Logger.warn(reason);
-                this.processFileViaWorker();
-            })
+    cleanUp() {
+        this._buffer = [];
+    }
+
+    abort() {
+        this.cleanUp();
     }
 }
 
-class FileDigesterWorker {
+class FileDigesterViaWorker extends FileDigester {
+    constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
+        super(meta, fileCompleteCallback, sendReceiveConfirmationCallback);
+        this._fileDigesterWorker = new SWFileDigester();
+    }
 
-    constructor() {
+    unchunk(chunk) {
+        this._fileDigesterWorker
+            .nextChunk(chunk, this._bytesReceived)
+            .then(_ => {
+                this.evaluateChunkSize(chunk);
+
+                // If file is not completely received -> Wait for next chunk.
+                if (!this.isFileReceivedCompletely()) return;
+
+                this.processFileViaWorker();
+            });
+    }
+
+    processFileViaWorker() {
+        this._fileDigesterWorker
+            .getFile()
+            .then(file => {
+                // Save id and displayName to file to be able to truncate file later
+                file.id = file.name;
+                file.displayName = this._name;
+
+                this._fileCompleteCallback(file);
+            })
+            .catch(e => {
+                Logger.error("Error in SWFileDigester:", e);
+                this.cleanUp();
+            });
+    }
+
+    cleanUp() {
+        this._fileDigesterWorker.cleanUp();
+    }
+
+    abort() {
+        // delete and clean up (included in deletion)
+        this._fileDigesterWorker.deleteFile().then((id) => {
+            Logger.debug("File deleted after abort:", id);
+        });
+    }
+}
+
+
+class SWFileDigester {
+
+    static fileWorkers = [];
+
+    constructor(id = null) {
         // Use service worker to prevent loading the complete file into RAM
-        this.fileWorker = new Worker("scripts/sw-file-digester.js");
+        // Uses origin private file system (OPFS) as storage endpoint
+
+        if (!id) {
+            // Generate random uuid to save file on disk
+            // Create only one service worker per file to prevent problems with accessHandles
+            id = generateUUID();
+            SWFileDigester.fileWorkers[id] = new Worker("scripts/sw-file-digester.js");
+        }
+
+        this.id = id;
+        this.fileWorker = SWFileDigester.fileWorkers[id];
 
         this.fileWorker.onmessage = (e) => {
             switch (e.data.type) {
                 case "support":
                     this.onSupport(e.data.supported);
                     break;
-                case "part":
-                    this.onPart(e.data.part);
+                case "chunk-written":
+                    this.onChunkWritten(e.data.offset);
                     break;
                 case "file":
                     this.onFile(e.data.file);
                     break;
                 case "file-deleted":
-                    this.onFileDeleted();
+                    this.onFileDeleted(e.data.id);
                     break;
                 case "error":
                     this.onError(e.data.error);
                     break;
+                case "directory-cleared":
+                    this.onDirectoryCleared();
+                    break;
             }
         }
+    }
+
+    onError(error) {
+        // an error occurred.
+        Logger.error(error);
     }
 
     static isSupported() {
@@ -2044,7 +2164,7 @@ class FileDigesterWorker {
                 return;
             }
 
-            const fileDigesterWorker = new FileDigesterWorker();
+            const fileDigesterWorker = new SWFileDigester();
 
             resolve(await fileDigesterWorker.checkSupport());
 
@@ -2068,75 +2188,88 @@ class FileDigesterWorker {
         this.resolveSupport = null;
     }
 
-    digestFileBuffer(buffer, fileName) {
-        return new Promise((resolve, reject) => {
-            this.resolveFile = resolve;
-            this.rejectFile = reject;
-
-            this.i = 0;
-            this.offset = 0;
-
-            this.buffer = buffer;
-            this.fileName = fileName;
-
-            this.sendPart(this.buffer[0], 0);
-        })
+    nextChunk(chunk, offset) {
+        return new Promise(resolve => {
+            this.digestChunk(chunk, offset);
+            resolve();
+        });
     }
 
-
-    sendPart(buffer, offset) {
+    digestChunk(chunk, offset) {
         this.fileWorker.postMessage({
-            type: "part",
-            name: this.fileName,
-            buffer: buffer,
+            type: "chunk",
+            id: this.id,
+            chunk: chunk,
             offset: offset
         });
     }
 
-    getFile() {
-        this.fileWorker.postMessage({
-            type: "get-file",
-            name: this.fileName,
-        });
+    onChunkWritten(chunkOffset) {
+        Logger.debug("Chunk written at offset", chunkOffset);
     }
 
-    deleteFile() {
-        this.fileWorker.postMessage({
-            type: "delete-file",
-            name: this.fileName
+    getFile() {
+        return new Promise(resolve => {
+            this.resolveFile = resolve;
+
+            this.fileWorker.postMessage({
+                type: "get-file",
+                id: this.id,
+            });
         })
     }
 
-    onPart(part) {
-        if (this.i < this.buffer.length - 1) {
-            // process next chunk
-            this.offset += part.byteLength;
-            this.i++;
-            this.sendPart(this.buffer[this.i], this.offset);
-            return;
-        }
-
-        // File processing complete -> retrieve completed file
-        this.getFile();
+    async getFileById(id) {
+        const swFileDigester = new SWFileDigester(id);
+        return await swFileDigester.getFile();
     }
 
     onFile(file) {
-        this.buffer = [];
         this.resolveFile(file);
-        this.deleteFile();
     }
 
-    onFileDeleted() {
+    deleteFile() {
+        return new Promise(resolve => {
+            this.resolveDeletion = resolve;
+            this.fileWorker.postMessage({
+                type: "delete-file",
+                id: this.id
+            });
+        });
+    }
+
+    static async deleteFileById(id) {
+        const swFileDigester = new SWFileDigester(id);
+        return await swFileDigester.deleteFile();
+    }
+
+    cleanUp() {
+        // terminate service worker
+        this.fileWorker.terminate();
+        delete SWFileDigester.fileWorkers[this.id];
+    }
+
+    onFileDeleted(id) {
         // File Digestion complete -> Tidy up
-        this.fileWorker.terminate();
+        Logger.debug("File deleted:", id);
+        this.resolveDeletion(id);
+        this.cleanUp();
     }
 
-    onError(error) {
-        // an error occurred.
-        Logger.error(error);
+    static clearDirectory() {
+        for (let i = 0; i < SWFileDigester.fileWorkers.length; i++) {
+            SWFileDigester.fileWorkers[i].terminate();
+        }
+        SWFileDigester.fileWorkers = [];
 
-        // Use memory method instead and terminate service worker.
-        this.fileWorker.terminate();
-        this.rejectFile("Failed to process file via service-worker. Do not use Firefox private mode to prevent this.");
+        const swFileDigester = new SWFileDigester();
+        swFileDigester.fileWorker.postMessage({
+            type: "clear-directory",
+        });
+    }
+
+    onDirectoryCleared() {
+        Logger.debug("All files on OPFS truncated.");
+        this.cleanUp();
     }
 }

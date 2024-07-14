@@ -25,6 +25,11 @@ class BrowserTabsConnector {
             : false;
     }
 
+    static isOnlyTab() {
+        let peerIdsBrowser = JSON.parse(localStorage.getItem('peer_ids_browser'));
+        return peerIdsBrowser.length <= 1;
+    }
+
     static async addPeerIdToLocalStorage() {
         const peerId = sessionStorage.getItem('peer_id');
         if (!peerId) return false;
