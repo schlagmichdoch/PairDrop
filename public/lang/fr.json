@@ -11,7 +11,9 @@
         "pair-device_title": "Associez vos appareils de manière permanente",
         "edit-paired-devices_title": "Gérer les appareils couplés",
         "join-public-room_title": "Rejoindre temporairement la salle publique",
-        "cancel-share-mode": "Terminé"
+        "cancel-share-mode": "Terminé",
+        "edit-share-mode": "Modifier",
+        "expand_title": "Agrandir entête bouton ligne"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Déposer pour choisir le destinataire",
@@ -21,11 +23,15 @@
         "x-instructions_mobile": "Appuyez pour envoyer des fichiers ou appuyez longuement pour envoyer un message",
         "x-instructions_data-drop-peer": "Déposer pour envoyer au destinataire",
         "x-instructions_data-drop-bg": "Lâcher pour choisir le destinataire",
-        "x-instructions-share-mode_desktop": "Cliquez pour envoyer",
-        "x-instructions-share-mode_mobile": "Appuyez pour envoyer",
+        "x-instructions-share-mode_desktop": "Cliquez pour envoyer {{descriptor}}",
+        "x-instructions-share-mode_mobile": "Appuyez pour envoyer {{descriptor}}",
         "activate-share-mode-base": "Ouvrez PairDrop sur d'autres appareils pour envoyer",
         "activate-share-mode-and-other-files-plural": "et {{count}} autres fichiers",
-        "activate-share-mode-shared-text": "texte partagé"
+        "activate-share-mode-shared-text": "texte partagé",
+        "activate-share-mode-shared-file": "fichier partagé",
+        "webrtc-requirement": "Pour utiliser cette instance de PairDrop, WebRTC doit être activé !",
+        "activate-share-mode-shared-files-plural": "{{count}} fichiers partagés",
+        "activate-share-mode-and-other-file": "et un autre fichier"
     },
     "footer": {
         "known-as": "Vous êtes connu comme :",
@@ -70,13 +76,13 @@
         "share": "Partage",
         "download": "Télécharger",
         "send-message-title": "Envoyer un message",
-        "send-message-to": "Envoyer un message à",
+        "send-message-to": "À :",
         "send": "Envoyer",
         "receive-text-title": "Message reçu",
         "copy": "Copier",
         "base64-processing": "Traitement…",
-        "base64-tap-to-paste": "Appuyez ici pour coller {{type}}",
-        "base64-paste-to-send": "Coller ici pour envoyer {{type}}",
+        "base64-tap-to-paste": "Appuyez ici pour partager {{type}}",
+        "base64-paste-to-send": "Coller le presse-papiers ici pour partager {{type}}",
         "base64-text": "texte",
         "base64-files": "fichiers",
         "file-other-description-image": "et 1 autre image",
@@ -93,7 +99,16 @@
         "system-language": "Langue du système",
         "message_title": "Insérer un message à envoyer",
         "pair-devices-qr-code_title": "Cliquer pour copier pour appairer l'appareil",
-        "public-room-qr-code_title": "Cliquez pour copier le lien vers le salon public"
+        "public-room-qr-code_title": "Cliquez pour copier le lien vers le salon public",
+        "base64-title-text": "Texte partagé",
+        "paired-device-removed": "L'appareil connecté a été enlevé.",
+        "message_placeholder": "Texte",
+        "base64-title-files": "Fichiers partagés",
+        "approve": "approuve",
+        "share-text-title": "Partage le message",
+        "share-text-subtitle": "Modifier le message avant l'envoi :",
+        "share-text-checkbox": "Toujours montrer ce dialogue quand du texte est partagé",
+        "close-toast_title": "Fermer la notification"
     },
     "about": {
         "close-about_aria-label": "Fermer à propos de PairDrop",
@@ -101,7 +116,11 @@
         "github_title": "PairDrop sur GitHub",
         "buy-me-a-coffee_title": "Achetez-moi un café !",
         "tweet_title": "Tweet à propos de PairDrop",
-        "faq_title": "Questions fréquemment posées"
+        "faq_title": "Questions fréquemment posées",
+        "bluesky_title": "Suis-nous sur BlueSky",
+        "custom_title": "Suis-nous",
+        "privacypolicy_title": "Ouvert sur notre politique de confidentialité",
+        "mastodon_title": "Écrire à propos de PairDrop sur Mastodon"
     },
     "notifications": {
         "display-name-changed-permanently": "Le nom d'affichage est modifié de manière permanente",

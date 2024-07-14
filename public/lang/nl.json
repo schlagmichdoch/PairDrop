@@ -51,7 +51,10 @@
         "online-requirement-public-room": "U moet online zijn om een openbare kamer te maken",
         "copied-text-error": "Schrijven naar klembord mislukt. Kopieer handmatig!",
         "download-successful": "{{descriptor}} downloaden",
-        "click-to-show": "Klik om te tonen"
+        "click-to-show": "Klik om te tonen",
+        "pair-url-copied-to-clipboard": "Koppeling om dit apparaat te koppelen is gekopieerd naar het klembord",
+        "room-url-copied-to-clipboard": "Koppeling naar openbare kamer gekopieerd naar klembord",
+        "notifications-permissions-error": "Meldingsmachtiging is geblokkeerd, omdat de gebruiker het machtigingsverzoek meerdere keren heeft afgewezen. Dit kan worden gereset in instellingen van de website, welke toegangelijk is door te klikken op het sloticoon naast de URL-balk."
     },
     "header": {
         "cancel-share-mode": "Klaar",
@@ -65,13 +68,15 @@
         "language-selector_title": "Taal Selecteren",
         "about_title": "Over PairDrop",
         "about_aria-label": "Open Over PairDrop",
-        "theme-light_title": "Altijd lichte modus gebruiken"
+        "theme-light_title": "Altijd lichte modus gebruiken",
+        "expand_title": "Knoppenrij uitvouwen",
+        "edit-share-mode": "Bewerken"
     },
     "instructions": {
         "x-instructions_mobile": "Tik om bestanden te versturen of houdt vast om een bericht te sturen",
-        "x-instructions-share-mode_desktop": "Klik om te verzenden",
+        "x-instructions-share-mode_desktop": "Klik om te verzenden {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "en {{count}} andere bestanden",
-        "x-instructions-share-mode_mobile": "Tik om te verzenden",
+        "x-instructions-share-mode_mobile": "Tik om te verzenden {{descriptor}}",
         "activate-share-mode-base": "Open PairDrop op andere apparaten om te verzenden",
         "no-peers-subtitle": "Koppel apparaten of betreed een openbare ruimte om op andere netwerken zichtbaar te worden",
         "activate-share-mode-shared-text": "gedeelde tekst",
@@ -79,7 +84,11 @@
         "no-peers-title": "Open PairDrop op andere apparaten om bestanden te versturen",
         "x-instructions_data-drop-peer": "Laat los om naar peer te versturen",
         "x-instructions_data-drop-bg": "Loslaten om ontvanger te selecteren",
-        "no-peers_data-drop-bg": "Loslaten om ontvanger te kiezen"
+        "no-peers_data-drop-bg": "Loslaten om ontvanger te kiezen",
+        "activate-share-mode-and-other-file": "en 1 ander bestand",
+        "activate-share-mode-shared-file": "gedeeld bestand",
+        "activate-share-mode-shared-files-plural": "{{count}} gedeelde bestanden",
+        "webrtc-requirement": "Om deze PairDrop instantie te kunnen gebruiken, moet WebRTC geactiveerd zijn!"
     },
     "peer-ui": {
         "processing": "Verwerken…",
@@ -91,7 +100,7 @@
         "transferring": "Overdragen…"
     },
     "dialogs": {
-        "base64-paste-to-send": "Plak hier om {{type}} te versturen",
+        "base64-paste-to-send": "Plak klembord hier om {{type}} te versturen",
         "auto-accept-instructions-2": "om automatisch alle bestanden van dat apparaat te accepteren.",
         "receive-text-title": "Bericht Ontvangen",
         "edit-paired-devices-title": "Gekoppelde Apparaten Bewerken",
@@ -107,7 +116,7 @@
         "join": "Betreden",
         "title-image-plural": "Afbeeldingen",
         "send": "Verzenden",
-        "base64-tap-to-paste": "Hier tikken om {{type}} te plakken",
+        "base64-tap-to-paste": "Hier tikken om {{type}} te delen",
         "base64-text": "tekst",
         "copy": "Kopiëren",
         "file-other-description-image": "en één andere afbeelding",
@@ -121,7 +130,7 @@
         "title-image": "Afbeelding",
         "file-other-description-file-plural": "en {{count}} andere bestanden",
         "would-like-to-share": "zou graag het volgende willen delen",
-        "send-message-to": "Verstuur een bericht naar",
+        "send-message-to": "Aan:",
         "language-selector-title": "Taal Instellen",
         "pair": "Koppel",
         "hr-or": "OF",
@@ -137,7 +146,19 @@
         "send-message-title": "Bericht Sturen",
         "input-room-id-on-another-device": "Voer de kamer ID in op een ander apparaat",
         "file-other-description-image-plural": "en {{count}} andere afbeeldingen",
-        "enter-room-id-from-another-device": "Voer de kamer ID van een ander apparaat hier in."
+        "enter-room-id-from-another-device": "Voer de kamer ID van een ander apparaat hier in.",
+        "paired-device-removed": "Gekoppelde apparaten zijn verwijderd.",
+        "message_title": "Voer bericht in om te versturen",
+        "message_placeholder": "Tekst",
+        "base64-title-files": "Deel Bestanden",
+        "base64-title-text": "Deel Tekst",
+        "public-room-qr-code_title": "Klik, om de link naar deze openbare ruimte te kopiëren",
+        "approve": "goedkeuren",
+        "share-text-title": "Gedeeld Tekst Bericht",
+        "share-text-checkbox": "Deze dialoog altijd tonen bij het delen van tekst",
+        "close-toast_title": "Bericht sluiten",
+        "pair-devices-qr-code_title": "Klik om de koppeling te kopiëren om dit apparaat te koppelen",
+        "share-text-subtitle": "Bewerk bericht voor verzending:"
     },
     "about": {
         "claim": "De makkelijkste manier om bestanden tussen apparaten te versturen",
@@ -145,7 +166,11 @@
         "close-about_aria-label": "Sluit Over PairDrop",
         "buy-me-a-coffee_title": "Koop een kopje koffie voor mij!",
         "github_title": "PairDrop op GitHub",
-        "faq_title": "Veel gestelde vragen"
+        "faq_title": "Veel gestelde vragen",
+        "mastodon_title": "Schrijf over PairDrop op Mastodon",
+        "bluesky_title": "Volg ons op BlueSky",
+        "custom_title": "Volg ons",
+        "privacypolicy_title": "Open ons privacybeleid"
     },
     "document-titles": {
         "file-transfer-requested": "Bestandsoverdracht verzocht",

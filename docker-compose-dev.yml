@@ -1,0 +1,33 @@
+version: "3"
+services:
+  pairdrop:
+    build: .
+    container_name: pairdrop
+    restart: unless-stopped
+    environment:
+      - PUID=1000 # UID to run the application as
+      - PGID=1000 # GID to run the application as
+      - WS_FALLBACK=false # Set to true to enable websocket fallback if the peer to peer WebRTC connection is not available to the client.
+      - RATE_LIMIT=false # Set to true to limit clients to 1000 requests per 5 min.
+      - RTC_CONFIG=false # Set to the path of a file that specifies the STUN/TURN servers.
+      - DEBUG_MODE=false # Set to true to debug container and peer connections.
+      - TZ=Etc/UTC # Time Zone
+    ports:
+      - "127.0.0.1:3000:3000" # Web UI. Change the port number before the last colon e.g. `127.0.0.1:9000:3000`
+  nginx:
+    build:
+      context: dev/
+      dockerfile: nginx-with-openssl.Dockerfile
+    image: "nginx-with-openssl"
+    volumes:
+      - ./public:/usr/share/nginx/html
+      - ./dev/certs:/etc/ssl/certs
+      - ./dev/openssl:/mnt/openssl
+      - ./dev/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8080:80"
+      - "8443:443"
+    env_file: dev/fqdn.env
+    entrypoint: /mnt/openssl/create.sh
+    command: ["nginx", "-g", "daemon off;"]
+    restart: unless-stopped

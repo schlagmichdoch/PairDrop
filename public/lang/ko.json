@@ -1,0 +1,29 @@
+{
+    "header": {
+        "notification_title": "알림 켜기",
+        "edit-paired-devices_title": "연결된 기기 편집하기",
+        "install_title": "PairDrop 설치",
+        "theme-dark_title": "항상 다크 테마 사용",
+        "about_title": "PairDrop에 대하여",
+        "language-selector_title": "언어 설정",
+        "about_aria-label": "PairDrop에 대하여 보기",
+        "theme-light_title": "항상 라이트 테마 사용",
+        "theme-auto_title": "시스템에 맞춰 테마 자동 적용",
+        "join-public-room_title": "일시적으로 공개 방에 참여하기",
+        "cancel-share-mode": "취소",
+        "edit-share-mode": "편집",
+        "pair-device_title": "영구적으로 기기 연결하기",
+        "expand_title": "머리글 버튼 행 펼치기"
+    },
+    "instructions": {
+        "no-peers-subtitle": "장치를 연결하거나 공개 방에 들어가 다른 네트워크에서 검색 가능하게 하세요",
+        "no-peers_data-drop-bg": "해제하여 수신자 선택하기",
+        "x-instructions_mobile": "탭하여 파일을 보내거나 길게 탭하여 메시지를 보내세요",
+        "x-instructions_desktop": "클릭해 파일을 보내거나 오른쪽 클릭으로 메시지를 보내세요",
+        "no-peers-title": "다른 장치에서 PairDrop을 열어 파일 보내기",
+        "x-instructions_data-drop-bg": "해제하여 수신자 선택하기",
+        "x-instructions-share-mode_desktop": "클릭하여 {{descriptor}} 보내기",
+        "x-instructions-share-mode_mobile": "탭하여 {{descriptor}} 보내기",
+        "activate-share-mode-base": "다른 기기에서 PairDrop을 열어 보내기"
+    }
+}

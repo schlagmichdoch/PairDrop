@@ -39,7 +39,6 @@ Send a file from your phone to your laptop?
 * Connect to devices in complex network environments (public Wi-Fi, company network, iCloud Private Relay, VPN, etc.).
 * Connect to devices on your mobile hotspot.
 * Devices outside of your local network that are behind a NAT are auto-connected via the PairDrop TURN server.
-* Connect to devices on your mobile hotspot.
 * Devices from the local network, in the same public room, or previously paired are shown.
 
 #### Persistent Device Pairing
@@ -119,9 +118,9 @@ Connect to others in complex network situations, or over the Internet.
 <br />
 
 PairDrop is libre, and always will be. \
-I footed the bill for the domain and the server, and you can help create great softeare by supporting me. \
-Please use BuyMeACoffee via the button above. \
-Thanks a lot for supporting copylefted libre software!
+If you find it useful and want to support free and open-source software, please consider donating using the button above. \
+I footed the bill for the domain and the server, and you can help create and maintain great software by supporting me. \
+Thank you very much for your contribution!
 
 ## Contributing
 Feel free to [open an issue](https://github.com/schlagmichdoch/pairdrop/issues/new/choose) or a

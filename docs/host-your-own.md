@@ -652,44 +652,34 @@ To run PairDrop including its own coturn-server you need to punch holes in the f
 
 <br>
 
-### Firewall
-To run PairDrop including its own coturn-server you need to punch holes in the firewall. These ports must be opened additionally:
-- 3478 tcp/udp
-- 5349 tcp/udp
-- 10000:20000 tcp/udp
-
-<br>
-
 ## Local Development
 
 ### Install
 
-All files needed for developing are available on the branch `dev`.
+All files needed for developing are available in the folder `./dev`.
 
-First, [Install docker with docker-compose.](https://docs.docker.com/compose/install/)
+For convenience, there is also a docker compose file for developing:
 
-Then, clone the repository and run docker-compose:
+#### Developing with docker compose
+First, [Install docker with docker compose.](https://docs.docker.com/compose/install/)
+
+Then, clone the repository and run docker compose:
 
 ```bash
 git clone https://github.com/schlagmichdoch/PairDrop.git && cd PairDrop
 ```
 ```bash
-git checkout dev
-```
-```bash
-docker compose -f docker-compose-dev.yml up -d
+docker compose -f docker-compose-dev.yml up --no-deps --build
 ```
 
 Now point your web browser to `http://localhost:8080`.
 
-- To restart the containers, run `docker compose restart`.
-- To stop the containers, run `docker compose stop`.
 - To debug the Node.js server, run `docker logs pairdrop`.
-
+- After changes to the code you have to rerun the `docker compose` command
 
 <br>
 
-### Testing PWA related features
+#### Testing PWA related features
 
 PWAs requires the app to be served under a correctly set up and trusted TLS endpoint.
 
@@ -702,14 +692,25 @@ If you want to test PWA features, you need to trust the CA of the certificate fo
 For your convenience, you can download the crt file from `http://<Your FQDN>:8080/ca.crt`. \
 Install that certificate to the trust store of your operating system. \
 
-- On Windows, make sure to install it to the `Trusted Root Certification Authorities` store.
-- On macOS, double-click the installed CA certificate in `Keychain Access`,
+##### Windows
+- Make sure to install it to the `Trusted Root Certification Authorities` store.
+
+##### macOS
+- Double-click the installed CA certificate in `Keychain Access`,
 - expand `Trust`, and select `Always Trust` for SSL.
+
+##### Firefox
 - Firefox uses its own trust store. To install the CA,
 - point Firefox at `http://<Your FQDN>:8080/ca.crt`.
 - When prompted, select `Trust this CA to identify websites` and click _OK_.
+
+##### Chrome
 - When using Chrome, you need to restart Chrome so it reloads the trust store (`chrome://restart`).
 - Additionally, after installing a new cert, you need to clear the Storage (DevTools → Application → Clear storage → Clear site data).
+
+##### Google Chrome
+- To skip the installation of the certificate, you can also open `chrome://flags/#unsafely-treat-insecure-origin-as-secure`
+- The feature `Insecure origins treated as secure` must be enabled and the list must include your PairDrop test instance. E.g.: `http://127.0.0.1:3000,https://127.0.0.1:8443`
 
 Please note that the certificates (CA and webserver cert) expire after a day.
 Also, whenever you restart the NGINX Docker container new certificates are created.

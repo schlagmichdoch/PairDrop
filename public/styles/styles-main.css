@@ -626,10 +626,13 @@ x-dialog:not([show]) x-background {
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: -1;
     opacity: 0;
     background-color: var(--accent-color);
     transition: opacity 300ms;
+}
+
+.icon-button:before {
+    z-index: -1;
 }
 
 .btn:not([disabled]):hover:before,

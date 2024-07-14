@@ -74,9 +74,9 @@
     },
     "instructions": {
         "x-instructions_mobile": "Ketuk untuk mengirim file atau ketuk lama untuk mengirim pesan",
-        "x-instructions-share-mode_desktop": "Klik untuk mengirim",
+        "x-instructions-share-mode_desktop": "Klik untuk mengirim {{descriptor}}",
         "activate-share-mode-and-other-files-plural": "dan {{count}} file lainnya",
-        "x-instructions-share-mode_mobile": "Ketuk untuk mengirim",
+        "x-instructions-share-mode_mobile": "Ketuk untuk mengirim {{descriptor}}",
         "activate-share-mode-base": "Buka PairDrop di perangkat lain untuk berkirim",
         "no-peers-subtitle": "Pasangkan perangkat atau masuk ke ruang publik agar dapat terdeteksi di jaringan lain",
         "activate-share-mode-shared-text": "teks bersama",

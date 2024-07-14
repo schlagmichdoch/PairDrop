@@ -11,14 +11,15 @@
         "theme-dark_title": "Всегда использовать темную тему",
         "theme-light_title": "Всегда использовать светлую тему",
         "join-public-room_title": "Войти на время в публичную комнату",
-        "language-selector_title": "Выбрать язык"
+        "language-selector_title": "Выбрать язык",
+        "edit-share-mode": "Редактировать"
     },
     "instructions": {
         "x-instructions_desktop": "Нажмите, чтобы отправить файлы, или щелкните правой кнопкой мыши, чтобы отправить сообщение",
         "no-peers_data-drop-bg": "Отпустите, чтобы выбрать получателя",
-        "x-instructions-share-mode_desktop": "Нажмите, чтобы отправить",
+        "x-instructions-share-mode_desktop": "Нажмите, чтобы отправить {{descriptor}}",
         "x-instructions_data-drop-bg": "Отпустите, чтобы выбрать получателя",
-        "x-instructions-share-mode_mobile": "Прикоснитесь, чтобы отправить",
+        "x-instructions-share-mode_mobile": "Прикоснитесь, чтобы отправить {{descriptor}}",
         "x-instructions_data-drop-peer": "Отпустите, чтобы послать узлу",
         "x-instructions_mobile": "Прикоснитесь коротко, чтобы отправить файлы, или долго, чтобы отправить сообщение",
         "no-peers-title": "Откройте PairDrop на других устройствах, чтобы отправить файлы",
@@ -92,7 +93,9 @@
         "temporary-public-room-title": "Временная публичная комната",
         "message_title": "Вставьте сообщение для отправки",
         "pair-devices-qr-code_title": "Нажмите, чтобы скопировать ссылку для привязки этого устройства",
-        "public-room-qr-code_title": "Нажмите, чтобы скопировать ссылку на публичную комнату"
+        "public-room-qr-code_title": "Нажмите, чтобы скопировать ссылку на публичную комнату",
+        "message_placeholder": "Текст",
+        "paired-device-removed": "Связанное устройство удалено."
     },
     "about": {
         "close-about-aria-label": "Закрыть страницу \"О сервисе\"",

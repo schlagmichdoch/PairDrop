@@ -12,7 +12,6 @@
     display: block;
     overflow: auto;
     resize: none;
-    line-height: 16px;
     max-height: 350px;
     word-break: break-word;
     word-wrap: anywhere;

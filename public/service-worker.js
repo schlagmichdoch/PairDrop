@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.10.6';
+const cacheVersion = 'v1.10.9';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
 const relativePathsToCache = [
@@ -27,22 +27,28 @@ const relativePathsToCache = [
     'images/android-chrome-512x512-maskable.png',
     'images/apple-touch-icon.png',
     'lang/ar.json',
+    'lang/be.json',
     'lang/ca.json',
+    'lang/da.json',
     'lang/de.json',
     'lang/en.json',
     'lang/es.json',
     'lang/fr.json',
+    'lang/he.json',
+    'lang/hu.json',
     'lang/id.json',
     'lang/it.json',
     'lang/ja.json',
     'lang/kn.json',
     'lang/nb.json',
     'lang/nl.json',
+    'lang/pl.json',
     'lang/pt-BR.json',
     'lang/ro.json',
     'lang/ru.json',
     'lang/tr.json',
-    'lang/zh-CN.json'
+    'lang/zh-CN.json',
+    'lang/zh-TW.json'
 ];
 const relativePathsNotToCache = [
     'config'
