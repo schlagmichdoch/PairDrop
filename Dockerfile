@@ -1,11 +1,13 @@
-FROM node:lts-alpine
+FROM alpine:latest
 
 WORKDIR /home/node/app
 
 COPY package*.json ./
 
-RUN npm ci
+RUN apk add --no-cache nodejs npm
+RUN NODE_ENV="production" npm ci --omit=dev
 
+# Directories and files excluded via .dockerignore
 COPY . .
 
 # environment settings
