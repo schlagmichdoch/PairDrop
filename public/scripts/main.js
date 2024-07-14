@@ -101,7 +101,7 @@ class PairDrop {
     }
 
     onPwaInstallable(e) {
-        if (!window.matchMedia('(display-mode: minimal-ui)').matches) {
+        if (!window.matchMedia('(display-mode: standalone)').matches) {
             // only display install btn when not installed
             this.$headerInstallBtn.removeAttribute('hidden');
             this.$headerInstallBtn.addEventListener('click', () => {
@@ -137,6 +137,7 @@ class PairDrop {
             let stylesheet = document.createElement('link');
             stylesheet.rel = 'preload';
             stylesheet.as = 'style';
+            stylesheet.defer = true;
             stylesheet.href = url;
             stylesheet.onload = _ => {
                 stylesheet.onload = null;
