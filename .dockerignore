@@ -1,5 +1,13 @@
-node_modules
 .github
 .git*
-
+.idea
+dev
+docs
+licenses
+node_modules
+pairdrop-cli
 *.md
+*.yml
+Dockerfile
+rtc_config_example.json
+turnserver_example.conf
