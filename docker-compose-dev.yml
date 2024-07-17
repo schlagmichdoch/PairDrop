@@ -27,7 +27,8 @@ services:
     ports:
       - "8080:80"
       - "8443:443"
-    env_file: dev/fqdn.env
+    environment:
+      - FQDN=localhost
     entrypoint: /mnt/openssl/create.sh
     command: ["nginx", "-g", "daemon off;"]
     restart: unless-stopped

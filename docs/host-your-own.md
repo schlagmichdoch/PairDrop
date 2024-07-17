@@ -685,8 +685,8 @@ PWAs requires the app to be served under a correctly set up and trusted TLS endp
 
 The NGINX container creates a CA certificate and a website certificate for you. 
 To correctly set the common name of the certificate, 
-you need to change the FQDN environment variable in `docker/fqdn.env` 
-to the fully qualified domain name of your workstation.
+you need to change the FQDN environment variable in `docker-compose-dev.yml`
+to the fully qualified domain name of your workstation. (Default: localhost)
 
 If you want to test PWA features, you need to trust the CA of the certificate for your local deployment. \
 For your convenience, you can download the crt file from `http://<Your FQDN>:8080/ca.crt`. \
@@ -700,9 +700,14 @@ Install that certificate to the trust store of your operating system. \
 - expand `Trust`, and select `Always Trust` for SSL.
 
 ##### Firefox
-- Firefox uses its own trust store. To install the CA,
-- point Firefox at `http://<Your FQDN>:8080/ca.crt`.
+Firefox uses its own trust store. To install the CA:
+- point Firefox at `http://<Your FQDN>:8080/ca.crt` (Default: `http://localhost:8080/ca.crt`)
 - When prompted, select `Trust this CA to identify websites` and click _OK_.
+
+Alternatively:
+1. Download `ca.crt` from `http://<Your FQDN>:8080/ca.crt` (Default: `http://localhost:8080/ca.crt`)
+2. Go to `about:preferences#privacy` scroll down to `Security` and `Certificates` and click `View Certificates`
+3. Import the downloaded certificate file (step 1)
 
 ##### Chrome
 - When using Chrome, you need to restart Chrome so it reloads the trust store (`chrome://restart`).
@@ -715,6 +720,6 @@ Install that certificate to the trust store of your operating system. \
 Please note that the certificates (CA and webserver cert) expire after a day.
 Also, whenever you restart the NGINX Docker container new certificates are created.
 
-The site is served on `https://<Your FQDN>:8443`.
+The site is served on `https://<Your FQDN>:8443` (Default: `https://localhost:8443`).
 
 [< Back](/README.md)
