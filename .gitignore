@@ -1,6 +1,5 @@
 node_modules
 .DS_Store
-fqdn.env
 /dev/certs
 qrcode-svg/
 turnserver.conf
