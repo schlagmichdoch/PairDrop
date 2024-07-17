@@ -675,22 +675,23 @@ class Peer {
         this._statusText = statusText;
     }
 
-    _calculateSpeedKbPerSecond() {
+    _getSpeedKbPerSecond() {
         const timeDifferenceSeconds = (this._byteLogs[this._byteLogs.length - 1].time - this._byteLogs[0].time) / 1000;
         const bytesDifferenceKB = (this._byteLogs[this._byteLogs.length - 1].bytesReceived - this._byteLogs[0].bytesReceived) / 1000;
-        return bytesDifferenceKB / timeDifferenceSeconds;
+        return Math.round(bytesDifferenceKB / timeDifferenceSeconds);
     }
 
-    _calculateBytesLeft() {
+    _getBytesLeft() {
         return this._bytesTotal - this._byteLogs[this._byteLogs.length - 1].bytesReceived;
     }
 
-    _calculateSecondsLeft() {
-        return Math.round(this._calculateBytesLeft() / this._calculateSpeedKbPerSecond() / 1000);
+    _getSecondsLeft() {
+        return Math.round(this._getBytesLeft() / this._getSpeedKbPerSecond() / 1000);
     }
 
     _getSpeedString() {
-        const speedKBs = this._calculateSpeedKbPerSecond();
+        const speedKBs = this._getSpeedKbPerSecond();
+
         if (speedKBs >= 1000) {
             let speedMBs = Math.round(speedKBs / 100) / 10;
             return `${speedMBs} MB/s`; // e.g. "2.2 MB/s"
@@ -700,7 +701,7 @@ class Peer {
     }
 
     _getTimeString() {
-        const seconds = this._calculateSecondsLeft();
+        const seconds = this._getSecondsLeft();
         if (seconds > 60) {
             let minutes = Math.floor(seconds / 60);
             let secondsLeft = Math.floor(seconds % 60);
