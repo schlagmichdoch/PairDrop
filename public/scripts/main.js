@@ -118,8 +118,8 @@ class PairDrop {
             this.$headerNotificationBtn.removeAttribute('hidden');
         }
 
-        let roomSecrets = await PersistentStorage.getAllRoomSecrets();
-        if (roomSecrets.length > 0) {
+        let roomSecretsCount = await PersistentStorage.getAllRoomSecretsCount();
+        if (roomSecretsCount > 0) {
             this.$headerEditPairedDevicesBtn.removeAttribute('hidden');
             this.$footerPairedDevicesBadge.removeAttribute('hidden');
         }
