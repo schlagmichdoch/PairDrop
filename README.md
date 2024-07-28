@@ -32,7 +32,7 @@ Send a file from your phone to your laptop?
 <img src="docs/pairdrop_screenshot_mobile.gif" alt="Screenshot GIF showing PairDrop in use" style="width: 300px">
 
 ## Differences to the [Snapdrop](https://github.com/RobinLinus/snapdrop) it is based on
-<details><summary>List view</summary>
+<details><summary>View all differences</summary>
 
 ### Paired Devices and Public Rooms — Internet Transfer
 * Transfer files over the Internet between paired devices or by entering temporary public rooms.
