@@ -477,7 +477,7 @@
                 <div class="center file-preview"></div>
                 <div class="row-reverse center btn-row wrap">
                     <button id="share-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.share" data-i18n-attrs="text" hidden></button>
-                    <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus disabled></button>
+                    <button id="download-btn" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.download" data-i18n-attrs="text" autofocus disabled hidden></button>
                     <button class="btn btn-rounded btn-grey" data-i18n-key="dialogs.close" data-i18n-attrs="text" close></button>
                 </div>
             </x-paper>
@@ -774,7 +774,7 @@
     <script src="scripts/ui-main.js" defer></script>
     <script src="scripts/main.js" defer></script>
     <!-- Sounds -->
-    <audio id="blop" autobuffer="true">
+    <audio id="blop" preload="metadata" disableremoteplayback="true" x-webkit-airplay="deny" muted>
         <source src="sounds/blop.mp3" type="audio/mpeg">
         <source src="sounds/blop.ogg" type="audio/ogg">
     </audio>

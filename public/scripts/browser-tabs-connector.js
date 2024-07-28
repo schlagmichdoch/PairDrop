@@ -2,18 +2,27 @@ class BrowserTabsConnector {
     constructor() {
         this.bc = new BroadcastChannel('pairdrop');
         this.bc.addEventListener('message', e => this._onMessage(e));
-        Events.on('broadcast-send', e => this._broadcastSend(e.detail));
+        Events.on('broadcast-send', e => this._broadcastSend(e.detail.type, e.detail.data));
+        Events.on('broadcast-self-display-name-changed', e => this._onBroadcastSelfDisplayNameChanged(e.detail.displayName));
     }
 
-    _broadcastSend(message) {
-        this.bc.postMessage(message);
+    _broadcastSend(type, data) {
+        this.bc.postMessage({ type, data });
+    }
+
+    _onBroadcastSelfDisplayNameChanged(displayName) {
+        this._broadcastSend('self-display-name-changed', { displayName: displayName });
     }
 
     _onMessage(e) {
-        console.log('Broadcast:', e.data)
-        switch (e.data.type) {
+        const type = e.data.type;
+        const data = e.data.data;
+
+        Logger.debug('Broadcast:', type, data);
+
+        switch (type) {
             case 'self-display-name-changed':
-                Events.fire('self-display-name-changed', e.data.detail);
+                Events.fire('self-display-name-changed', data.displayName);
                 break;
         }
     }
@@ -23,6 +32,11 @@ class BrowserTabsConnector {
         return peerIdsBrowser
             ? peerIdsBrowser.indexOf(peerId) !== -1
             : false;
+    }
+
+    static isOnlyTab() {
+        let peerIdsBrowser = JSON.parse(localStorage.getItem('peer_ids_browser'));
+        return peerIdsBrowser.length <= 1;
     }
 
     static async addPeerIdToLocalStorage() {

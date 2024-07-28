@@ -2,28 +2,28 @@ class Localization {
     constructor() {
         Localization.$htmlRoot = document.querySelector('html');
 
-        Localization.defaultLocale = "en";
-        Localization.supportedLocales = ["ar", "be", "ca", "da", "de", "en", "es", "fr", "he", "hu", "id", "it", "ja", "kn", "nb", "nl", "pl", "pt-BR", "ro", "ru", "tr", "zh-CN", "zh-TW"];
-        Localization.supportedLocalesRtl = ["ar", "he"];
+        Localization.localeDefault = "en";
+        Localization.localesSupported = ["ar", "be", "ca", "da", "de", "en", "es", "fr", "he", "hu", "id", "it", "ja", "kn", "nb", "nl", "pl", "pt-BR", "ro", "ru", "tr", "zh-CN", "zh-TW"];
+        Localization.localesRtl = ["ar", "he"];
 
         Localization.translations = {};
         Localization.translationsDefaultLocale = {};
 
-        Localization.systemLocale = Localization.getSupportedOrDefaultLocales(navigator.languages);
+        Localization.localeSystem = Localization.getSupportedOrDefaultLocales(navigator.languages);
 
         let storedLanguageCode = localStorage.getItem('language_code');
 
-        Localization.initialLocale = storedLanguageCode && Localization.localeIsSupported(storedLanguageCode)
+        Localization.localeInitial = storedLanguageCode && Localization.localeIsSupported(storedLanguageCode)
             ? storedLanguageCode
-            : Localization.systemLocale;
+            : Localization.localeSystem;
     }
 
     static localeIsSupported(locale) {
-        return Localization.supportedLocales.indexOf(locale) > -1;
+        return Localization.localesSupported.indexOf(locale) > -1;
     }
 
     static localeIsRtl(locale) {
-        return Localization.supportedLocalesRtl.indexOf(locale) > -1;
+        return Localization.localesRtl.indexOf(locale) > -1;
     }
 
     static currentLocaleIsRtl() {
@@ -31,7 +31,7 @@ class Localization {
     }
 
     static currentLocaleIsDefault() {
-        return Localization.locale === Localization.defaultLocale
+        return Localization.locale === Localization.localeDefault
     }
 
     static getSupportedOrDefaultLocales(locales) {
@@ -44,15 +44,15 @@ class Localization {
         // If there is no perfect match for browser locales, try generic locales first before resorting to the default locale
         return locales.find(Localization.localeIsSupported)
             || localesGeneric.find(Localization.localeIsSupported)
-            || Localization.defaultLocale;
+            || Localization.localeDefault;
     }
 
     async setInitialTranslation() {
-        await Localization.setTranslation(Localization.initialLocale)
+        await Localization.setTranslation(Localization.localeInitial)
     }
 
     static async setTranslation(locale) {
-        if (!locale) locale = Localization.systemLocale;
+        if (!locale) locale = Localization.localeSystem;
 
         await Localization.setLocale(locale)
         await Localization.translatePage();
@@ -67,8 +67,8 @@ class Localization {
         Localization.$htmlRoot.setAttribute('lang', locale);
 
 
-        console.log("Page successfully translated",
-            `System language: ${Localization.systemLocale}`,
+        Logger.debug("Page successfully translated",
+            `System language: ${Localization.localeSystem}`,
             `Selected language: ${locale}`
         );
 
@@ -78,7 +78,7 @@ class Localization {
     static async setLocale(newLocale) {
         if (newLocale === Localization.locale) return false;
 
-        Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
+        Localization.translationsDefaultLocale = await Localization.fetchTranslationsFor(Localization.localeDefault);
 
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
 
@@ -145,7 +145,7 @@ class Localization {
             translation = translationObj[lastKey];
 
         } catch (e) {
-            console.error(e);
+            Logger.error(e);
         }
 
         if (!translation) {
@@ -179,7 +179,7 @@ class Localization {
         }
         catch (e) {
             // Log warnings and help calls
-            console.warn(e);
+            Logger.warn(e);
             Localization.logTranslationMissingOrBroken(key, attr, data, useDefault);
             Localization.logHelpCallKey(key, attr);
             Localization.logHelpCall();
@@ -192,7 +192,7 @@ class Localization {
             else {
                 // Is not default locale yet
                 // Get translation for default language with same arguments
-                console.log(`Using default language ${Localization.defaultLocale.toUpperCase()} instead.`);
+                Logger.debug(`Using default language ${Localization.localeDefault.toUpperCase()} instead.`);
                 translation = this.getTranslation(key, attr, data, true);
             }
         }
@@ -202,14 +202,14 @@ class Localization {
 
     static logTranslationMissingOrBroken(key, attr, data, useDefault) {
         let usedLocale = useDefault
-            ? Localization.defaultLocale.toUpperCase()
+            ? Localization.localeDefault.toUpperCase()
             : Localization.locale.toUpperCase();
 
-        console.warn(`Missing or broken translation for language ${usedLocale}.\n`, 'key:', key, 'attr:', attr, 'data:', data);
+        Logger.warn(`Missing or broken translation for language ${usedLocale}.\n`, 'key:', key, 'attr:', attr, 'data:', data);
     }
 
     static logHelpCall() {
-        console.log("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
+        Logger.warn("Help translating PairDrop: https://hosted.weblate.org/engage/pairdrop/");
     }
 
     static logHelpCallKey(key, attr) {
@@ -219,7 +219,7 @@ class Localization {
             ? key
             : `${key}_${attr}`;
 
-        console.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${locale}/?q=${keyComplete}`);
+        Logger.warn(`Translate this string here: https://hosted.weblate.org/browse/pairdrop/pairdrop-spa/${locale}/?q=${keyComplete}`);
     }
 
     static escapeHTML(unsafeText) {

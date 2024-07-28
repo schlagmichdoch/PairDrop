@@ -7,19 +7,18 @@ class PersistentStorage {
         const DBOpenRequest = window.indexedDB.open('pairdrop_store', 5);
         DBOpenRequest.onerror = e => {
             PersistentStorage.logBrowserNotCapable();
-            console.log('Error initializing database: ');
-            console.log(e)
+            Logger.error('Error initializing database:', e);
         };
         DBOpenRequest.onsuccess = _ => {
-            console.log('Database initialised.');
+            Logger.debug('Database initialised.');
         };
         DBOpenRequest.onupgradeneeded = async e => {
             const db = e.target.result;
             const txn = e.target.transaction;
 
-            db.onerror = e => console.log('Error loading database: ' + e);
+            db.onerror = e => Logger.error('Error loading database:', e);
 
-            console.log(`Upgrading IndexedDB database from version ${e.oldVersion} to version ${e.newVersion}`);
+            Logger.debug(`Upgrading IndexedDB database from version ${e.oldVersion} to version ${e.newVersion}`);
 
             if (e.oldVersion === 0) {
                 // initiate v1
@@ -54,7 +53,7 @@ class PersistentStorage {
     }
 
     static logBrowserNotCapable() {
-        console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
+        Logger.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 
     static set(key, value) {
@@ -66,7 +65,7 @@ class PersistentStorage {
                 const objectStore = transaction.objectStore('keyval');
                 const objectStoreRequest = objectStore.put(value, key);
                 objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Added key-pair: ${key} - ${value}`);
+                    Logger.debug(`Request successful. Added key-pair: ${key} - ${value}`);
                     resolve(value);
                 };
             }
@@ -85,7 +84,7 @@ class PersistentStorage {
                 const objectStore = transaction.objectStore('keyval');
                 const objectStoreRequest = objectStore.get(key);
                 objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Retrieved key-pair: ${key} - ${objectStoreRequest.result}`);
+                    Logger.debug(`Request successful. Retrieved key-pair: ${key} - ${objectStoreRequest.result}`);
                     resolve(objectStoreRequest.result);
                 }
             }
@@ -104,7 +103,7 @@ class PersistentStorage {
                 const objectStore = transaction.objectStore('keyval');
                 const objectStoreRequest = objectStore.delete(key);
                 objectStoreRequest.onsuccess = _ => {
-                    console.log(`Request successful. Deleted key: ${key}`);
+                    Logger.debug(`Request successful. Deleted key: ${key}`);
                     resolve();
                 };
             }
@@ -128,7 +127,7 @@ class PersistentStorage {
                     'auto_accept': false
                 });
                 objectStoreRequest.onsuccess = e => {
-                    console.log(`Request successful. RoomSecret added: ${e.target.result}`);
+                    Logger.debug(`Request successful. RoomSecret added: ${e.target.result}`);
                     resolve();
                 }
             }
@@ -145,7 +144,7 @@ class PersistentStorage {
             for (let i = 0; i < roomSecrets.length; i++) {
                 secrets.push(roomSecrets[i].secret);
             }
-            console.log(`Request successful. Retrieved ${secrets.length} room_secrets`);
+            Logger.debug(`Request successful. Retrieved ${secrets.length} room_secrets`);
             return(secrets);
         } catch (e) {
             this.logBrowserNotCapable();
@@ -182,13 +181,13 @@ class PersistentStorage {
                 objectStoreRequestKey.onsuccess = e => {
                     const key = e.target.result;
                     if (!key) {
-                        console.log(`Nothing to retrieve. Entry for room_secret not existing: ${roomSecret}`);
+                        Logger.debug(`Nothing to retrieve. Entry for room_secret not existing: ${roomSecret}`);
                         resolve();
                         return;
                     }
                     const objectStoreRequestRetrieval = objectStore.get(key);
                     objectStoreRequestRetrieval.onsuccess = e => {
-                        console.log(`Request successful. Retrieved entry for room_secret: ${key}`);
+                        Logger.debug(`Request successful. Retrieved entry for room_secret: ${key}`);
                         resolve({
                             "entry": e.target.result,
                             "key": key
@@ -215,14 +214,14 @@ class PersistentStorage {
                 const objectStoreRequestKey = objectStore.index("secret").getKey(roomSecret);
                 objectStoreRequestKey.onsuccess = e => {
                     if (!e.target.result) {
-                        console.log(`Nothing to delete. room_secret not existing: ${roomSecret}`);
+                        Logger.debug(`Nothing to delete. room_secret not existing: ${roomSecret}`);
                         resolve();
                         return;
                     }
                     const key = e.target.result;
                     const objectStoreRequestDeletion = objectStore.delete(key);
                     objectStoreRequestDeletion.onsuccess = _ => {
-                        console.log(`Request successful. Deleted room_secret: ${key}`);
+                        Logger.debug(`Request successful. Deleted room_secret: ${key}`);
                         resolve(roomSecret);
                     }
                     objectStoreRequestDeletion.onerror = e => {
@@ -245,7 +244,7 @@ class PersistentStorage {
                 const objectStore = transaction.objectStore('room_secrets');
                 const objectStoreRequest = objectStore.clear();
                 objectStoreRequest.onsuccess = _ => {
-                    console.log('Request successful. All room_secrets cleared');
+                    Logger.debug('Request successful. All room_secrets cleared');
                     resolve();
                 };
             }
@@ -255,15 +254,15 @@ class PersistentStorage {
         })
     }
 
-    static updateRoomSecretNames(roomSecret, displayName, deviceName) {
-        return this.updateRoomSecret(roomSecret, undefined, displayName, deviceName);
+    static updateRoomSecretDisplayName(roomSecret, displayName) {
+        return this.updateRoomSecret(roomSecret, null, displayName, null);
     }
 
     static updateRoomSecretAutoAccept(roomSecret, autoAccept) {
-        return this.updateRoomSecret(roomSecret, undefined, undefined, undefined, autoAccept);
+        return this.updateRoomSecret(roomSecret, null, null, null, autoAccept);
     }
 
-    static updateRoomSecret(roomSecret, updatedRoomSecret = undefined, updatedDisplayName = undefined, updatedDeviceName = undefined, updatedAutoAccept = undefined) {
+    static updateRoomSecret(roomSecret, updatedRoomSecret = null, updatedDisplayName = null, updatedDeviceName = null, updatedAutoAccept = null) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = e => {
@@ -278,16 +277,16 @@ class PersistentStorage {
                         const objectStore = transaction.objectStore('room_secrets');
                         // Do not use `updatedRoomSecret ?? roomSecretEntry.entry.secret` to ensure compatibility with older browsers
                         const updatedRoomSecretEntry = {
-                            'secret': updatedRoomSecret !== undefined ? updatedRoomSecret : roomSecretEntry.entry.secret,
-                            'display_name': updatedDisplayName !== undefined ? updatedDisplayName : roomSecretEntry.entry.display_name,
-                            'device_name': updatedDeviceName !== undefined ? updatedDeviceName : roomSecretEntry.entry.device_name,
-                            'auto_accept': updatedAutoAccept !== undefined ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
+                            'secret': updatedRoomSecret !== null ? updatedRoomSecret : roomSecretEntry.entry.secret,
+                            'display_name': updatedDisplayName !== null ? updatedDisplayName : roomSecretEntry.entry.display_name,
+                            'device_name': updatedDeviceName !== null ? updatedDeviceName : roomSecretEntry.entry.device_name,
+                            'auto_accept': updatedAutoAccept !== null ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
                         };
 
                         const objectStoreRequestUpdate = objectStore.put(updatedRoomSecretEntry, roomSecretEntry.key);
 
                         objectStoreRequestUpdate.onsuccess = e => {
-                            console.log(`Request successful. Updated room_secret: ${roomSecretEntry.key}`);
+                            Logger.debug(`Request successful. Updated room_secret: ${roomSecretEntry.key}`);
                             resolve({
                                 "entry": updatedRoomSecretEntry,
                                 "key": roomSecretEntry.key

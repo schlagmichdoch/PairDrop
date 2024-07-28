@@ -124,7 +124,6 @@
         "online-requirement": "Для сопряжения устройств вам нужно быть в сети.",
         "files-incorrect": "Файлы неверны",
         "message-transfer-completed": "Передача сообщения завершена",
-        "ios-memory-limit": "Отправка файлов на iOS устройства возможна только до 200 МБ за один раз",
         "selected-peer-left": "Выбранный узел вышел",
         "request-title": "{{name}} хотел бы передать {{count}} {{descriptor}}",
         "rate-limit-join-key": "Достигнут предел скорости. Подождите 10 секунд и повторите попытку.",

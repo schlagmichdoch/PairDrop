@@ -48,7 +48,6 @@
         "pairing-cleared": "全てのデバイスとのペアリングを解除しました",
         "notifications-enabled": "通知が有効になりました",
         "online-requirement-pairing": "ペアリングするにはオンラインである必要があります",
-        "ios-memory-limit": "iOSへのファイル送信は一度に200MBまでしかできません",
         "online-requirement-public-room": "公開ルームを作成するにはオンラインである必要があります",
         "copied-text-error": "クリップボードにコピーできませんでした。手動でコピーしてください。",
         "download-successful": "{{descriptor}}をダウンロードしました",

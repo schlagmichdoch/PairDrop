@@ -62,41 +62,67 @@ window.isMobile = window.iOS || window.android;
 
 
 // Helper functions
+
+const audioPlayer = (() => {
+    const blop = document.getElementById('blop');
+    blop.addEventListener('ended', _ => {
+        blop.muted = true
+    });
+
+
+    return {
+        playBlop() {
+            if (window.isMobile) return;
+
+            blop.muted = false;
+            blop.play();
+        }
+    }
+})();
+
 const zipper = (() => {
 
-    let zipWriter;
     return {
-        createNewZipWriter() {
-            zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true, level: 0 });
-        },
-        addFile(file, options) {
-            return zipWriter.add(file.name, new zip.BlobReader(file), options);
-        },
-        async getBlobURL() {
-            if (zipWriter) {
-                const blobURL = URL.createObjectURL(await zipWriter.close());
-                zipWriter = null;
-                return blobURL;
+        async getObjectUrlOfZipFile(files, onZipProgressCallback){
+            try {
+                const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
+
+                let bytesProcessed = 0;
+                for (let i = 0; i < files.length; i++) {
+                    await zipWriter.add(
+                        files[i].name,
+                        new zip.BlobReader(files[i]),
+                        {
+                            onprogress: (progress) => onZipProgressCallback(bytesProcessed + progress)
+                        }
+                    );
+                    bytesProcessed += files[i].size;
+                }
+
+                return URL.createObjectURL(await zipWriter.close());
             }
-            else {
-                throw new Error("Zip file closed");
-            }
-        },
-        async getZipFile(filename = "archive.zip") {
-            if (zipWriter) {
-                const file = new File([await zipWriter.close()], filename, {type: "application/zip"});
-                zipWriter = null;
-                return file;
-            }
-            else {
-                throw new Error("Zip file closed");
+            catch (e) {
+                Logger.error(e);
+                return false;
             }
         },
         async getEntries(file, options) {
-            return await (new zip.ZipReader(new zip.BlobReader(file))).getEntries(options);
+            try {
+                return await (new zip.ZipReader(new zip.BlobReader(file))).getEntries(options);
+            }
+            catch (e) {
+                Logger.error(e);
+                return false;
+            }
         },
         async getData(entry, options) {
-            return await entry.getData(new zip.BlobWriter(), options);
+            try {
+                return await entry.getData(new zip.BlobWriter(), options);
+            }
+            catch (e) {
+                Logger.error(e);
+                return false;
+            }
         },
     };
 
@@ -521,7 +547,7 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
             let dataUrl = canvas.toDataURL("image/jpeg", quality);
             resolve(dataUrl);
         } catch (e) {
-            console.error(e);
+            Logger.error(e);
             reject(new Error(`Could not create an image thumbnail from type ${file.type}`));
         }
     })
@@ -593,4 +619,27 @@ function isUrlValid(url) {
     catch (e) {
         return false;
     }
+}
+
+// polyfill for crypto.randomUUID()
+// Credits: @Briguy37 - https://stackoverflow.com/a/8809472/14678591
+function generateUUID() {
+    return crypto && crypto.randomUUID()
+        ? crypto.randomUUID()
+        : () => {
+            let
+                d = new Date().getTime(),
+                d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now() * 1000)) || 0;
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+                let r = Math.random() * 16;
+                if (d > 0) {
+                    r = (d + r) % 16 | 0;
+                    d = Math.floor(d / 16);
+                } else {
+                    r = (d2 + r) % 16 | 0;
+                    d2 = Math.floor(d2 / 16);
+                }
+                return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
+            });
+        };
 }

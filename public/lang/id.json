@@ -48,7 +48,6 @@
         "pairing-cleared": "Semua Perangkat dilepaskan",
         "notifications-enabled": "Notifikasi diaktifkan",
         "online-requirement-pairing": "Anda harus online untuk memasangkan perangkat",
-        "ios-memory-limit": "Mengirim file ke iOS hanya dapat dilakukan hingga 200 MB sekaligus",
         "online-requirement-public-room": "Anda harus online untuk membuat ruang publik",
         "copied-text-error": "Menyalin ke papan klip gagal. Salinlah secara manual!",
         "download-successful": "{{descriptor}} diunduh",

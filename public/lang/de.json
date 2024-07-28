@@ -138,7 +138,6 @@
         "message-transfer-completed": "Nachricht übertragen",
         "rate-limit-join-key": "Rate Limit erreicht. Warte 10 Sekunden und versuche es erneut.",
         "selected-peer-left": "Ausgewählter Peer ist gegangen",
-        "ios-memory-limit": "Für Übertragungen an iOS Geräte beträgt die maximale Dateigröße 200 MB",
         "public-room-left": "Öffentlichen Raum {{publicRoomId}} verlassen",
         "copied-to-clipboard-error": "Konnte nicht kopieren. Kopiere manuell.",
         "public-room-id-invalid": "Ungültige Raum-ID",

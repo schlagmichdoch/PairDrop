@@ -48,7 +48,6 @@
         "pairing-cleared": "Toate dispozitivele sunt decuplate",
         "notifications-enabled": "Notificări activate",
         "online-requirement-pairing": "Trebuie să fiți online pentru a asocia dispozitivele",
-        "ios-memory-limit": "Trimiterea de fișiere pe iOS este posibilă doar până la 200 MB simultan",
         "online-requirement-public-room": "Trebuie să fiți online pentru a crea o cameră publică",
         "copied-text-error": "Scrierea în clipboard a eșuat. Copiați manual!",
         "download-successful": "{{descriptor}} descărcat",

@@ -116,7 +116,6 @@
         "request-title": "{{name}} ønsker å overføre {{count}} {{descriptor}}",
         "message-received": "Melding mottatt av {{name}} - Klikk for å åpne",
         "files-incorrect": "Filene er uriktige",
-        "ios-memory-limit": "Forsendelse av filer til iOS er kun mulig opptil 200 MB av gangen",
         "unfinished-transfers-warning": "Lukk med ufullførte overføringer?",
         "rate-limit-join-key": "Forsøksgrense overskredet. Vent 10 sek. og prøv igjen."
     },

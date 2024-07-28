@@ -145,7 +145,6 @@
         "pairing-cleared": "Tots els dispositius desvinculats",
         "notifications-enabled": "Notificacions habilitades",
         "online-requirement-pairing": "Has d'estar en línia per vincular dispositius",
-        "ios-memory-limit": "Tan sols és possible enviar fitxers de fins a 200 MB a iOS",
         "online-requirement-public-room": "Cal que estiguis en línia per poder crear una sala pública",
         "room-url-copied-to-clipboard": "Enllaç a la sala pública copiat al porta-retalls",
         "copied-text-error": "L'escriptura al porta-retalls ha fallat. Copiar manualment!",

@@ -153,7 +153,6 @@
         "connecting": "Conectando…",
         "files-incorrect": "Os arquivos estão incorretos",
         "file-transfer-completed": "Transferência de arquivo concluída",
-        "ios-memory-limit": "Enviar arquivos para iOS só é possível até 200 MB de uma vez",
         "message-transfer-completed": "Transferência de mensagem concluída",
         "unfinished-transfers-warning": "Há transferências inacabadas. Tem certeza de que deseja fechar o PairDrop?",
         "rate-limit-join-key": "Limite de taxa atingido. Aguarde 10 segundos e tente novamente.",

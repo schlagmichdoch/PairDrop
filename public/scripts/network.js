@@ -27,16 +27,16 @@ class ServerConnection {
     }
 
     _getConfig() {
-        console.log("Loading config...")
+        Logger.log("Loading config...")
         return new Promise((resolve, reject) => {
             let xhr = new XMLHttpRequest();
             xhr.addEventListener("load", () => {
                 if (xhr.status === 200) {
                     // Config received
                     let config = JSON.parse(xhr.responseText);
-                    console.log("Config loaded:", config)
-                    this._config = config;
-                    Events.fire('config', config);
+                    Logger.log("Config loaded:", config)
+                    window._config = config;
+                    Events.fire('config-loaded');
                     resolve()
                 } else if (xhr.status < 200 || xhr.status >= 300) {
                     retry(xhr);
@@ -69,7 +69,7 @@ class ServerConnection {
 
     _connect() {
         clearTimeout(this._reconnectTimer);
-        if (this._isConnected() || this._isConnecting() || this._isOffline()) return;
+        if (this._isConnected() || this._isConnecting()) return;
         if (this._isReconnect) {
             Events.fire('notify-user', {
                 message: Localization.getTranslation("notifications.connecting"),
@@ -86,9 +86,11 @@ class ServerConnection {
     }
 
     _onOpen() {
-        console.log('WS: server connected');
+        Logger.log('WS: server connected');
         Events.fire('ws-connected');
-        if (this._isReconnect) Events.fire('notify-user', Localization.getTranslation("notifications.connected"));
+        if (this._isReconnect) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.connected"));
+        }
     }
 
     _onPairDeviceInitiate() {
@@ -101,6 +103,7 @@ class ServerConnection {
 
     _onPairDeviceJoin(pairKey) {
         if (!this._isConnected()) {
+            // Todo: instead use pending outbound ws queue
             setTimeout(() => this._onPairDeviceJoin(pairKey), 1000);
             return;
         }
@@ -131,88 +134,82 @@ class ServerConnection {
         this.send({ type: 'leave-public-room' });
     }
 
-    _onMessage(msg) {
-        msg = JSON.parse(msg);
-        if (msg.type !== 'ping') console.log('WS receive:', msg);
-        switch (msg.type) {
+    _onMessage(message) {
+        const messageJSON = JSON.parse(message);
+        if (messageJSON.type !== 'ping' && messageJSON.type !== 'ws-relay') {
+            Logger.debug('WS receive:', messageJSON);
+        }
+        switch (messageJSON.type) {
             case 'ws-config':
-                this._setWsConfig(msg.wsConfig);
+                this._setWsConfig(messageJSON.wsConfig);
                 break;
             case 'peers':
-                this._onPeers(msg);
+                this._onPeers(messageJSON);
                 break;
             case 'peer-joined':
-                Events.fire('peer-joined', msg);
+                Events.fire('peer-joined', messageJSON);
                 break;
             case 'peer-left':
-                Events.fire('peer-left', msg);
+                Events.fire('peer-left', messageJSON);
                 break;
             case 'signal':
-                Events.fire('signal', msg);
+                Events.fire('signal', messageJSON);
                 break;
             case 'ping':
                 this.send({ type: 'pong' });
                 break;
             case 'display-name':
-                this._onDisplayName(msg);
+                this._onDisplayName(messageJSON);
                 break;
             case 'pair-device-initiated':
-                Events.fire('pair-device-initiated', msg);
+                Events.fire('pair-device-initiated', messageJSON);
                 break;
             case 'pair-device-joined':
-                Events.fire('pair-device-joined', msg);
+                Events.fire('pair-device-joined', messageJSON);
                 break;
             case 'pair-device-join-key-invalid':
                 Events.fire('pair-device-join-key-invalid');
                 break;
             case 'pair-device-canceled':
-                Events.fire('pair-device-canceled', msg.pairKey);
+                Events.fire('pair-device-canceled', messageJSON.pairKey);
                 break;
             case 'join-key-rate-limit':
                 Events.fire('notify-user', Localization.getTranslation("notifications.rate-limit-join-key"));
                 break;
             case 'secret-room-deleted':
-                Events.fire('secret-room-deleted', msg.roomSecret);
+                Events.fire('secret-room-deleted', messageJSON.roomSecret);
                 break;
             case 'room-secret-regenerated':
-                Events.fire('room-secret-regenerated', msg);
+                Events.fire('room-secret-regenerated', messageJSON);
                 break;
             case 'public-room-id-invalid':
-                Events.fire('public-room-id-invalid', msg.publicRoomId);
+                Events.fire('public-room-id-invalid', messageJSON.publicRoomId);
                 break;
             case 'public-room-created':
-                Events.fire('public-room-created', msg.roomId);
+                Events.fire('public-room-created', messageJSON.roomId);
                 break;
             case 'public-room-left':
                 Events.fire('public-room-left');
                 break;
-            case 'request':
-            case 'header':
-            case 'partition':
-            case 'partition-received':
-            case 'progress':
-            case 'files-transfer-response':
-            case 'file-transfer-complete':
-            case 'message-transfer-complete':
-            case 'text':
-            case 'display-name-changed':
-            case 'ws-chunk':
+            case 'ws-relay':
                 // ws-fallback
                 if (this._wsConfig.wsFallback) {
-                    Events.fire('ws-relay', JSON.stringify(msg));
+                    Events.fire('ws-relay', {peerId: messageJSON.sender.id, message: message});
                 }
                 else {
-                    console.log("WS receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
+                    Logger.warn("WS receive: message type is for websocket fallback only but websocket fallback is not activated on this instance.")
                 }
                 break;
             default:
-                console.error('WS receive: unknown message type', msg);
+                Logger.error('WS receive: unknown message type', messageJSON);
         }
     }
 
     send(msg) {
         if (!this._isConnected()) return;
-        if (msg.type !== 'pong') console.log("WS send:", msg)
+        if (msg.type !== 'pong' && msg.type !== 'ws-relay') {
+            Logger.debug("WS send:", msg)
+        }
         this._socket.send(JSON.stringify(msg));
     }
 
@@ -230,7 +227,7 @@ class ServerConnection {
             .addPeerIdToLocalStorage()
             .then(peerId => {
                 if (!peerId) return;
-                console.log("successfully added peerId to localStorage");
+                Logger.debug("successfully added peerId to localStorage");
 
                 // Only now join rooms
                 Events.fire('join-ip-room');
@@ -246,8 +243,8 @@ class ServerConnection {
     _endpoint() {
         const protocol = location.protocol.startsWith('https') ? 'wss' : 'ws';
         // Check whether the instance specifies another signaling server otherwise use the current instance for signaling
-        let wsServerDomain = this._config.signalingServer
-            ? this._config.signalingServer
+        let wsServerDomain = window._config.signalingServer
+            ? window._config.signalingServer
             : location.host + location.pathname;
 
         let wsUrl = new URL(protocol + '://' + wsServerDomain + 'server');
@@ -271,7 +268,7 @@ class ServerConnection {
         BrowserTabsConnector
             .removePeerIdFromLocalStorage(peerId)
             .then(_ => {
-                console.log("successfully removed peerId from localStorage");
+                Logger.debug("successfully removed peerId from localStorage");
             });
 
         if (!this._socket) return;
@@ -284,7 +281,7 @@ class ServerConnection {
     }
 
     _onDisconnect() {
-        console.log('WS: server disconnected');
+        Logger.log('WS: server disconnected');
         setTimeout(() => {
             this._isReconnect = true;
             Events.fire('ws-disconnected');
@@ -310,7 +307,7 @@ class ServerConnection {
     }
 
     _onError(e) {
-        console.error(e);
+        Logger.error(e);
     }
 
     _reconnect() {
@@ -320,6 +317,14 @@ class ServerConnection {
 }
 
 class Peer {
+
+    static STATE_IDLE = 'idle';
+    static STATE_PREPARE = 'prepare';
+    static STATE_TRANSFER_REQUEST_SENT = 'transfer-request-sent';
+    static STATE_TRANSFER_REQUEST_RECEIVED = 'transfer-request-received';
+    static STATE_RECEIVE_PROCEEDING = 'receive-proceeding';
+    static STATE_TRANSFER_PROCEEDING = 'transfer-proceeding';
+    static STATE_TEXT_SENT = 'text-sent';
 
     constructor(serverConnection, isCaller, peerId, roomType, roomId) {
         this._server = serverConnection;
@@ -332,19 +337,71 @@ class Peer {
         this._filesQueue = [];
         this._busy = false;
 
+        this._state = Peer.STATE_IDLE;
+
         // evaluate auto accept
         this._evaluateAutoAccept();
+
+        Events.on('beforeunload', e => this._onBeforeUnload(e));
+        Events.on('pagehide', _ => this._onPageHide());
     }
 
-    sendJSON(message) {
-        this._send(JSON.stringify(message));
+    _reset() {
+        this._state = Peer.STATE_IDLE;
+        this._busy = false;
+
+        clearInterval(this._updateStatusTextInterval);
+
+        this._updateStatusTextInterval = null;
+        this._bytesTotal = 0;
+        this._bytesReceivedFiles = 0;
+        this._timeStartTransferComplete = null;
+        this._timeStartTransferFile = null;
+        this._byteLogs = [];
+
+        // tidy up sender
+        this._filesRequested = null;
+        this._chunker = null;
+
+        // tidy up receiver
+        this._pendingRequest = null;
+        this._acceptedRequest = null;
+        this._filesReceived = [];
+
+        if (this._digester) {
+            this._digester.cleanUp();
+            this._digester = null;
+        }
+
+        // disable NoSleep if idle
+        Events.fire('evaluate-no-sleep');
     }
 
-    // Is overwritten in expanding classes
-    _send(message) {}
+    _refresh() {}
 
-    sendDisplayName(displayName) {
-        this.sendJSON({type: 'display-name-changed', displayName: displayName});
+    _disconnect() {
+        Events.fire('peer-disconnected', this._peerId);
+    }
+
+    _onDisconnected() {
+        this._reset();
+    }
+
+    _onBeforeUnload(e) {
+        if (this._busy) {
+            e.preventDefault();
+            return Localization.getTranslation("notifications.unfinished-transfers-warning");
+        }
+    }
+
+    _onPageHide() {
+        this._disconnect();
+    }
+
+    _onServerSignalMessage(message) {}
+
+    _setIsCaller(isCaller) {
+        this._isCaller = isCaller;
     }
 
     _isSameBrowser() {
@@ -381,7 +438,9 @@ class Peer {
             PersistentStorage
                 .deleteRoomSecret(this._getPairSecret())
                 .then(deletedRoomSecret => {
-                    if (deletedRoomSecret) console.log("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
+                    if (deletedRoomSecret) {
+                        Logger.debug("Successfully deleted duplicate room secret with same peer: ", deletedRoomSecret);
+                    }
                 });
         }
 
@@ -394,7 +453,7 @@ class Peer {
             &&  this._isCaller) {
             // increase security by initiating the increase of the roomSecret length
             // from 64 chars (<v1.7.0) to 256 chars (v1.7.0+)
-            console.log('RoomSecret is regenerated to increase security')
+            Logger.debug('RoomSecret is regenerated to increase security')
             Events.fire('regenerate-room-secret', this._getPairSecret());
         }
     }
@@ -433,14 +492,238 @@ class Peer {
             : false;
     }
 
-    async requestFileTransfer(files) {
+    _onPeerConnected() {
+        this._sendState();
+    }
+
+    _sendMessage(message) {}
+
+    _sendData(data) {}
+
+    async _onMessage(message) {
+        switch (message.type) {
+            case 'display-name-changed':
+                this._onDisplayNameChanged(message);
+                break;
+            case 'state':
+                await this._onState(message.state);
+                break;
+            case 'transfer-request':
+                await this._onTransferRequest(message);
+                break;
+            case 'transfer-request-response':
+                this._onTransferRequestResponse(message);
+                break;
+            case 'transfer-header':
+                this._onTransferHeader(message);
+                break;
+            case 'receive-confirmation':
+                this._onReceiveConfirmation(message.bytesReceived);
+                break;
+            case 'resend-request':
+                this._onResendRequest(message.offset);
+                break;
+            case 'file-receive-complete':
+                this._onFileReceiveComplete(message);
+                break;
+            case 'text':
+                this._onText(message);
+                break;
+            case 'text-receive-complete':
+                this._onTextReceiveComplete();
+                break;
+            default:
+                Logger.warn('RTC: Unknown message type:', message.type);
+        }
+    }
+    
+    _sendDisplayName(displayName) {
+        this._sendMessage({type: 'display-name-changed', displayName: displayName});
+    }
+
+    _onDisplayNameChanged(message) {
+        const displayNameHasChanged = message.displayName !== this._displayName;
+
+        if (!message.displayName || !displayNameHasChanged) return;
+
+        this._displayName = message.displayName;
+
+        const roomSecret = this._getPairSecret();
+
+        if (roomSecret) {
+            PersistentStorage
+                .updateRoomSecretDisplayName(roomSecret, message.displayName)
+                .then(roomSecretEntry => {
+                    Logger.debug(`Successfully updated DisplayName for roomSecretEntry ${roomSecretEntry.key}`);
+                })
+        }
+
+        Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
+        Events.fire('notify-display-name-changed', { recipient: this._peerId });
+    }
+
+    _sendState() {
+        this._sendMessage({type: 'state', state: this._state})
+    }
+
+    async _onState(peerState) {
+        if (this._state === Peer.STATE_TRANSFER_PROCEEDING) {
+            this._onStateIfSender(peerState);
+        }
+        else if (this._state === Peer.STATE_RECEIVE_PROCEEDING) {
+            this._onStateIfReceiver(peerState);
+        }
+        else if (this._state === Peer.STATE_TRANSFER_REQUEST_SENT) {
+            await this._onStateIfTransferRequestSent(peerState);
+        }
+        else if (this._state === Peer.STATE_TRANSFER_REQUEST_RECEIVED) {
+            this._onStateIfTransferRequestReceived(peerState);
+        }
+    }
+
+    _onStateIfSender(peerState) {
+        // this peer is sender
+        if (peerState !== Peer.STATE_RECEIVE_PROCEEDING) {
+            this._abortTransfer();
+        }
+    }
+
+    _onStateIfReceiver(peerState) {
+        // this peer is receiver
+        switch (peerState) {
+            case Peer.STATE_TRANSFER_REQUEST_SENT:
+                // Reconnection during file transfer request. Send acceptance again.
+                this._sendTransferRequestResponse(true);
+                break;
+            case Peer.STATE_TRANSFER_PROCEEDING:
+                // Reconnection during receiving of file. Send request for resending
+                if (!this._digester) {
+                    this._abortTransfer();
+                }
+                const offset = this._digester._bytesReceived;
+                this._sendResendRequest(offset);
+                break;
+            default:
+                this._abortTransfer();
+        }
+    }
+
+    async _onStateIfTransferRequestSent(peerState) {
+        // This peer has sent a transfer request
+        // If other peer is still idle -> send request again
+        if (peerState === Peer.STATE_IDLE) {
+            await this._sendFileTransferRequest(this._filesRequested);
+        }
+    }
+
+    _onStateIfTransferRequestReceived(peerState) {
+        // This peer has received a transfer request
+        // If other peer is not in "STATE_TRANSFER_REQUEST_SENT" anymore -> reset and hide request from user
+        if (peerState !== Peer.STATE_TRANSFER_REQUEST_SENT) {
+            this._reset();
+            Events.fire('files-transfer-request-abort', {
+                peerId: this._peerId
+            })
+        }
+    }
+
+    _abortTransfer() {
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'error'});
+
+        if (this._digester) {
+            this._digester.abort();
+        }
+
+        this._reset();
+    }
+
+    _addLog(bytesReceivedTotal) {
+        const now = Date.now();
+
+        // Add log
+        this._byteLogs.push({
+            time: now,
+            bytesReceived: bytesReceivedTotal
+        });
+
+        // Always include at least 5 entries (2.5 MB) to increase precision
+        if (this._byteLogs.length < 5) return;
+
+        // Move running average to calculate with a window of 20s
+        while (now - this._byteLogs[0].time > 20000) {
+            this._byteLogs.shift();
+        }
+    }
+
+    _updateStatusText() {
+        const secondsSinceStart = Math.round((Date.now() - this._timeStartTransferComplete) / 1000);
+
+        // Wait for 10s to only show info on longer transfers and to increase precision
+        if (secondsSinceStart < 10) return;
+
+        // mode: 0 -> speed, 1 -> time left, 2 -> receive/transfer (statusText = null)
+        const mode = Math.round((secondsSinceStart - 10) / 5) % 3;
+        let statusText = null;
+
+        if (mode === 0) {
+            statusText = this._getSpeedString();
+        }
+        else if (mode === 1) {
+            statusText = this._getTimeString();
+        }
+
+        this._statusText = statusText;
+    }
+
+    _getSpeedKbPerSecond() {
+        const timeDifferenceSeconds = (this._byteLogs[this._byteLogs.length - 1].time - this._byteLogs[0].time) / 1000;
+        const bytesDifferenceKB = (this._byteLogs[this._byteLogs.length - 1].bytesReceived - this._byteLogs[0].bytesReceived) / 1000;
+        return Math.round(bytesDifferenceKB / timeDifferenceSeconds);
+    }
+
+    _getBytesLeft() {
+        return this._bytesTotal - this._byteLogs[this._byteLogs.length - 1].bytesReceived;
+    }
+
+    _getSecondsLeft() {
+        return Math.round(this._getBytesLeft() / this._getSpeedKbPerSecond() / 1000);
+    }
+
+    _getSpeedString() {
+        const speedKBs = this._getSpeedKbPerSecond();
+
+        if (speedKBs >= 1000) {
+            let speedMBs = Math.round(speedKBs / 100) / 10;
+            return `${speedMBs} MB/s`; // e.g. "2.2 MB/s"
+        }
+
+        return `${speedKBs} kB/s`; // e.g. "522 kB/s"
+    }
+
+    _getTimeString() {
+        const seconds = this._getSecondsLeft();
+        if (seconds > 60) {
+            let minutes = Math.floor(seconds / 60);
+            let secondsLeft = Math.floor(seconds % 60);
+            return `${minutes} min ${secondsLeft}s`; // e.g. // "1min 20s"
+        }
+        else {
+            return `${seconds}s`; // e.g. "35s"
+        }
+    }
+
+    // File Sender Only
+    async _sendFileTransferRequest(files) {
+        this._state = Peer.STATE_PREPARE;
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'prepare'});
+
         let header = [];
         let totalSize = 0;
-        let imagesOnly = true
-        for (let i=0; i<files.length; i++) {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0.8*i/files.length, status: 'prepare'})
+        let imagesOnly = true;
+
+        for (let i = 0; i < files.length; i++) {
             header.push({
-                name: files[i].name,
+                displayName: files[i].name,
                 mime: files[i].type,
                 size: files[i].size
             });
@@ -448,36 +731,68 @@ class Peer {
             if (files[i].type.split('/')[0] !== 'image') imagesOnly = false;
         }
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0.8, status: 'prepare'})
-
-        let dataUrl = '';
+        let dataUrl = "";
         if (files[0].type.split('/')[0] === 'image') {
             try {
                 dataUrl = await getThumbnailAsDataUrl(files[0], 400, null, 0.9);
             } catch (e) {
-                console.error(e);
+                Logger.error(e);
             }
         }
 
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'prepare'})
+        this._state = Peer.STATE_TRANSFER_REQUEST_SENT;
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'});
 
         this._filesRequested = files;
+        this._bytesTotal = totalSize;
 
-        this.sendJSON({type: 'request',
+        this._sendMessage({type: 'transfer-request',
             header: header,
             totalSize: totalSize,
             imagesOnly: imagesOnly,
             thumbnailDataUrl: dataUrl
         });
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'})
+
+    }
+    
+    _onTransferRequestResponse(message) {
+        if (this._state !== Peer.STATE_TRANSFER_REQUEST_SENT) {
+            this._sendState();
+            return;
+        }
+
+        if (!message.accepted) {
+            if (message.reason === 'ram-exceed-ios') {
+                Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
+            }
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
+            this._reset();
+            return;
+        }
+
+        Events.fire('file-transfer-accepted');
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
+        this._state = Peer.STATE_TRANSFER_PROCEEDING;
+        this._sendFiles();
     }
 
-    async sendFiles() {
-        for (let i=0; i<this._filesRequested.length; i++) {
+    _sendFiles() {
+        for (let i = 0; i < this._filesRequested.length; i++) {
             this._filesQueue.push(this._filesRequested[i]);
         }
         this._filesRequested = null
+
         if (this._busy) return;
+
+        this._byteLogs = [];
+        this._bytesReceivedFiles = 0;
+        this._timeStartTransferComplete = Date.now();
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
+
+        this._statusText = null;
+        this._updateStatusTextInterval = setInterval(() => this._updateStatusText(), 1000);
+
         this._dequeueFile();
     }
 
@@ -487,235 +802,322 @@ class Peer {
         this._sendFile(file);
     }
 
-    async _sendFile(file) {
-        this.sendJSON({
-            type: 'header',
+    _sendHeader(file) {
+        this._sendMessage({
+            type: 'transfer-header',
             size: file.size,
-            name: file.name,
+            displayName: file.name,
             mime: file.type
         });
-        this._chunker = new FileChunker(file,
-            chunk => this._send(chunk),
-            offset => this._onPartitionEnd(offset));
-        this._chunker.nextPartition();
     }
 
-    _onPartitionEnd(offset) {
-        this.sendJSON({ type: 'partition', offset: offset });
-    }
+    _sendFile(file) {}
 
-    _onReceivedPartitionEnd(offset) {
-        this.sendJSON({ type: 'partition-received', offset: offset });
-    }
-
-    _sendNextPartition() {
-        if (!this._chunker || this._chunker.isFileEnd()) return;
-        this._chunker.nextPartition();
-    }
-
-    _sendProgress(progress) {
-        this.sendJSON({ type: 'progress', progress: progress });
-    }
-
-    _onMessage(message) {
-        if (typeof message !== 'string') {
-            this._onChunkReceived(message);
+    _onResendRequest(offset) {
+        if (this._state !== Peer.STATE_TRANSFER_PROCEEDING || !this._chunker) {
+            this._sendTransferAbortion();
             return;
         }
-        const messageJSON = JSON.parse(message);
-        switch (messageJSON.type) {
-            case 'request':
-                this._onFilesTransferRequest(messageJSON);
-                break;
-            case 'header':
-                this._onFileHeader(messageJSON);
-                break;
-            case 'partition':
-                this._onReceivedPartitionEnd(messageJSON);
-                break;
-            case 'partition-received':
-                this._sendNextPartition();
-                break;
-            case 'progress':
-                this._onDownloadProgress(messageJSON.progress);
-                break;
-            case 'files-transfer-response':
-                this._onFileTransferRequestResponded(messageJSON);
-                break;
-            case 'file-transfer-complete':
-                this._onFileTransferCompleted();
-                break;
-            case 'message-transfer-complete':
-                this._onMessageTransferCompleted();
-                break;
-            case 'text':
-                this._onTextReceived(messageJSON);
-                break;
-            case 'display-name-changed':
-                this._onDisplayNameChanged(messageJSON);
-                break;
-        }
+        Logger.debug("Resend requested from offset:", offset)
+        this._chunker._resendFromOffset(offset);
     }
 
-    _onFilesTransferRequest(request) {
-        if (this._requestPending) {
-            // Only accept one request at a time per peer
-            this.sendJSON({type: 'files-transfer-response', accepted: false});
+    _onReceiveConfirmation(bytesReceived) {
+        if (!this._chunker || this._state !== Peer.STATE_TRANSFER_PROCEEDING) {
+            this._sendState();
             return;
         }
-        if (window.iOS && request.totalSize >= 200*1024*1024) {
-            // iOS Safari can only put 400MB at once to memory.
-            // Request to send them in chunks of 200MB instead:
-            this.sendJSON({type: 'files-transfer-response', accepted: false, reason: 'ios-memory-limit'});
+        this._chunker._onReceiveConfirmation(bytesReceived);
+
+        const bytesReceivedTotal = this._bytesReceivedFiles + bytesReceived;
+        const progress = Math.round(1e4 * bytesReceivedTotal / this._bytesTotal) / 1e4;
+
+        this._addLog(bytesReceivedTotal);
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer', statusText: this._statusText});
+    }
+
+    _onFileReceiveComplete(message) {
+        if (this._state !== Peer.STATE_TRANSFER_PROCEEDING) {
+            this._sendState();
             return;
         }
 
-        this._requestPending = request;
+        this._bytesReceivedFiles += this._chunker._file.size;
 
+        this._chunker = null;
+
+        if (!message.success) {
+            Logger.warn('File could not be sent');
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'idle'});
+            this._reset();
+            return;
+        }
+
+        Logger.log(`File sent.\n\nSize: ${message.size} MB\tDuration: ${message.duration} s\tSpeed: ${message.speed} MB/s`);
+
+        if (this._filesQueue.length) {
+            this._dequeueFile();
+            return;
+        }
+
+        // No more files in queue. Transfer is complete
+        this._reset();
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer-complete'});
+        Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
+        Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
+    }
+
+    // File Receiver Only
+    async _onTransferRequest(request) {
+        // Only accept one request at a time per peer
+        if (this._pendingRequest) {
+            this._sendTransferRequestResponse(false);
+            return;
+        }
+
+        this.fileDigesterWorkerSupported = await SWFileDigester.isSupported();
+
+        Logger.debug('Digesting files via service workers is', this.fileDigesterWorkerSupported ? 'supported' : 'NOT supported');
+
+        // Check if each file must be loaded into RAM completely. This might lead to a page crash (Memory limit iOS Safari: ~380 MB)
+        if (!this.fileDigesterWorkerSupported) {
+            Logger.warn('Big file transfers might exceed the RAM of the receiver. Use a secure context (https) and do not use private tabs to prevent this.');
+
+            // Check if page will crash on iOS
+            if (window.iOS && await this._filesTooBigForSwOnIOS(request.header)) {
+                Events.fire('notify-user', Localization.getTranslation('notifications.ram-exceed-ios'));
+
+                // Would exceed RAM -> decline request
+                this._sendTransferRequestResponse(false, 'ram-exceed-ios');
+                return;
+            }
+        }
+
+        this._state = Peer.STATE_TRANSFER_REQUEST_RECEIVED;
+        this._pendingRequest = request;
+
+        // Automatically accept request if auto-accept is set to true via the Edit Paired Devices Dialog
         if (this._autoAccept) {
-            // auto accept if set via Edit Paired Devices Dialog
-            this._respondToFileTransferRequest(true);
+            this._sendTransferRequestResponse(true);
             return;
         }
 
-        // default behavior: show user transfer request
+        // Default behavior: show transfer request to user
         Events.fire('files-transfer-request', {
             request: request,
             peerId: this._peerId
         });
     }
 
-    _respondToFileTransferRequest(accepted) {
-        this.sendJSON({type: 'files-transfer-response', accepted: accepted});
+    async _filesTooBigForSwOnIOS(files) {
+        // Files over 250 MB crash safari if not handled via a service worker
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].size > 250000000) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    _sendTransferRequestResponse(accepted, reason = null) {
+        let message = {type: 'transfer-request-response', accepted: accepted};
+
+        if (reason) {
+            message.reason = reason;
+        }
+
         if (accepted) {
-            this._requestAccepted = this._requestPending;
-            this._totalBytesReceived = 0;
+            this._state = Peer.STATE_RECEIVE_PROCEEDING;
             this._busy = true;
+            this._byteLogs = [];
             this._filesReceived = [];
+            this._acceptedRequest = this._pendingRequest;
+
+            this._bytesTotal = this._acceptedRequest.totalSize;
+            this._bytesReceivedFiles = 0;
+
+            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'receive'});
+
+            this._timeStartTransferComplete = Date.now();
+            this._statusText = null;
+            this._updateStatusTextInterval = setInterval(() => this._updateStatusText(), 1000);
         }
-        this._requestPending = null;
+
+        this._sendMessage(message);
     }
 
-    _onFileHeader(header) {
-        if (this._requestAccepted && this._requestAccepted.header.length) {
-            this._lastProgress = 0;
-            this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
-                this._requestAccepted.totalSize,
-                this._totalBytesReceived,
-                fileBlob => this._onFileReceived(fileBlob)
-            );
+    _onTransferHeader(header) {
+        if (this._state !== Peer.STATE_RECEIVE_PROCEEDING) {
+            this._sendState();
+            return;
         }
+
+        if (!this._fitsAcceptedHeader(header)) {
+            this._abortTransfer();
+            Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
+            Logger.error("Received files differ from requested files. Abort!");
+            return;
+        }
+
+        this._timeStartTransferFile = Date.now();
+
+        this._addFileDigester(header);
     }
 
-    _abortTransfer() {
-        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
-        Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
-        this._filesReceived = [];
-        this._requestAccepted = null;
-        this._digester = null;
-        throw new Error("Received files differ from requested files. Abort!");
+    _addFileDigester(header) {
+        this._digester = this.fileDigesterWorkerSupported
+            ?   new FileDigesterViaWorker(
+                    {
+                        size: header.size,
+                        name: header.displayName,
+                        mime: header.mime
+                    },
+                file => this._fileReceived(file),
+                    bytesReceived => this._sendReceiveConfirmation(bytesReceived)
+                )
+            :   new FileDigesterViaBuffer(
+                    {
+                        size: header.size,
+                        name: header.displayName,
+                        mime: header.mime
+                    },
+                    file => this._fileReceived(file),
+                    bytesReceived => this._sendReceiveConfirmation(bytesReceived)
+                );
+    }
+
+    _sendReceiveConfirmation(bytesReceived) {
+        this._sendMessage({type: 'receive-confirmation', bytesReceived: bytesReceived});
+
+        const bytesReceivedTotal = this._bytesReceivedFiles + bytesReceived;
+        const progress = Math.round(1e4 * bytesReceivedTotal / this._bytesTotal) / 1e4;
+
+        this._addLog(bytesReceivedTotal);
+
+        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'receive', statusText: this._statusText});
+    }
+
+    _sendResendRequest(offset) {
+        this._sendMessage({ type: 'resend-request', offset: offset });
+    }
+
+    _sendTransferAbortion() {
+        this._sendMessage({type: 'file-receive-complete', success: false});
+    }
+
+    _onData(data) {
+        this._onChunkReceived(data);
     }
 
     _onChunkReceived(chunk) {
-        if(!this._digester || !(chunk.byteLength || chunk.size)) return;
-
-        this._digester.unchunk(chunk);
-        const progress = this._digester.progress;
-
-        if (progress > 1) {
-            this._abortTransfer();
-        }
-
-        this._onDownloadProgress(progress);
-
-        // occasionally notify sender about our progress
-        if (progress - this._lastProgress < 0.005 && progress !== 1) return;
-        this._lastProgress = progress;
-        this._sendProgress(progress);
-    }
-
-    _onDownloadProgress(progress) {
-        Events.fire('set-progress', {peerId: this._peerId, progress: progress, status: 'transfer'});
-    }
-
-    async _onFileReceived(fileBlob) {
-        const acceptedHeader = this._requestAccepted.header.shift();
-        this._totalBytesReceived += fileBlob.size;
-
-        this.sendJSON({type: 'file-transfer-complete'});
-
-        const sameSize = fileBlob.size === acceptedHeader.size;
-        const sameName = fileBlob.name === acceptedHeader.name
-        if (!sameSize || !sameName) {
-            this._abortTransfer();
-        }
-
-        // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', fileBlob);
-
-        this._filesReceived.push(fileBlob);
-        if (!this._requestAccepted.header.length) {
-            this._busy = false;
-            Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
-            Events.fire('files-received', {peerId: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
-            this._filesReceived = [];
-            this._requestAccepted = null;
-        }
-    }
-
-    _onFileTransferCompleted() {
-        this._chunker = null;
-        if (!this._filesQueue.length) {
-            this._busy = false;
-            Events.fire('notify-user', Localization.getTranslation("notifications.file-transfer-completed"));
-            Events.fire('files-sent'); // used by 'Snapdrop & PairDrop for Android' app
-        }
-        else {
-            this._dequeueFile();
-        }
-    }
-
-    _onFileTransferRequestResponded(message) {
-        if (!message.accepted) {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
-            this._filesRequested = null;
-            if (message.reason === 'ios-memory-limit') {
-                Events.fire('notify-user', Localization.getTranslation("notifications.ios-memory-limit"));
-            }
+        if (this._state !== Peer.STATE_RECEIVE_PROCEEDING || !this._digester || !chunk.byteLength) {
+            this._sendState();
             return;
         }
-        Events.fire('file-transfer-accepted');
-        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'transfer'});
-        this.sendFiles();
+
+        try {
+            this._digester.unchunk(chunk);
+        }
+        catch (e) {
+            this._abortTransfer();
+            Logger.error(e);
+        }
     }
 
-    _onMessageTransferCompleted() {
+    _fileReceived(file) {
+        // File transfer complete
+        this._singleFileReceiveComplete(file);
+
+        // If less files received than header accepted -> wait for next file
+        if (this._filesReceived.length < this._acceptedRequest.header.length) return;
+
+        // We are done receiving
+        Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'receive'});
+        Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
+        this._allFilesReceiveComplete();
+    }
+
+    _fitsAcceptedHeader(header) {
+        if (!this._acceptedRequest) {
+            return false;
+        }
+
+        const positionFile = this._filesReceived.length;
+
+        if (positionFile > this._acceptedRequest.header.length - 1) {
+            return false;
+        }
+
+        // Check if file header fits
+        const acceptedHeader = this._acceptedRequest.header[positionFile];
+
+        const sameSize = header.size === acceptedHeader.size;
+        const sameType = header.mime === acceptedHeader.mime;
+        const sameName = header.displayName === acceptedHeader.displayName;
+
+        return sameSize && sameType && sameName;
+    }
+
+    _singleFileReceiveComplete(file) {
+        this._digester._fileCompleteCallback = null;
+        this._digester._sendReceiveConfimationCallback = null;
+        this._digester = null;
+
+        this._bytesReceivedFiles += file.size;
+
+        const duration = (Date.now() - this._timeStartTransferFile) / 1000; // s
+        const size = Math.round(10 * file.size / 1e6) / 10; // MB
+        const speed = Math.round(100 * size / duration) / 100; // MB/s
+
+        // Log speed from request to receive
+        Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
+
+        // include for compatibility with 'Snapdrop & PairDrop for Android' app
+        Events.fire('file-received', {name: file.displayName, size: file.size});
+
+        this._filesReceived.push(file);
+
+        this._sendMessage({type: 'file-receive-complete', success: true, duration: duration, size: size, speed: speed});
+    }
+
+    _allFilesReceiveComplete() {
+        Events.fire('files-received', {
+            peerId: this._peerId,
+            files: this._filesReceived,
+            imagesOnly: this._acceptedRequest.imagesOnly,
+            totalSize: this._acceptedRequest.totalSize
+        });
+        this._reset();
+    }
+
+    // Message Sender Only
+    _sendText(text) {
+        this._state = Peer.STATE_TEXT_SENT;
+        const unescaped = btoa(unescape(encodeURIComponent(text)));
+        this._sendMessage({ type: 'text', text: unescaped });
+    }
+
+    _onTextReceiveComplete() {
+        if (this._state !== Peer.STATE_TEXT_SENT) {
+            this._sendState();
+            return;
+        }
+        this._reset();
         Events.fire('notify-user', Localization.getTranslation("notifications.message-transfer-completed"));
     }
 
-    sendText(text) {
-        const unescaped = btoa(unescape(encodeURIComponent(text)));
-        this.sendJSON({ type: 'text', text: unescaped });
-    }
-
-    _onTextReceived(message) {
+    // Message Receiver Only
+    _onText(message) {
         if (!message.text) return;
-        const escaped = decodeURIComponent(escape(atob(message.text)));
-        Events.fire('text-received', { text: escaped, peerId: this._peerId });
-        this.sendJSON({ type: 'message-transfer-complete' });
-    }
-
-    _onDisplayNameChanged(message) {
-        const displayNameHasChanged = this._displayName !== message.displayName
-
-        if (message.displayName && displayNameHasChanged) {
-            this._displayName = message.displayName;
+        try {
+            const escaped = decodeURIComponent(escape(atob(message.text)));
+            Events.fire('text-received', { text: escaped, peerId: this._peerId });
+            this._sendMessage({ type: 'text-receive-complete' });
         }
-
-        Events.fire('peer-display-name-changed', {peerId: this._peerId, displayName: message.displayName});
-
-        if (!displayNameHasChanged) return;
-        Events.fire('notify-peer-display-name-changed', this._peerId);
+        catch (e) {
+            Logger.error(e);
+        }
     }
 }
 
@@ -725,99 +1127,349 @@ class RTCPeer extends Peer {
         super(serverConnection, isCaller, peerId, roomType, roomId);
 
         this.rtcSupported = true;
-        this.rtcConfig = rtcConfig
+        this.rtcConfig = rtcConfig;
 
-        if (!this._isCaller) return; // we will listen for a caller
+        this.pendingInboundServerSignalMessages = [];
+        this.pendingOutboundMessages = [];
+
         this._connect();
     }
 
-    _connect() {
-        if (!this._conn || this._conn.signalingState === "closed") this._openConnection();
+    _connected() {
+        return this._conn && this._conn.connectionState === 'connected';
+    }
 
-        if (this._isCaller) {
-            this._openChannel();
-        }
-        else {
-            this._conn.ondatachannel = e => this._onChannelOpened(e);
-        }
+    _connecting() {
+        return this._conn
+            && (
+                this._conn.connectionState === 'new'
+                || this._conn.connectionState === 'connecting'
+            );
+    }
+
+    _messageChannelOpen() {
+        return this._messageChannel && this._messageChannel.readyState === 'open';
+    }
+
+    _dataChannelOpen() {
+        return this._dataChannel && this._dataChannel.readyState === 'open';
+    }
+
+    _messageChannelConnecting() {
+        return this._messageChannel && this._messageChannel.readyState === 'connecting';
+    }
+
+    _dataChannelConnecting() {
+        return this._dataChannel && this._dataChannel.readyState === 'connecting';
+    }
+
+    _channelOpen() {
+        return this._messageChannelOpen() && this._dataChannelOpen();
+    }
+
+    _channelConnecting() {
+        return (this._dataChannelConnecting() || this._dataChannelOpen())
+            && (this._messageChannelConnecting() || this._messageChannelOpen());
+    }
+
+    _stable() {
+        return this._connected() && this._channelOpen();
+    }
+
+    _connect() {
+        if (this._stable()) return;
+
+        Events.fire('peer-connecting', this._peerId);
+
+        this._openConnection();
+        this._openMessageChannel();
+        this._openDataChannel();
+
+        this._evaluatePendingInboundServerMessages()
+            .then((count) => {
+                if (count) {
+                    Logger.debug("Pending inbound messages evaluated.");
+                }
+            });
     }
 
     _openConnection() {
-        this._conn = new RTCPeerConnection(this.rtcConfig);
-        this._conn.onicecandidate = e => this._onIceCandidate(e);
-        this._conn.onicecandidateerror = e => this._onError(e);
-        this._conn.onconnectionstatechange = _ => this._onConnectionStateChange();
-        this._conn.oniceconnectionstatechange = e => this._onIceConnectionStateChange(e);
+        const conn = new RTCPeerConnection(this.rtcConfig);
+        conn.onnegotiationneeded = _ => this._onNegotiationNeeded();
+        conn.onsignalingstatechange = _ => this._onSignalingStateChanged();
+        conn.oniceconnectionstatechange = _ => this._onIceConnectionStateChange();
+        conn.onicegatheringstatechange = _ => this._onIceGatheringStateChanged();
+        conn.onconnectionstatechange = _ => this._onConnectionStateChange();
+        conn.onicecandidate = e => this._onIceCandidate(e);
+        conn.onicecandidateerror = e => this._onIceCandidateError(e);
+
+        this._conn = conn;
     }
 
-    _openChannel() {
-        if (!this._conn) return;
+    async _onNegotiationNeeded() {
+        Logger.debug('RTC: Negotiation needed');
 
-        const channel = this._conn.createDataChannel('data-channel', {
-            ordered: true,
-            reliable: true // Obsolete. See https://developer.mozilla.org/en-US/docs/Web/API/RTCDataChannel/reliable
-        });
-        channel.onopen = e => this._onChannelOpened(e);
-        channel.onerror = e => this._onError(e);
-
-        this._conn
-            .createOffer()
-            .then(d => this._onDescription(d))
-            .catch(e => this._onError(e));
+        if (this._isCaller) {
+            // Creating offer if required
+            Logger.debug('RTC: Creating offer');
+            const description = await this._conn.createOffer();
+            await this._handleLocalDescription(description);
+        }
     }
 
-    _onDescription(description) {
-        // description.sdp = description.sdp.replace('b=AS:30', 'b=AS:1638400');
-        this._conn
-            .setLocalDescription(description)
-            .then(_ => this._sendSignal({ sdp: description }))
-            .catch(e => this._onError(e));
+    _onSignalingStateChanged() {
+        Logger.debug('RTC: Signaling state changed:', this._conn.signalingState);
+    }
+
+    _onIceConnectionStateChange() {
+        Logger.debug('RTC: ICE connection state changed:', this._conn.iceConnectionState);
+    }
+
+    _onIceGatheringStateChanged() {
+        Logger.debug('RTC: ICE gathering state changed:', this._conn.iceConnectionState);
+    }
+
+    _onConnectionStateChange() {
+        Logger.debug('RTC: Connection state changed:', this._conn.connectionState);
+        switch (this._conn.connectionState) {
+            case 'disconnected':
+                this._refresh();
+                break;
+            case 'failed':
+                Logger.warn('RTC connection failed');
+                // Todo: if error is "TURN server needed" -> fallback to WS if activated
+                this._refresh();
+        }
     }
 
     _onIceCandidate(event) {
-        if (!event.candidate) return;
-        this._sendSignal({ ice: event.candidate });
+        this._handleLocalCandidate(event.candidate);
     }
 
-    onServerMessage(message) {
-        if (!this._conn) this._connect();
-
-        if (message.sdp) {
-            this._conn
-                .setRemoteDescription(message.sdp)
-                .then(_ => {
-                    if (message.sdp.type === 'offer') {
-                        return this._conn
-                            .createAnswer()
-                            .then(d => this._onDescription(d));
-                    }
-                })
-                .catch(e => this._onError(e));
-        }
-        else if (message.ice) {
-            this._conn
-                .addIceCandidate(new RTCIceCandidate(message.ice))
-                .catch(e => this._onError(e));
-        }
+    _onIceCandidateError(error) {
+        Logger.error(error);
     }
 
-    _onChannelOpened(event) {
-        console.log('RTC: channel opened with', this._peerId);
-        const channel = event.channel || event.target;
-        channel.binaryType = 'arraybuffer';
-        channel.onmessage = e => this._onMessage(e.data);
-        channel.onclose = _ => this._onChannelClosed();
-        this._channel = channel;
-        Events.on('beforeunload', e => this._onBeforeUnload(e));
-        Events.on('pagehide', _ => this._onPageHide());
+    _openMessageChannel() {
+        const messageCallback = e => this._onMessage(e.data);
+        this._messageChannel = this._openChannel("message-channel", 1, "json", messageCallback);
+    }
+
+    _openDataChannel() {
+        const messageCallback = e => this._onData(e.data);
+        this._dataChannel = this._openChannel("data-channel", 0, "raw", messageCallback);
+    }
+
+    _openChannel(label, id, protocol, messageCallback) {
+        const channel = this._conn.createDataChannel(label, {
+            ordered: true,
+            negotiated: true,
+            id: id,
+            protocol: protocol
+        });
+        channel.binaryType = "arraybuffer";
+        channel.onopen = e => this._onChannelOpened(e);
+        channel.onclose = e => this._onChannelClosed(e);
+        channel.onerror = e => this._onChannelError(e);
+        channel.onmessage = messageCallback;
+
+        return channel;
+    }
+
+    _onChannelOpened(e) {
+        Logger.debug(`RTC: Channel ${e.target.label} opened with`, this._peerId);
+
+        // wait until all channels are open
+        if (!this._stable()) return;
+
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+        super._onPeerConnected();
+
+        this._sendPendingOutboundMessaged();
     }
 
-    _onMessage(message) {
-        if (typeof message === 'string') {
-            console.log('RTC:', JSON.parse(message));
+    _sendPendingOutboundMessaged() {
+        while (this._stable() && this.pendingOutboundMessages.length > 0) {
+            this._sendViaMessageChannel(this.pendingOutboundMessages.shift());
         }
-        super._onMessage(message);
+    }
+
+    _onChannelClosed(e) {
+        Logger.debug(`RTC: Channel ${e.target.label} closed`, this._peerId);
+        this._refresh();
+    }
+
+    _onChannelError(e) {
+        Logger.warn(`RTC: Channel ${e.target.label} error`, this._peerId);
+        Logger.error(e.error);
+    }
+
+    async _handleLocalDescription(localDescription) {
+        await this._conn.setLocalDescription(localDescription);
+
+        Logger.debug("RTC: Sending local description");
+        this._sendSignal({ signalType: 'description', description: localDescription });
+    }
+
+    async _handleRemoteDescription(remoteDescription) {
+        Logger.debug("RTC: Received remote description");
+        await this._conn.setRemoteDescription(remoteDescription);
+
+        if (!this._isCaller) {
+            // Creating answer if required
+            Logger.debug('RTC: Creating answer');
+            const localDescription = await this._conn.createAnswer();
+            await this._handleLocalDescription(localDescription);
+        }
+    }
+
+    _handleLocalCandidate(candidate) {
+        Logger.debug("RTC: Local candidate created", candidate);
+
+        if (candidate === null) {
+            return;
+        }
+
+        this._sendSignal({ signalType: 'candidate', candidate: candidate });
+    }
+
+    async _handleRemoteCandidate(candidate) {
+        Logger.debug("RTC: Received remote candidate", candidate);
+
+        if (candidate === null) {
+            return;
+        }
+
+        await this._conn.addIceCandidate(candidate);
+    }
+
+    async _evaluatePendingInboundServerMessages() {
+        let inboundMessagesEvaluatedCount = 0;
+        while (this.pendingInboundServerSignalMessages.length > 0) {
+            const message = this.pendingInboundServerSignalMessages.shift();
+
+            Logger.debug("Evaluate pending inbound message:", message);
+
+            await this._onServerSignalMessage(message);
+
+            inboundMessagesEvaluatedCount++;
+        }
+        return inboundMessagesEvaluatedCount;
+    }
+
+    async _onServerSignalMessage(message) {
+        if (this._conn === null) {
+            this.pendingInboundServerSignalMessages.push(message);
+            return;
+        }
+
+        switch (message.signalType) {
+            case 'description':
+                await this._handleRemoteDescription(message.description);
+                break;
+            case 'candidate':
+                await this._handleRemoteCandidate(message.candidate);
+                break;
+            default:
+                Logger.warn('Unknown signalType:', message.signalType);
+                break;
+        }
+    }
+
+
+    _refresh() {
+        Events.fire('peer-connecting', this._peerId);
+        this._closeChannelAndConnection();
+
+        this._connect(); // reopen the channel
+    }
+
+    _onDisconnected() {
+        super._onDisconnected();
+        this._closeChannelAndConnection();
+    }
+
+    _closeChannelAndConnection() {
+        if (this._dataChannel) {
+            this._dataChannel.onopen = null;
+            this._dataChannel.onclose = null;
+            this._dataChannel.onerror = null;
+            this._dataChannel.onmessage = null;
+            this._dataChannel.close();
+            this._dataChannel = null;
+        }
+        if (this._messageChannel) {
+            this._messageChannel.onopen = null;
+            this._messageChannel.onclose = null;
+            this._messageChannel.onerror = null;
+            this._messageChannel.onmessage = null;
+            this._messageChannel.close();
+            this._messageChannel = null;
+        }
+        if (this._conn) {
+            this._conn.onnegotiationneeded = null;
+            this._conn.onsignalingstatechange = null;
+            this._conn.oniceconnectionstatechange = null;
+            this._conn.onicegatheringstatechange = null;
+            this._conn.onconnectionstatechange = null;
+            this._conn.onicecandidate = null;
+            this._conn.onicecandidateerror = null;
+            this._conn.close();
+            this._conn = null;
+        }
+    }
+
+    _sendMessage(message) {
+        if (!this._stable() || this.pendingOutboundMessages.length > 0) {
+            // queue messages if not connected OR if connected AND queue is not empty
+            this.pendingOutboundMessages.push(message);
+            return;
+        }
+        this._sendViaMessageChannel(message);
+    }
+
+    _sendViaMessageChannel(message) {
+        Logger.debug('RTC Send:', message);
+        this._messageChannel.send(JSON.stringify(message));
+    }
+
+    _sendData(data) {
+        this._sendViaDataChannel(data)
+    }
+
+    _sendViaDataChannel(data) {
+        this._dataChannel.send(data);
+    }
+
+    _sendSignal(message) {
+        message.type = 'signal';
+        message.to = this._peerId;
+        message.roomType = this._getRoomTypes()[0];
+        message.roomId = this._roomIds[this._getRoomTypes()[0]];
+        this._server.send(message);
+    }
+
+    async _sendFile(file) {
+        this._chunker = new FileChunkerRTC(
+            file,
+            chunk => this._sendData(chunk),
+            this._conn,
+            this._dataChannel
+        );
+        this._chunker._readChunk();
+        this._sendHeader(file);
+        this._state = Peer.STATE_TRANSFER_PROCEEDING;
+    }
+
+    async _onMessage(message) {
+        Logger.debug('RTC Receive:', JSON.parse(message));
+        try {
+            message = JSON.parse(message);
+        } catch (e) {
+            Logger.warn("RTCPeer: Received JSON is malformed");
+            return;
+        }
+        await super._onMessage(message);
     }
 
     getConnectionHash() {
@@ -845,96 +1497,6 @@ class RTCPeer extends Peer {
         }
         return hash;
     }
-
-    _onBeforeUnload(e) {
-        if (this._busy) {
-            e.preventDefault();
-            return Localization.getTranslation("notifications.unfinished-transfers-warning");
-        }
-    }
-
-    _onPageHide() {
-        this._disconnect();
-    }
-
-    _disconnect() {
-        if (this._conn && this._channel) {
-            this._channel.onclose = null;
-            this._channel.close();
-        }
-        Events.fire('peer-disconnected', this._peerId);
-    }
-
-    _onChannelClosed() {
-        console.log('RTC: channel closed', this._peerId);
-        Events.fire('peer-disconnected', this._peerId);
-        if (!this._isCaller) return;
-        this._connect(); // reopen the channel
-    }
-
-    _onConnectionStateChange() {
-        console.log('RTC: state changed:', this._conn.connectionState);
-        switch (this._conn.connectionState) {
-            case 'disconnected':
-                Events.fire('peer-disconnected', this._peerId);
-                this._onError('rtc connection disconnected');
-                break;
-            case 'failed':
-                Events.fire('peer-disconnected', this._peerId);
-                this._onError('rtc connection failed');
-                break;
-        }
-    }
-
-    _onIceConnectionStateChange() {
-        switch (this._conn.iceConnectionState) {
-            case 'failed':
-                this._onError('ICE Gathering failed');
-                break;
-            default:
-                console.log('ICE Gathering', this._conn.iceConnectionState);
-        }
-    }
-
-    _onError(error) {
-        console.error(error);
-    }
-
-    _send(message) {
-        if (!this._channel) this.refresh();
-        this._channel.send(message);
-    }
-
-    _sendSignal(signal) {
-        signal.type = 'signal';
-        signal.to = this._peerId;
-        signal.roomType = this._getRoomTypes()[0];
-        signal.roomId = this._roomIds[this._getRoomTypes()[0]];
-        this._server.send(signal);
-    }
-
-    refresh() {
-        // check if channel is open. otherwise create one
-        if (this._isConnected() || this._isConnecting()) return;
-
-        // only reconnect if peer is caller
-        if (!this._isCaller) return;
-
-        this._connect();
-    }
-
-    _isConnected() {
-        return this._channel && this._channel.readyState === 'open';
-    }
-
-    _isConnecting() {
-        return this._channel && this._channel.readyState === 'connecting';
-    }
-
-    sendDisplayName(displayName) {
-        if (!this._isConnected()) return;
-        super.sendDisplayName(displayName);
-    }
 }
 
 class WSPeer extends Peer {
@@ -943,19 +1505,38 @@ class WSPeer extends Peer {
         super(serverConnection, isCaller, peerId, roomType, roomId);
 
         this.rtcSupported = false;
+        this.signalSuccessful = false;
 
         if (!this._isCaller) return; // we will listen for a caller
+
         this._sendSignal();
     }
 
-    _send(chunk) {
-        this.sendJSON({
-            type: 'ws-chunk',
-            chunk: arrayBufferToBase64(chunk)
+    _sendFile(file) {
+        this._sendHeader(file);
+        this._chunker = new FileChunkerWS(
+            file,
+            chunk => this._sendData(chunk)
+        );
+        this._chunker._readChunk();
+    }
+
+    _sendData(data) {
+        this._sendMessage({
+            type: 'chunk',
+            chunk: arrayBufferToBase64(data)
         });
     }
 
-    sendJSON(message) {
+    _sendMessage(message) {
+        message = {
+            type: 'ws-relay',
+            message: message
+        };
+        this._sendMessageViaServer(message);
+    }
+
+    _sendMessageViaServer(message) {
         message.to = this._peerId;
         message.roomType = this._getRoomTypes()[0];
         message.roomId = this._roomIds[this._getRoomTypes()[0]];
@@ -963,14 +1544,56 @@ class WSPeer extends Peer {
     }
 
     _sendSignal(connected = false) {
-        this.sendJSON({type: 'signal', connected: connected});
+        this._sendMessageViaServer({type: 'signal', connected: connected});
     }
 
-    onServerMessage(message) {
+    _onServerSignalMessage(message) {
         this._peerId = message.sender.id;
-        Events.fire('peer-connected', {peerId: message.sender.id, connectionHash: this.getConnectionHash()})
-        if (message.connected) return;
+
+        Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()})
+
+        if (message.connected) {
+            this.signalSuccessful = true;
+            return;
+        }
+
         this._sendSignal(true);
+    }
+
+    async _onMessage(message) {
+        Logger.debug('WS Receive:', message);
+        await super._onMessage(message);
+    }
+
+    _onWsRelay(message) {
+        try {
+            message = JSON.parse(message).message;
+        }
+        catch (e) {
+            Logger.warn("WSPeer: Received JSON is malformed");
+            return;
+        }
+
+        if (message.type === 'chunk') {
+            const data = base64ToArrayBuffer(message.chunk);
+            this._onData(data);
+        }
+        else {
+            this._onMessage(message);
+        }
+    }
+
+    _refresh() {
+        this.signalSuccessful = true;
+
+        if (!this._isCaller) return; // we will listen for a caller
+
+        this._sendSignal();
+    }
+
+    _onDisconnected() {
+        super._onDisconnected();
+        this.signalSuccessful = false;
     }
 
     getConnectionHash() {
@@ -982,47 +1605,81 @@ class WSPeer extends Peer {
 class PeersManager {
 
     constructor(serverConnection) {
-        this.peers = {};
         this._server = serverConnection;
-        Events.on('signal', e => this._onMessage(e.detail));
+        this.peers = {};
+        this._device = {
+            originalDisplayName: '',
+            displayName: '',
+            publicRoomId: null
+        };
+
+        Events.on('signal', e => this._onSignal(e.detail));
         Events.on('peers', e => this._onPeers(e.detail));
-        Events.on('files-selected', e => this._onFilesSelected(e.detail));
-        Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
-        Events.on('send-text', e => this._onSendText(e.detail));
         Events.on('peer-left', e => this._onPeerLeft(e.detail));
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-connected', e => this._onPeerConnected(e.detail.peerId));
         Events.on('peer-disconnected', e => this._onPeerDisconnected(e.detail));
 
+        // ROOMS
+        Events.on('join-public-room', e => this._onJoinPublicRoom(e.detail.roomId));
+
         // this device closes connection
         Events.on('room-secrets-deleted', e => this._onRoomSecretsDeleted(e.detail));
-        Events.on('leave-public-room', e => this._onLeavePublicRoom(e.detail));
+        Events.on('leave-public-room', _ => this._onLeavePublicRoom());
 
         // peer closes connection
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
-
         Events.on('room-secret-regenerated', e => this._onRoomSecretRegenerated(e.detail));
+
+        // peer
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
-        Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail));
-        Events.on('notify-peer-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail));
+        Events.on('self-display-name-changed', e => this._notifyPeersDisplayNameChanged(e.detail.displayName));
+        Events.on('notify-display-name-changed', e => this._notifyPeerDisplayNameChanged(e.detail.recipient));
         Events.on('auto-accept-updated', e => this._onAutoAcceptUpdated(e.detail.roomSecret, e.detail.autoAccept));
+
+        // transfer
+        Events.on('send-text', e => this._onSendText(e.detail));
+        Events.on('files-selected', e => this._onFilesSelected(e.detail));
+        Events.on('respond-to-files-transfer-request', e => this._onRespondToFileTransferRequest(e.detail))
+
+        // websocket connection
         Events.on('ws-disconnected', _ => this._onWsDisconnected());
-        Events.on('ws-relay', e => this._onWsRelay(e.detail));
+        Events.on('ws-relay', e => this._onWsRelay(e.detail.peerId, e.detail.message));
         Events.on('ws-config', e => this._onWsConfig(e.detail));
+
+        // no-sleep
+        Events.on('evaluate-no-sleep', _ => this._onEvaluateNoSleep());
+
+        // clean up on page hide
+        Events.on('pagehide', _ => this._onPageHide());
     }
 
     _onWsConfig(wsConfig) {
         this._wsConfig = wsConfig;
     }
 
-    _onMessage(message) {
+    _onSignal(message) {
         const peerId = message.sender.id;
-        this.peers[peerId].onServerMessage(message);
+        this.peers[peerId]._onServerSignalMessage(message);
     }
 
-    _refreshPeer(peerId, roomType, roomId) {
-        if (!this._peerExists(peerId)) return false;
+    _onEvaluateNoSleep() {
+        // Evaluate if NoSleep should be disabled
+        for (let i = 0; i < this.peers.length; i++) {
+            if (this.peers[i]._busy) return;
+        }
 
+        NoSleepUI.disable();
+    }
+
+    _onPageHide() {
+        // Clear OPFS directory ONLY if this is the last PairDrop Browser tab
+        if (!BrowserTabsConnector.isOnlyTab()) return;
+
+        SWFileDigester.clearDirectory();
+    }
+
+    _refreshPeer(isCaller, peerId, roomType, roomId) {
         const peer = this.peers[peerId];
         const roomTypesDiffer = Object.keys(peer._roomIds)[0] !== roomType;
         const roomIdsDiffer = peer._roomIds[roomType] !== roomId;
@@ -1036,17 +1693,22 @@ class PeersManager {
             return true;
         }
 
-        peer.refresh();
+        // reconnect peer - caller/waiter might be switched
+        peer._setIsCaller(isCaller);
+        peer._refresh();
 
         return true;
     }
 
     _createOrRefreshPeer(isCaller, peerId, roomType, roomId, rtcSupported) {
         if (this._peerExists(peerId)) {
-            this._refreshPeer(peerId, roomType, roomId);
-            return;
+            this._refreshPeer(isCaller, peerId, roomType, roomId);
+        } else {
+            this._createPeer(isCaller, peerId, roomType, roomId, rtcSupported);
         }
+    }
 
+    _createPeer(isCaller, peerId, roomType, roomId, rtcSupported) {
         if (window.isRtcSupported && rtcSupported) {
             this.peers[peerId] = new RTCPeer(this._server, isCaller, peerId, roomType, roomId, this._wsConfig.rtcConfig);
         }
@@ -1054,7 +1716,7 @@ class PeersManager {
             this.peers[peerId] = new WSPeer(this._server, isCaller, peerId, roomType, roomId);
         }
         else {
-            console.warn("Websocket fallback is not activated on this instance.\n" +
+            Logger.warn("Websocket fallback is not activated on this instance.\n" +
                 "Activate WebRTC in this browser or ask the admin of this instance to activate the websocket fallback.")
         }
     }
@@ -1069,30 +1731,32 @@ class PeersManager {
         })
     }
 
-    _onWsRelay(message) {
+    _onWsRelay(peerId, message) {
         if (!this._wsConfig.wsFallback) return;
 
-        const messageJSON = JSON.parse(message);
-        if (messageJSON.type === 'ws-chunk') message = base64ToArrayBuffer(messageJSON.chunk);
-        this.peers[messageJSON.sender.id]._onMessage(message);
+        const peer = this.peers[peerId];
+
+        if (!peer || peer.rtcSupported) return;
+
+        peer._onWsRelay(message);
     }
 
     _onRespondToFileTransferRequest(detail) {
-        this.peers[detail.to]._respondToFileTransferRequest(detail.accepted);
+        this.peers[detail.to]._sendTransferRequestResponse(detail.accepted);
     }
 
     async _onFilesSelected(message) {
         let files = await mime.addMissingMimeTypesToFiles(message.files);
-        await this.peers[message.to].requestFileTransfer(files);
+        await this.peers[message.to]._sendFileTransferRequest(files);
     }
 
     _onSendText(message) {
-        this.peers[message.to].sendText(message.text);
+        this.peers[message.to]._sendText(message.text);
     }
 
     _onPeerLeft(message) {
-        if (this._peerExists(message.peerId) && this._webRtcSupported(message.peerId)) {
-            console.log('WSPeer left:', message.peerId);
+        if (this._peerExists(message.peerId) && !this._webRtcSupported(message.peerId)) {
+            Logger.debug('WSPeer left:', message.peerId);
         }
         if (message.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
@@ -1105,7 +1769,7 @@ class PeersManager {
                     .removeOtherPeerIdsFromLocalStorage()
                     .then(peerIds => {
                         if (!peerIds) return;
-                        console.log("successfully removed other peerIds from localStorage");
+                        Logger.debug("successfully removed other peerIds from localStorage");
                     });
             }
         }
@@ -1136,25 +1800,36 @@ class PeersManager {
     _onPeerDisconnected(peerId) {
         const peer = this.peers[peerId];
         delete this.peers[peerId];
-        if (!peer || !peer._conn) return;
-        if (peer._channel) peer._channel.onclose = null;
-        peer._conn.close();
-        peer._busy = false;
-        peer._roomIds = {};
+
+        if (!peer) return;
+
+        peer._onDisconnected();
     }
 
     _onRoomSecretsDeleted(roomSecrets) {
-        for (let i=0; i<roomSecrets.length; i++) {
+        for (let i = 0; i < roomSecrets.length; i++) {
             this._disconnectOrRemoveRoomTypeByRoomId('secret', roomSecrets[i]);
         }
     }
 
-    _onLeavePublicRoom(publicRoomId) {
-        this._disconnectOrRemoveRoomTypeByRoomId('public-id', publicRoomId);
+    _onJoinPublicRoom(roomId) {
+        if (roomId !== this._device.publicRoomId) {
+            this._disconnectFromPublicRoom();
+        }
+        this._device.publicRoomId = roomId;
+    }
+
+    _onLeavePublicRoom() {
+        this._disconnectFromPublicRoom();
     }
 
     _onSecretRoomDeleted(roomSecret) {
         this._disconnectOrRemoveRoomTypeByRoomId('secret', roomSecret);
+    }
+
+    _disconnectFromPublicRoom() {
+        this._disconnectOrRemoveRoomTypeByRoomId('public-id', this._device.publicRoomId);
+        this._device.publicRoomId = null;
     }
 
     _disconnectOrRemoveRoomTypeByRoomId(roomType, roomId) {
@@ -1162,7 +1837,7 @@ class PeersManager {
 
         if (!peerIds.length) return;
 
-        for (let i=0; i<peerIds.length; i++) {
+        for (let i = 0; i < peerIds.length; i++) {
             this._disconnectOrRemoveRoomTypeByPeerId(peerIds[i], roomType);
         }
     }
@@ -1170,7 +1845,7 @@ class PeersManager {
     _disconnectOrRemoveRoomTypeByPeerId(peerId, roomType) {
         const peer = this.peers[peerId];
 
-        if (!peer) return;
+        if (!peer || !peer._getRoomTypes().includes(roomType)) return;
 
         if (peer._getRoomTypes().length > 1) {
             peer._removeRoomType(roomType);
@@ -1184,13 +1859,16 @@ class PeersManager {
         PersistentStorage
             .updateRoomSecret(message.oldRoomSecret, message.newRoomSecret)
             .then(_ => {
-                console.log("successfully regenerated room secret");
+                Logger.debug("successfully regenerated room secret");
                 Events.fire("room-secrets", [message.newRoomSecret]);
             })
     }
 
     _notifyPeersDisplayNameChanged(newDisplayName) {
-        this._displayName = newDisplayName ? newDisplayName : this._originalDisplayName;
+        this._device.displayName = newDisplayName
+            ? newDisplayName
+            : this._device.originalDisplayName;
+
         for (const peerId in this.peers) {
             this._notifyPeerDisplayNameChanged(peerId);
         }
@@ -1199,21 +1877,33 @@ class PeersManager {
     _notifyPeerDisplayNameChanged(peerId) {
         const peer = this.peers[peerId];
         if (!peer) return;
-        this.peers[peerId].sendDisplayName(this._displayName);
+        this.peers[peerId]._sendDisplayName(this._device.displayName);
     }
 
     _onDisplayName(displayName) {
-        this._originalDisplayName = displayName;
+        this._device.originalDisplayName = displayName;
         // if the displayName has not been changed (yet) set the displayName to the original displayName
-        if (!this._displayName) this._displayName = displayName;
+        if (!this._device.displayName) this._device.displayName = displayName;
     }
 
     _onAutoAcceptUpdated(roomSecret, autoAccept) {
-        const peerId = this._getPeerIdsFromRoomId(roomSecret)[0];
+        let peerIds = this._getPeerIdsFromRoomId(roomSecret);
+        const peerId = this._removePeerIdsSameBrowser(peerIds)[0];
 
         if (!peerId) return;
 
         this.peers[peerId]._setAutoAccept(autoAccept);
+    }
+
+    _removePeerIdsSameBrowser(peerIds) {
+        let peerIdsNotSameBrowser = [];
+        for (let i = 0; i < peerIds.length; i++) {
+            const peer = this.peers[peerIds[i]];
+            if (!peer._isSameBrowser()) {
+                peerIdsNotSameBrowser.push(peerIds[i]);
+            }
+        }
+        return peerIdsNotSameBrowser;
     }
 
     _getPeerIdsFromRoomId(roomId) {
@@ -1234,81 +1924,395 @@ class PeersManager {
 
 class FileChunker {
 
-    constructor(file, onChunk, onPartitionEnd) {
-        this._chunkSize = 64000; // 64 KB
-        this._maxPartitionSize = 1e6; // 1 MB
-        this._offset = 0;
-        this._partitionSize = 0;
+    constructor(file, onChunkCallback) {
+        this._chunkSize = 65536; // 64 KB
+        this._maxBytesSentWithoutConfirmation = 1048576; // 1 MB
+
+        this._bytesSent = 0;
+        this._bytesReceived = 0;
+
         this._file = file;
-        this._onChunk = onChunk;
-        this._onPartitionEnd = onPartitionEnd;
+        this._onChunk = onChunkCallback;
+
         this._reader = new FileReader();
         this._reader.addEventListener('load', e => this._onChunkRead(e.target.result));
-    }
 
-    nextPartition() {
-        this._partitionSize = 0;
-        this._readChunk();
+        this._currentlySending = false;
     }
 
     _readChunk() {
-        const chunk = this._file.slice(this._offset, this._offset + this._chunkSize);
+        if (this._currentlySending || !this._bufferHasSpaceForChunk() || this._isFileEnd()) return;
+
+        this._currentlySending = true;
+        const chunk = this._file.slice(this._bytesSent, this._bytesSent + this._chunkSize);
         this._reader.readAsArrayBuffer(chunk);
     }
 
     _onChunkRead(chunk) {
-        this._offset += chunk.byteLength;
-        this._partitionSize += chunk.byteLength;
+        if (!chunk.byteLength) return;
+
+        this._currentlySending = false;
+
         this._onChunk(chunk);
-        if (this.isFileEnd()) return;
-        if (this._isPartitionEnd()) {
-            this._onPartitionEnd(this._offset);
-            return;
-        }
+        this._bytesSent += chunk.byteLength;
+
+        // Pause sending when reaching the high watermark or file end
+        if (!this._bufferHasSpaceForChunk() || this._isFileEnd()) return;
+
         this._readChunk();
     }
 
-    repeatPartition() {
-        this._offset -= this._partitionSize;
-        this.nextPartition();
+    _bufferHasSpaceForChunk() {}
+
+    _onReceiveConfirmation(bytesReceived) {}
+
+    _resendFromOffset(offset) {
+        this._bytesSent = offset;
+        this._readChunk();
     }
 
-    _isPartitionEnd() {
-        return this._partitionSize >= this._maxPartitionSize;
+    _isFileEnd() {
+        return this._bytesSent >= this._file.size;
+    }
+}
+
+class FileChunkerRTC extends FileChunker {
+
+    constructor(file, onChunkCallback, peerConnection, dataChannel) {
+        super(file, onChunkCallback);
+
+        this._chunkSize = peerConnection && peerConnection.sctp
+            ? Math.min(peerConnection.sctp.maxMessageSize, 1048576) // 1 MB max
+            : 262144; // 256 KB
+
+        this._peerConnection = peerConnection;
+        this._dataChannel = dataChannel;
+
+        this._highWatermark = 10485760; // 10 MB
+        this._lowWatermark = 4194304; // 4 MB
+
+        // Set buffer threshold
+        this._dataChannel.bufferedAmountLowThreshold = this._lowWatermark;
+        this._dataChannel.addEventListener('bufferedamountlow', _ => this._readChunk());
     }
 
-    isFileEnd() {
-        return this._offset >= this._file.size;
+    _bufferHasSpaceForChunk() {
+        return this._dataChannel.bufferedAmount + this._chunkSize < this._highWatermark;
+    }
+
+    _onReceiveConfirmation(bytesReceived) {
+        this._bytesReceived = bytesReceived;
+    }
+}
+
+class FileChunkerWS extends FileChunker {
+
+    constructor(file, onChunkCallback) {
+        super(file, onChunkCallback);
+    }
+
+    _bytesCurrentlySent() {
+        return this._bytesSent - this._bytesReceived;
+    }
+
+    _bufferHasSpaceForChunk() {
+        return this._bytesCurrentlySent() + this._chunkSize <= this._maxBytesSentWithoutConfirmation;
+    }
+
+    _onReceiveConfirmation(bytesReceived) {
+        this._bytesReceived = bytesReceived;
+        this._readChunk();
     }
 }
 
 class FileDigester {
 
-    constructor(meta, totalSize, totalBytesReceived, callback) {
-        this._buffer = [];
+    constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
         this._bytesReceived = 0;
+        this._bytesReceivedSinceLastTime = 0;
+        this._maxBytesWithoutConfirmation = 1048576; // 1 MB
         this._size = meta.size;
         this._name = meta.name;
         this._mime = meta.mime;
-        this._totalSize = totalSize;
-        this._totalBytesReceived = totalBytesReceived;
-        this._callback = callback;
+        this._fileCompleteCallback = fileCompleteCallback;
+        this._sendReceiveConfimationCallback = sendReceiveConfirmationCallback;
+    }
+
+    unchunk(chunk) {}
+
+    evaluateChunkSize(chunk) {
+        this._bytesReceived += chunk.byteLength;
+        this._bytesReceivedSinceLastTime += chunk.byteLength;
+
+        if (this._bytesReceived > this._size) {
+            throw new Error("Too many bytes received. Abort!");
+        }
+
+        // If more than half of maxBytesWithoutConfirmation received -> send confirmation
+        if (2 * this._bytesReceivedSinceLastTime > this._maxBytesWithoutConfirmation) {
+            this._sendReceiveConfimationCallback(this._bytesReceived);
+            this._bytesReceivedSinceLastTime = 0;
+        }
+    }
+
+    isFileReceivedCompletely() {
+        return this._bytesReceived >= this._size;
+    }
+
+    cleanUp() {}
+
+    abort() {}
+}
+
+class FileDigesterViaBuffer extends FileDigester {
+    constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
+        super(meta, fileCompleteCallback, sendReceiveConfirmationCallback);
+        this._buffer = [];
     }
 
     unchunk(chunk) {
         this._buffer.push(chunk);
-        this._bytesReceived += chunk.byteLength || chunk.size;
-        this.progress = (this._totalBytesReceived + this._bytesReceived) / this._totalSize;
-        if (isNaN(this.progress)) this.progress = 1
+        this.evaluateChunkSize(chunk);
 
-        if (this._bytesReceived < this._size) return;
-        // we are done
-        const blob = new Blob(this._buffer)
-        this._buffer = null;
-        this._callback(new File([blob], this._name, {
-            type: this._mime,
-            lastModified: new Date().getTime()
-        }));
+        // If file is not completely received -> Wait for next chunk.
+        if (!this.isFileReceivedCompletely()) return;
+
+        this.processFileViaMemory();
     }
 
+    processFileViaMemory() {
+        // Loads complete file into RAM which might lead to a page crash (Memory limit iOS Safari: ~380 MB)
+        const file = new File(
+            this._buffer,
+            this._name,
+            {
+                type: this._mime,
+                lastModified: new Date().getTime()
+            }
+        );
+        file.displayName = this._name
+
+        this._fileCompleteCallback(file);
+    }
+
+    cleanUp() {
+        this._buffer = [];
+    }
+
+    abort() {
+        this.cleanUp();
+    }
+}
+
+class FileDigesterViaWorker extends FileDigester {
+    constructor(meta, fileCompleteCallback, sendReceiveConfirmationCallback) {
+        super(meta, fileCompleteCallback, sendReceiveConfirmationCallback);
+        this._fileDigesterWorker = new SWFileDigester();
+    }
+
+    unchunk(chunk) {
+        this._fileDigesterWorker
+            .nextChunk(chunk, this._bytesReceived)
+            .then(_ => {
+                this.evaluateChunkSize(chunk);
+
+                // If file is not completely received -> Wait for next chunk.
+                if (!this.isFileReceivedCompletely()) return;
+
+                this.processFileViaWorker();
+            });
+    }
+
+    processFileViaWorker() {
+        this._fileDigesterWorker
+            .getFile()
+            .then(file => {
+                // Save id and displayName to file to be able to truncate file later
+                file.id = file.name;
+                file.displayName = this._name;
+
+                this._fileCompleteCallback(file);
+            })
+            .catch(e => {
+                Logger.error("Error in SWFileDigester:", e);
+                this.cleanUp();
+            });
+    }
+
+    cleanUp() {
+        this._fileDigesterWorker.cleanUp();
+    }
+
+    abort() {
+        // delete and clean up (included in deletion)
+        this._fileDigesterWorker.deleteFile().then((id) => {
+            Logger.debug("File deleted after abort:", id);
+        });
+    }
+}
+
+
+class SWFileDigester {
+
+    static fileWorkers = [];
+
+    constructor(id = null) {
+        // Use service worker to prevent loading the complete file into RAM
+        // Uses origin private file system (OPFS) as storage endpoint
+
+        if (!id) {
+            // Generate random uuid to save file on disk
+            // Create only one service worker per file to prevent problems with accessHandles
+            id = generateUUID();
+            SWFileDigester.fileWorkers[id] = new Worker("scripts/sw-file-digester.js");
+        }
+
+        this.id = id;
+        this.fileWorker = SWFileDigester.fileWorkers[id];
+
+        this.fileWorker.onmessage = (e) => {
+            switch (e.data.type) {
+                case "support":
+                    this.onSupport(e.data.supported);
+                    break;
+                case "chunk-written":
+                    this.onChunkWritten(e.data.offset);
+                    break;
+                case "file":
+                    this.onFile(e.data.file);
+                    break;
+                case "file-deleted":
+                    this.onFileDeleted(e.data.id);
+                    break;
+                case "error":
+                    this.onError(e.data.error);
+                    break;
+                case "directory-cleared":
+                    this.onDirectoryCleared();
+                    break;
+            }
+        }
+    }
+
+    onError(error) {
+        // an error occurred.
+        Logger.error(error);
+    }
+
+    static isSupported() {
+        // Check if web worker is supported and supports specific functions
+        return new Promise(async resolve => {
+            if (!window.Worker || !window.isSecureContext) {
+                resolve(false);
+                return;
+            }
+
+            const fileDigesterWorker = new SWFileDigester();
+
+            resolve(await fileDigesterWorker.checkSupport());
+
+            fileDigesterWorker.fileWorker.terminate();
+        })
+    }
+
+    checkSupport() {
+        return new Promise(resolve => {
+            this.resolveSupport = resolve;
+            this.fileWorker.postMessage({
+                type: "check-support"
+            });
+        })
+    }
+
+    onSupport(supported) {
+        if (!this.resolveSupport) return;
+
+        this.resolveSupport(supported);
+        this.resolveSupport = null;
+    }
+
+    nextChunk(chunk, offset) {
+        return new Promise(resolve => {
+            this.digestChunk(chunk, offset);
+            resolve();
+        });
+    }
+
+    digestChunk(chunk, offset) {
+        this.fileWorker.postMessage({
+            type: "chunk",
+            id: this.id,
+            chunk: chunk,
+            offset: offset
+        });
+    }
+
+    onChunkWritten(chunkOffset) {
+        Logger.debug("Chunk written at offset", chunkOffset);
+    }
+
+    getFile() {
+        return new Promise(resolve => {
+            this.resolveFile = resolve;
+
+            this.fileWorker.postMessage({
+                type: "get-file",
+                id: this.id,
+            });
+        })
+    }
+
+    async getFileById(id) {
+        const swFileDigester = new SWFileDigester(id);
+        return await swFileDigester.getFile();
+    }
+
+    onFile(file) {
+        this.resolveFile(file);
+    }
+
+    deleteFile() {
+        return new Promise(resolve => {
+            this.resolveDeletion = resolve;
+            this.fileWorker.postMessage({
+                type: "delete-file",
+                id: this.id
+            });
+        });
+    }
+
+    static async deleteFileById(id) {
+        const swFileDigester = new SWFileDigester(id);
+        return await swFileDigester.deleteFile();
+    }
+
+    cleanUp() {
+        // terminate service worker
+        this.fileWorker.terminate();
+        delete SWFileDigester.fileWorkers[this.id];
+    }
+
+    onFileDeleted(id) {
+        // File Digestion complete -> Tidy up
+        Logger.debug("File deleted:", id);
+        this.resolveDeletion(id);
+        this.cleanUp();
+    }
+
+    static clearDirectory() {
+        for (let i = 0; i < SWFileDigester.fileWorkers.length; i++) {
+            SWFileDigester.fileWorkers[i].terminate();
+        }
+        SWFileDigester.fileWorkers = [];
+
+        const swFileDigester = new SWFileDigester();
+        swFileDigester.fileWorker.postMessage({
+            type: "clear-directory",
+        });
+    }
+
+    onDirectoryCleared() {
+        Logger.debug("All files on OPFS truncated.");
+        this.cleanUp();
+    }
 }

@@ -158,11 +158,13 @@
         "connecting": "Connecting…",
         "files-incorrect": "Files are incorrect",
         "file-transfer-completed": "File transfer completed",
-        "ios-memory-limit": "Sending files to iOS is only possible up to 200 MB at once",
         "message-transfer-completed": "Message transfer completed",
         "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close PairDrop?",
         "rate-limit-join-key": "Rate limit reached. Wait 10 seconds and try again.",
-        "selected-peer-left": "Selected peer left"
+        "selected-peer-left": "Selected peer left",
+        "error-sharing-size": "Files too big to be shared. They can be downloaded instead.",
+        "error-sharing-default": "Error while sharing. It can be downloaded instead.",
+        "ram-exceed-ios": "One of the files is bigger than 250 MB and will crash the page on iOS. Use https and do not use private tabs on the iOS device to prevent this."
     },
     "document-titles": {
         "file-received": "File Received",
@@ -176,9 +178,14 @@
         "click-to-send-share-mode": "Click to send {{descriptor}}",
         "click-to-send": "Click to send files or right click to send a message",
         "connection-hash": "To verify the security of the end-to-end encryption, compare this security number on both devices",
+        "connecting": "Connecting…",
         "preparing": "Preparing…",
         "waiting": "Waiting…",
         "processing": "Processing…",
-        "transferring": "Transferring…"
+        "transferring": "Sending…",
+        "receiving": "Receiving…",
+        "transfer-complete": "Sent",
+        "receive-complete": "Received",
+        "error": "Error"
     }
 }
