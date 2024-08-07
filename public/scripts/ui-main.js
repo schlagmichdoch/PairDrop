@@ -206,10 +206,6 @@ class FooterUI {
 
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
-
-        // Load saved display name on page load
-        Events.on('ws-connected', _ => this._loadSavedDisplayName());
-
         Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges());
     }
 
@@ -234,17 +230,20 @@ class FooterUI {
     }
 
     async _loadSavedDisplayName() {
-        const displayName = await this._getSavedDisplayName()
+        const displayNameSaved = await this._getSavedDisplayName()
 
-        if (!displayName) return;
+        if (!displayNameSaved) return;
 
-        console.log("Retrieved edited display name:", displayName)
-        Events.fire('self-display-name-changed', displayName);
+        console.log("Retrieved edited display name:", displayNameSaved)
+        Events.fire('self-display-name-changed', displayNameSaved);
     }
 
-    _onDisplayName(displayName){
-        // set display name
-        this.$displayName.setAttribute('placeholder', displayName);
+    async _onDisplayName(displayNameServer){
+        // load saved displayname first to prevent flickering
+        await this._loadSavedDisplayName();
+
+        // set original display name as placeholder
+        this.$displayName.setAttribute('placeholder', displayNameServer);
     }
 
 
