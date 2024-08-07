@@ -557,6 +557,10 @@ footer .logo {
     position: relative;
 }
 
+#display-name:focus::before {
+    display: none;
+}
+
 html:not([dir="rtl"]) #display-name,
 html:not([dir="rtl"]) .edit-pen {
     margin-left: -1rem;
