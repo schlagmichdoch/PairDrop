@@ -274,6 +274,10 @@ class FooterUI {
         if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) {
             e.target.innerText = '';
         }
+
+        // Remove selection from text
+        window.getSelection().removeAllRanges();
+
         await this._saveDisplayName(e.target.innerText)
     }
 
