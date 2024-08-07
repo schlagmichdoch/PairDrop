@@ -943,8 +943,8 @@ body {
     --lt-dialog-bg-color: #fff;
     --lt-bg-color: 255,255,255;
     --lt-bg-color-secondary: #f2f2f2;
-    --lt-border-color: #a9a9a9;
-    --lt-badge-color: #a5a5a5;
+    --lt-border-color: #757575;
+    --lt-badge-color: #757575;
     --lt-lang-hr-color: #DDD;
 
     --lt-shadow-color-secondary-rgb: 0,0,0;
@@ -957,8 +957,8 @@ body {
     --dt-dialog-bg-color: #141414;
     --dt-bg-color: 0,0,0;
     --dt-bg-color-secondary: #262628;
-    --dt-border-color: #919191;
-    --dt-badge-color: #717171;
+    --dt-border-color: #757575;
+    --dt-badge-color: #757575;
     --dt-lang-hr-color: #404040;
 
     --dt-shadow-color-secondary-rgb: 255,255,255;
