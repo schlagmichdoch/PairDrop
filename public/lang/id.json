@@ -101,7 +101,7 @@
         "transferring": "Mentransfer…"
     },
     "dialogs": {
-        "base64-paste-to-send": "Tempel di sini untuk mengirim {{type}}",
+        "base64-paste-to-send": "Tempel salinan di sini untuk mengirim {{type}}",
         "auto-accept-instructions-2": "untuk secara otomatis menerima semua file yang dikirim dari perangkat tersebut.",
         "receive-text-title": "Pesan Diterima",
         "edit-paired-devices-title": "Edit Perangkat yg. Dipasangkan",
@@ -154,7 +154,12 @@
         "base64-title-files": "Bagikan File",
         "base64-title-text": "Bagikan Teks",
         "message_placeholder": "Teks",
-        "paired-device-removed": "Perangkat yang dipasangkan telah dihapus."
+        "paired-device-removed": "Perangkat yang dipasangkan telah dihapus.",
+        "approve": "menyetujui",
+        "share-text-title": "Kirim Pesan Teks",
+        "share-text-subtitle": "Edit pesan sebelum mengirim:",
+        "share-text-checkbox": "Selalu tampilkan dialog ini ketika mengirimkan teks",
+        "close-toast_title": "Tutup notifikasi"
     },
     "about": {
         "claim": "Cara termudah untuk mentransfer file lintas perangkat",
@@ -162,7 +167,11 @@
         "close-about_aria-label": "Tutup Tentang PairDrop",
         "buy-me-a-coffee_title": "Traktir aku kopi!",
         "github_title": "PairDrop di GitHub",
-        "faq_title": "Pertanyaan yang sering diajukan"
+        "faq_title": "Pertanyaan yang sering diajukan",
+        "mastodon_title": "Tulis tentang PairDrop di Mastodon",
+        "bluesky_title": "Ikuti kami di BlueSky",
+        "custom_title": "Ikuti kami",
+        "privacypolicy_title": "Buka kebijakan privasi kami"
     },
     "document-titles": {
         "file-transfer-requested": "Permintaan Transfer File",
