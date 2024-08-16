@@ -201,15 +201,11 @@ class FooterUI {
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
-        this.$displayName.addEventListener('keyup', e => this._onKeyUpDisplayName(e));
-        this.$displayName.addEventListener('blur', e => this._saveDisplayName(e.target.innerText));
+        this.$displayName.addEventListener('focus', e => this._onFocusDisplayName(e));
+        this.$displayName.addEventListener('blur', e => this._onBlurDisplayName(e));
 
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
-
-        // Load saved display name on page load
-        Events.on('ws-connected', _ => this._loadSavedDisplayName());
-
         Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges());
     }
 
@@ -234,17 +230,20 @@ class FooterUI {
     }
 
     async _loadSavedDisplayName() {
-        const displayName = await this._getSavedDisplayName()
+        const displayNameSaved = await this._getSavedDisplayName()
 
-        if (!displayName) return;
+        if (!displayNameSaved) return;
 
-        console.log("Retrieved edited display name:", displayName)
-        Events.fire('self-display-name-changed', displayName);
+        console.log("Retrieved edited display name:", displayNameSaved)
+        Events.fire('self-display-name-changed', displayNameSaved);
     }
 
-    _onDisplayName(displayName){
-        // set display name
-        this.$displayName.setAttribute('placeholder', displayName);
+    async _onDisplayName(displayNameServer){
+        // load saved displayname first to prevent flickering
+        await this._loadSavedDisplayName();
+
+        // set original display name as placeholder
+        this.$displayName.setAttribute('placeholder', displayNameServer);
     }
 
 
@@ -259,9 +258,27 @@ class FooterUI {
         }
     }
 
-    _onKeyUpDisplayName(e) {
+    _onFocusDisplayName(e) {
+        if (!e.target.innerText) {
+            // Fix z-position of cursor when div is completely empty (Firefox only)
+            e.target.innerText = "\n";
+
+            // On Chromium based browsers the cursor position is lost when adding sth. to the focused node. This adds it back.
+            let sel = window.getSelection();
+            sel.collapse(e.target.lastChild);
+        }
+    }
+
+    async _onBlurDisplayName(e) {
         // fix for Firefox inserting a linebreak into div on edit which prevents the placeholder from showing automatically when it is empty
-        if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) e.target.innerText = '';
+        if (/^(\n|\r|\r\n)$/.test(e.target.innerText)) {
+            e.target.innerText = '';
+        }
+
+        // Remove selection from text
+        window.getSelection().removeAllRanges();
+
+        await this._saveDisplayName(e.target.innerText)
     }
 
     async _saveDisplayName(newDisplayName) {
