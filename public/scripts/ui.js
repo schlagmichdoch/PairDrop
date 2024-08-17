@@ -1060,7 +1060,7 @@ class ReceiveDialog extends Dialog {
                 : Localization.getTranslation("dialogs.file-other-description-file-plural", null, {count: files.length - 1});
         }
 
-        const fileName = files[0].displayName;
+        const fileName = files[0].originalName ?? files[0].name;
         const fileNameSplit = fileName.split('.');
         const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
         const fileStem = fileName.substring(0, fileName.length - fileExtension.length);
@@ -1236,8 +1236,13 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     async _setShareButton() {
+        // Add original file names
+        let filesWithOriginalNames = []
+        for (const file of this._data.files) {
+            filesWithOriginalNames.push(new File([file], file.originalName, {type: file.type}))
+        }
         this.$shareBtn.onclick = _ => {
-            navigator.share({files: this._data.files})
+            navigator.share({files: filesWithOriginalNames})
                 .catch(async err => {
                     Logger.error(err);
 
@@ -1355,7 +1360,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     _downloadFiles(files) {
         let tmpBtn = document.createElement("a");
         for (let i = 0; i < files.length; i++) {
-            tmpBtn.download = files[i].displayName;
+            tmpBtn.download = files[i].originalName;
             tmpBtn.href = URL.createObjectURL(files[i]);
             tmpBtn.click();
         }

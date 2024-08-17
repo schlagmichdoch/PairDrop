@@ -723,7 +723,7 @@ class Peer {
 
         for (let i = 0; i < files.length; i++) {
             header.push({
-                displayName: files[i].name,
+                name: files[i].name,
                 mime: files[i].type,
                 size: files[i].size
             });
@@ -806,7 +806,7 @@ class Peer {
         this._sendMessage({
             type: 'transfer-header',
             size: file.size,
-            displayName: file.name,
+            name: file.name,
             mime: file.type
         });
     }
@@ -970,7 +970,7 @@ class Peer {
             ?   new FileDigesterViaWorker(
                     {
                         size: header.size,
-                        name: header.displayName,
+                        name: header.name,
                         mime: header.mime
                     },
                 file => this._fileReceived(file),
@@ -979,7 +979,7 @@ class Peer {
             :   new FileDigesterViaBuffer(
                     {
                         size: header.size,
-                        name: header.displayName,
+                        name: header.name,
                         mime: header.mime
                     },
                     file => this._fileReceived(file),
@@ -1054,7 +1054,7 @@ class Peer {
 
         const sameSize = header.size === acceptedHeader.size;
         const sameType = header.mime === acceptedHeader.mime;
-        const sameName = header.displayName === acceptedHeader.displayName;
+        const sameName = header.name === acceptedHeader.name;
 
         return sameSize && sameType && sameName;
     }
@@ -1074,7 +1074,7 @@ class Peer {
         Logger.log(`File received.\n\nSize: ${size} MB\tDuration: ${duration} s\tSpeed: ${speed} MB/s`);
 
         // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', {name: file.displayName, size: file.size});
+        Events.fire('file-received', {name: file.originalName, size: file.size});
 
         this._filesReceived.push(file);
 
@@ -2090,7 +2090,6 @@ class FileDigesterViaBuffer extends FileDigester {
                 lastModified: new Date().getTime()
             }
         );
-        file.displayName = this._name
 
         this._fileCompleteCallback(file);
     }
@@ -2129,7 +2128,7 @@ class FileDigesterViaWorker extends FileDigester {
             .then(file => {
                 // Save id and displayName to file to be able to truncate file later
                 file.id = file.name;
-                file.displayName = this._name;
+                file.originalName = this._name;
 
                 this._fileCompleteCallback(file);
             })
