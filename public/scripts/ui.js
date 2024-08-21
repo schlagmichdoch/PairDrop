@@ -1306,8 +1306,6 @@ class ReceiveFileDialog extends ReceiveDialog {
 
             Events.fire('notify-user', downloadSuccessfulTranslation);
             this.downloadSuccessful = true;
-
-            this.hide();
         };
     }
 
@@ -1335,8 +1333,6 @@ class ReceiveFileDialog extends ReceiveDialog {
 
             Events.fire('notify-user', downloadSuccessfulTranslation);
             this.downloadSuccessful = true;
-
-            this.hide();
         };
     }
 
@@ -1400,6 +1396,7 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$downloadBtn.removeAttribute('disabled');
         this.$downloadBtn.removeAttribute('hidden');
 
+        // Todo: complete rewrite of the download button logic and file zipping
         let {sendAsZip, zipObjectUrl, zipName} = await this._processDataAsZip();
 
         // If single file or zipping failed or file size exceeds memory -> download files individually -> else download zip
@@ -1438,12 +1435,26 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$previewBox.innerHTML = '';
     }
 
+    async _deleteFilesFromDisk(files) {
+        for(const file of files) {
+            if (!file.id) {
+                continue;
+            }
+            let fileId = await SWFileDigester.deleteFileById(file.id)
+            Logger.log(`File with id: ${fileId} successfully deleted.`)
+        }
+    }
+
     hide() {
         super.hide();
 
         setTimeout(async () => {
             this._tidyUpButtons();
             this._tidyUpPreviewBox();
+
+            let oldFiles = this._data.files;
+            this._deleteFilesFromDisk(oldFiles)
+                .then(() => Logger.log("Deletion of old files finished."))
 
             this._busy = false;
 
