@@ -4,7 +4,7 @@ class PersistentStorage {
             PersistentStorage.logBrowserNotCapable();
             return;
         }
-        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 5);
+        const DBOpenRequest = window.indexedDB.open('pairdrop_store', 6);
         DBOpenRequest.onerror = e => {
             PersistentStorage.logBrowserNotCapable();
             Logger.error('Error initializing database:', e);
@@ -49,6 +49,28 @@ class PersistentStorage {
                     await PersistentStorage.delete('editedDisplayName');
                 }
             }
+            if (e.oldVersion <= 5) {
+                // migrate to v6
+                let roomSecretsObjectStore5 = txn.objectStore('room_secrets');
+                roomSecretsObjectStore5.createIndex('ws_domain', 'ws_domain');
+                // add current ws_domain to existing peer secret entries once the config has loaded
+                Events.on('config-loaded', _ => PersistentStorage.addCurrentWsDomainToAllRoomSecrets(), { once: true });
+            }
+        }
+    }
+
+    static getCurrentWsDomain() {
+        return window._config && window._config.signalingServer
+            ? window._config.signalingServer
+            : location.host + location.pathname;
+    }
+
+    static async addCurrentWsDomainToAllRoomSecrets() {
+        const wsServerDomain = this.getCurrentWsDomain();
+
+        const roomSecrets = await PersistentStorage.getAllRoomSecrets(false);
+        for (let i = 0; i < roomSecrets.length; i++) {
+            await PersistentStorage.updateRoomSecret(roomSecrets[i], null, null, null, null, wsServerDomain);
         }
     }
 
@@ -124,7 +146,8 @@ class PersistentStorage {
                     'secret': roomSecret,
                     'display_name': displayName,
                     'device_name': deviceName,
-                    'auto_accept': false
+                    'auto_accept': false,
+                    'ws_domain': PersistentStorage.getCurrentWsDomain()
                 });
                 objectStoreRequest.onsuccess = e => {
                     Logger.debug(`Request successful. RoomSecret added: ${e.target.result}`);
@@ -137,22 +160,28 @@ class PersistentStorage {
         })
     }
 
-    static async getAllRoomSecrets() {
-        try {
-            const roomSecrets = await this.getAllRoomSecretEntries();
-            let secrets = [];
-            for (let i = 0; i < roomSecrets.length; i++) {
-                secrets.push(roomSecrets[i].secret);
-            }
-            Logger.debug(`Request successful. Retrieved ${secrets.length} room_secrets`);
-            return(secrets);
-        } catch (e) {
-            this.logBrowserNotCapable();
-            return [];
-        }
+    static async getAllRoomSecretsCount(currentWsDomainOnly = true) {
+        return (await PersistentStorage.getAllRoomSecrets(currentWsDomainOnly)).length;
     }
 
-    static getAllRoomSecretEntries() {
+    static async getAllRoomSecrets(currentWsDomainOnly = true) {
+        let secrets = [];
+        try {
+            const roomSecrets = await this.getAllRoomSecretEntries(currentWsDomainOnly);
+
+            secrets = roomSecrets.map(roomSecret => roomSecret.secret);
+
+            Logger.debug(`Request successful. Retrieved ${secrets.length} room_secrets`);
+        }
+        catch (e) {
+            console.debug(e)
+            this.logBrowserNotCapable();
+        }
+
+        return secrets;
+    }
+
+    static getAllRoomSecretEntries(currentWsDomainOnly = true) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = (e) => {
@@ -161,7 +190,19 @@ class PersistentStorage {
                 const objectStore = transaction.objectStore('room_secrets');
                 const objectStoreRequest = objectStore.getAll();
                 objectStoreRequest.onsuccess = e => {
-                    resolve(e.target.result);
+                    let roomSecrets = e.target.result;
+                    let roomSecretEntries = [];
+
+                    for (let i = 0; i < roomSecrets.length; i++) {
+                        const currentWsDomainDiffers = roomSecrets[i].ws_domain !== PersistentStorage.getCurrentWsDomain();
+
+                        // if the saved ws domain differs from the current ws domain and only peers for the current ws domain should be returned -> skip this entry
+                        if (currentWsDomainOnly && currentWsDomainDiffers) continue;
+
+                        roomSecretEntries.push(roomSecrets[i]);
+                    }
+
+                    resolve(roomSecretEntries);
                 }
             }
             DBOpenRequest.onerror = (e) => {
@@ -262,7 +303,7 @@ class PersistentStorage {
         return this.updateRoomSecret(roomSecret, null, null, null, autoAccept);
     }
 
-    static updateRoomSecret(roomSecret, updatedRoomSecret = null, updatedDisplayName = null, updatedDeviceName = null, updatedAutoAccept = null) {
+    static updateRoomSecret(roomSecret, updatedRoomSecret = null, updatedDisplayName = null, updatedDeviceName = null, updatedAutoAccept = null, wsDomain = null) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');
             DBOpenRequest.onsuccess = e => {
@@ -280,7 +321,8 @@ class PersistentStorage {
                             'secret': updatedRoomSecret !== null ? updatedRoomSecret : roomSecretEntry.entry.secret,
                             'display_name': updatedDisplayName !== null ? updatedDisplayName : roomSecretEntry.entry.display_name,
                             'device_name': updatedDeviceName !== null ? updatedDeviceName : roomSecretEntry.entry.device_name,
-                            'auto_accept': updatedAutoAccept !== null ? updatedAutoAccept : roomSecretEntry.entry.auto_accept
+                            'auto_accept': updatedAutoAccept !== null ? updatedAutoAccept : roomSecretEntry.entry.auto_accept,
+                            'ws_domain': wsDomain !== null ? wsDomain : roomSecretEntry.entry.ws_domain
                         };
 
                         const objectStoreRequestUpdate = objectStore.put(updatedRoomSecretEntry, roomSecretEntry.key);
