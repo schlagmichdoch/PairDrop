@@ -2101,7 +2101,7 @@ class ReceiveTextDialog extends Dialog {
                         let linkNodePlaceholder = `${p}${m}`;
 
                         // add linkNodePlaceholder to text node and save a reference to linkNodes object
-                        linkNodes[linkNodePlaceholder] = `<a href="${link}" target="_blank">${url}</a>`;
+                        linkNodes[linkNodePlaceholder] = `<a href="${link}" target="_blank" rel="noreferrer">${url}</a>`;
                         return `${whitespaceOrSpecial}${linkNodePlaceholder}`;
                     }
                     // link is not valid -> do not replace
