@@ -7,13 +7,18 @@
 
   <p>
     Local file sharing <a href="https://pairdrop.net"><strong>in your web browser</strong></a>. 
-    <br />
-    <br />
+    <br>
+    Inspired by Apple's AirDrop.
+    <br> 
+    Fork of Snapdrop.
+    <br>
+    <br>
     <a href="https://github.com/schlagmichdoch/PairDrop/issues">Report a bug</a>
     <br />
     <a href="https://github.com/schlagmichdoch/PairDrop/issues">Request feature</a>
   </p>
 </div>
+<br>
 
 ## Features
 File sharing on your local network that works on all platforms.
