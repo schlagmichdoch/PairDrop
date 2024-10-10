@@ -1,1 +1,22 @@
-{}
+{
+    "header": {
+        "about_title": "Tietoja PairDropista",
+        "language-selector_title": "Valitse kieli",
+        "about_aria-label": "Avaa tietoja PairDropista",
+        "theme-auto_title": "Käytä samaa teemaa kuin järjestelmä",
+        "theme-light_title": "Käytä aina vaaleaa teemaa",
+        "theme-dark_title": "Käytä aina tummaa teemaa",
+        "notification_title": "Laita ilmoitukset päälle",
+        "install_title": "Asenna PairDrop",
+        "pair-device_title": "Yhdistä laitteesi pysyvästi",
+        "edit-paired-devices_title": "Muokkaa yhdistettyjä laitteita",
+        "join-public-room_title": "Liity julkiseen huoneeseen väliaikaisesti",
+        "cancel-share-mode": "Peruuta",
+        "edit-share-mode": "Muokkaa"
+    },
+    "instructions": {
+        "no-peers-title": "Avaa PairDrop muilla laitteilla lähettääksesi tiedostoja",
+        "no-peers-subtitle": "Yhdistä laite tai liity julkiseen huoneeseen, jotta olet löydettävissä muissa verkoissa",
+        "x-instructions_desktop": "Paina lähettääksesi tiedoston tai klikkaa oikealla painikkeella lähettääksesi viestin"
+    }
+}
