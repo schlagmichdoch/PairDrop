@@ -24,6 +24,8 @@
         "x-instructions_data-drop-bg": "해제하여 수신자 선택하기",
         "x-instructions-share-mode_desktop": "클릭하여 {{descriptor}} 보내기",
         "x-instructions-share-mode_mobile": "탭하여 {{descriptor}} 보내기",
-        "activate-share-mode-base": "다른 기기에서 PairDrop을 열어 보내기"
+        "activate-share-mode-base": "다른 기기에서 PairDrop을 열어 보내기",
+        "activate-share-mode-and-other-files-plural": "이외 {{count}}개의 다른 파일",
+        "activate-share-mode-and-other-file": "이외 1개의 다른 파일"
     }
 }
