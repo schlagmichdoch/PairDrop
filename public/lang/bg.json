@@ -1,0 +1,35 @@
+{
+    "header": {
+        "about_title": "Относно PairDrop",
+        "language-selector_title": "Задай език",
+        "about_aria-label": "Отвори Относно PairDrop",
+        "theme-auto_title": "Адаптирай темата спрямо системните настройки",
+        "theme-light_title": "Винаги използвай светла тема",
+        "notification_title": "Включи известията",
+        "pair-device_title": "Свържи устройствата си перманентно",
+        "join-public-room_title": "Присъедини се към временна публична стая",
+        "cancel-share-mode": "Отказ",
+        "expand_title": "Покажи меню",
+        "theme-dark_title": "Винаги използвай тъмна тема",
+        "install_title": "Инсталирай PairDrop",
+        "edit-paired-devices_title": "Промени свързаните устройства",
+        "edit-share-mode": "Промени"
+    },
+    "instructions": {
+        "no-peers_data-drop-bg": "Пусни, за да избереш получател",
+        "no-peers-title": "Отвори PairDrop на друго устройство, за да започнеш споделяне",
+        "no-peers-subtitle": "Свържи устройство или влез в публична стая, за да станеш откриваем за други мрежи",
+        "x-instructions_desktop": "Ляв клик, за да изпратиш файл или десен клик, за да изпратиш съобщение",
+        "x-instructions_data-drop-peer": "Пусни, за да изпратиш",
+        "x-instructions-share-mode_desktop": "Натисни, за да изпратиш {{descriptor}}",
+        "activate-share-mode-base": "Отвори PairDrop на друго устройство, за да изпратиш",
+        "activate-share-mode-and-other-file": "и още 1 файл",
+        "activate-share-mode-and-other-files-plural": "и още {{count}} файла",
+        "activate-share-mode-shared-text": "споделен текст",
+        "activate-share-mode-shared-files-plural": "{{count}} споделени файлове",
+        "x-instructions_data-drop-bg": "Пусни, за да избереш получател",
+        "activate-share-mode-shared-file": "споделен файл",
+        "x-instructions_mobile": "Докосни, за да изпратиш файл или задръж, за да изпратиш съобщение",
+        "x-instructions-share-mode_mobile": "Докосни, за да изпратиш {{descriptor}}"
+    }
+}
