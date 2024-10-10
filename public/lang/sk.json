@@ -1,0 +1,43 @@
+{
+    "header": {
+        "install_title": "Nainštalovať PairDrop",
+        "about_title": "O službe PairDrop",
+        "language-selector_title": "Nastaviť jazyk",
+        "about_aria-label": "Otvoriť \"O službe PairDrop\"",
+        "theme-auto_title": "Automaticky prispôsobiť tému systému",
+        "edit-share-mode": "Upraviť",
+        "expand_title": "Rozbaliť riadok tlačítka záhlavia",
+        "theme-light_title": "Vždy použiť svetlú tému",
+        "theme-dark_title": "Vždy použiť tmavú tému",
+        "notification_title": "Povoliť upozornenia",
+        "pair-device_title": "Spárovať zariadenia natrvalo",
+        "edit-paired-devices_title": "Upraviť spárované zariadenia",
+        "join-public-room_title": "Dočasne sa pripojiť k verejnej miestnosti",
+        "cancel-share-mode": "Zrušiť"
+    },
+    "instructions": {
+        "no-peers_data-drop-bg": "Pustite pre vybratie príjemcu",
+        "no-peers-title": "Otvorte PairDrop na iných zariadeniach pre posielanie súborov",
+        "x-instructions_desktop": "Kliknite pre poslanie súborov alebo kliknite pravým tlačidlom pre poslanie správy",
+        "x-instructions_data-drop-peer": "Pustite pre odoslanie",
+        "x-instructions_data-drop-bg": "Pustením vyberiete príjemcu",
+        "activate-share-mode-and-other-file": "a 1 ďalší súbor",
+        "activate-share-mode-and-other-files-plural": "a {{count}} ďalších súborov",
+        "activate-share-mode-shared-text": "zdieľaný text",
+        "activate-share-mode-shared-file": "zdieľaný súbor",
+        "activate-share-mode-shared-files-plural": "{{count}} zdieľaných súborov",
+        "no-peers-subtitle": "Spárujte zariadenia alebo vstúpte do verejnej miestnosti pre viditeľnosť v iných sieťach",
+        "x-instructions_mobile": "Ťuknite pre poslanie súboru alebo podržte pre poslanie správy",
+        "webrtc-requirement": "Pre použitie PairDrop-u je nevyhnutné povoliť WebRTC!"
+    },
+    "footer": {
+        "known-as": "Ste pomenovaný/-á:",
+        "display-name_data-placeholder": "Načítava sa…",
+        "display-name_title": "Trvalo upraviť názov zariadenia",
+        "discovery": "Ste viditeľný/-á",
+        "on-this-network": "v tejto sieti",
+        "on-this-network_title": "Ste viditeľný pre kohokoľvek v tejto sieti.",
+        "paired-devices_title": "Pre spárované zariadenia ste viditeľný vždy, nezávisle od siete.",
+        "public-room-devices": "v miestnosti {{roomId}}"
+    }
+}
