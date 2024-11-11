@@ -478,12 +478,7 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
         try {
             if (file.type === "image/heif" || file.type === "image/heic") {
                 // browsers can't show heic files --> convert to jpeg before creating thumbnail
-                let blob = await fileToBlob(file);
-                file = await heic2any({
-                    blob,
-                    toType: "image/jpeg",
-                    quality: quality
-                });
+                file = await heicToJpeg(file, 0.5);
             }
 
             let imageUrl = URL.createObjectURL(file);
@@ -539,6 +534,32 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
             reject(new Error(`Could not create an image thumbnail from type ${file.type}`));
         }
     })
+}
+
+function initHeicConverter() {
+    return new Promise((resolve, reject) => {
+        fetch("libheif.wasm")
+            .then((res) => res.arrayBuffer())
+            .then(async (wasmBinary) => {
+                resolve(new HeifConvert(libheif({ wasmBinary: wasmBinary })));
+            })
+            .catch(reject);
+    });
+}
+
+async function heicToJpeg(file, quality) {
+    const heicConverter = await initHeicConverter();
+    console.log("Using libheif", heicConverter.libheif.heif_get_version());
+
+    const buffer = await file.arrayBuffer();
+    const canvas = await heicConverter.convert(buffer);
+
+    return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob),
+            'image/jpeg',
+            quality
+        );
+    });
 }
 
 // Resolves returned promise when image is loaded and throws error if image cannot be shown
