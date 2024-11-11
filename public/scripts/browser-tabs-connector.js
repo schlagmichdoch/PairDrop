@@ -1,5 +1,7 @@
 class BrowserTabsConnector {
     constructor() {
+        if (!('BroadcastChannel' in window)) return;
+
         this.bc = new BroadcastChannel('pairdrop');
         this.bc.addEventListener('message', e => this._onMessage(e));
         Events.on('broadcast-send', e => this._broadcastSend(e.detail));
