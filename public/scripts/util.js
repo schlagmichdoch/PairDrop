@@ -493,26 +493,40 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
 
             await waitUntilImageIsLoaded(imageUrl);
 
-            let imageWidth = image.width;
-            let imageHeight = image.height;
             let canvas = document.createElement('canvas');
+            let heightForSpecifiedWidth;
+            let widthForSpecifiedHeight;
 
-            // resize the canvas and draw the image data into it
+            if (width) {
+                heightForSpecifiedWidth = Math.floor(image.height * width / image.width);
+            }
+            if (height) {
+                widthForSpecifiedHeight = Math.floor(image.width * height / image.height);
+            }
+
+            // resize the canvas and draw the image on it
             if (width && height) {
-                canvas.width = width;
-                canvas.height = height;
+                // mode "contain": preserve aspect ratio and use arguments as boundaries
+                if (height > heightForSpecifiedWidth) {
+                    canvas.width = width;
+                    canvas.height = heightForSpecifiedWidth;
+                }
+                else {
+                    canvas.width = widthForSpecifiedHeight;
+                    canvas.height = height;
+                }
             }
             else if (width) {
                 canvas.width = width;
-                canvas.height = Math.floor(imageHeight * width / imageWidth)
+                canvas.height = heightForSpecifiedWidth;
             }
             else if (height) {
-                canvas.width = Math.floor(imageWidth * height / imageHeight);
+                canvas.width = widthForSpecifiedHeight;
                 canvas.height = height;
             }
             else {
-                canvas.width = imageWidth;
-                canvas.height = imageHeight
+                canvas.width = image.width;
+                canvas.height = image.height
             }
 
             let ctx = canvas.getContext("2d");

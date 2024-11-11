@@ -332,6 +332,8 @@ class Peer {
         this._filesQueue = [];
         this._busy = false;
 
+        this.maxMessageSize = 65536; // 64 KB
+
         // evaluate auto accept
         this._evaluateAutoAccept();
     }
@@ -450,14 +452,7 @@ class Peer {
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 0.8, status: 'prepare'})
 
-        let dataUrl = '';
-        if (files[0].type.split('/')[0] === 'image') {
-            try {
-                dataUrl = await getThumbnailAsDataUrl(files[0], 400, null, 0.9);
-            } catch (e) {
-                console.error(e);
-            }
-        }
+        let dataUrl = await this.getFileTransferThumbnail(files[0]);
 
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'prepare'})
 
@@ -470,6 +465,30 @@ class Peer {
             thumbnailDataUrl: dataUrl
         });
         Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'wait'})
+    }
+
+    async getFileTransferThumbnail(image) {
+        if (image.type.split('/')[0] !== 'image') {
+            // file is not of type image -> abort!
+            return '';
+        }
+
+        let dataUrl = '';
+        try {
+            // Iteratively lower thumbnail quality until its size is less than maxMessageSize - 2 kB
+            let quality = 1;
+            do {
+                quality -= 0.1;
+                if (quality <= 0) {
+                    console.error("Could not create thumbnail that fits into one message.");
+                    return '';
+                }
+                dataUrl = await getThumbnailAsDataUrl(image, 450, 450, quality);
+            } while (new Blob([dataUrl]).size + 2_000 > this.maxMessageSize);
+        } catch (e) {
+            console.error(e);
+        }
+        return dataUrl;
     }
 
     async sendFiles() {
@@ -725,7 +744,8 @@ class RTCPeer extends Peer {
         super(serverConnection, isCaller, peerId, roomType, roomId);
 
         this.rtcSupported = true;
-        this.rtcConfig = rtcConfig
+        this.rtcConfig = rtcConfig;
+        this.maxMessageSize = 262144; // 256 KB
 
         if (!this._isCaller) return; // we will listen for a caller
         this._connect();
@@ -811,6 +831,13 @@ class RTCPeer extends Peer {
         Events.on('beforeunload', e => this._onBeforeUnload(e));
         Events.on('pagehide', _ => this._onPageHide());
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
+        this._setMaxMessageSize();
+    }
+
+    _setMaxMessageSize() {
+        this.maxMessageSize = this._conn && this._conn.sctp
+            ? Math.min(this._conn.sctp.maxMessageSize, 1048576) // 1 MB max
+            : 262144; // 256 KB
     }
 
     _onMessage(message) {

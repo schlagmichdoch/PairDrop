@@ -281,10 +281,8 @@ class PeersUI {
 
             if (files[0].type.split('/')[0] === 'image') {
                 try {
-                    let imageUrl = await getThumbnailAsDataUrl(files[0], 80, null, 0.9);
-
+                    let imageUrl = await getThumbnailAsDataUrl(files[0], 80, 80, 0.9);
                     this.$shareModeImageThumb.style.backgroundImage = `url(${imageUrl})`;
-
                     this.$shareModeImageThumb.removeAttribute('hidden');
                 } catch (e) {
                     console.error(e);
