@@ -478,12 +478,7 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
         try {
             if (file.type === "image/heif" || file.type === "image/heic") {
                 // browsers can't show heic files --> convert to jpeg before creating thumbnail
-                let blob = await fileToBlob(file);
-                file = await heic2any({
-                    blob,
-                    toType: "image/jpeg",
-                    quality: quality
-                });
+                file = await heicToJpeg(file, 0.5);
             }
 
             let imageUrl = URL.createObjectURL(file);
@@ -493,26 +488,40 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
 
             await waitUntilImageIsLoaded(imageUrl);
 
-            let imageWidth = image.width;
-            let imageHeight = image.height;
             let canvas = document.createElement('canvas');
+            let heightForSpecifiedWidth;
+            let widthForSpecifiedHeight;
 
-            // resize the canvas and draw the image data into it
+            if (width) {
+                heightForSpecifiedWidth = Math.floor(image.height * width / image.width);
+            }
+            if (height) {
+                widthForSpecifiedHeight = Math.floor(image.width * height / image.height);
+            }
+
+            // resize the canvas and draw the image on it
             if (width && height) {
-                canvas.width = width;
-                canvas.height = height;
+                // mode "contain": preserve aspect ratio and use arguments as boundaries
+                if (height > heightForSpecifiedWidth) {
+                    canvas.width = width;
+                    canvas.height = heightForSpecifiedWidth;
+                }
+                else {
+                    canvas.width = widthForSpecifiedHeight;
+                    canvas.height = height;
+                }
             }
             else if (width) {
                 canvas.width = width;
-                canvas.height = Math.floor(imageHeight * width / imageWidth)
+                canvas.height = heightForSpecifiedWidth;
             }
             else if (height) {
-                canvas.width = Math.floor(imageWidth * height / imageHeight);
+                canvas.width = widthForSpecifiedHeight;
                 canvas.height = height;
             }
             else {
-                canvas.width = imageWidth;
-                canvas.height = imageHeight
+                canvas.width = image.width;
+                canvas.height = image.height
             }
 
             let ctx = canvas.getContext("2d");
@@ -525,6 +534,32 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
             reject(new Error(`Could not create an image thumbnail from type ${file.type}`));
         }
     })
+}
+
+function initHeicConverter() {
+    return new Promise((resolve, reject) => {
+        fetch("libheif.wasm")
+            .then((res) => res.arrayBuffer())
+            .then(async (wasmBinary) => {
+                resolve(new HeifConvert(libheif({ wasmBinary: wasmBinary })));
+            })
+            .catch(reject);
+    });
+}
+
+async function heicToJpeg(file, quality) {
+    const heicConverter = await initHeicConverter();
+    console.log("Using libheif", heicConverter.libheif.heif_get_version());
+
+    const buffer = await file.arrayBuffer();
+    const canvas = await heicConverter.convert(buffer);
+
+    return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob),
+            'image/jpeg',
+            quality
+        );
+    });
 }
 
 // Resolves returned promise when image is loaded and throws error if image cannot be shown

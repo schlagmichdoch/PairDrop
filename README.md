@@ -108,7 +108,7 @@ Connect to others in complex network situations, or over the Internet.
 * [zip.js](https://gildas-lormeau.github.io/zip.js/) library
 * [cyrb53](https://github.com/bryc/code/blob/master/jshash/experimental/cyrb53.js) super-fast hash function
 * [NoSleep](https://github.com/richtr/NoSleep.js) display sleep, add wake lock ([MIT](licenses/MIT-NoSleep))
-* [heic2any](https://github.com/alexcorvi/heic2any) HEIC/HEIF to PNG/GIF/JPEG ([MIT](licenses/MIT-heic2any))
+* [libheif](https://github.com/strukturag/libheif) library to handle HEIC/HEIF files (GPLv3)
 * [Weblate](https://weblate.org/) web-based localization tool
 
 [FAQ](docs/faq.md)
