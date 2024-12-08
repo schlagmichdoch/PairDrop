@@ -26,7 +26,7 @@
         }
     ],
     "background_color": "#efefef",
-    "display": "minimal-ui",
+    "display": "standalone",
     "theme_color": "#3367d6",
     "screenshots" : [
         {
@@ -86,5 +86,10 @@
     },
     "launch_handler": {
         "client_mode": "focus-existing"
-    }
+    },
+    "start_url": "/",
+    "orientation": "any",
+    "categories": ["utilities", "productivity"],
+    "prefer_related_applications": false,
+    "display_override": ["window-controls-overlay", "standalone"]
 }
