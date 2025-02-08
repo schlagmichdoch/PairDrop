@@ -17,7 +17,7 @@
     "notifications": {
         "request-title": "يرغب {{name}} في نقل {{count}} {{descriptor}}",
         "unfinished-transfers-warning": "هناك تحويلات غير مكتملة. هل أنت متأكد أنك تريد إغلاق PairDrop؟",
-        "message-received": "تم استلام الرابط بواسطة {{name}} - انقر للفتح",
+        "message-received": "تم استلام الرسالة بواسطة {{name}} - انقر للفتح",
         "rate-limit-join-key": "تم الوصول إلى الحد الأقصى. انتظر 10 ثوان وحاول مرة أخرى.",
         "connecting": "يتصل …",
         "pairing-key-invalidated": "المفتاح {{key}} خاطئ",
@@ -52,7 +52,10 @@
         "online-requirement-public-room": "يجب أن تكون متصلاً بالإنترنت لإنشاء غرفة عامة",
         "copied-text-error": "فشلت الكتابة من الحافظة. انسخ يدويًا!",
         "download-successful": "تم تحميل {{descriptor}}",
-        "click-to-show": "اضغط للعرض"
+        "click-to-show": "اضغط للعرض",
+        "pair-url-copied-to-clipboard": "تم نسخ رابط اقتران هذا الجهاز إلى الحافظة",
+        "room-url-copied-to-clipboard": "تم نسخ رابط هذه الغرفة العامة إلى الحافظة",
+        "notifications-permissions-error": "لم يتم منح إذن الإشعارات حيث أن المستخدم أغلق نافذة السماح عدة مرات. يمكن إعادة تعيين هذا في معلومات الصفحة التي يمكن فتحها بالضغط على رمز القفل بجانب شريط عنوان صفحة الإنترنت."
     },
     "header": {
         "cancel-share-mode": "تمّ",
@@ -62,12 +65,13 @@
         "pair-device_title": "قم بإقران أجهزتك بشكل دائم",
         "join-public-room_title": "انضم إلى الغرفة العامة مؤقتًا",
         "notification_title": "تفعيل الإشعارات",
-        "edit-paired-devices_title": "تعديل الأجهزة المقترنة",
+        "edit-paired-devices_title": "عدل الأجهزة المقترنة",
         "language-selector_title": "إختر اللغة",
         "about_title": "حول PairDrop",
         "about_aria-label": "افتح حول PairDrop",
         "theme-light_title": "إستخدم دائماً المظهر الفاتح",
-        "edit-share-mode": "ت٧ارف"
+        "edit-share-mode": "عدل",
+        "expand_title": "Expand header button row"
     },
     "instructions": {
         "x-instructions_mobile": "انقر لإرسال الملفات أو انقر لفترة طويلة لإرسال رسالة",
@@ -81,7 +85,11 @@
         "no-peers-title": "افتح PairDrop على الأجهزة الأخرى لإرسال الملفات",
         "x-instructions_data-drop-bg": "حرر لتحديد المستلم",
         "no-peers_data-drop-bg": "حرر لتحديد المستلم",
-        "x-instructions_data-drop-peer": "قم بالتحرير لإرسالها إلى القرين"
+        "x-instructions_data-drop-peer": "قم بالتحرير لإرسالها إلى القرين",
+        "activate-share-mode-and-other-file": "وملف واحد آخر",
+        "activate-share-mode-shared-files-plural": "{{count}} ملفات مشاركة",
+        "activate-share-mode-shared-file": "الملف المُشارك",
+        "webrtc-requirement": "لتستعمل بيردروب هنا، يجب أن يكون WebRTC مفعلًا!"
     },
     "peer-ui": {
         "processing": "مُعالجة …",
@@ -93,7 +101,7 @@
         "transferring": "جارٍ النقل…"
     },
     "dialogs": {
-        "base64-paste-to-send": "الصق هنا لإرسال {{type}}",
+        "base64-paste-to-send": "الصق هنا للمشاركة {{type}}",
         "auto-accept-instructions-2": "لقبول جميع الملفات المرسلة من هذا الجهاز تلقائيًا.",
         "receive-text-title": "تلقيت رسالة",
         "edit-paired-devices-title": "تحرير الأجهزة المقترنة",
@@ -104,12 +112,12 @@
         "title-file": "ملف",
         "base64-processing": "مُعالجة…",
         "decline": "رفض",
-        "receive-title": "تم الاستلام {{descriptor}}",
+        "receive-title": "تم استلام {{descriptor}}",
         "leave": "مُغادرة",
         "join": "انضمام",
         "title-image-plural": "صور",
         "send": "ارسال",
-        "base64-tap-to-paste": "انقر هنا للصق {{type}}",
+        "base64-tap-to-paste": "انقر هنا للمشاركة {{type}}",
         "base64-text": "نص",
         "copy": "نسخ",
         "file-other-description-image": "وصورة واحدة أخرى",
@@ -123,7 +131,7 @@
         "title-image": "صورة",
         "file-other-description-file-plural": "و{{count}} ملفات أخرى",
         "would-like-to-share": "ترغب في المشاركة",
-        "send-message-to": "أرسال رسالة إلى",
+        "send-message-to": "أرسال رسالة إلى:",
         "language-selector-title": "إختر اللُغة",
         "pair": "إقتران",
         "hr-or": "او",
@@ -139,7 +147,19 @@
         "send-message-title": "إرسال رسالة",
         "input-room-id-on-another-device": "‌أدخل معرف الغرفة هذا على جهاز آخر",
         "file-other-description-image-plural": "و{{count}} صور أخرى",
-        "enter-room-id-from-another-device": "أدخل معرف الغرفة من جهاز آخر للانضمام إلى الغرفة."
+        "enter-room-id-from-another-device": "أدخل معرف الغرفة من جهاز آخر للانضمام إلى الغرفة.",
+        "share-text-title": "شارك رسالة نصية",
+        "paired-device-removed": "تمت إزالة الجهاز المقترن.",
+        "message_title": "أدخل رسالة لإرسالها",
+        "message_placeholder": "النص",
+        "base64-title-files": "شارك ملفات",
+        "base64-title-text": "شارك نصًا",
+        "public-room-qr-code_title": "اضغط لنسخ رابط الغرفة العامة",
+        "approve": "قبول",
+        "share-text-subtitle": "عدل الرسالة قبل الإرسال:",
+        "share-text-checkbox": "أظهر هذه الرسالة دائمًا عند مشاركة النصوص",
+        "close-toast_title": "أغلق الإشعار",
+        "pair-devices-qr-code_title": "اضغط لنسخ رابط اقتران هذا الجهاز"
     },
     "about": {
         "claim": "أسهل طريقة لنقل الملفات عبر الأجهزة",
@@ -147,7 +167,11 @@
         "close-about_aria-label": "إغلاق حول PairDrop",
         "buy-me-a-coffee_title": "اشتري لي القهوة!",
         "github_title": "PairDrop على جيت هاب",
-        "faq_title": "أسئلة متكررة"
+        "faq_title": "أسئلة متكررة",
+        "mastodon_title": "اكتب عن بيردروب على ماستادون",
+        "bluesky_title": "تابعنا على بلوسكاي",
+        "custom_title": "تابعنا",
+        "privacypolicy_title": "افتح سياسة الخصوصية الخاصة بنا"
     },
     "document-titles": {
         "file-transfer-requested": "طلب نقل الملف",
