@@ -1,18 +1,19 @@
 {
     "header": {
-        "about_aria-label": "Открыть страницу \"О сервисе\"",
+        "about_aria-label": "О PairDrop",
         "pair-device_title": "Связать ваши устройства навсегда",
         "install_title": "Установить PairDrop",
         "cancel-share-mode": "Выполнено",
         "edit-paired-devices_title": "Редактировать связанные устройства",
         "notification_title": "Включить уведомления",
-        "about_title": "О сервисе",
+        "about_title": "О PairDrop",
         "theme-auto_title": "Адаптировать тему к системной автоматически",
         "theme-dark_title": "Всегда использовать темную тему",
         "theme-light_title": "Всегда использовать светлую тему",
         "join-public-room_title": "Войти на время в публичную комнату",
-        "language-selector_title": "Выбрать язык",
-        "edit-share-mode": "Редактировать"
+        "language-selector_title": "Установить язык",
+        "edit-share-mode": "Редактировать",
+        "expand_title": "Развернуть ряд кнопок заголовка"
     },
     "instructions": {
         "x-instructions_desktop": "Нажмите, чтобы отправить файлы, или щелкните правой кнопкой мыши, чтобы отправить сообщение",
@@ -26,7 +27,11 @@
         "no-peers-subtitle": "Свяжите устройства или войдите в публичную комнату, чтобы вас могли обнаружить из других сетей",
         "activate-share-mode-and-other-files-plural": "и {{count}} других файлов",
         "activate-share-mode-base": "Откройте PairDrop на других устройствах, чтобы отправить",
-        "activate-share-mode-shared-text": "общий текст"
+        "activate-share-mode-shared-text": "общий текст",
+        "activate-share-mode-and-other-file": "и 1 другой файл",
+        "activate-share-mode-shared-file": "доступный файл",
+        "activate-share-mode-shared-files-plural": "{{count}} доступных файлов",
+        "webrtc-requirement": "Включите WebRTC, чтобы пользоваться этой копией PairDrop!"
     },
     "footer": {
         "display-name_data-placeholder": "Загрузка…",
@@ -55,13 +60,13 @@
         "download": "Скачать",
         "receive-text-title": "Сообщение получено",
         "send": "Отправить",
-        "send-message-to": "Отправить сообщение",
+        "send-message-to": "Кому:",
         "send-message-title": "Отправить сообщение",
         "copy": "Копировать",
         "base64-files": "файлы",
-        "base64-paste-to-send": "Вставьте здесь, чтобы отправить {{type}}",
+        "base64-paste-to-send": "Вставьте, чтобы поделиться {{type}}",
         "base64-processing": "Обработка…",
-        "base64-tap-to-paste": "Прикоснитесь здесь, чтобы вставить {{type}}",
+        "base64-tap-to-paste": "Нажмите, чтобы поделиться {{type}}",
         "base64-text": "текст",
         "title-file": "Файл",
         "title-file-plural": "Файлы",
@@ -95,7 +100,14 @@
         "pair-devices-qr-code_title": "Нажмите, чтобы скопировать ссылку для привязки этого устройства",
         "public-room-qr-code_title": "Нажмите, чтобы скопировать ссылку на публичную комнату",
         "message_placeholder": "Текст",
-        "paired-device-removed": "Связанное устройство удалено."
+        "paired-device-removed": "Связанное устройство удалено.",
+        "close-toast_title": "Закрыть уведомление",
+        "share-text-checkbox": "Всегда показывать это окно перед отправкой",
+        "base64-title-text": "Поделиться текстом",
+        "base64-title-files": "Поделиться файлами",
+        "share-text-subtitle": "Отредактировать сообщение перед отправкой:",
+        "approve": "одобрить",
+        "share-text-title": "Поделиться сообщением"
     },
     "about": {
         "close-about-aria-label": "Закрыть страницу \"О сервисе\"",
@@ -104,7 +116,11 @@
         "buy-me-a-coffee_title": "Купить мне кофе!",
         "github_title": "PairDrop на GitHub",
         "tweet_title": "Твит о PairDrop",
-        "faq_title": "Часто задаваемые вопросы"
+        "faq_title": "Часто задаваемые вопросы",
+        "mastodon_title": "Расскажите о PairDrop на Mastodon",
+        "custom_title": "Подпишитесь на нас",
+        "bluesky_title": "Подписаться на BlueSky",
+        "privacypolicy_title": "Открыть нашу политику приватности"
     },
     "notifications": {
         "display-name-changed-permanently": "Отображаемое имя было изменено навсегда",
