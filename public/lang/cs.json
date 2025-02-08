@@ -40,7 +40,7 @@
         "public-room-devices": "v místnosti {{roomId}}",
         "public-room-devices_title": "Zařízení v této veřejné místnosti vás mohou objevit nezávisle na síti.",
         "traffic": "Provoz je",
-        "routed": "směrovány přes server"
+        "routed": "směrován přes server"
     },
     "dialogs": {
         "auto-accept": "auto-accept",
@@ -58,8 +58,8 @@
         "unpair": "Zrušit spárování",
         "paired-device-removed": "Spárované zařízení bylo odstraněno.",
         "paired-devices-wrapper_data-empty": "Žádná spárovaná zařízení.",
-        "auto-accept-instructions-1": "Aktivovat",
-        "auto-accept-instructions-2": "automaticky přijímat všechny soubory odeslané z tohoto zařízení.",
+        "auto-accept-instructions-1": "Aktivací",
+        "auto-accept-instructions-2": "budete automaticky přijímat všechny soubory odeslané z tohoto zařízení.",
         "close": "Zavřít",
         "join": "Připojit",
         "leave": "Odejít",
@@ -132,7 +132,7 @@
         "pairing-key-invalid": "Neplatný klíč",
         "pairing-key-invalidated": "Klíč {{key}} byl neplatný",
         "public-room-id-invalid": "Neplatné ID místnosti",
-        "public-room-left": "Opustit veřejnou místnost {{publicRoomId}}",
+        "public-room-left": "Opuštěna veřejná místnost {{publicRoomId}}",
         "copied-to-clipboard": "Zkopírováno do schránky",
         "pair-url-copied-to-clipboard": "Odkaz pro spárování tohoto zařízení byl zkopírován do schránky",
         "room-url-copied-to-clipboard": "Odkaz do veřejné místnosti zkopírován do schránky",
