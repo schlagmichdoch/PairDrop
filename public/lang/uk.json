@@ -34,7 +34,7 @@
         "activate-share-mode-shared-files-plural": "{{count}} спільних файлів"
     },
     "footer": {
-        "known-as": "Вам відомо як:",
+        "known-as": "Ви відомі як:",
         "discovery": "Вас можна знайти:",
         "public-room-devices": "у кімнаті {{roomId}}",
         "public-room-devices_title": "Вас можуть знайти пристрої в цій публічній кімнаті, незалежно від мережі.",
