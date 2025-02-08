@@ -12,7 +12,8 @@
         "edit-paired-devices_title": "Editar dispositivos emparelhados",
         "join-public-room_title": "Entrar em uma sala pública temporariamente",
         "cancel-share-mode": "Cancelar",
-        "edit-share-mode": "Editar"
+        "edit-share-mode": "Editar",
+        "expand_title": "Expandir linha de botões de cabeçalho"
     },
     "instructions": {
         "no-peers_data-drop-bg": "Solte para selecionar o destinatário",
@@ -114,7 +115,11 @@
         "github_title": "PairDrop no GitHub",
         "buy-me-a-coffee_title": "Me compre um café!",
         "tweet_title": "Tweet sobre o PairDrop",
-        "faq_title": "Perguntas frequentes"
+        "faq_title": "Perguntas frequentes",
+        "mastodon_title": "Escrever sobre PairDrop no Mastodon",
+        "bluesky_title": "Siga-nos no BlueSky",
+        "custom_title": "Siga-nos",
+        "privacypolicy_title": "Abra nossa política de privacidade"
     },
     "notifications": {
         "display-name-changed-permanently": "O nome de exibição é alterado permanentemente",
