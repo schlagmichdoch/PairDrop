@@ -1,0 +1,39 @@
+{
+    "dialogs": {
+        "message_placeholder": "Aḍris",
+        "send-message-title": "Azen izen",
+        "copy": "Nɣel",
+        "title-image-plural": "Tugniwin",
+        "send": "Azen",
+        "title-image": "Tugna",
+        "title-file-plural": "Ifuyla",
+        "base64-text": "aḍris",
+        "auto-accept-instructions-1": "Rmed",
+        "base64-files": "Ifuyla",
+        "hr-or": "NEƔ",
+        "send-message-to": "I:",
+        "title-file": "Afaylu",
+        "close": "Mdel",
+        "accept": "Qbel",
+        "share": "Beṭṭu",
+        "download": "Asider",
+        "language-selector-title": "Sbedd tutlayt",
+        "system-language": "Tutlayt n unagraw",
+        "cancel": "Sefsex"
+    },
+    "about": {
+        "github_title": "PairDrop deg GitHub",
+        "close-about_aria-label": "Mdel Ɣef PairDrop"
+    },
+    "notifications": {
+        "connecting": "Tuqqna…",
+        "connected": "Yeqqen"
+    },
+    "header": {
+        "about_aria-label": "Ldi Ɣef PairDrop",
+        "about_title": "Ɣef PairDrop",
+        "language-selector_title": "Fren tutlayt",
+        "install_title": "Sbedd PairDrop",
+        "edit-share-mode": "Ẓreg"
+    }
+}

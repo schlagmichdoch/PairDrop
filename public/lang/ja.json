@@ -34,7 +34,7 @@
         "online": "オンラインに復帰しました",
         "public-room-left": "公開ルーム{{publicRoomId}}から退出しました",
         "copied-text": "テキストをクリップボードにコピーしました",
-        "display-name-random-again": "新しいランダムなデバイス名に変更されました",
+        "display-name-random-again": "新しいデバイス名に変更されました",
         "display-name-changed-permanently": "デバイス名が変更されました",
         "copied-to-clipboard-error": "コピーできませんでした。手動でコピーしてください。",
         "pairing-success": "ペアリングしました",
