@@ -1,6 +1,6 @@
 {
   "name": "pairdrop",
-  "version": "1.10.9",
+  "version": "1.10.10",
   "type": "module",
   "description": "",
   "main": "server/index.js",

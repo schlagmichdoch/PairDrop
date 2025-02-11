@@ -556,10 +556,6 @@ a2enmod proxy
 a2enmod proxy_http
 ```
 
-```bash
-a2enmod proxy_wstunnel
-```
-
 <br>
 
 Create a new configuration file under `/etc/apache2/sites-available` (on Debian)
@@ -570,18 +566,10 @@ Create a new configuration file under `/etc/apache2/sites-available` (on Debian)
 
 ```apacheconf
 <VirtualHost *:80>
-	ProxyPass / http://127.0.0.1:3000/
-	RewriteEngine on
-	RewriteCond %{HTTP:Upgrade} websocket [NC]
-	RewriteCond %{HTTP:Connection} upgrade [NC]
-	RewriteRule ^/?(.*) "ws://127.0.0.1:3000/$1" [P,L]
+	ProxyPass / http://127.0.0.1:3000/ upgrade=websocket
 </VirtualHost>
 <VirtualHost *:443>
-	ProxyPass / https://127.0.0.1:3000/
-	RewriteEngine on
-	RewriteCond %{HTTP:Upgrade} websocket [NC]
-	RewriteCond %{HTTP:Connection} upgrade [NC]
-	RewriteRule ^/?(.*) "wws://127.0.0.1:3000/$1" [P,L]
+	ProxyPass / https://127.0.0.1:3000/ upgrade=websocket
 </VirtualHost>
 ```
 
@@ -589,14 +577,10 @@ Create a new configuration file under `/etc/apache2/sites-available` (on Debian)
 
 ```apacheconf
 <VirtualHost *:80>
-   Redirect permanent / https://127.0.0.1:3000/
+	Redirect permanent / https://127.0.0.1:3000/
 </VirtualHost>
 <VirtualHost *:443>
-	ProxyPass / https://127.0.0.1:3000/
-	RewriteEngine on
-	RewriteCond %{HTTP:Upgrade} websocket [NC]
-	RewriteCond %{HTTP:Connection} upgrade [NC]
-	RewriteRule ^/?(.*) "wws://127.0.0.1:3000/$1" [P,L]
+	ProxyPass / http://127.0.0.1:3000/ upgrade=websocket
 </VirtualHost>
 ```
 

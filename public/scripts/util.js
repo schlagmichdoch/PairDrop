@@ -477,13 +477,16 @@ function getThumbnailAsDataUrl(file, width = undefined, height = undefined, qual
     return new Promise(async (resolve, reject) => {
         try {
             if (file.type === "image/heif" || file.type === "image/heic") {
-                // browsers can't show heic files --> convert to jpeg before creating thumbnail
-                let blob = await fileToBlob(file);
-                file = await heic2any({
-                    blob,
-                    toType: "image/jpeg",
-                    quality: quality
-                });
+                // hotfix: Converting heic images taken on iOS 18 crashes page. Waiting for PR #350
+                reject(new Error(`Hotfix: Converting of HEIC/HEIF images currently disabled.`));
+                return;
+                // // browsers can't show heic files --> convert to jpeg before creating thumbnail
+                // let blob = await fileToBlob(file);
+                // file = await heic2any({
+                //     blob,
+                //     toType: "image/jpeg",
+                //     quality: quality
+                // });
             }
 
             let imageUrl = URL.createObjectURL(file);

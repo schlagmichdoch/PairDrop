@@ -26,8 +26,6 @@
         }
     ],
     "background_color": "#efefef",
-    "start_url": "/",
-    "scope": "/",
     "display": "minimal-ui",
     "theme_color": "#3367d6",
     "screenshots" : [
