@@ -51,13 +51,14 @@ class Localization {
     }
 
     async setInitialTranslation() {
+        await Localization.fetchDefaultTranslations();
         await Localization.setTranslation(Localization.initialLocale)
     }
 
     static async setTranslation(locale) {
         if (!locale) locale = Localization.systemLocale;
 
-        await Localization.setLocale(locale)
+        await Localization.fetchTranslations(locale)
         await Localization.translatePage();
 
         if (Localization.localeIsRtl(locale)) {
@@ -78,10 +79,12 @@ class Localization {
         Events.fire("translation-loaded");
     }
 
-    static async setLocale(newLocale) {
-        if (newLocale === Localization.locale) return false;
+    static async fetchDefaultTranslations() {
+        Localization.translationsDefaultLocale = await Localization.fetchTranslationsFor(Localization.defaultLocale);
+    }
 
-        Localization.defaultTranslations = await Localization.fetchTranslationsFor(Localization.defaultLocale);
+    static async fetchTranslations(newLocale) {
+        if (newLocale === Localization.locale) return false;
 
         const newTranslations = await Localization.fetchTranslationsFor(newLocale);
 
