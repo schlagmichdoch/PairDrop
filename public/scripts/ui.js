@@ -278,8 +278,6 @@ class PeersUI {
                 descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-file");
             }
 
-            files = await mime.addMissingMimeTypesToFiles(files);
-
             if (files[0].type.split('/')[0] === 'image') {
                 try {
                     let imageUrl = await getThumbnailAsDataUrl(files[0], 80, null, 0.9);
