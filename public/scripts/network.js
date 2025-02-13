@@ -1082,7 +1082,7 @@ class PeersManager {
     }
 
     async _onFilesSelected(message) {
-        let files = await mime.addMissingMimeTypesToFiles(message.files);
+        let files = mime.addMissingMimeTypesToFiles(message.files);
         await this.peers[message.to].requestFileTransfer(files);
     }
 

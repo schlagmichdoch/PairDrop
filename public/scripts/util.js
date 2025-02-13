@@ -396,20 +396,20 @@ const mime = (() => {
     }
 
     return {
-        async guessMimeByFilename(filename) {
+        guessMimeByFilename(filename) {
             const split = filename.split('.');
             if (split.length === 1) {
                 // Filename does not include suffix
-                return "";
+                return false;
             }
             const suffix = split[split.length - 1].toLowerCase();
-            return suffixToMimeMap[suffix] || "";
+            return suffixToMimeMap[suffix];
         },
-        async addMissingMimeTypesToFiles(files) {
+        addMissingMimeTypesToFiles(files) {
             // if filetype is empty guess via suffix otherwise leave unchanged
             for (let i = 0; i < files.length; i++) {
                 if (!files[i].type) {
-                    files[i] = new File([files[i]], files[i].name, {type: await mime.guessMimeByFilename(files[i].name) || ""});
+                    files[i] = new File([files[i]], files[i].name, {type: mime.guessMimeByFilename(files[i].name) || ""});
                 }
             }
             return files;
