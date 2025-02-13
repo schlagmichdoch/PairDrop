@@ -18,11 +18,12 @@ class PeersUI {
 
         this.peers = {};
 
-        this.shareMode = {};
-        this.shareMode.active = false;
-        this.shareMode.descriptor = "";
-        this.shareMode.files = [];
-        this.shareMode.text = "";
+        this.shareMode = {
+            active: false,
+            descriptor: "",
+            files: [],
+            text: ""
+        }
 
         Events.on('peer-joined', e => this._onPeerJoined(e.detail));
         Events.on('peer-added', _ => this._evaluateOverflowingPeers());
@@ -394,12 +395,6 @@ class PeersUI {
 
 class PeerUI {
 
-    static _badgeClassNames = ["badge-room-ip", "badge-room-secret", "badge-room-public-id"];
-    static _shareMode = {
-        active: false,
-        descriptor: ""
-    };
-
     constructor(peer, connectionHash, shareMode) {
         this.$xInstructions = $$('x-instructions');
         this.$xPeers = $$('x-peers');
@@ -409,7 +404,7 @@ class PeerUI {
             `${connectionHash.substring(0, 4)} ${connectionHash.substring(4, 8)} ${connectionHash.substring(8, 12)} ${connectionHash.substring(12, 16)}`;
 
         // This is needed if the ShareMode is started BEFORE the PeerUI is drawn.
-        PeerUI._shareMode = shareMode;
+        this._shareMode = shareMode;
 
         this._initDom();
 
@@ -421,8 +416,8 @@ class PeerUI {
     }
 
     html() {
-        let title= PeerUI._shareMode.active
-            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor})
+        let title= this._shareMode.active
+            ? Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: this._shareMode.descriptor})
             : Localization.getTranslation("peer-ui.click-to-send");
 
         this.$el.innerHTML = `
@@ -485,8 +480,8 @@ class PeerUI {
 
     _onShareModeChanged(active = false, descriptor = "") {
         // This is needed if the ShareMode is started AFTER the PeerUI is drawn.
-        PeerUI._shareMode.active = active;
-        PeerUI._shareMode.descriptor = descriptor;
+        this._shareMode.active = active;
+        this._shareMode.descriptor = descriptor;
 
         this._evaluateShareMode();
         this._bindListeners();
@@ -494,12 +489,12 @@ class PeerUI {
 
     _evaluateShareMode() {
         let title;
-        if (!PeerUI._shareMode.active) {
+        if (!this._shareMode.active) {
             title = Localization.getTranslation("peer-ui.click-to-send");
             this.$input.removeAttribute('disabled');
         }
         else {
-            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: PeerUI._shareMode.descriptor});
+            title =  Localization.getTranslation("peer-ui.click-to-send-share-mode", null, {descriptor: this._shareMode.descriptor});
             this.$input.setAttribute('disabled', true);
         }
         this.$label.setAttribute('title', title);
@@ -520,7 +515,7 @@ class PeerUI {
     }
 
     _bindListeners() {
-        if(!PeerUI._shareMode.active) {
+        if(!this._shareMode.active) {
             // Remove Events Share mode
             this.$el.removeEventListener('pointerdown', this._callbackPointerDown);
 
@@ -636,7 +631,7 @@ class PeerUI {
     }
 
     _onDrop(e) {
-        if (PeerUI._shareMode.active || Dialog.anyDialogShown()) return;
+        if (this._shareMode.active || Dialog.anyDialogShown()) return;
 
         e.preventDefault();
 
@@ -1974,7 +1969,7 @@ class SendTextDialog extends Dialog {
     _onRecipient(peerId, deviceName) {
         this.correspondingPeerId = peerId;
         this.$peerDisplayName.innerText = deviceName;
-        this.$peerDisplayName.classList.remove(...PeerUI._badgeClassNames);
+        this.$peerDisplayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
         this.$peerDisplayName.classList.add($(peerId).ui._badgeClassName());
 
         this.show();
@@ -2056,7 +2051,7 @@ class ReceiveTextDialog extends Dialog {
 
     _showReceiveTextDialog(text, peerId) {
         this.$displayName.innerText = $(peerId).ui._displayName();
-        this.$displayName.classList.remove(...PeerUI._badgeClassNames);
+        this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
         this.$displayName.classList.add($(peerId).ui._badgeClassName());
 
         this.$text.innerText = text;

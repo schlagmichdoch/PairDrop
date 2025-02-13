@@ -696,7 +696,6 @@ button::-moz-focus-inner {
 
 
 /* Info Animation */
-
 #about {
     color: white;
     z-index: 32;
@@ -752,9 +751,11 @@ button::-moz-focus-inner {
     height: var(--size);
     z-index: -1;
     background: var(--primary-color);
-    background-image: radial-gradient(circle at calc(50% - 36px), var(--accent-color) 0%, color-mix(in srgb, var(--accent-color) 40%, black) 80%);
+    background-image: radial-gradient(circle at calc(50% - 36px), var(--primary-color) 0%, black 80%);
     --crop-size: 0px;
     clip-path: circle(var(--crop-size));
+    /* For clients < iOS 13.1 */
+    -webkit-clip-path: circle(var(--crop-size));
 }
 
 html:not([dir="rtl"]) #about x-background {
