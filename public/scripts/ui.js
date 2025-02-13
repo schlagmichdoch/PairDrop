@@ -175,7 +175,7 @@ class PeersUI {
         if (!$peer) return;
         $peer.remove();
         this.evaluateOverflowing();
-        if ($$('x-peers:empty')) setTimeout(_ => window.animateBackground(true), 1750); // Start animation again
+        window.animateBackground(true);
     }
 
     _onSecretRoomDeleted(roomSecret) {
@@ -315,7 +315,7 @@ class PeerUI {
         $$('x-peers').appendChild(this.$el)
         Events.fire('peer-added');
         this.$xInstructions = $$('x-instructions');
-        setTimeout(_ => window.animateBackground(false), 1750); // Stop animation
+        window.animateBackground(false);
     }
 
     html() {
@@ -1587,11 +1587,11 @@ class NetworkStatusUI {
     }
 
     _onWsConnected() {
-        window.animateBackground(true);
+        // window.animateBackground(true);
     }
 
     _onWsDisconnected() {
-        window.animateBackground(false);
+        // window.animateBackground(false);
     }
 }
 
@@ -1954,7 +1954,7 @@ Events.on('load', () => {
         let oldOffset = offset
         w = document.documentElement.clientWidth;
         h = document.documentElement.clientHeight;
-        offset = $$('footer').offsetHeight - 32;
+        offset = $$('footer').offsetHeight - 33;
         if (h > 800) offset += 16;
 
         if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
@@ -1963,7 +1963,7 @@ Events.on('load', () => {
         c.height = h;
         x0 = w / 2;
         y0 = h - offset;
-        dw = Math.round(Math.max(w, h, 1000) / 13);
+        dw = Math.round(Math.max(w, h, 1000) / 12);
         drawCircles(cCtx, 0);
 
         // enforce redrawing of frames
@@ -1972,18 +1972,25 @@ Events.on('load', () => {
     Events.on('bg-resize', _ => init());
     window.onresize = _ => Events.fire('bg-resize');
 
+    function drawBg(ctx) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, w, h);
+    }
+
     function drawCircle(ctx, radius) {
+        ctx.lineWidth = 1.5;
+        let opacity = 0.35 * radius / (dw * 8);
+        ctx.strokeStyle = `rgb(128 128 128 / ${opacity})`;
         ctx.beginPath();
-        ctx.lineWidth = 2;
-        let opacity = 0.2 * (1 - 1.2 * radius / Math.max(w, h));
-        ctx.strokeStyle = `rgb(128, 128, 128, ${opacity})`;
         ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
         ctx.stroke();
     }
 
     function drawCircles(ctx, frame) {
-        for (let i = 0; i < 13; i++) {
-            drawCircle(ctx, dw * i + frame);
+        // drawBg(ctx);
+
+        for (let i = 7; i >= 0; i--) {
+            drawCircle(ctx, dw * i + frame + 33);
         }
     }
 
@@ -1998,6 +2005,7 @@ Events.on('load', () => {
 
     function drawFrame(frame) {
         cCtx.clearRect(0, 0, w, h);
+
         if (!offscreenCanvases[frame]) {
             createOffscreenCanvas(frame);
         }
@@ -2007,20 +2015,41 @@ Events.on('load', () => {
     let animate = true;
     let currentFrame = 0;
 
+    // initialize the timer variables and start the animation
+    let fpsInterval, startTime, now, then, elapsed;
+
+    function startAnimating(fps) {
+        fpsInterval = 1000 / fps;
+        then = Date.now();
+        startTime = then;
+        animateBg();
+    }
+
     function animateBg() {
-        if (currentFrame + 1 < dw || animate) {
-            currentFrame = (currentFrame + 1) % dw;
+        requestAnimationFrame(animateBg);
+
+        now = Date.now();
+        elapsed = now - then;
+        // if not enough time has elapsed, do not draw the next frame -> abort
+        if (elapsed < fpsInterval) {
+            return;
+        }
+
+        then = now - (elapsed % fpsInterval);
+
+        if (animate) {
+            currentFrame = (currentFrame + 2) % dw;
             drawFrame(currentFrame);
         }
-        setTimeout(_ => animateBg(), 3000 / dw);
     }
 
     window.animateBackground = function(l) {
         animate = l;
+        console.debug(l)
     };
 
     init();
-    animateBg();
+    startAnimating(25)
 });
 
 document.changeFavicon = function (src) {
