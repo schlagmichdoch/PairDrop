@@ -179,10 +179,13 @@ class PeersUI {
 
         this._onDragEnd();
 
-        if ($$('x-peer') || !$$('x-peer').contains(e.target)) return; // dropped on peer
+        if ($$('x-peer') && $$('x-peer').contains(e.target)) return; // dropped on peer
 
-        const files = e.dataTransfer.files;
-        const text = e.dataTransfer.getData("text");
+        let files = e.dataTransfer.files;
+        let text = e.dataTransfer.getData("text");
+
+        // convert FileList to Array
+        files = [...files];
 
         if (files.length > 0) {
             Events.fire('activate-share-mode', {
@@ -215,8 +218,11 @@ class PeersUI {
         if (this.shareMode.active || Dialog.anyDialogShown()) return;
 
         e.preventDefault()
-        const files = e.clipboardData.files;
-        const text = e.clipboardData.getData("Text");
+        let files = e.clipboardData.files;
+        let text = e.clipboardData.getData("Text");
+
+        // convert FileList to Array
+        files = [...files];
 
         if (files.length > 0) {
             Events.fire('activate-share-mode', {files: files});
@@ -277,8 +283,6 @@ class PeersUI {
             else {
                 descriptorInstructions = Localization.getTranslation("instructions.activate-share-mode-shared-file");
             }
-
-            files = await mime.addMissingMimeTypesToFiles(files);
 
             if (files[0].type.split('/')[0] === 'image') {
                 try {
