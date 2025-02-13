@@ -909,6 +909,13 @@ x-peers:empty~x-instructions {
     }
 }
 
+/* PWA Standalone styles */
+@media all and (display-mode: standalone) {
+    footer {
+        padding-bottom: 34px;
+    }
+}
+
 /* Constants */
 
 :root {
