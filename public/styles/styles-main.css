@@ -899,7 +899,7 @@ x-peers:empty~x-instructions {
 
 @media screen and (min-height: 800px) {
     footer {
-        margin-bottom: 16px;
+        padding-bottom: 10px;
     }
 }
 

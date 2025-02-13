@@ -357,7 +357,6 @@ class BackgroundCanvas {
         this.w = document.documentElement.clientWidth;
         this.h = document.documentElement.clientHeight;
         this.offset = this.$footer.offsetHeight - 27;
-        if (this.h >= 800) this.offset += 10;
 
         if (oldW === this.w && oldH === this.h && oldOffset === this.offset) return; // nothing has changed
 
