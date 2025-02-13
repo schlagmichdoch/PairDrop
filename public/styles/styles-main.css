@@ -11,10 +11,6 @@ body {
     overflow-x: hidden;
     overscroll-behavior: none;
     overflow-y: hidden;
-    /* Only allow selection on message and pair key */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
     transition: color 300ms;
 }
 
