@@ -333,65 +333,142 @@ class FooterUI {
 
 class BackgroundCanvas {
     constructor() {
-        this.c = $$('canvas');
-        this.cCtx = this.c.getContext('2d');
-        this.$footer = $$('footer');
+        this.canvas = $$('canvas');
+        this.initAnimation();
+    }
+
+    initAnimation() {
+        let c = this.canvas;
+        let cCtx = c.getContext('2d');
+        let $footer = $$('footer');
+
+        let x0, y0, w, h, dw, offset, baseColor, baseOpacity;
+
+        let offscreenCanvases;
+        let shareMode = false;
+
+        let animate = true;
+        let currentFrame = 0;
+
+        let fpsInterval, now, then, elapsed;
+
+        let speed = 1.5;
+
+        function init() {
+            let oldW = w;
+            let oldH = h;
+            let oldOffset = offset
+            w = document.documentElement.clientWidth;
+            h = document.documentElement.clientHeight;
+            offset = $footer.offsetHeight - 33;
+            if (h > 800) offset += 16;
+
+            if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
+
+            c.width = w;
+            c.height = h;
+            x0 = w / 2;
+            y0 = h - offset;
+            dw = Math.round(Math.max(w, h, 1000) / 12);
+
+            drawCircles(cCtx, 0);
+
+            // enforce redrawing of frames
+            offscreenCanvases = {true: [], false: []};
+        }
+
+        function drawCircle(ctx, radius) {
+            ctx.lineWidth = 2;
+
+            baseColor = shareMode ? '168 168 255' : '168 168 168';
+            baseOpacity = shareMode ? 0.8 : 0.4;
+
+            let opacity = baseOpacity * radius / (dw * 8);
+            if (radius > dw * 5) {
+                opacity *= (6 * dw - radius) / dw
+            }
+            ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
+            ctx.beginPath();
+            ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
+            ctx.stroke();
+        }
+
+        function drawCircles(ctx, frame) {
+            for (let i = 6; i >= 0; i--) {
+                drawCircle(ctx, dw * i + speed * frame + 33);
+            }
+        }
+
+        function createOffscreenCanvas(frame) {
+            let canvas = document.createElement("canvas");
+            canvas.width = c.width;
+            canvas.height = c.height;
+            offscreenCanvases[shareMode][frame] = canvas;
+            let ctx = canvas.getContext('2d');
+            drawCircles(ctx, frame);
+        }
+
+        function drawFrame(frame) {
+            cCtx.clearRect(0, 0, w, h);
+
+            if (!offscreenCanvases[shareMode][frame]) {
+                createOffscreenCanvas(frame);
+            }
+            cCtx.drawImage(offscreenCanvases[shareMode][frame], 0, 0);
+        }
+
+        function startAnimating(fps) {
+            fpsInterval = 1000 / fps;
+            then = Date.now();
+            animateBg();
+        }
+
+        function animateBg() {
+            requestAnimationFrame(animateBg);
+
+            now = Date.now();
+            elapsed = now - then;
+            // if not enough time has elapsed, do not draw the next frame -> abort
+            if (elapsed < fpsInterval) {
+                return;
+            }
+
+            then = now - (elapsed % fpsInterval);
+
+            if (animate) {
+                currentFrame = (currentFrame + 1) % (dw/speed);
+                drawFrame(currentFrame);
+            }
+        }
+
+        function switchAnimation(state) {
+            animate = state;
+            console.debug(state)
+        }
+
+        function redrawOnShareModeChange(active) {
+            shareMode = active
+        }
+
+        init();
+        startAnimating(30)
 
         // redraw canvas
-        Events.on('resize', _ => this.init());
-        Events.on('redraw-canvas', _ => this.init());
-        Events.on('translation-loaded', _ => this.init());
+        Events.on('resize', _ => init());
+        Events.on('redraw-canvas', _ => init());
+        Events.on('translation-loaded', _ => init());
 
         // ShareMode
-        Events.on('share-mode-changed', e => this.onShareModeChanged(e.detail.active));
+        Events.on('share-mode-changed', e => redrawOnShareModeChange(e.detail.active));
+
+        // Start and stop animation
+        Events.on('background-animation', e => switchAnimation(e.detail.animate))
+
+        Events.on('offline', _ => switchAnimation(false));
+        Events.on('online', _ => switchAnimation(true));
     }
 
     async fadeIn() {
-        this.c.classList.remove('opacity-0');
-    }
-
-    init() {
-        let oldW = this.w;
-        let oldH = this.h;
-        let oldOffset = this.offset
-        this.w = document.documentElement.clientWidth;
-        this.h = document.documentElement.clientHeight;
-        this.offset = this.$footer.offsetHeight - 27;
-        if (this.h >= 800) this.offset += 10;
-
-        if (oldW === this.w && oldH === this.h && oldOffset === this.offset) return; // nothing has changed
-
-        this.c.width = this.w;
-        this.c.height = this.h;
-        this.x0 = this.w / 2;
-        this.y0 = this.h - this.offset;
-        this.dw = Math.round(Math.max(this.w, this.h, 1000) / 13);
-        this.baseColor = '165, 165, 165';
-        this.baseOpacity = 0.3;
-
-        this.drawCircles(this.cCtx);
-    }
-
-    onShareModeChanged(active) {
-        this.baseColor = active ? '165, 165, 255' : '165, 165, 165';
-        this.baseOpacity = active ? 0.5 : 0.3;
-        this.drawCircles(this.cCtx);
-    }
-
-
-    drawCircle(ctx, radius) {
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        let opacity = Math.max(0, this.baseOpacity * (1 - 1.2 * radius / Math.max(this.w, this.h)));
-        ctx.strokeStyle = `rgba(${this.baseColor}, ${opacity})`;
-        ctx.arc(this.x0, this.y0, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-    }
-
-    drawCircles(ctx) {
-        ctx.clearRect(0, 0, this.w, this.h);
-        for (let i = 0; i < 13; i++) {
-            this.drawCircle(ctx, this.dw * i + 33 + 66);
-        }
+        this.canvas.classList.remove('opacity-0');
     }
 }
