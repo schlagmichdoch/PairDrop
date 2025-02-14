@@ -899,13 +899,20 @@ x-peers:empty~x-instructions {
 
 @media screen and (min-height: 800px) {
     footer {
-        margin-bottom: 16px;
+        padding-bottom: 10px;
     }
 }
 
 @media (hover: hover) and (pointer: fine) {
     x-instructions:not([drop-peer]):not([drop-bg]):before {
         content: attr(desktop);
+    }
+}
+
+/* PWA Standalone styles */
+@media all and (display-mode: standalone) {
+    footer {
+        padding-bottom: 34px;
     }
 }
 
