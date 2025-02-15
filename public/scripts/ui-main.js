@@ -344,15 +344,26 @@ class BackgroundCanvas {
 
         let x0, y0, w, h, dw, offset, baseColor, baseOpacity;
 
-        let offscreenCanvases;
+        let offscreenCanvases = {false: [], true: []};
         let shareMode = false;
 
+        let startTime;
         let animate = true;
-        let currentFrame = 0;
+        let speed = 0.4;
+        let fps = 300;
+        let maxFrames = fps / speed;
 
-        let fpsInterval, now, then, elapsed;
-
-        let speed = 1.5;
+        for (let frame = 0; frame < maxFrames; frame++) {
+            let canvas = document.createElement("canvas");
+            offscreenCanvases[false][frame] = {
+                "redraw": true,
+                "canvas": canvas
+            };
+            offscreenCanvases[true][frame] = {
+                "redraw": true,
+                "canvas": canvas
+            };
+        }
 
         function init() {
             let oldW = w;
@@ -360,8 +371,8 @@ class BackgroundCanvas {
             let oldOffset = offset
             w = document.documentElement.clientWidth;
             h = document.documentElement.clientHeight;
-            offset = $footer.offsetHeight - 33;
-            if (h > 800) offset += 16;
+            offset = $footer.offsetHeight - 28;
+            if (h > 800) offset += 11;
 
             if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
 
@@ -369,12 +380,15 @@ class BackgroundCanvas {
             c.height = h;
             x0 = w / 2;
             y0 = h - offset;
-            dw = Math.round(Math.max(w, h, 1000) / 12);
+            dw = Math.round(Math.max(w, h, 1000) / 15);
 
-            drawCircles(cCtx, 0);
+            drawFrame(currentFrame);
 
             // enforce redrawing of frames
-            offscreenCanvases = {true: [], false: []};
+            for (let frame = 0; frame < maxFrames; frame++) {
+                offscreenCanvases[true][frame]["redraw"] = true;
+                offscreenCanvases[false][frame]["redraw"] = true;
+            }
         }
 
         function drawCircle(ctx, radius) {
@@ -383,8 +397,11 @@ class BackgroundCanvas {
             baseColor = shareMode ? '168 168 255' : '168 168 168';
             baseOpacity = shareMode ? 0.8 : 0.4;
 
-            let opacity = baseOpacity * radius / (dw * 8);
-            if (radius > dw * 5) {
+            let opacity = Math.max(0, baseOpacity * (1 - 1.2 * radius / Math.max(w, h)));
+            if (radius < dw) {
+                opacity *= (radius - 33) / (dw - 33)
+            }
+            else if (radius > dw * 5) {
                 opacity *= (6 * dw - radius) / dw
             }
             ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
@@ -394,16 +411,16 @@ class BackgroundCanvas {
         }
 
         function drawCircles(ctx, frame) {
-            for (let i = 6; i >= 0; i--) {
-                drawCircle(ctx, dw * i + speed * frame + 33);
+            ctx.clearRect(0, 0, w, h);
+            for (let i = 5; i >= 0; i--) {
+                drawCircle(ctx, dw * i + speed * dw * frame / fps + 33);
             }
         }
 
-        function createOffscreenCanvas(frame) {
-            let canvas = document.createElement("canvas");
+        function drawOffscreenCanvas(frame) {
+            let canvas = offscreenCanvases[shareMode][frame]["canvas"];
             canvas.width = c.width;
             canvas.height = c.height;
-            offscreenCanvases[shareMode][frame] = canvas;
             let ctx = canvas.getContext('2d');
             drawCircles(ctx, frame);
         }
@@ -411,39 +428,45 @@ class BackgroundCanvas {
         function drawFrame(frame) {
             cCtx.clearRect(0, 0, w, h);
 
-            if (!offscreenCanvases[shareMode][frame]) {
-                createOffscreenCanvas(frame);
+            if (offscreenCanvases[shareMode][frame]["redraw"]) {
+                drawOffscreenCanvas(frame);
             }
-            cCtx.drawImage(offscreenCanvases[shareMode][frame], 0, 0);
+            cCtx.drawImage(offscreenCanvases[shareMode][frame]["canvas"], 0, 0);
         }
 
-        function startAnimating(fps) {
-            fpsInterval = 1000 / fps;
-            then = Date.now();
+        function startAnimating() {
+            startTime = Date.now();
             animateBg();
         }
 
+        let currentFrame = 0;
         function animateBg() {
-            requestAnimationFrame(animateBg);
+            let now = Date.now();
 
-            now = Date.now();
-            elapsed = now - then;
-            // if not enough time has elapsed, do not draw the next frame -> abort
-            if (elapsed < fpsInterval) {
+            if (!animate) {
+                // Animation stopped -> don't draw next frame
                 return;
             }
 
-            then = now - (elapsed % fpsInterval);
+            let timeSinceLastFullCycle = (now - startTime) % (1000 / speed);
+            let nextFrame = Math.trunc(fps * timeSinceLastFullCycle / 1000);
 
-            if (animate) {
-                currentFrame = (currentFrame + 1) % (dw/speed);
-                drawFrame(currentFrame);
+            // Only draw frame if it differs from current frame
+            if (nextFrame !== currentFrame) {
+                drawFrame(nextFrame);
+                currentFrame = nextFrame;
             }
+
+            requestAnimationFrame(animateBg);
         }
 
         function switchAnimation(state) {
+            if (!animate && state) {
+                // animation starts again. Set startTime to specific value to prevent frame jump
+                startTime = Date.now() - 1000 * currentFrame / fps;
+            }
             animate = state;
-            console.debug(state)
+            animateBg();
         }
 
         function redrawOnShareModeChange(active) {
@@ -451,7 +474,7 @@ class BackgroundCanvas {
         }
 
         init();
-        startAnimating(30)
+        startAnimating();
 
         // redraw canvas
         Events.on('resize', _ => init());
