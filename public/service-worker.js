@@ -17,6 +17,7 @@ const relativePathsToCache = [
     'scripts/ui-main.js',
     'scripts/util.js',
     'scripts/zip.min.js',
+    'scripts/canvas-worker.js',
     'sounds/blop.mp3',
     'sounds/blop.ogg',
     'images/favicon-96x96.png',

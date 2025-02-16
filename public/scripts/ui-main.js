@@ -333,45 +333,93 @@ class FooterUI {
 
 class BackgroundCanvas {
     constructor() {
-        this.canvas = $$('canvas');
+        this.$canvas = $$('canvas');
+        this.$footer = $$('footer');
+
         this.initAnimation();
     }
 
+    async fadeIn() {
+        this.$canvas.classList.remove('opacity-0');
+    }
+
     initAnimation() {
-        let c = this.canvas;
-        let cCtx = c.getContext('2d');
-        let $footer = $$('footer');
+        this.baseColorNormal = '168 168 168';
+        this.baseColorShareMode = '168 168 255';
+        this.baseOpacityNormal = 0.4;
+        this.baseOpacityShareMode = 0.8;
+        this.speed = 0.4;
+        this.fps = 40;
 
-        let x0, y0, w, h, dw, offset, baseColor, baseOpacity;
+        // if browser supports OffscreenCanvas
+        //      -> put canvas drawing into serviceworker to unblock main thread
+        // otherwise
+        //      -> use main thread
+        let {init, startAnimation, switchAnimation, onShareModeChange} =
+            this.$canvas.transferControlToOffscreen
+                ? this.initAnimationOffscreen()
+                : this.initAnimationOnscreen();
 
-        let offscreenCanvases = {false: [], true: []};
-        let shareMode = false;
+        init();
+        startAnimation();
+
+        // redraw canvas
+        Events.on('resize', _ => init());
+        Events.on('redraw-canvas', _ => init());
+        Events.on('translation-loaded', _ => init());
+
+        // ShareMode
+        Events.on('share-mode-changed', e => onShareModeChange(e.detail.active));
+
+        // Start and stop animation
+        Events.on('background-animation', e => switchAnimation(e.detail.animate))
+        Events.on('offline', _ => switchAnimation(false));
+        Events.on('online', _ => switchAnimation(true));
+    }
+
+    initAnimationOnscreen() {
+        let $canvas = this.$canvas;
+        let $footer = this.$footer;
+
+        let baseColorNormal = this.baseColorNormal;
+        let baseColorShareMode = this.baseColorShareMode;
+        let baseOpacityNormal = this.baseOpacityNormal;
+        let baseOpacityShareMode = this.baseOpacityShareMode;
+        let speed = this.speed;
+        let fps = this.fps;
+
+        let c;
+        let cCtx;
+
+        let x0, y0, w, h, dw, offset;
 
         let startTime;
         let animate = true;
-        let speed = 0.4;
-        let fps = 300;
-        let maxFrames = fps / speed;
+        let currentFrame = 0;
+        let lastFrame;
+        let baseColor;
+        let baseOpacity;
 
-        for (let frame = 0; frame < maxFrames; frame++) {
-            let canvas = document.createElement("canvas");
-            offscreenCanvases[false][frame] = {
-                "redraw": true,
-                "canvas": canvas
-            };
-            offscreenCanvases[true][frame] = {
-                "redraw": true,
-                "canvas": canvas
-            };
+        function createCanvas() {
+            c = $canvas;
+            cCtx = c.getContext('2d');
+
+            lastFrame = fps / speed - 1;
+            baseColor = baseColorNormal;
+            baseOpacity = baseOpacityNormal;
         }
 
         function init() {
+            initCanvas($footer.offsetHeight, document.documentElement.clientWidth, document.documentElement.clientHeight);
+        }
+
+        function initCanvas(footerOffsetHeight, clientWidth, clientHeight) {
             let oldW = w;
             let oldH = h;
-            let oldOffset = offset
-            w = document.documentElement.clientWidth;
-            h = document.documentElement.clientHeight;
-            offset = $footer.offsetHeight - 28;
+            let oldOffset = offset;
+            w = clientWidth;
+            h = clientHeight;
+            offset = footerOffsetHeight - 28;
             if (h > 800) offset += 11;
 
             if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
@@ -380,30 +428,39 @@ class BackgroundCanvas {
             c.height = h;
             x0 = w / 2;
             y0 = h - offset;
-            dw = Math.round(Math.max(w, h, 1000) / 15);
+            dw = Math.round(Math.min(Math.max(w, h), 800) / 10);
 
             drawFrame(currentFrame);
+        }
 
-            // enforce redrawing of frames
-            for (let frame = 0; frame < maxFrames; frame++) {
-                offscreenCanvases[true][frame]["redraw"] = true;
-                offscreenCanvases[false][frame]["redraw"] = true;
+        function startAnimation() {
+            startTime = Date.now();
+            animateBg();
+        }
+
+        function switchAnimation(state) {
+            if (!animate && state) {
+                // animation starts again. Set startTime to specific value to prevent frame jump
+                startTime = Date.now() - 1000 * currentFrame / fps;
             }
+            animate = state;
+            requestAnimationFrame(animateBg);
+        }
+
+        function onShareModeChange(active) {
+            baseColor = active ? baseColorShareMode : baseColorNormal;
+            baseOpacity = active ? baseOpacityShareMode : baseOpacityNormal;
+            drawFrame(currentFrame);
         }
 
         function drawCircle(ctx, radius) {
             ctx.lineWidth = 2;
 
-            baseColor = shareMode ? '168 168 255' : '168 168 168';
-            baseOpacity = shareMode ? 0.8 : 0.4;
-
             let opacity = Math.max(0, baseOpacity * (1 - 1.2 * radius / Math.max(w, h)));
-            if (radius < dw) {
-                opacity *= (radius - 33) / (dw - 33)
+            if (radius > dw * 7) {
+                opacity *= (8 * dw - radius) / dw
             }
-            else if (radius > dw * 5) {
-                opacity *= (6 * dw - radius) / dw
-            }
+
             ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
             ctx.beginPath();
             ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
@@ -412,39 +469,21 @@ class BackgroundCanvas {
 
         function drawCircles(ctx, frame) {
             ctx.clearRect(0, 0, w, h);
-            for (let i = 5; i >= 0; i--) {
+            for (let i = 7; i >= 0; i--) {
                 drawCircle(ctx, dw * i + speed * dw * frame / fps + 33);
             }
         }
 
-        function drawOffscreenCanvas(frame) {
-            let canvas = offscreenCanvases[shareMode][frame]["canvas"];
-            canvas.width = c.width;
-            canvas.height = c.height;
-            let ctx = canvas.getContext('2d');
-            drawCircles(ctx, frame);
-        }
-
         function drawFrame(frame) {
             cCtx.clearRect(0, 0, w, h);
-
-            if (offscreenCanvases[shareMode][frame]["redraw"]) {
-                drawOffscreenCanvas(frame);
-            }
-            cCtx.drawImage(offscreenCanvases[shareMode][frame]["canvas"], 0, 0);
+            drawCircles(cCtx, frame);
         }
 
-        function startAnimating() {
-            startTime = Date.now();
-            animateBg();
-        }
-
-        let currentFrame = 0;
         function animateBg() {
             let now = Date.now();
 
-            if (!animate) {
-                // Animation stopped -> don't draw next frame
+            if (!animate && currentFrame === lastFrame) {
+                // Animation stopped and cycle finished -> stop drawing frames
                 return;
             }
 
@@ -460,38 +499,62 @@ class BackgroundCanvas {
             requestAnimationFrame(animateBg);
         }
 
-        function switchAnimation(state) {
-            if (!animate && state) {
-                // animation starts again. Set startTime to specific value to prevent frame jump
-                startTime = Date.now() - 1000 * currentFrame / fps;
-            }
-            animate = state;
-            animateBg();
-        }
+        createCanvas();
 
-        function redrawOnShareModeChange(active) {
-            shareMode = active
-        }
-
-        init();
-        startAnimating();
-
-        // redraw canvas
-        Events.on('resize', _ => init());
-        Events.on('redraw-canvas', _ => init());
-        Events.on('translation-loaded', _ => init());
-
-        // ShareMode
-        Events.on('share-mode-changed', e => redrawOnShareModeChange(e.detail.active));
-
-        // Start and stop animation
-        Events.on('background-animation', e => switchAnimation(e.detail.animate))
-
-        Events.on('offline', _ => switchAnimation(false));
-        Events.on('online', _ => switchAnimation(true));
+        return {init, startAnimation, switchAnimation, onShareModeChange};
     }
 
-    async fadeIn() {
-        this.canvas.classList.remove('opacity-0');
+    initAnimationOffscreen() {
+        console.log("Use OffscreenCanvas to draw background animation.")
+
+        let baseColorNormal = this.baseColorNormal;
+        let baseColorShareMode = this.baseColorShareMode;
+        let baseOpacityNormal = this.baseOpacityNormal;
+        let baseOpacityShareMode = this.baseOpacityShareMode;
+        let speed = this.speed;
+        let fps = this.fps;
+        let $canvas = this.$canvas;
+        let $footer = this.$footer;
+
+        const offscreen = $canvas.transferControlToOffscreen();
+        const worker = new Worker("scripts/canvas-worker.js");
+
+        function createCanvas() {
+            worker.postMessage({
+                type: "createCanvas",
+                canvas: offscreen,
+                baseColorNormal: baseColorNormal,
+                baseColorShareMode: baseColorShareMode,
+                baseOpacityNormal: baseOpacityNormal,
+                baseOpacityShareMode: baseOpacityShareMode,
+                speed: speed,
+                fps: fps
+            }, [offscreen]);
+        }
+
+        function init() {
+            worker.postMessage({
+                type: "initCanvas",
+                footerOffsetHeight: $footer.offsetHeight,
+                clientWidth: document.documentElement.clientWidth,
+                clientHeight: document.documentElement.clientHeight
+            });
+        }
+
+        function startAnimation() {
+            worker.postMessage({ type: "startAnimation" });
+        }
+
+        function onShareModeChange(active) {
+            worker.postMessage({ type: "onShareModeChange", active: active });
+        }
+
+        function switchAnimation(animate) {
+            worker.postMessage({ type: "switchAnimation", animate: animate });
+        }
+
+        createCanvas();
+
+        return {init, startAnimation, switchAnimation, onShareModeChange};
     }
 }
