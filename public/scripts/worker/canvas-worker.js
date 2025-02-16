@@ -96,7 +96,15 @@ function drawCircle(ctx, radius) {
         opacity *= (8 * dw - radius) / dw
     }
 
-    ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
+    if (ctx.setStrokeColor) {
+        // older blink/webkit based browsers do not understand opacity in strokeStyle. Use deprecated setStrokeColor instead
+        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/strokeStyle#webkitblink-specific_note
+        let baseColorRgb = baseColor.split(" ");
+        ctx.setStrokeColor(baseColorRgb[0], baseColorRgb[1], baseColorRgb[2], opacity);
+    }
+    else {
+        ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
+    }
     ctx.beginPath();
     ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
     ctx.stroke();

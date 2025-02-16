@@ -461,7 +461,14 @@ class BackgroundCanvas {
                 opacity *= (8 * dw - radius) / dw
             }
 
-            ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
+            if (ctx.setStrokeColor) {
+                // older blink/webkit browsers do not understand opacity in strokeStyle. Use deprecated setStrokeColor
+                let baseColorRgb = baseColor.split(" ");
+                ctx.setStrokeColor(baseColorRgb[0], baseColorRgb[1], baseColorRgb[2], opacity);
+            }
+            else {
+                ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
+            }
             ctx.beginPath();
             ctx.arc(x0, y0, radius, 0, 2 * Math.PI);
             ctx.stroke();
