@@ -348,7 +348,7 @@ class BackgroundCanvas {
         this.baseColorShareMode = '168 168 255';
         this.baseOpacityNormal = 0.4;
         this.baseOpacityShareMode = 0.8;
-        this.speed = 0.4;
+        this.speed = 0.5;
         this.fps = 40;
 
         // if browser supports OffscreenCanvas
