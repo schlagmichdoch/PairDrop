@@ -517,7 +517,7 @@ class BackgroundCanvas {
         let $footer = this.$footer;
 
         const offscreen = $canvas.transferControlToOffscreen();
-        const worker = new Worker("scripts/canvas-worker.js");
+        const worker = new Worker("scripts/worker/canvas-worker.js");
 
         function createCanvas() {
             worker.postMessage({
