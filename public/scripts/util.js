@@ -590,7 +590,7 @@ async function decodeBase64Text(base64) {
 
 function isUrlValid(url) {
     try {
-        let urlObj = new URL(url);
+        new URL(url);
         return true;
     }
     catch (e) {

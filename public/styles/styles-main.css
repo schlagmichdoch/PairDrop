@@ -587,7 +587,6 @@ x-dialog:not([show]) x-background {
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    white-space: nowrap;
     cursor: pointer;
     user-select: none;
     background: inherit;
