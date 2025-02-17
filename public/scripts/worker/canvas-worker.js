@@ -98,8 +98,7 @@ function drawCircle(ctx, radius) {
     if (ctx.setStrokeColor) {
         // older blink/webkit based browsers do not understand opacity in strokeStyle. Use deprecated setStrokeColor instead
         // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/strokeStyle#webkitblink-specific_note
-        let baseColorRgb = baseColor.split(" ");
-        ctx.setStrokeColor(baseColorRgb[0], baseColorRgb[1], baseColorRgb[2], opacity);
+        ctx.setStrokeColor("grey", opacity);
     }
     else {
         ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;

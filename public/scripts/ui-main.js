@@ -462,8 +462,8 @@ class BackgroundCanvas {
 
             if (ctx.setStrokeColor) {
                 // older blink/webkit browsers do not understand opacity in strokeStyle. Use deprecated setStrokeColor
-                let baseColorRgb = baseColor.split(" ");
-                ctx.setStrokeColor(baseColorRgb[0], baseColorRgb[1], baseColorRgb[2], opacity);
+                // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/strokeStyle#webkitblink-specific_note
+                ctx.setStrokeColor("grey", opacity);
             }
             else {
                 ctx.strokeStyle = `rgb(${baseColor} / ${opacity})`;
