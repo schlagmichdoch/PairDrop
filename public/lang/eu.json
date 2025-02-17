@@ -73,7 +73,7 @@
         "copied-text": "Testua arbelera kopiatu da",
         "online": "Berriro zaude linean",
         "unfinished-transfers-warning": "Amaitu gabeko trukatzeak daude. Ziur PairDrop itxi nahi duzula?",
-        "selected-peer-left": "Falta diren hautatutako kideak",
+        "selected-peer-left": "Hautatutako kideak alde egin du",
         "pairing-key-invalidated": "{{key}} gakoa baliogabetu da"
     },
     "dialogs": {
