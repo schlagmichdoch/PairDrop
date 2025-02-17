@@ -2087,35 +2087,48 @@ class ReceiveTextDialog extends Dialog {
 
             let m = 0;
 
-            const allowedDomainChars = "a-zA-Z0-9áàäčçđéèêŋńñóòôöšŧüžæøåëìíîïðùúýþćěłřśţźǎǐǒǔǥǧǩǯəʒâûœÿãõāēīōūăąĉċďĕėęĝğġģĥħĩĭįıĵķĸĺļľņňŏőŕŗŝşťũŭůűųŵŷżאבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ";
-            const urlRgx = new RegExp(`(^|\\n|\\s|["><\\-_~:\\/?#\\[\\]@!$&'()*+,;=%.])(((https?:\\/\\/)?(?:[${allowedDomainChars}](?:[${allowedDomainChars}-]{0,61}[${allowedDomainChars}])?\\.)+[${allowedDomainChars}][${allowedDomainChars}-]{0,61}[${allowedDomainChars}])(:?\\d*)\\/?([${allowedDomainChars}_\\/\\-#.]*)(\\?([${allowedDomainChars}\\-_~:\\/?#\\[\\]@!$&'()*+,;=%.]*))?)`, 'g');
+            const chrs = `a-zA-Z0-9áàäčçđéèêŋńñóòôöšŧüžæøåëìíîïðùúýþćěłřśţźǎǐǒǔǥǧǩǯəʒâûœÿãõāēīōūăąĉċďĕėęĝğġģĥħĩĭįıĵķĸĺļľņňŏőŕŗŝşťũŭůűųŵŷżאבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ`; // allowed chars in domain names
+            const rgxWhitespace = `(^|\\n|\\s)`;
+            const rgxScheme = `(https?:\\/\\/)`
+            const rgxSchemeMail = `(mailto:)`
+            const rgxUserinfo = `(?:(?:[${chrs}.%]*(?::[${chrs}.%]*)?)@)`;
+            const rgxHost = `(?:(?:[${chrs}](?:[${chrs}-]{0,61}[${chrs}])?\\.)+[${chrs}][${chrs}-]{0,61}[${chrs}])`;
+            const rgxPort = `(:\\d*)`;
+            const rgxPath = `(?:(?:\\/[${chrs}\\-\\._~!$&'\\(\\)\\*\\+,;=:@%]*)*)`;
+            const rgxQueryAndFragment = `(\\?[${chrs}\\-_~:\\/#\\[\\]@!$&'\\(\\)*+,;=%.]*)`;
+            const rgxUrl = `(${rgxScheme}?${rgxHost}${rgxPort}?${rgxPath}${rgxQueryAndFragment}?)`;
+            const rgxMail = `(${rgxSchemeMail}${rgxUserinfo}${rgxHost})`;
+            const rgxUrlAll = new RegExp(`${rgxWhitespace}${rgxUrl}`, 'g');
+            const rgxMailAll = new RegExp(`${rgxWhitespace}${rgxMail}`, 'g');
 
-            $textShadow.innerText = text.replace(urlRgx,
-                (match, whitespaceOrSpecial, url, g3, scheme) => {
-                    let link = url;
+            const replaceMatchWithPlaceholder = function(match, whitespace, url, scheme) {
+                let link = url;
 
-                    // prefix www.example.com with http protocol to prevent it from being a relative link
-                    if (!scheme && link.startsWith('www')) {
-                        link = "http://" + link
-                    }
+                // prefix www.example.com with http scheme to prevent it from being a relative link
+                if (!scheme && link.startsWith('www')) {
+                    link = "http://" + link
+                }
 
-                    if (isUrlValid(link)) {
-                        // link is valid -> replace with link node placeholder
-
-                        // find linkNodePlaceholder that is not yet present in text node
-                        m++;
-                        while (occP.includes(`${p}${m}`)) {
-                            m++;
-                        }
-                        let linkNodePlaceholder = `${p}${m}`;
-
-                        // add linkNodePlaceholder to text node and save a reference to linkNodes object
-                        linkNodes[linkNodePlaceholder] = `<a href="${link}" target="_blank" rel="noreferrer">${url}</a>`;
-                        return `${whitespaceOrSpecial}${linkNodePlaceholder}`;
-                    }
+                if (!isUrlValid(link)) {
                     // link is not valid -> do not replace
                     return match;
-                });
+                }
+
+                // link is valid -> replace with link node placeholder
+                // find linkNodePlaceholder that is not yet present in text node
+                m++;
+                while (occP.includes(`${p}${m}`)) {
+                    m++;
+                }
+                let linkNodePlaceholder = `${p}${m}`;
+
+                // add linkNodePlaceholder to text node and save a reference to linkNodes object
+                linkNodes[linkNodePlaceholder] = `<a href="${link}" target="_blank" rel="noreferrer">${url}</a>`;
+                return `${whitespace}${linkNodePlaceholder}`;
+            }
+
+            text = text.replace(rgxUrlAll, replaceMatchWithPlaceholder);
+            $textShadow.innerText = text.replace(rgxMailAll, replaceMatchWithPlaceholder);
 
 
             this.$text.innerHTML = $textShadow.innerHTML.replace(pRgx,

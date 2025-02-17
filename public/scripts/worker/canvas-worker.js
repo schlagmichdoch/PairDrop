@@ -55,7 +55,6 @@ function initCanvas(footerOffsetHeight, clientWidth, clientHeight) {
     w = clientWidth;
     h = clientHeight;
     offset = footerOffsetHeight - 28;
-    if (h > 800) offset += 11;
 
     if (oldW === w && oldH === h && oldOffset === offset) return; // nothing has changed
 
