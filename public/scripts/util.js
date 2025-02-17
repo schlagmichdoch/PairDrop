@@ -392,7 +392,8 @@ const mime = (() => {
         "vob": "video/x-ms-vob",
         "wmv": "video/x-ms-wmv",
         "avi": "video/x-msvideo",
-        "*": "video/x-sgi-movie"
+        "*": "video/x-sgi-movie",
+        "kdbx": "application/x-keepass2"
     }
 
     return {
@@ -409,7 +410,7 @@ const mime = (() => {
             // if filetype is empty guess via suffix otherwise leave unchanged
             for (let i = 0; i < files.length; i++) {
                 if (!files[i].type) {
-                    files[i] = new File([files[i]], files[i].name, {type: mime.guessMimeByFilename(files[i].name) || ""});
+                    files[i] = new File([files[i]], files[i].name, {type: mime.guessMimeByFilename(files[i].name) || "application/octet-stream"});
                 }
             }
             return files;
