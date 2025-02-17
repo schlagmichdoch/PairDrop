@@ -346,10 +346,10 @@ class BackgroundCanvas {
     initAnimation() {
         this.baseColorNormal = '168 168 168';
         this.baseColorShareMode = '168 168 255';
-        this.baseOpacityNormal = 0.4;
+        this.baseOpacityNormal = 0.3;
         this.baseOpacityShareMode = 0.8;
         this.speed = 0.5;
-        this.fps = 40;
+        this.fps = 60;
 
         // if browser supports OffscreenCanvas
         //      -> put canvas drawing into serviceworker to unblock main thread
@@ -427,7 +427,7 @@ class BackgroundCanvas {
             c.height = h;
             x0 = w / 2;
             y0 = h - offset;
-            dw = Math.round(Math.min(Math.max(w, h), 800) / 10);
+            dw = Math.round(Math.min(Math.max(0.6 * w, h)) / 10);
 
             drawFrame(currentFrame);
         }

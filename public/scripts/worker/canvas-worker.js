@@ -62,7 +62,7 @@ function initCanvas(footerOffsetHeight, clientWidth, clientHeight) {
     c.height = h;
     x0 = w / 2;
     y0 = h - offset;
-    dw = Math.round(Math.min(Math.max(w, h), 800) / 10);
+    dw = Math.round(Math.min(Math.max(0.6 * w, h)) / 10);
 
     drawFrame(currentFrame);
 }
