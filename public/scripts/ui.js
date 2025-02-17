@@ -150,10 +150,17 @@ class PeersUI {
     }
 
     _onPeerDisconnected(peerId) {
+        // Remove peer from UI
         const $peer = $(peerId);
         if (!$peer) return;
         $peer.remove();
         this._evaluateOverflowingPeers();
+
+        // If no peer is shown -> start background animation again
+        if ($$('x-peers:empty')) {
+            Events.fire('background-animation', {animate: true});
+        }
+
     }
 
     _onRoomTypeRemoved(peerId, roomType) {
@@ -417,6 +424,9 @@ class PeerUI {
 
         // ShareMode
         Events.on('share-mode-changed', e => this._onShareModeChanged(e.detail.active, e.detail.descriptor));
+
+        // Stop background animation
+        Events.fire('background-animation', {animate: false});
     }
 
     html() {
