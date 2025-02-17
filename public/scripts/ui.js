@@ -873,7 +873,9 @@ class ReceiveDialog extends Dialog {
 
         const fileName = files[0].name;
         const fileNameSplit = fileName.split('.');
-        const fileExtension = '.' + fileNameSplit[fileNameSplit.length - 1];
+        const fileExtension = fileNameSplit.length > 1
+            ? '.' + fileNameSplit[fileNameSplit.length - 1]
+            : '';
         this.$fileStem.innerText = fileName.substring(0, fileName.length - fileExtension.length);
         this.$fileExtension.innerText = fileExtension;
         this.$fileSize.innerText = this._formatFileSize(totalSize);
