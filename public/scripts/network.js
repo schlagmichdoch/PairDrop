@@ -1082,7 +1082,7 @@ class PeersManager {
     }
 
     async _onFilesSelected(message) {
-        let files = mime.addMissingMimeTypesToFiles(message.files);
+        let files = mime.addMissingMimeTypesToFiles([...message.files]);
         await this.peers[message.to].requestFileTransfer(files);
     }
 
@@ -1306,9 +1306,8 @@ class FileDigester {
         const blob = new Blob(this._buffer)
         this._buffer = null;
         this._callback(new File([blob], this._name, {
-            type: this._mime,
+            type: this._mime || "application/octet-stream",
             lastModified: new Date().getTime()
         }));
     }
-
 }
