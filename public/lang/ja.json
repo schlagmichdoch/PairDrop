@@ -12,7 +12,7 @@
         "routed": "サーバーを経由します",
         "discovery": "このデバイスを検出可能なネットワーク:",
         "on-this-network_title": "このネットワーク上のすべてのデバイスからアクセスできます。",
-        "known-as": "他のデバイスに表示される名前:"
+        "known-as": "このデバイスの名前:"
     },
     "notifications": {
         "request-title": "{{name}}は{{count}}個の{{descriptor}}を共有しようとしています",
@@ -25,7 +25,7 @@
         "connected": "接続しました",
         "pairing-not-persistent": "このデバイスとのペアリングは解除される可能性があります",
         "text-content-incorrect": "無効なテキスト内容です",
-        "message-transfer-completed": "メッセージの送信が完了しました",
+        "message-transfer-completed": "メッセージを送信しました",
         "file-transfer-completed": "ファイル転送が完了しました",
         "file-content-incorrect": "無効なファイル内容です",
         "files-incorrect": "ファイルが間違っています",
@@ -59,7 +59,7 @@
     },
     "header": {
         "cancel-share-mode": "キャンセル",
-        "theme-auto_title": "システムテーマに合わせる",
+        "theme-auto_title": "システムのテーマに合わせる",
         "install_title": "PairDropをインストール",
         "theme-dark_title": "常にダークテーマを使用する",
         "pair-device_title": "他のデバイスとペアリングする",
@@ -74,7 +74,7 @@
         "expand_title": "ヘッダーボタン列を拡大する"
     },
     "instructions": {
-        "x-instructions_mobile": "タップでファイルを送信、長押しでメッセージを送信します",
+        "x-instructions_mobile": "タップでファイル送信、長押しでメッセージ送信",
         "x-instructions-share-mode_desktop": "クリックして{{descriptor}}を送信",
         "activate-share-mode-and-other-files-plural": "とその他{{count}}個のファイル",
         "x-instructions-share-mode_mobile": "タップして{{descriptor}}を送信",
@@ -82,7 +82,7 @@
         "no-peers-subtitle": "ペアリングや公開ルームを使用すると、他のネットワーク上のデバイスと共有できます",
         "activate-share-mode-shared-text": "共有されたテキスト",
         "x-instructions_desktop": "左クリックでファイルを送信、右クリックでメッセージを送信します",
-        "no-peers-title": "ファイルを共有するには他のデバイスでPairDropを開いてください",
+        "no-peers-title": "ファイル共有するには他のデバイスでPairDropを開きます",
         "x-instructions_data-drop-peer": "ドロップするとこのデバイスに送信します",
         "x-instructions_data-drop-bg": "送信したいデバイスの上でドロップしてください",
         "no-peers_data-drop-bg": "送信したいデバイスの上でドロップしてください",
@@ -103,7 +103,7 @@
     "dialogs": {
         "base64-paste-to-send": "ここをタップして{{type}}を送信",
         "auto-accept-instructions-2": "」を有効にすると、そのデバイスから送信されたすべてのファイルを自動的に受け入れます。",
-        "receive-text-title": "メッセージを受信しました",
+        "receive-text-title": "メッセージを受信",
         "edit-paired-devices-title": "ペアリング設定",
         "cancel": "キャンセル",
         "auto-accept-instructions-1": "「",
@@ -123,14 +123,14 @@
         "file-other-description-image": "とその他1個の画像",
         "temporary-public-room-title": "公開ルーム",
         "base64-files": "ファイル",
-        "has-sent": "が送信しました:",
+        "has-sent": "が送信:",
         "file-other-description-file": "とその他1個のファイル",
         "close": "閉じる",
         "system-language": "システム言語",
         "unpair": "ペアリング解除",
         "title-image": "画像",
         "file-other-description-file-plural": "とその他{{count}}個のファイル",
-        "would-like-to-share": "が以下のファイルを共有しようとしています",
+        "would-like-to-share": "がこれを共有しています",
         "send-message-to": "このデバイスにメッセージを送信:",
         "language-selector-title": "言語設定",
         "pair": "ペアリング",
@@ -174,8 +174,8 @@
         "privacypolicy_title": "プライバシーポリシーを開く"
     },
     "document-titles": {
-        "file-transfer-requested": "ファイルの転送がリクエストされました",
-        "image-transfer-requested": "画像の転送がリクエストされました",
+        "file-transfer-requested": "ファイル転送の要求があります",
+        "image-transfer-requested": "画像の転送の要求があります",
         "message-received-plural": "{{count}}個のメッセージを受信しました",
         "message-received": "メッセージを受信しました",
         "file-received": "ファイルを受信しました",
