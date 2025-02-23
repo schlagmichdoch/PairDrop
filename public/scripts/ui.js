@@ -2404,7 +2404,7 @@ class Base64Dialog extends Dialog {
 class AboutUI {
     constructor() {
         this.$donationBtn = $('donation-btn');
-        this.$twitterBtn = $('twitter-btn');
+        this.$twitterBtn = $('x-twitter-btn');
         this.$mastodonBtn = $('mastodon-btn');
         this.$blueskyBtn = $('bluesky-btn');
         this.$customBtn = $('custom-btn');
