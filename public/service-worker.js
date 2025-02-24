@@ -69,14 +69,16 @@ const relativePathsNotToCache = [
 ]
 
 self.addEventListener('install', function(event) {
-  // Perform install steps
+    // Perform install steps
+    console.log("Cache files for sw:", cacheVersion);
     event.waitUntil(
         caches.open(cacheTitle)
             .then(function(cache) {
                 return cache
                     .addAll(relativePathsToCache)
                     .then(_ => {
-                        console.log('All files cached.');
+                        console.log('All files cached for sw:', cacheVersion);
+                        self.skipWaiting();
                     });
             })
     );
@@ -182,6 +184,8 @@ self.addEventListener('fetch', function(event) {
 
 // on activation, we clean up the previously registered service workers
 self.addEventListener('activate', evt => {
+    console.log("Activate sw:", cacheVersion);
+    evt.waitUntil(clients.claim());
     return evt.waitUntil(
         caches
             .keys()
