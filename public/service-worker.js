@@ -1,6 +1,5 @@
 const cacheVersion = 'v1.11.1';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
-const forceFetch = false; // FOR DEVELOPMENT: Set to true to always update assets instead of using cached versions
 const relativePathsToCache = [
     './',
     'index.html',
@@ -76,20 +75,25 @@ self.addEventListener('install', function(event) {
 const fromNetwork = (request, timeout) =>
     new Promise((resolve, reject) => {
         const timeoutId = setTimeout(reject, timeout);
-        fetch(request)
+        fetch(request, {cache: "no-store"})
             .then(response => {
+                if (response.redirected) {
+                    throw new Error("Fetch is redirect. Abort usage and cache!");
+                }
+
                 clearTimeout(timeoutId);
                 resolve(response);
 
+                // Prevent requests that are in relativePathsNotToCache from being cached
                 if (doNotCacheRequest(request)) return;
 
-                update(request)
+                updateCache(request)
                     .then(() => console.log("Cache successfully updated for", request.url))
-                    .catch(reason => console.log("Cache could not be updated for", request.url, "Reason:", reason));
+                    .catch(err => console.log("Cache could not be updated for", request.url, err));
             })
             .catch(error => {
                 // Handle any errors that occurred during the fetch
-                console.error(`Could not fetch ${request.url}. Are you online?`);
+                console.error(`Could not fetch ${request.url}.`);
                 reject(error);
             });
     });
@@ -111,16 +115,16 @@ const doNotCacheRequest = request => {
 };
 
 // cache the current page to make it available for offline
-const update = request => new Promise((resolve, reject) => {
-    if (doNotCacheRequest(request)) {
-        reject("Url is specifically prevented from being cached in the serviceworker.");
-        return;
-    }
+const updateCache = request => new Promise((resolve, reject) => {
     caches
         .open(cacheTitle)
         .then(cache =>
             fetch(request, {cache: "no-store"})
                 .then(response => {
+                    if (response.redirected) {
+                        throw new Error("Fetch is redirect. Abort usage and cache!");
+                    }
+
                     cache
                         .put(request, response)
                         .then(() => resolve());
@@ -129,9 +133,10 @@ const update = request => new Promise((resolve, reject) => {
         );
 });
 
-// general strategy when making a request (eg if online try to fetch it
-// from cache, if something fails fetch from network. Update cache everytime files are fetched.
-// This way files should only be fetched if cacheVersion is changed
+// general strategy when making a request:
+// 1. Try to retrieve file from cache
+// 2. If cache is not available: Fetch from network and update cache.
+// This way, cached files are only updated if the cacheVersion is changed
 self.addEventListener('fetch', function(event) {
     if (event.request.method === "POST") {
         // Requests related to Web Share Target.
@@ -141,39 +146,46 @@ self.addEventListener('fetch', function(event) {
         })());
     }
     else {
-        // Regular requests not related to Web Share Target.
-        if (forceFetch) {
-            event.respondWith(fromNetwork(event.request, 10000));
-        }
-        else {
-            event.respondWith(
-                fromCache(event.request)
+        // Regular requests not related to Web Share Target:
+        // If request is excluded from cache -> respondWith fromNetwork
+        // else -> try fromCache first
+        event.respondWith(
+            doNotCacheRequest(event.request)
+                ? fromNetwork(event.request, 10000)
+                : fromCache(event.request)
                     .then(rsp => {
                         // if fromCache resolves to undefined fetch from network instead
-                        return rsp || fromNetwork(event.request, 10000);
+                        if (!rsp) {
+                            throw new Error("No match found.");
+                        }
+                        return rsp;
                     })
-            );
-        }
+                    .catch(error => {
+                        console.error("Could not retrieve request from cache:", event.request.url, error);
+                        return fromNetwork(event.request, 10000);
+                    })
+        );
     }
 });
 
 
 // on activation, we clean up the previously registered service workers
 self.addEventListener('activate', evt => {
-        return evt.waitUntil(
-            caches.keys()
-                .then(cacheNames => {
-                    return Promise.all(
-                        cacheNames.map(cacheName => {
-                            if (cacheName !== cacheTitle) {
-                                return caches.delete(cacheName);
-                            }
-                        })
-                    );
-                })
-        )
-    }
-);
+    return evt.waitUntil(
+        caches
+            .keys()
+            .then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== cacheTitle) {
+                            console.log("Delete cache:", cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+    )
+});
 
 const evaluateRequestData = function (request) {
     return new Promise(async (resolve) => {
