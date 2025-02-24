@@ -1,6 +1,35 @@
 {
     "header": {
         "about_title": "পেয়ার ড্রপ সম্পর্কে",
-        "install_title": "পেয়ার ড্রপ ইন্সটল করুন"
+        "install_title": "পেয়ার ড্রপ ইন্সটল করুন",
+        "pair-device_title": "ডিভাইস স্থায়ী ভাবে যুক্ত করুন",
+        "cancel-share-mode": "বাতিল",
+        "theme-light_title": "সবসময় সাদা থিম ব্যাবহার",
+        "language-selector_title": "ভাষা সেট করুন",
+        "about_aria-label": "পেয়ারড্রপ সম্পর্কে",
+        "theme-auto_title": "থিমের ধরন ডিভাইস অনুযায়ী",
+        "theme-dark_title": "সবসময় কালো থিব ব্যাবহার",
+        "notification_title": "নোটিফিকেশন চালু করুন",
+        "edit-paired-devices_title": "যুক্ত ডিভাইস সম্পাদনা করুন",
+        "join-public-room_title": "সাময়িক ভাবে পাবলিক রুমে জয়েন করুন",
+        "edit-share-mode": "সম্পাদনা",
+        "expand_title": "হেডার বোতামের সারিটি বড় করুন"
+    },
+    "instructions": {
+        "activate-share-mode-and-other-file": "আর একটি ফাইল যোগ করুন",
+        "activate-share-mode-shared-file": "পাঠানো ফাইল",
+        "no-peers-subtitle": "ডিভাইস প্রদর্শিত হতে নতুন ডিভাইস যুক্ত করুন অথবা পাবলিক রুমে জয়েন দিন",
+        "no-peers-title": "ফাইল পাঠানোর জন্য অন্যান্য ডিভাইসে পেয়ারড্রপ খুলুন",
+        "x-instructions_data-drop-bg": "প্রাপক নির্বাচন করতে ছেড়ে দিন",
+        "no-peers_data-drop-bg": "প্রাপক নির্বাচন ছেড়ে দিন",
+        "x-instructions_desktop": "ফাইল পাঠাতে ক্লিক করুন অথবা মেসেজ পাঠাতে ডানে চাপুন",
+        "x-instructions_mobile": "ফাইল পাঠাতে ক্লিক করুন অথবা বেশি চেপে মেসেজ পাঠান",
+        "x-instructions_data-drop-peer": "পিয়ারকে পাঠানোর জন্য রিলিজ করুন",
+        "x-instructions-share-mode_desktop": "পাঠাতে ক্লিক করুন",
+        "x-instructions-share-mode_mobile": "পাঠাতে ক্লিক করুন",
+        "activate-share-mode-base": "অন্য ডিভাইসে পাঠাতে পেয়ারড্রপ খুলুন",
+        "activate-share-mode-and-other-files-plural": "অন্য ফাইল যোগ করুন",
+        "activate-share-mode-shared-text": "পাঠানো টেক্সট",
+        "activate-share-mode-shared-files-plural": "পাঠানো ফাইল গুলো"
     }
 }
