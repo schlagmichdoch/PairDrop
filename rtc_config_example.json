@@ -5,7 +5,7 @@
       "urls": "stun:<DOMAIN>:3478"
     },
     {
-      "urls": "turns:<DOMAIN>:5349",
+      "urls": "turn:<DOMAIN>:5349",
       "username": "username",
       "credential": "password"
     }
