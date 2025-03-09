@@ -501,7 +501,7 @@ footer .logo {
 }
 
 .badge {
-    border-radius: 0.4rem;
+    border-radius: 0.3rem;
     padding-right: 0.3rem;
     padding-left: 0.3em;
     background-color: var(--badge-color);
