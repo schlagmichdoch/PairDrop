@@ -70,6 +70,8 @@
         "join": "Join",
         "leave": "Leave",
         "would-like-to-share": "would like to share",
+        "change-name": "Change name :",
+        "reset-name": "Reset Name",
         "accept": "Accept",
         "decline": "Decline",
         "has-sent": "has sent:",

@@ -297,6 +297,10 @@ h3 {
     color: white !important;
 }
 
+.text-red {
+    color: red !important;
+}
+
 .font-body1,
 body {
     font-size: 14px;
@@ -676,6 +680,11 @@ x-dialog:not([show]) x-background {
 
 button::-moz-focus-inner {
     border: 0;
+}
+
+#reset-name-1, #reset-name-2 {
+    margin: 3px;
+    height: 50px;
 }
 
 
