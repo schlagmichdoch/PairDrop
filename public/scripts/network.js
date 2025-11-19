@@ -677,7 +677,7 @@ class Peer {
 
     _onFileTransferRequestResponded(message) {
         if (!message.accepted) {
-            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
+            Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'transfer'});
             this._filesRequested = null;
             if (message.reason === 'ios-memory-limit') {
                 Events.fire('notify-user', Localization.getTranslation("notifications.ios-memory-limit"));
