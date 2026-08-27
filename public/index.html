@@ -508,6 +508,26 @@
             </x-paper>
         </x-background>
     </x-dialog>
+    <x-dialog id="send-folders-dialog">
+        <x-background class="full center">
+            <x-paper shadow="2">
+                <div class="row center p-2">
+                    <h2 class="dialog-title"></h2>
+                </div>
+                <div class="row center p-2">
+                    <div class="column center file-description">
+                        <div class="row file-name">
+                            <span class="folder-names"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row-reverse center btn-row wrap">
+                    <button id="send-as-zip" class="btn btn-rounded btn-grey" title="ENTER" data-i18n-key="dialogs.send-folders-as-zip" data-i18n-attrs="text" autofocus></button>
+                    <button id="send-individually" class="btn btn-rounded btn-grey" data-i18n-key="dialogs.send-folders-individually" data-i18n-attrs="text"></button>
+                </div>
+            </x-paper>
+        </x-background>
+    </x-dialog>
     <!-- Receive File Dialog -->
     <x-dialog id="receive-file-dialog">
         <x-background class="full center">
