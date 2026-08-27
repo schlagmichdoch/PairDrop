@@ -179,22 +179,30 @@ class PeersUI {
         $peer.ui.setProgress(progress.progress, progress.status)
     }
 
-    _onDrop(e) {
+    async _onDrop(e) {
         if (this.shareMode.active || Dialog.anyDialogShown()) return;
 
         e.preventDefault();
 
         this._onDragEnd();
 
-        if ($$('x-peer') && $$('x-peer').contains(e.target)) return; // dropped on peer
+        if (e.target.closest && e.target.closest('x-peer')) return; // dropped on peer
 
-        let files = e.dataTransfer.files;
-        let text = e.dataTransfer.getData("text");
+        const text = e.dataTransfer.getData("text");
+        const { files, folderNames } = e.dataTransfer.items
+            ? await getFilesFromDataTransferItems(e.dataTransfer.items)
+            : { files: [...e.dataTransfer.files], folderNames: [] };
 
-        // convert FileList to Array
-        files = [...files];
+        // reevaluate as the situation may have changed while reading the dropped items
+        if (this.shareMode.active || Dialog.anyDialogShown()) return;
 
-        if (files.length > 0) {
+        if (folderNames.length > 0) {
+            Events.fire('folders-dropped', {
+                files: files,
+                folderNames: folderNames
+            });
+        }
+        else if (files.length > 0) {
             Events.fire('activate-share-mode', {
                 files: files
             });
@@ -644,7 +652,7 @@ class PeerUI {
         $progress.style.setProperty('--progress', degrees);
     }
 
-    _onDrop(e) {
+    async _onDrop(e) {
         if (this._shareMode.active || Dialog.anyDialogShown()) return;
 
         e.preventDefault();
@@ -652,10 +660,22 @@ class PeerUI {
         this._onDragEnd();
 
         const peerId = this._peer.id;
-        const files = e.dataTransfer.files;
         const text = e.dataTransfer.getData("text");
+        const { files, folderNames } = e.dataTransfer.items
+            ? await getFilesFromDataTransferItems(e.dataTransfer.items)
+            : { files: [...e.dataTransfer.files], folderNames: [] };
 
-        if (files.length > 0) {
+        // reevaluate as the situation may have changed while reading the dropped items
+        if (this._shareMode.active || Dialog.anyDialogShown()) return;
+
+        if (folderNames.length > 0) {
+            Events.fire('folders-dropped', {
+                files: files,
+                folderNames: folderNames,
+                to: peerId
+            });
+        }
+        else if (files.length > 0) {
             Events.fire('files-selected', {
                 files: files,
                 to: peerId
@@ -2445,6 +2465,167 @@ class AboutUI {
             }
             $btn.removeAttribute('hidden');
         }
+    }
+}
+
+class SendFoldersDialog extends Dialog {
+
+    constructor() {
+        super('send-folders-dialog');
+
+        this.$dialogTitle = this.$el.querySelector('.dialog-title');
+        this.$folderNames = this.$el.querySelector('.folder-names');
+        this.$sendAsZipBtn = this.$el.querySelector('#send-as-zip');
+        this.$sendIndividuallyBtn = this.$el.querySelector('#send-individually');
+
+        this.$sendAsZipBtn.addEventListener('click', _ => this._sendAsZip());
+        this.$sendIndividuallyBtn.addEventListener('click', _ => this._sendIndividually());
+
+        Events.on('folders-dropped', e => this._onFoldersDropped(e.detail));
+        Events.on('keydown', e => this._onKeyDown(e));
+    }
+
+    _onFoldersDropped(detail) {
+        if (!detail.files.length) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.folder-empty"));
+            return;
+        }
+
+        if (this._clearTimeout) clearTimeout(this._clearTimeout);
+
+        this._files = detail.files;
+        this._folderNames = detail.folderNames;
+        this._peerId = detail.to;
+
+        // hide this dialog if the corresponding peer disconnects
+        this.correspondingPeerId = detail.to;
+
+        this.$dialogTitle.innerText = this._folderNames.length > 1
+            ? Localization.getTranslation("dialogs.send-folders-title-plural")
+            : Localization.getTranslation("dialogs.send-folders-title");
+        this.$folderNames.innerText = this._folderNames.join(", ");
+
+        this.show();
+    }
+
+    _onKeyDown(e) {
+        if (!this.isShown() || this._busy) return;
+
+        if (e.code === "Escape") {
+            this.hide();
+        }
+    }
+
+    hide() {
+        super.hide();
+        // release the file references after the hide transition has finished
+        this._clearTimeout = setTimeout(() => {
+            this._files = null;
+            this._folderNames = null;
+            this._peerId = null;
+        }, 300);
+    }
+
+    _setBusy(busy) {
+        this._busy = busy;
+        if (busy) {
+            this.$sendAsZipBtn.setAttribute('disabled', true);
+            this.$sendIndividuallyBtn.setAttribute('disabled', true);
+        }
+        else {
+            this.$sendAsZipBtn.removeAttribute('disabled');
+            this.$sendIndividuallyBtn.removeAttribute('disabled');
+        }
+    }
+
+    _sendFiles(files, peerId) {
+        if (peerId) {
+            if (!$(peerId)) {
+                // peer left while the files were prepared
+                Events.fire('notify-user', Localization.getTranslation("notifications.selected-peer-left"));
+                return;
+            }
+            Events.fire('files-selected', {
+                files: files,
+                to: peerId
+            });
+        }
+        else {
+            Events.fire('activate-share-mode', {
+                files: files
+            });
+        }
+    }
+
+    async _sendAsZip() {
+        const files = this._files;
+        const folderNames = this._folderNames;
+        const peerId = this._peerId;
+
+        if (peerId) {
+            // progress is shown on the peer icon -> hide the dialog immediately
+            this.hide();
+        }
+        else {
+            // keep the dialog open while zipping to prevent other share interactions in the meantime
+            this._setBusy(true);
+            Events.fire('notify-user', {
+                message: Localization.getTranslation("notifications.creating-zip"),
+                persistent: true
+            });
+        }
+
+        // files that were not dropped inside a folder are sent unchanged
+        let filesToSend = [];
+        let totalSize = 0;
+        for (let i = 0; i < files.length; i++) {
+            if (!files[i].relativePath) {
+                filesToSend.push(files[i]);
+            }
+            else {
+                totalSize += files[i].size;
+            }
+        }
+
+        try {
+            let bytesCompleted = 0;
+            for (let i = 0; i < folderNames.length; i++) {
+                const folderFiles = files.filter(file => file.relativePath && file.relativePath.startsWith(`${folderNames[i]}/`));
+                if (!folderFiles.length) continue; // do not send a zip file for an empty folder
+
+                const zipFile = await zipper.createZipFileFromFiles(folderFiles, `${folderNames[i]}.zip`, bytes => {
+                    if (!peerId || !totalSize) return;
+                    Events.fire('set-progress', {
+                        peerId: peerId,
+                        progress: (bytesCompleted + bytes) / totalSize,
+                        status: 'process'
+                    });
+                });
+                for (let j = 0; j < folderFiles.length; j++) {
+                    bytesCompleted += folderFiles[j].size;
+                }
+                filesToSend.push(zipFile);
+            }
+        } catch (e) {
+            console.error(e);
+            // zipping failed -> fall back to sending the files individually
+            filesToSend = files;
+        }
+
+        if (!peerId) {
+            this._setBusy(false);
+            this.hide();
+        }
+
+        this._sendFiles(filesToSend, peerId);
+    }
+
+    _sendIndividually() {
+        const files = this._files;
+        const peerId = this._peerId;
+
+        this.hide();
+        this._sendFiles(files, peerId);
     }
 }
 
