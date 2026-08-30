@@ -30,6 +30,15 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log(reason)
 })
 
+// Allow supplying the STUN/TURN config as the raw JSON content of an env
+// var (TURN_CONFIG_JSON) instead of a file committed to the repo, since this
+// repo is public and TURN credentials must never be committed to it.
+if (process.env.TURN_CONFIG_JSON && !process.env.RTC_CONFIG) {
+    const tmpConfigPath = "/tmp/rtc_config.json";
+    fs.writeFileSync(tmpConfigPath, process.env.TURN_CONFIG_JSON);
+    process.env.RTC_CONFIG = tmpConfigPath;
+}
+
 // Evaluate arguments for deployment with Docker and Node.js
 let conf = {};
 
