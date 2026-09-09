@@ -162,7 +162,8 @@
         "message-transfer-completed": "Message transfer completed",
         "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close PairDrop?",
         "rate-limit-join-key": "Rate limit reached. Wait 10 seconds and try again.",
-        "selected-peer-left": "Selected peer left"
+        "selected-peer-left": "Selected peer left",
+        "large-file-no-fsapi-warning": "Larger file downloads may fail without File System Access API support. Enable it in browser flags."
     },
     "document-titles": {
         "file-received": "File Received",

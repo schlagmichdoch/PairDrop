@@ -326,6 +326,9 @@ class Peer {
         this._isCaller = isCaller;
         this._peerId = peerId;
 
+        this._fileHandle = null;
+        this._fileStream = null;
+
         this._roomIds = {};
         this._updateRoomIds(roomType, roomId);
 
@@ -518,17 +521,39 @@ class Peer {
     }
 
     _onMessage(message) {
-        if (typeof message !== 'string') {
-            this._onChunkReceived(message);
-            return;
+        this._messageQueue = this._messageQueue || [];
+        this._messageQueue.push(message);
+        this._processMessageQueue();
+    }
+
+    async _processMessageQueue() {
+        if (this._isProcessingMessage || !this._messageQueue.length) return;
+        this._isProcessingMessage = true;
+
+        while (this._messageQueue.length > 0) {
+            const message = this._messageQueue.shift();
+            try {
+                if (typeof message !== 'string') {
+                    await this._onChunkReceived(message);
+                } else {
+                    const messageJSON = JSON.parse(message);
+                    await this._handleMessageJSON(messageJSON);
+                }
+            } catch (err) {
+                console.error("Error processing peer message:", err);
+            }
         }
-        const messageJSON = JSON.parse(message);
+
+        this._isProcessingMessage = false;
+    }
+
+    async _handleMessageJSON(messageJSON) {
         switch (messageJSON.type) {
             case 'request':
                 this._onFilesTransferRequest(messageJSON);
                 break;
             case 'header':
-                this._onFileHeader(messageJSON);
+                await this._onFileHeader(messageJSON);
                 break;
             case 'partition':
                 this._onReceivedPartitionEnd(messageJSON);
@@ -585,24 +610,42 @@ class Peer {
         });
     }
 
-    _respondToFileTransferRequest(accepted) {
+    _respondToFileTransferRequest(accepted, options = {}) {
         this.sendJSON({type: 'files-transfer-response', accepted: accepted});
         if (accepted) {
             this._requestAccepted = this._requestPending;
             this._totalBytesReceived = 0;
             this._busy = true;
-            this._filesReceived = [];
+            this._filesReceived = []; // Only for in-memory fallback
+
+            if (options.fileSystemHandle && this._requestAccepted.header.length === 1 && this._requestAccepted.totalSize === this._requestAccepted.header[0].size) {
+                this._fileHandle = options.fileSystemHandle;
+            }
+            else
+            {
+                this._fileHandle = null;
+            }
         }
         this._requestPending = null;
     }
 
-    _onFileHeader(header) {
+    async _onFileHeader(header) {
         if (this._requestAccepted && this._requestAccepted.header.length) {
             this._lastProgress = 0;
+            let fileStream = null;
+            if (this._fileHandle) {
+                try {
+                    let handle = this._fileHandle;
+                    fileStream = await handle.createWritable();
+                } catch (e) {
+                    console.error("Failed to create writable stream, falling back to in-memory:", e);
+                }
+            }
             this._digester = new FileDigester({size: header.size, name: header.name, mime: header.mime},
                 this._requestAccepted.totalSize,
                 this._totalBytesReceived,
-                fileBlob => this._onFileReceived(fileBlob)
+                fileBlob => this._onFileReceived(fileBlob),
+                { fileStream }
             );
         }
     }
@@ -616,10 +659,10 @@ class Peer {
         throw new Error("Received files differ from requested files. Abort!");
     }
 
-    _onChunkReceived(chunk) {
+    async _onChunkReceived(chunk) {
         if(!this._digester || !(chunk.byteLength || chunk.size)) return;
 
-        this._digester.unchunk(chunk);
+        await this._digester.unchunk(chunk);
         const progress = this._digester.progress;
 
         if (progress > 1) {
@@ -640,26 +683,40 @@ class Peer {
 
     async _onFileReceived(fileBlob) {
         const acceptedHeader = this._requestAccepted.header.shift();
-        this._totalBytesReceived += fileBlob.size;
+        const size = fileBlob ? fileBlob.size : acceptedHeader.size;
+        const name = fileBlob ? fileBlob.name : acceptedHeader.name;
+        
+        this._totalBytesReceived += size;
 
         this.sendJSON({type: 'file-transfer-complete'});
 
-        const sameSize = fileBlob.size === acceptedHeader.size;
-        const sameName = fileBlob.name === acceptedHeader.name
+        const sameSize = size === acceptedHeader.size;
+        const sameName = name === acceptedHeader.name;
         if (!sameSize || !sameName) {
             this._abortTransfer();
         }
 
-        // include for compatibility with 'Snapdrop & PairDrop for Android' app
-        Events.fire('file-received', fileBlob);
+        if (fileBlob) {
+            // include for compatibility with 'Snapdrop & PairDrop for Android' app
+            Events.fire('file-received', fileBlob);
+            this._filesReceived.push(fileBlob);
+        }
 
-        this._filesReceived.push(fileBlob);
         if (!this._requestAccepted.header.length) {
             this._busy = false;
             Events.fire('set-progress', {peerId: this._peerId, progress: 0, status: 'process'});
-            Events.fire('files-received', {peerId: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
+            
+            if (this._filesReceived.length > 0) {
+                Events.fire('files-received', {peerId: this._peerId, files: this._filesReceived, imagesOnly: this._requestAccepted.imagesOnly, totalSize: this._requestAccepted.totalSize});
+            } else {
+                Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'process'});
+                const descriptor = this._requestAccepted.imagesOnly ? "images" : "files";
+                Events.fire('notify-user', Localization.getTranslation("notifications.download-successful", null, {descriptor: descriptor}));
+            }
+            
             this._filesReceived = [];
             this._requestAccepted = null;
+            this._fileHandle = null;
         }
     }
 
@@ -1078,7 +1135,7 @@ class PeersManager {
     }
 
     _onRespondToFileTransferRequest(detail) {
-        this.peers[detail.to]._respondToFileTransferRequest(detail.accepted);
+        this.peers[detail.to]._respondToFileTransferRequest(detail.accepted, detail.options);
     }
 
     async _onFilesSelected(message) {
@@ -1284,7 +1341,7 @@ class FileChunker {
 
 class FileDigester {
 
-    constructor(meta, totalSize, totalBytesReceived, callback) {
+    constructor(meta, totalSize, totalBytesReceived, callback, options = {}) {
         this._buffer = [];
         this._bytesReceived = 0;
         this._size = meta.size;
@@ -1293,21 +1350,30 @@ class FileDigester {
         this._totalSize = totalSize;
         this._totalBytesReceived = totalBytesReceived;
         this._callback = callback;
+        this._fileStream = options.fileStream || null;
     }
 
-    unchunk(chunk) {
-        this._buffer.push(chunk);
+    async unchunk(chunk) {
         this._bytesReceived += chunk.byteLength || chunk.size;
         this.progress = (this._totalBytesReceived + this._bytesReceived) / this._totalSize;
-        if (isNaN(this.progress)) this.progress = 1
+        if (isNaN(this.progress)) this.progress = 1;
 
-        if (this._bytesReceived < this._size) return;
-        // we are done
-        const blob = new Blob(this._buffer)
-        this._buffer = null;
-        this._callback(new File([blob], this._name, {
-            type: this._mime || "application/octet-stream",
-            lastModified: new Date().getTime()
-        }));
+        if (this._fileStream) {
+            await this._fileStream.write(chunk);
+            if (this._bytesReceived >= this._size) {
+                await this._fileStream.close();
+                this._callback(null);
+            }
+        } else {
+            this._buffer.push(chunk);
+            if (this._bytesReceived < this._size) return;
+            // we are done
+            const blob = new Blob(this._buffer);
+            this._buffer = null;
+            this._callback(new File([blob], this._name, {
+                type: this._mime || "application/octet-stream",
+                lastModified: new Date().getTime()
+            }));
+        }
     }
 }
