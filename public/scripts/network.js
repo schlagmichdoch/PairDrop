@@ -10,6 +10,7 @@ class ServerConnection {
 
         Events.on('room-secrets', e => this.send({ type: 'room-secrets', roomSecrets: e.detail }));
         Events.on('join-ip-room', _ => this.send({ type: 'join-ip-room'}));
+        Events.on('leave-ip-room', _ => this.send({ type: 'leave-ip-room'}));
         Events.on('room-secrets-deleted', e => this.send({ type: 'room-secrets-deleted', roomSecrets: e.detail}));
         Events.on('regenerate-room-secret', e => this.send({ type: 'regenerate-room-secret', roomSecret: e.detail}));
         Events.on('pair-device-initiate', _ => this._onPairDeviceInitiate());
@@ -233,7 +234,10 @@ class ServerConnection {
                 console.log("successfully added peerId to localStorage");
 
                 // Only now join rooms
-                Events.fire('join-ip-room');
+                PersistentStorage.isIpDiscoveryEnabled()
+                    .then(enabled => {
+                        if (enabled) Events.fire('join-ip-room');
+                    });
                 PersistentStorage.getAllRoomSecrets()
                     .then(roomSecrets => {
                         Events.fire('room-secrets', roomSecrets);
@@ -997,6 +1001,7 @@ class PeersManager {
         // this device closes connection
         Events.on('room-secrets-deleted', e => this._onRoomSecretsDeleted(e.detail));
         Events.on('leave-public-room', e => this._onLeavePublicRoom(e.detail));
+        Events.on('leave-ip-room', _ => this._onLeaveIpRoom());
 
         // peer closes connection
         Events.on('secret-room-deleted', e => this._onSecretRoomDeleted(e.detail));
@@ -1096,7 +1101,14 @@ class PeersManager {
         }
         if (message.disconnect === true) {
             // if user actively disconnected from PairDrop server, disconnect all peer to peer connections immediately
-            this._disconnectOrRemoveRoomTypeByPeerId(message.peerId, message.roomType);
+            if (message.roomType === 'ip') {
+                // only keep the connection if the peer is paired (via room secret),
+                // being in a public room alone does not count as "discoverable"
+                this._disconnectOrRemoveIpRoomByPeerId(message.peerId);
+            }
+            else {
+                this._disconnectOrRemoveRoomTypeByPeerId(message.peerId, message.roomType);
+            }
 
             // If no peers are connected anymore, we can safely assume that no other tab on the same browser is connected:
             // Tidy up peerIds in localStorage
@@ -1155,6 +1167,31 @@ class PeersManager {
 
     _onSecretRoomDeleted(roomSecret) {
         this._disconnectOrRemoveRoomTypeByRoomId('secret', roomSecret);
+    }
+
+    _onLeaveIpRoom() {
+        // user disabled "discoverable on this network" -> clean up all peers that were only visible via IP room
+        for (const peerId in this.peers) {
+            const peer = this.peers[peerId];
+            if (peer._getRoomTypes().includes('ip')) {
+                this._disconnectOrRemoveIpRoomByPeerId(peerId);
+            }
+        }
+    }
+
+    _disconnectOrRemoveIpRoomByPeerId(peerId) {
+        const peer = this.peers[peerId];
+
+        if (!peer) return;
+
+        // keep the connection only if the peer is paired via room secret.
+        // Being in a public room alone does not count as "discoverable" and must be disconnected.
+        if (peer._isPaired()) {
+            peer._removeRoomType('ip');
+        }
+        else {
+            Events.fire('peer-disconnected', peerId);
+        }
     }
 
     _disconnectOrRemoveRoomTypeByRoomId(roomType, roomId) {

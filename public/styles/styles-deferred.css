@@ -268,57 +268,6 @@ x-peer[drop] x-icon {
     transform: scale(1.1);
 }
 
-/* Checkboxes as slider */
-
-.switch {
-    display: inline-block;
-    height: 20px;
-    position: relative;
-    width: 30px;
-}
-
-.switch input {
-    display:none;
-}
-
-.slider {
-    background-color: rgba(128, 128, 128, 0.5);
-    cursor: pointer;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    position: absolute;
-    transition: .4s;
-}
-
-.slider:before {
-    background-color: #fff;
-    content: "";
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 16px;
-    height: 16px;
-    transition: .4s;
-}
-
-input:checked + .slider {
-    background-color: var(--primary-color);
-}
-
-input:checked + .slider:before {
-    transform: translateX(10px);
-}
-
-.slider.round {
-    border-radius: 20px;
-}
-
-.slider.round:before {
-    border-radius: 50%;
-}
-
 /* Dialog */
 
 x-dialog x-background {

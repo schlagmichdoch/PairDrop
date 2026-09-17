@@ -199,14 +199,36 @@ class FooterUI {
         this.$footer = $$('footer');
         this.$displayName = $('display-name');
         this.$discoveryWrapper = $$('footer .discovery-wrapper');
+        this.$ipDiscoveryToggle = $('ip-discovery-toggle');
 
         this.$displayName.addEventListener('keydown', e => this._onKeyDownDisplayName(e));
         this.$displayName.addEventListener('focus', e => this._onFocusDisplayName(e));
         this.$displayName.addEventListener('blur', e => this._onBlurDisplayName(e));
+        this.$ipDiscoveryToggle.addEventListener('click', e => this._onIpDiscoveryToggleClick(e));
 
         Events.on('display-name', e => this._onDisplayName(e.detail.displayName));
         Events.on('self-display-name-changed', e => this._insertDisplayName(e.detail));
         Events.on('evaluate-footer-badges', _ => this._evaluateFooterBadges());
+
+        this._loadSavedIpDiscoverySetting();
+    }
+
+    async _loadSavedIpDiscoverySetting() {
+        const enabled = await PersistentStorage.isIpDiscoveryEnabled();
+        this.$ipDiscoveryToggle.checked = enabled;
+    }
+
+    _onIpDiscoveryToggleClick(e) {
+        const enabled = e.target.checked;
+        PersistentStorage.setIpDiscoveryEnabled(enabled)
+            .then(_ => {
+                Events.fire(enabled ? 'join-ip-room' : 'leave-ip-room');
+                Events.fire('notify-user', Localization.getTranslation(
+                    enabled
+                        ? "notifications.ip-discovery-enabled"
+                        : "notifications.ip-discovery-disabled"
+                ));
+            });
     }
 
     async showLoading() {
