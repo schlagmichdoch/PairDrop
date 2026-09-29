@@ -1,0 +1,45 @@
+{
+    "header": {
+        "about_title": "पेयरड्रॉप के बारे में",
+        "language-selector_title": "भाषा सेट करें",
+        "about_aria-label": "पेयरड्रॉप के बारे में जानकारी खोलें",
+        "theme-auto_title": "सिस्टम थीम के अनुसार थीम सेट करें",
+        "theme-light_title": "हमेशा लाइट थीम का उपयोग करें",
+        "theme-dark_title": "हमेशा डार्क थीम का इस्तेमाल करें",
+        "notification_title": "सूचनाएं सक्षम करें",
+        "install_title": "पेयरड्रॉप इंस्टॉल करें",
+        "pair-device_title": "अपने डिवाइस स्थायी रूप से पेयर करें",
+        "edit-paired-devices_title": "पेयर किए गए डिवाइस संपादित करें",
+        "join-public-room_title": "सार्वजनिक रूम अस्थायी रूप से जॉइन करें",
+        "cancel-share-mode": "रद्द करें",
+        "edit-share-mode": "संपादित करें",
+        "expand_title": "हेडर बटन रो एक्सपैंड करें"
+    },
+    "instructions": {
+        "no-peers_data-drop-bg": "चुने हुए प्राप्तकर्ता को भेजें",
+        "no-peers-title": "फाइल भेजने के लिए अन्य डिवाइस पर पेयरड्रॉप खोलें",
+        "no-peers-subtitle": "अन्य नेटवर्क पर दिखाई देने के लिए डिवाइस पेयर करें या सार्वजनिक रूम में प्रवेश करें",
+        "x-instructions_desktop": "फाइल भेजने के लिए क्लिक करें या संदेश भेजने के लिए दायाँ क्लिक करें",
+        "x-instructions_mobile": "फाइल भेजने के लिए टैप करें या संदेश भेजने के लिए लंबा टैप करें",
+        "x-instructions_data-drop-peer": "पीयर को भेजने के लिए छोड़ें",
+        "x-instructions_data-drop-bg": "प्राप्तकर्ता चुनने के लिए छोड़ें",
+        "x-instructions-share-mode_desktop": "{{descriptor}} भेजने के लिए क्लिक करें",
+        "x-instructions-share-mode_mobile": "{{descriptor}} भेजने के लिए टैप करें",
+        "activate-share-mode-base": "भेजने के लिए अन्य डिवाइस पर PairDrop खोलें",
+        "activate-share-mode-and-other-file": "और 1 अन्य फ़ाइल",
+        "activate-share-mode-and-other-files-plural": "और {{count}} अन्य फ़ाइल",
+        "activate-share-mode-shared-text": "भेजा गया टेक्स्ट",
+        "activate-share-mode-shared-file": "साझा फ़ाइल",
+        "activate-share-mode-shared-files-plural": "{{count}} साझा फ़ाइलें",
+        "webrtc-requirement": "इस PairDrop इंस्टेंस का उपयोग करने के लिए, WebRTC सक्षम होना चाहिए!"
+    },
+    "footer": {
+        "known-as": "आपका नाम है:",
+        "display-name_data-placeholder": "लोड हो रहा है…",
+        "display-name_title": "अपने डिवाइस का नाम स्थायी रूप से संपादित करें",
+        "discovery": "आपको खोजा जा सकता है:",
+        "on-this-network": "इस नेटवर्क पर",
+        "on-this-network_title": "इस नेटवर्क पर आप सभी द्वारा खोजे जा सकते हैं।",
+        "paired-devices": "पेयर किए गए डिवाइसों द्वारा"
+    }
+}

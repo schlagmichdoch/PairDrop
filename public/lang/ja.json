@@ -2,7 +2,7 @@
     "footer": {
         "webrtc": "(WebRTCが無効なため)",
         "public-room-devices_title": "公開ルーム内のデバイスは、別のネットワークからもアクセスできます。",
-        "display-name_data-placeholder": "読み込み中…",
+        "display-name_data-placeholder": "読込中…",
         "display-name_title": "デバイス名を変更する",
         "traffic": "この通信は",
         "paired-devices_title": "ペアリング済みデバイスは、別のネットワークからもアクセスできます。",
@@ -174,8 +174,8 @@
         "privacypolicy_title": "プライバシーポリシーを開く"
     },
     "document-titles": {
-        "file-transfer-requested": "ファイル転送の要求があります",
-        "image-transfer-requested": "画像の転送の要求があります",
+        "file-transfer-requested": "ファイルが転送されています",
+        "image-transfer-requested": "画像が転送されています",
         "message-received-plural": "{{count}}個のメッセージを受信しました",
         "message-received": "メッセージを受信しました",
         "file-received": "ファイルを受信しました",
