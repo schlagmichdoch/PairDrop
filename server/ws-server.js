@@ -28,7 +28,8 @@ export default class PairDropWsServer {
             type: 'ws-config',
             wsConfig: {
                 rtcConfig: this._conf.rtcConfig,
-                wsFallback: this._conf.wsFallback
+                wsFallback: this._conf.wsFallback,
+                wsPeerFallback: true
             }
         });
 
@@ -102,17 +103,13 @@ export default class PairDropWsServer {
             case 'text':
             case 'display-name-changed':
             case 'ws-chunk':
-                // relay ws-fallback
-                if (this._conf.wsFallback) {
-                    this._signalAndRelay(sender, message);
-                }
-                else {
-                    console.log("Websocket fallback is not activated on this instance.")
-                }
+                // Relay websocket traffic when global fallback is enabled or
+                // when either endpoint cannot use WebRTC.
+                this._signalAndRelay(sender, message, true);
         }
     }
 
-    _signalAndRelay(sender, message) {
+    _signalAndRelay(sender, message, websocketOnly = false) {
         const room = message.roomType === 'ip'
             ? sender.ip
             : message.roomId;
@@ -120,6 +117,12 @@ export default class PairDropWsServer {
         // relay message to recipient
         if (message.to && Peer.isValidUuid(message.to) && this._rooms[room]) {
             const recipient = this._rooms[room][message.to];
+            if (!recipient) return;
+
+            if (websocketOnly && !this._conf.wsFallback && sender.rtcSupported && recipient.rtcSupported) {
+                return;
+            }
+
             delete message.to;
             // add sender
             message.sender = {

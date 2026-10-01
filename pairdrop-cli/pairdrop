@@ -17,6 +17,7 @@ help()
    echo -e "Open PairDrop:\t\t$(basename "$0")"
    echo -e "Send files:\t\t$(basename "$0") file1/directory1 (file2/directory2 file3/directory3 ...)"
    echo -e "Send text:\t\t$(basename "$0") -t \"text\""
+   echo -e "Headless mode:\t\t$(basename "$0") --headless (pair|peers|reset|[--to DEVICE] FILE...)"
    echo -e "Specify domain:\t\t$(basename "$0") -d \"https://pairdrop.net/\""
    echo -e "Show this help text:\t$(basename "$0") (-h|--help)"
    echo
@@ -355,6 +356,23 @@ setOs
 ############################################################
 # Process the input options. Add options as needed.        #
 ############################################################
+# Headless mode is opt-in and does not alter the existing browser-based flow.
+if [[ "${1:-}" == "--headless" ]]; then
+  if ! command -v node > /dev/null 2>&1; then
+    echo "Headless mode requires Node.js." >&2
+    exit 1
+  fi
+
+  if [[ ! -d "$script_path/node_modules/ws" ]]; then
+    echo "Headless mode dependency is missing." >&2
+    echo "Run: npm install --omit=dev --prefix \"$script_path\"" >&2
+    exit 1
+  fi
+
+  shift
+  exec node "$script_path/pairdrop-headless.mjs" --domain "$DOMAIN" "$@"
+fi
+
 # Get the options
 # open PairDrop if no options are given
 [[ $# -eq 0 ]] && openPairDrop && exit
