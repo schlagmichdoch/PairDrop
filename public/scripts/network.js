@@ -1242,30 +1242,29 @@ class FileChunker {
         this._file = file;
         this._onChunk = onChunk;
         this._onPartitionEnd = onPartitionEnd;
-        this._reader = new FileReader();
-        this._reader.addEventListener('load', e => this._onChunkRead(e.target.result));
     }
 
     nextPartition() {
         this._partitionSize = 0;
-        this._readChunk();
+        this._readChunks();
     }
 
-    _readChunk() {
-        const chunk = this._file.slice(this._offset, this._offset + this._chunkSize);
-        this._reader.readAsArrayBuffer(chunk);
-    }
+    async _readChunks() {
+        while (!this.isFileEnd()) {
+            const chunk = await this._file
+                .slice(this._offset, this._offset + this._chunkSize)
+                .arrayBuffer();
 
-    _onChunkRead(chunk) {
-        this._offset += chunk.byteLength;
-        this._partitionSize += chunk.byteLength;
-        this._onChunk(chunk);
-        if (this.isFileEnd()) return;
-        if (this._isPartitionEnd()) {
-            this._onPartitionEnd(this._offset);
-            return;
+            this._offset += chunk.byteLength;
+            this._partitionSize += chunk.byteLength;
+            this._onChunk(chunk);
+
+            if (this.isFileEnd()) return;
+            if (this._isPartitionEnd()) {
+                this._onPartitionEnd(this._offset);
+                return;
+            }
         }
-        this._readChunk();
     }
 
     repeatPartition() {
