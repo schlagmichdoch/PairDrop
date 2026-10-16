@@ -21,6 +21,11 @@ export default class PairDropWsServer {
     _onConnection(peer) {
         peer.socket.on('message', message => this._onMessage(peer, message));
         peer.socket.onerror = e => console.error(e);
+        peer.socket.on('close', () => this._onDisconnect(peer));
+
+        if (this._keepAliveTimers[peer.id]) {
+            this._keepAliveTimers[peer.id].lastBeat = Date.now();
+        }
 
         this._keepAlive(peer);
 
@@ -341,6 +346,14 @@ export default class PairDropWsServer {
             this._rooms[roomId] = {};
         }
 
+        const oldPeer = this._rooms[roomId][peer.id];
+        if (oldPeer && oldPeer !== peer) {
+            this._cancelKeepAlive(oldPeer);
+            try {
+                oldPeer.socket.terminate();
+            } catch (e) {}
+        }
+
         this._notifyPeers(peer, roomType, roomId);
 
         // add peer to room
@@ -369,6 +382,7 @@ export default class PairDropWsServer {
 
     _leaveRoom(peer, roomType, roomId, disconnect = false) {
         if (!this._rooms[roomId] || !this._rooms[roomId][peer.id]) return;
+        if (this._rooms[roomId][peer.id] !== peer) return;
 
         // remove peer from room
         delete this._rooms[roomId][peer.id];
@@ -437,8 +451,9 @@ export default class PairDropWsServer {
     }
 
     _leaveAllSecretRooms(peer, disconnect = false) {
-        for (let i=0; i<peer.roomSecrets.length; i++) {
-            this._leaveSecretRoom(peer, peer.roomSecrets[i], disconnect);
+        const roomSecrets = [...peer.roomSecrets];
+        for (let i=0; i<roomSecrets.length; i++) {
+            this._leaveSecretRoom(peer, roomSecrets[i], disconnect);
         }
     }
 
@@ -460,8 +475,8 @@ export default class PairDropWsServer {
             };
         }
 
-        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 5 * timeout) {
-            // Disconnect peer if unresponsive for 10s
+        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 30000) {
+            // Disconnect peer if unresponsive for 30s (allows mobile file selection / camera)
             this._disconnect(peer);
             return;
         }
