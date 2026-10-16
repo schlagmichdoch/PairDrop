@@ -721,6 +721,12 @@ class Peer {
 
 class RTCPeer extends Peer {
 
+    // Continuous streaming is paced by the data channel's send buffer:
+    // reading pauses while more than _BUFFER_PAUSE bytes are queued and
+    // resumes once the buffer drains to _BUFFER_RESUME.
+    static _BUFFER_PAUSE = 4 * 1024 * 1024; // 4 MB
+    static _BUFFER_RESUME = 1024 * 1024;    // 1 MB
+
     constructor(serverConnection, isCaller, peerId, roomType, roomId, rtcConfig) {
         super(serverConnection, isCaller, peerId, roomType, roomId);
 
@@ -799,6 +805,71 @@ class RTCPeer extends Peer {
                 .addIceCandidate(new RTCIceCandidate(message.ice))
                 .catch(e => this._onError(e));
         }
+    }
+
+    async _sendFile(file) {
+        this.sendJSON({
+            type: 'header',
+            size: file.size,
+            name: file.name,
+            mime: file.type
+        });
+
+        if (typeof this._channel?.bufferedAmountLowThreshold === 'number') {
+            // Continuous streaming paced by the send buffer: no waiting
+            // for per-partition acknowledgements, so the throughput is
+            // no longer bound by one round trip per megabyte.
+            this._chunker = new FileChunker(file, chunk => this._sendChunk(chunk));
+            this._chunker.streamAll(() => this._awaitSendBufferDrained());
+        }
+        else {
+            // Browser without bufferedAmountLow support:
+            // fall back to the legacy stop-and-wait handshake.
+            this._chunker = new FileChunker(file,
+                chunk => this._sendChunk(chunk),
+                offset => this._onPartitionEnd(offset));
+            this._chunker.nextPartition();
+        }
+    }
+
+    _sendChunk(chunk) {
+        if (!this._channel || this._channel.readyState !== 'open') {
+            // Channel died mid-transfer: stop the stream loop.
+            if (this._chunker) this._chunker.abort();
+            return;
+        }
+        this._channel.send(chunk);
+    }
+
+    _awaitSendBufferDrained() {
+        const channel = this._channel;
+        if (!channel || channel.readyState !== 'open') {
+            if (this._chunker) this._chunker.abort();
+            return;
+        }
+        // Fast path: buffer already low enough to keep streaming.
+        if (channel.bufferedAmount < RTCPeer._BUFFER_PAUSE) return;
+
+        return new Promise(resolve => {
+            const finish = () => {
+                clearInterval(pollTimer);
+                channel.removeEventListener('bufferedamountlow', onLow);
+                channel.removeEventListener('close', onClose);
+                resolve();
+            };
+            const onLow = finish;
+            const onClose = finish;
+            // bufferedamountlow only fires on a transition from above the
+            // threshold to below; poll as a safety net in case that
+            // transition happens before the listener is attached.
+            const pollTimer = setInterval(() => {
+                if (channel.bufferedAmount <= RTCPeer._BUFFER_RESUME
+                    || channel.readyState !== 'open') finish();
+            }, 50);
+            channel.bufferedAmountLowThreshold = RTCPeer._BUFFER_RESUME;
+            channel.addEventListener('bufferedamountlow', onLow);
+            channel.addEventListener('close', onClose);
+        });
     }
 
     _onChannelOpened(event) {
@@ -1242,18 +1313,44 @@ class FileChunker {
         this._file = file;
         this._onChunk = onChunk;
         this._onPartitionEnd = onPartitionEnd;
+        this._aborted = false;
     }
 
+    // Legacy stop-and-wait mode: send one partition, then hand control
+    // back to the caller until it calls nextPartition() again.
     nextPartition() {
         this._partitionSize = 0;
         this._readChunks();
     }
 
-    async _readChunks() {
-        while (!this.isFileEnd()) {
+    // Continuous mode: send the whole file without waiting for
+    // partition acknowledgements. `beforeChunk` is awaited before every
+    // read so the caller can apply backpressure while streaming.
+    async streamAll(beforeChunk) {
+        while (!this.isFileEnd() && !this._aborted) {
+            if (beforeChunk) await beforeChunk();
+            if (this._aborted) return;
+
             const chunk = await this._file
                 .slice(this._offset, this._offset + this._chunkSize)
                 .arrayBuffer();
+            if (this._aborted) return;
+
+            this._offset += chunk.byteLength;
+            this._onChunk(chunk);
+        }
+    }
+
+    abort() {
+        this._aborted = true;
+    }
+
+    async _readChunks() {
+        while (!this.isFileEnd() && !this._aborted) {
+            const chunk = await this._file
+                .slice(this._offset, this._offset + this._chunkSize)
+                .arrayBuffer();
+            if (this._aborted) return;
 
             this._offset += chunk.byteLength;
             this._partitionSize += chunk.byteLength;
