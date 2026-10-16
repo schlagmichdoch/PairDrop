@@ -626,11 +626,13 @@ class Peer {
             this._abortTransfer();
         }
 
-        this._onDownloadProgress(progress);
-
-        // occasionally notify sender about our progress
+        // Update the UI and notify the sender only occasionally: doing
+        // this on every 64 KB chunk floods the receiver's main thread
+        // with DOM events and the wire with progress messages.
         if (progress - this._lastProgress < 0.005 && progress !== 1) return;
         this._lastProgress = progress;
+
+        this._onDownloadProgress(progress);
         this._sendProgress(progress);
     }
 
@@ -723,9 +725,11 @@ class RTCPeer extends Peer {
 
     // Continuous streaming is paced by the data channel's send buffer:
     // reading pauses while more than _BUFFER_PAUSE bytes are queued and
-    // resumes once the buffer drains to _BUFFER_RESUME.
-    static _BUFFER_PAUSE = 4 * 1024 * 1024; // 4 MB
-    static _BUFFER_RESUME = 1024 * 1024;    // 1 MB
+    // resumes once the buffer drains to _BUFFER_RESUME. The pause level
+    // stays well below typical SCTP receive windows so the association
+    // never runs into congestion backoff from an oversized burst.
+    static _BUFFER_PAUSE = 1024 * 1024;    // 1 MB
+    static _BUFFER_RESUME = 256 * 1024;    // 256 KB
 
     constructor(serverConnection, isCaller, peerId, roomType, roomId, rtcConfig) {
         super(serverConnection, isCaller, peerId, roomType, roomId);
@@ -1308,6 +1312,7 @@ class FileChunker {
     constructor(file, onChunk, onPartitionEnd) {
         this._chunkSize = 64000; // 64 KB
         this._maxPartitionSize = 1e6; // 1 MB
+        this._blockSize = 16 * 64000; // 1,024,000 (~1 MB): exact multiple of the chunk size so blocks split evenly
         this._offset = 0;
         this._partitionSize = 0;
         this._file = file;
@@ -1325,19 +1330,30 @@ class FileChunker {
 
     // Continuous mode: send the whole file without waiting for
     // partition acknowledgements. `beforeChunk` is awaited before every
-    // read so the caller can apply backpressure while streaming.
+    // chunk so the caller can apply backpressure while streaming.
+    // Data is read in _BLOCK_SIZE blocks and fed to the wire as
+    // zero-copy 64 KB views, so only one Blob read task is scheduled
+    // per block instead of one per chunk.
     async streamAll(beforeChunk) {
+        const blockSize = this._blockSize;
         while (!this.isFileEnd() && !this._aborted) {
             if (beforeChunk) await beforeChunk();
             if (this._aborted) return;
 
-            const chunk = await this._file
-                .slice(this._offset, this._offset + this._chunkSize)
+            const block = await this._file
+                .slice(this._offset, Math.min(this._offset + blockSize, this._file.size))
                 .arrayBuffer();
             if (this._aborted) return;
 
-            this._offset += chunk.byteLength;
-            this._onChunk(chunk);
+            const view = new Uint8Array(block);
+            for (let start = 0; start < view.length && !this._aborted; start += this._chunkSize) {
+                if (beforeChunk && start > 0) await beforeChunk();
+                if (this._aborted) return;
+
+                const end = Math.min(start + this._chunkSize, view.length);
+                this._offset += end - start;
+                this._onChunk(view.subarray(start, end));
+            }
         }
     }
 
