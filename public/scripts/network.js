@@ -815,7 +815,7 @@ class RTCPeer extends Peer {
         channel.onclose = _ => this._onChannelClosed();
         this._channel = channel;
         Events.on('beforeunload', e => this._onBeforeUnload(e));
-        Events.on('pagehide', _ => this._onPageHide());
+        Events.on('pagehide', e => this._onPageHide(e));
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
     }
 
