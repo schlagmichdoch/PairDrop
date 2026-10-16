@@ -1,7 +1,12 @@
 class ServerConnection {
 
     constructor() {
-        Events.on('pagehide', _ => this._disconnect());
+        Events.on('pagehide', _ => {
+            this._disconnect();
+            if (BrowserTabsConnector.isOnlyTab()) {
+                FileDigester.clearDirectory();
+            }
+        });
         Events.on(window.visibilityChangeEvent, _ => this._onVisibilityChange());
 
         if (navigator.connection) {
@@ -563,9 +568,9 @@ class Peer {
             this.sendJSON({type: 'files-transfer-response', accepted: false});
             return;
         }
-        if (window.iOS && request.totalSize >= 200*1024*1024) {
+        if (window.iOS && request.totalSize >= 200*1024*1024 && !FileDigester.isStreamingSupported) {
             // iOS Safari can only put 400MB at once to memory.
-            // Request to send them in chunks of 200MB instead:
+            // Request to send them in chunks of 200MB instead if OPFS streaming is not supported:
             this.sendJSON({type: 'files-transfer-response', accepted: false, reason: 'ios-memory-limit'});
             return;
         }
@@ -608,11 +613,14 @@ class Peer {
     }
 
     _abortTransfer() {
+        if (this._digester) {
+            this._digester.abort();
+            this._digester = null;
+        }
         Events.fire('set-progress', {peerId: this._peerId, progress: 1, status: 'wait'});
         Events.fire('notify-user', Localization.getTranslation("notifications.files-incorrect"));
         this._filesReceived = [];
         this._requestAccepted = null;
-        this._digester = null;
         throw new Error("Received files differ from requested files. Abort!");
     }
 
@@ -858,6 +866,10 @@ class RTCPeer extends Peer {
     }
 
     _disconnect() {
+        if (this._digester) {
+            this._digester.abort();
+            this._digester = null;
+        }
         if (this._conn && this._channel) {
             this._channel.onclose = null;
             this._channel.close();
@@ -867,6 +879,10 @@ class RTCPeer extends Peer {
 
     _onChannelClosed() {
         console.log('RTC: channel closed', this._peerId);
+        if (this._digester) {
+            this._digester.abort();
+            this._digester = null;
+        }
         Events.fire('peer-disconnected', this._peerId);
         if (!this._isCaller) return;
         this._connect(); // reopen the channel
@@ -876,10 +892,18 @@ class RTCPeer extends Peer {
         console.log('RTC: state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
             case 'disconnected':
+                if (this._digester) {
+                    this._digester.abort();
+                    this._digester = null;
+                }
                 Events.fire('peer-disconnected', this._peerId);
                 this._onError('rtc connection disconnected');
                 break;
             case 'failed':
+                if (this._digester) {
+                    this._digester.abort();
+                    this._digester = null;
+                }
                 Events.fire('peer-disconnected', this._peerId);
                 this._onError('rtc connection failed');
                 break;
@@ -1284,30 +1308,208 @@ class FileChunker {
 
 class FileDigester {
 
+    static isStreamingSupported = false;
+    static _worker = null;
+    static _initPromise = null;
+
+    static async init() {
+        if (FileDigester._initPromise) return await FileDigester._initPromise;
+
+        FileDigester._initPromise = new Promise(resolve => {
+            if (!window.Worker || !window.isSecureContext) {
+                FileDigester.isStreamingSupported = false;
+                resolve(false);
+                return;
+            }
+
+            try {
+                const worker = new Worker('scripts/worker/file-digester-worker.js');
+                const timeout = setTimeout(() => {
+                    worker.terminate();
+                    FileDigester.isStreamingSupported = false;
+                    resolve(false);
+                }, 3000);
+
+                worker.onmessage = e => {
+                    if (e.data && e.data.type === 'support') {
+                        clearTimeout(timeout);
+                        FileDigester.isStreamingSupported = !!e.data.supported;
+                        if (FileDigester.isStreamingSupported) {
+                            FileDigester._worker = worker;
+                            FileDigester.clearDirectory();
+                        } else {
+                            worker.terminate();
+                        }
+                        resolve(FileDigester.isStreamingSupported);
+                    }
+                };
+
+                worker.onerror = () => {
+                    clearTimeout(timeout);
+                    worker.terminate();
+                    FileDigester.isStreamingSupported = false;
+                    resolve(false);
+                };
+
+                worker.postMessage({ type: 'check-support' });
+            } catch (e) {
+                FileDigester.isStreamingSupported = false;
+                resolve(false);
+            }
+        });
+
+        return await FileDigester._initPromise;
+    }
+
+    static deleteFile(id) {
+        if (FileDigester._worker && id) {
+            FileDigester._worker.postMessage({ type: 'delete-file', id: id });
+        }
+    }
+
+    static clearDirectory() {
+        if (FileDigester._worker) {
+            FileDigester._worker.postMessage({ type: 'clear-directory' });
+        }
+    }
+
     constructor(meta, totalSize, totalBytesReceived, callback) {
-        this._buffer = [];
-        this._bytesReceived = 0;
+        if (FileDigester.isStreamingSupported && FileDigester._worker) {
+            return new FileDigesterViaWorker(meta, totalSize, totalBytesReceived, callback, FileDigester._worker);
+        }
+        return new FileDigesterViaBuffer(meta, totalSize, totalBytesReceived, callback);
+    }
+}
+
+class FileDigesterBase {
+
+    constructor(meta, totalSize, totalBytesReceived, callback) {
         this._size = meta.size;
         this._name = meta.name;
         this._mime = meta.mime;
         this._totalSize = totalSize;
         this._totalBytesReceived = totalBytesReceived;
+        this._bytesReceived = 0;
         this._callback = callback;
+        this.progress = 0;
+    }
+
+    abort() {}
+}
+
+class FileDigesterViaBuffer extends FileDigesterBase {
+
+    constructor(meta, totalSize, totalBytesReceived, callback) {
+        super(meta, totalSize, totalBytesReceived, callback);
+        this._buffer = [];
     }
 
     unchunk(chunk) {
         this._buffer.push(chunk);
         this._bytesReceived += chunk.byteLength || chunk.size;
         this.progress = (this._totalBytesReceived + this._bytesReceived) / this._totalSize;
-        if (isNaN(this.progress)) this.progress = 1
+        if (isNaN(this.progress)) this.progress = 1;
 
         if (this._bytesReceived < this._size) return;
         // we are done
-        const blob = new Blob(this._buffer)
+        const blob = new Blob(this._buffer);
         this._buffer = null;
-        this._callback(new File([blob], this._name, {
+        const file = new File([blob], this._name, {
             type: this._mime || "application/octet-stream",
             lastModified: new Date().getTime()
-        }));
+        });
+        file.originalName = this._name;
+        this._callback(file);
+    }
+
+    abort() {
+        this._buffer = null;
     }
 }
+
+class FileDigesterViaWorker extends FileDigesterBase {
+
+    constructor(meta, totalSize, totalBytesReceived, callback, worker) {
+        super(meta, totalSize, totalBytesReceived, callback);
+        this._id = `pairdrop-file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        this._worker = worker;
+        this._onMessage = this._handleWorkerMessage.bind(this);
+        this._worker.addEventListener('message', this._onMessage);
+
+        this._worker.postMessage({
+            type: 'init-file',
+            id: this._id
+        });
+    }
+
+    _handleWorkerMessage(e) {
+        const msg = e.data;
+        if (!msg || msg.id !== this._id) return;
+
+        if (msg.type === 'file') {
+            this._cleanUpListener();
+            const rawFile = msg.file;
+            const file = new File([rawFile], this._name, {
+                type: this._mime || rawFile.type || "application/octet-stream",
+                lastModified: new Date().getTime()
+            });
+            file.id = this._id;
+            file.originalName = this._name;
+            this._callback(file);
+        } else if (msg.type === 'error') {
+            console.error('FileDigester worker error for file', this._id, msg.error);
+            this._cleanUpListener();
+        }
+    }
+
+    unchunk(chunk) {
+        const byteLen = chunk.byteLength || chunk.size || 0;
+        const offset = this._bytesReceived;
+        this._bytesReceived += byteLen;
+        this.progress = (this._totalBytesReceived + this._bytesReceived) / this._totalSize;
+        if (isNaN(this.progress)) this.progress = 1;
+
+        // Zero-copy transfer if chunk is an ArrayBuffer
+        if (chunk instanceof ArrayBuffer) {
+            this._worker.postMessage({
+                type: 'chunk',
+                id: this._id,
+                chunk: chunk,
+                offset: offset
+            }, [chunk]);
+        } else {
+            this._worker.postMessage({
+                type: 'chunk',
+                id: this._id,
+                chunk: chunk,
+                offset: offset
+            });
+        }
+
+        if (this._bytesReceived < this._size) return;
+
+        // Request complete file from worker
+        this._worker.postMessage({
+            type: 'get-file',
+            id: this._id
+        });
+    }
+
+    abort() {
+        this._cleanUpListener();
+        this._worker.postMessage({
+            type: 'delete-file',
+            id: this._id
+        });
+    }
+
+    _cleanUpListener() {
+        if (this._worker && this._onMessage) {
+            this._worker.removeEventListener('message', this._onMessage);
+            this._onMessage = null;
+        }
+    }
+}
+
+// Auto-initialize FileDigester support detection
+FileDigester.init();
