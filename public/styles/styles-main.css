@@ -12,6 +12,7 @@ body {
     overscroll-behavior: none;
     overflow-y: hidden;
     transition: color 300ms;
+    user-select: none;
 }
 
 body {
