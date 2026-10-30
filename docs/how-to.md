@@ -20,6 +20,8 @@ When the PWA is installed, it will register itself to the share-menu of the devi
 Send files or text with PairDrop via command-line interface. \
 This opens PairDrop in the default browser where you can choose the receiver.
 
+PairDrop CLI can also run in a fully headless mode for SSH sessions and servers. Headless mode does not open a browser or use the clipboard. It uses PairDrop's WebSocket transport automatically when one endpoint cannot use WebRTC, so no extra server configuration is required on versions that include headless CLI support.
+
 ### Usage
 ```bash
 pairdrop -h
@@ -36,6 +38,23 @@ Specify domain:		pairdrop -d "https://pairdrop.net/"
 Show this help text:	pairdrop (-h|--help)
 
 This pairdrop-cli version was released alongside v1.10.4
+```
+
+Headless mode:
+```bash
+pairdrop --headless pair
+pairdrop --headless peers
+pairdrop --headless file1 file2
+pairdrop --headless --to "Android" file1
+pairdrop --headless reset
+```
+
+The first `pair` command prints a six-digit PairDrop pairing code. Enter it once on the receiving device. Pairing state is stored in `~/.config/pairdrop-cli/headless.json` on Linux/macOS and `%APPDATA%\\pairdrop-cli\\headless.json` on Windows. Without `--to`, files are offered to every currently online paired device.
+
+Headless mode currently supports regular files only. It requires Node.js and the `ws` package shipped in `pairdrop-cli/package.json`:
+
+```bash
+npm install --omit=dev --prefix /usr/share/pairdrop-cli
 ```
 
 <br>
