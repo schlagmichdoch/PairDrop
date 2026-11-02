@@ -31,5 +31,63 @@
         "activate-share-mode-and-other-files-plural": "অন্য ফাইল যোগ করুন",
         "activate-share-mode-shared-text": "পাঠানো টেক্সট",
         "activate-share-mode-shared-files-plural": "পাঠানো ফাইল গুলো"
+    },
+    "footer": {
+        "display-name_data-placeholder": "লোডিং …",
+        "traffic": "ট্রাফিক"
+    },
+    "dialogs": {
+        "pair": "সংযোগ",
+        "unpair": "সংযোগ বন্ধ",
+        "close": "বন্ধ",
+        "join": "যুক্ত",
+        "leave": "বের হও",
+        "accept": "গ্রহণ করো",
+        "auto-accept": "স্বয়ংক্রিয়ভাবে গ্রহণ করো",
+        "decline": "প্রত্যাখ্যান",
+        "download": "ডাউনলোড",
+        "send-message-to": "প্রতি:",
+        "message_placeholder": "লেখা",
+        "send": "পাঠাও",
+        "base64-processing": "প্রক্রিয়ারত…",
+        "base64-text": "লেখা",
+        "base64-files": "ফাইল",
+        "title-file": "ফাইল",
+        "title-image-plural": "ছবি",
+        "title-file-plural": "ফাইল",
+        "has-sent": "পাঠানো হয়েছে:",
+        "send-message-title": "বার্তা দাও",
+        "base64-title-files": "ফাইল শেয়ার করো",
+        "base64-title-text": "লেখা শেয়ার করো",
+        "receive-title": "{{descriptor}} গৃহীত",
+        "language-selector-title": "ভাষা নির্ধারণ",
+        "system-language": "সিস্টেম ভাষা",
+        "close-toast_title": "বিজ্ঞপ্তি বন্ধ করো",
+        "share": "শেয়ার",
+        "approve": "অনুমোদন",
+        "hr-or": "অথবা",
+        "auto-accept-instructions-1": "চালু করো",
+        "copy": "কপি",
+        "cancel": "বাতিল",
+        "title-image": "ছবি",
+        "receive-text-title": "বার্তা গৃহীত",
+        "download-again": "আবার ডাউনলোড করো"
+    },
+    "notifications": {
+        "pairing-success": "ডিভাইস সংযুক্ত",
+        "pairing-key-invalid": "ভুল কি(চাবি)",
+        "notifications-enabled": "বিজ্ঞপ্তি সক্রিয়",
+        "connected": "সংযুক্ত হয়েছে",
+        "connecting": "সংযোগরত…",
+        "download-successful": "{{descriptor}} ডাউনলোড হয়েছে"
+    },
+    "peer-ui": {
+        "preparing": "প্রস্তুত হচ্ছে…",
+        "transferring": "পাঠানো হচ্ছে…",
+        "waiting": "অপেক্ষারত…",
+        "processing": "প্রক্রিয়ারত…"
+    },
+    "about": {
+        "custom_title": "আমাদের অনুসরণ করো"
     }
 }
