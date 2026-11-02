@@ -1,0 +1,26 @@
+{
+    "header": {
+        "about_title": "પૈરડ્રોપ વિષે",
+        "language-selector_title": "ભાષા સેટ કરો",
+        "about_aria-label": "પેરડ્રોપ વિશે માહિતી ઉકેલો",
+        "theme-auto_title": "વિષયને સ્વચાલિત રીતે પ્રણાલીને અનુકૂળ બનાવો",
+        "theme-light_title": "હમેશા સફેદ થિમનો ઉપયોગ કરો",
+        "theme-dark_title": "હમેશા કાળા થિમનો ઉપયોગ કરો",
+        "notification_title": "નોટિફિકેશન ચાલુ કરો",
+        "install_title": "પેરડ્રોપ ઇન્સ્ટોલ કરો",
+        "pair-device_title": "તમારા ઉપકરણોને કાયમ માટે જોડો",
+        "edit-paired-devices_title": "જોડેલા ઉપકરણોને સંપાદિત કરો",
+        "join-public-room_title": "કામચલાઉ ધોરણે જાહેર રૂમમાં જોડાઓ",
+        "cancel-share-mode": "રદ કરો",
+        "edit-share-mode": "સંપાદન",
+        "expand_title": "હેડર બટનની હરોળને વિસ્તારો"
+    },
+    "instructions": {
+        "no-peers_data-drop-bg": "પ્રાપ્તકર્તાને પસંદ કરવા માટે છોડો",
+        "no-peers-title": "ફાઇલો મોકલવા માટે અન્ય ઉપકરણો પર પેરડ્રોપ ખોલો",
+        "no-peers-subtitle": "અન્ય નેટવર્ક પર શોધી શકાય તે માટે ઉપકરણોને જોડો અથવા જાહેર રૂમમાં પ્રવેશ કરો",
+        "x-instructions_desktop": "ફાઇલો મોકલવા માટે ક્લિક કરો અથવા સંદેશ મોકલવા માટે જમણું ક્લિક કરો",
+        "x-instructions_mobile": "ફાઇલો મોકલવા માટે ટૅપ કરો અથવા સંદેશ મોકલવા માટે લાંબો ટૅપ કરો",
+        "x-instructions_data-drop-bg": "પીઅરને મોકલવા માટે છોડો"
+    }
+}
