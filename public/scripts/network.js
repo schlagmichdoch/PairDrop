@@ -1,7 +1,10 @@
 class ServerConnection {
 
     constructor() {
-        Events.on('pagehide', _ => this._disconnect());
+        Events.on('pagehide', e => {
+            if (e?.persisted) return;
+            this._disconnect();
+        });
         Events.on(window.visibilityChangeEvent, _ => this._onVisibilityChange());
 
         if (navigator.connection) {
@@ -293,8 +296,11 @@ class ServerConnection {
     }
 
     _onVisibilityChange() {
-        if (window.hiddenProperty) return;
-        this._connect();
+        const isHidden = window.hiddenProperty ? document[window.hiddenProperty] : false;
+        if (isHidden) return;
+        if (!this._isConnected() && !this._isConnecting()) {
+            this._connect();
+        }
     }
 
     _isConnected() {
@@ -809,7 +815,7 @@ class RTCPeer extends Peer {
         channel.onclose = _ => this._onChannelClosed();
         this._channel = channel;
         Events.on('beforeunload', e => this._onBeforeUnload(e));
-        Events.on('pagehide', _ => this._onPageHide());
+        Events.on('pagehide', e => this._onPageHide(e));
         Events.fire('peer-connected', {peerId: this._peerId, connectionHash: this.getConnectionHash()});
     }
 
@@ -853,7 +859,8 @@ class RTCPeer extends Peer {
         }
     }
 
-    _onPageHide() {
+    _onPageHide(e) {
+        if (e?.persisted) return;
         this._disconnect();
     }
 
@@ -868,18 +875,35 @@ class RTCPeer extends Peer {
     _onChannelClosed() {
         console.log('RTC: channel closed', this._peerId);
         Events.fire('peer-disconnected', this._peerId);
-        if (!this._isCaller) return;
-        this._connect(); // reopen the channel
     }
 
     _onConnectionStateChange() {
         console.log('RTC: state changed:', this._conn.connectionState);
         switch (this._conn.connectionState) {
+            case 'connected':
+                if (this._disconnectedTimeout) {
+                    clearTimeout(this._disconnectedTimeout);
+                    this._disconnectedTimeout = null;
+                }
+                break;
             case 'disconnected':
-                Events.fire('peer-disconnected', this._peerId);
-                this._onError('rtc connection disconnected');
+                // WebRTC disconnected state is often transient (network handover or ICE recheck).
+                // Allow a brief grace window for recovery before declaring permanent disconnection.
+                if (!this._disconnectedTimeout) {
+                    this._disconnectedTimeout = setTimeout(() => {
+                        this._disconnectedTimeout = null;
+                        if (this._conn && (this._conn.connectionState === 'disconnected' || this._conn.connectionState === 'failed')) {
+                            Events.fire('peer-disconnected', this._peerId);
+                            this._onError('rtc connection disconnected');
+                        }
+                    }, 5000);
+                }
                 break;
             case 'failed':
+                if (this._disconnectedTimeout) {
+                    clearTimeout(this._disconnectedTimeout);
+                    this._disconnectedTimeout = null;
+                }
                 Events.fire('peer-disconnected', this._peerId);
                 this._onError('rtc connection failed');
                 break;
