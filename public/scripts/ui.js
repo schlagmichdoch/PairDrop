@@ -961,6 +961,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     }
 
     async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
+        this._currentFiles = files;
         this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
 
         let descriptor, url, filenameDownload;
@@ -976,11 +977,15 @@ class ReceiveFileDialog extends ReceiveDialog {
         }
         this.$receiveTitle.innerText = Localization.getTranslation("dialogs.receive-title", null, {descriptor: descriptor});
 
-        const canShare = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files});
+        const canShare = (window.iOS || window.android) && !!navigator.share && navigator.canShare({files}) && !(window.iOS && totalSize > 250000000);
         if (canShare) {
             this.$shareBtn.removeAttribute('hidden');
             this.$shareBtn.onclick = _ => {
-                navigator.share({files: files})
+                let filesToShare = files;
+                if (window.iOS) {
+                    filesToShare = files.map(f => new File([f], f.originalName || f.name, { type: f.type }));
+                }
+                navigator.share({files: filesToShare})
                     .catch(err => {
                         console.error(err);
                     });
@@ -1080,7 +1085,7 @@ class ReceiveFileDialog extends ReceiveDialog {
     _downloadFilesIndividually(files) {
         let tmpBtn = document.createElement("a");
         for (let i=0; i<files.length; i++) {
-            tmpBtn.download = files[i].name;
+            tmpBtn.download = files[i].originalName || files[i].name;
             tmpBtn.href = URL.createObjectURL(files[i]);
             tmpBtn.click();
         }
@@ -1093,6 +1098,14 @@ class ReceiveFileDialog extends ReceiveDialog {
             this.$downloadBtn.setAttribute('disabled', true);
             this.$previewBox.innerHTML = '';
             this._busy = false;
+            if (this._currentFiles) {
+                for (const file of this._currentFiles) {
+                    if (file && file.id) {
+                        FileDigester.deleteFile(file.id);
+                    }
+                }
+                this._currentFiles = null;
+            }
             await this._nextFiles();
         }, 300);
     }

@@ -15,6 +15,7 @@ const relativePathsToCache = [
     'scripts/ui-main.js',
     'scripts/util.js',
     'scripts/worker/canvas-worker.js',
+    'scripts/worker/file-digester-worker.js',
     'scripts/libs/heic2any.min.js',
     'scripts/libs/no-sleep.min.js',
     'scripts/libs/qr-code.min.js',

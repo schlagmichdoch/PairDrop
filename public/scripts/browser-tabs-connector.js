@@ -53,10 +53,13 @@ class BrowserTabsConnector {
 
     static async removeOtherPeerIdsFromLocalStorage() {
         const peerId = sessionStorage.getItem('peer_id');
-        if (!peerId) return false;
-
         let peerIdsBrowser = [peerId];
         localStorage.setItem('peer_ids_browser', JSON.stringify(peerIdsBrowser));
         return peerIdsBrowser;
+    }
+
+    static isOnlyTab() {
+        let peerIdsBrowser = JSON.parse(localStorage.getItem('peer_ids_browser'));
+        return !peerIdsBrowser || peerIdsBrowser.length <= 1;
     }
 }
