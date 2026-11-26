@@ -1135,6 +1135,7 @@ class ReceiveRequestDialog extends ReceiveDialog {
 
     _showRequestDialog(request, peerId) {
         this.correspondingPeerId = peerId;
+        this._currentRequest = request;
 
         const displayName = $(peerId).ui._displayName();
         const connectionHash = $(peerId).ui._connectionHash;
@@ -1162,10 +1163,29 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.show();
     }
 
-    _respondToFileTransferRequest(accepted) {
+    async _respondToFileTransferRequest(accepted) {
+        let options = {};
+        const request = this._currentRequest;
+        const totalSize = request ? request.totalSize : 0;
+        const hasFSAPI = ('showSaveFilePicker' in window);
+
+        if (accepted) {
+            console.log(totalSize);
+            if (hasFSAPI && totalSize > (100 * 1024 * 1024)) {
+                try {
+                    if (request.header.length === 1) {
+                        options.fileSystemHandle = await window.showSaveFilePicker({ startIn: "downloads", 'suggestedName': request.header[0].name });
+                    }
+                } catch (e) { }
+            } else if (!hasFSAPI && totalSize > (200 * 1024 * 1024)) {
+                Events.fire('notify-user', Localization.getTranslation("notifications.large-file-no-fsapi-warning"));
+            }
+        }
+
         Events.fire('respond-to-files-transfer-request', {
             to: this.correspondingPeerId,
-            accepted: accepted
+            accepted: accepted,
+            options: options
         })
         if (accepted) {
             Events.fire('set-progress', {peerId: this.correspondingPeerId, progress: 0, status: 'wait'});
