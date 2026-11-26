@@ -57,6 +57,11 @@ conf.signalingServer = process.env.SIGNALING_SERVER && process.env.SIGNALING_SER
 
 conf.ipv6Localize = parseInt(process.env.IPV6_LOCALIZE) || false;
 
+// Only trust the cf-connecting-ip header when the instance actually sits behind
+// Cloudflare. Otherwise it is a client-supplied header that could be spoofed to
+// join another peer's IP auto-discovery room.
+conf.cfConnectingIp = process.env.CF_CONNECTING_IP === "true";
+
 let rateLimit = false;
 if (process.argv.includes('--rate-limit') || process.env.RATE_LIMIT === "true") {
     rateLimit = 5;

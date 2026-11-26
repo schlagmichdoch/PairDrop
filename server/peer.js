@@ -42,7 +42,15 @@ export default class Peer {
     }
 
     _setIP(request) {
-        if (request.headers['cf-connecting-ip']) {
+        // cf-connecting-ip is only meaningful when the instance actually sits
+        // behind Cloudflare; otherwise it is a plain client-supplied header.
+        // Trusting it unconditionally lets any client spoof its source IP and
+        // join an arbitrary peer's IP auto-discovery room, so it is honored
+        // only when the operator opts in via CF_CONNECTING_IP. The documented
+        // reverse-proxy setup overwrites x-forwarded-for with the real client
+        // IP but does not touch cf-connecting-ip, so without this gate that
+        // setup is still bypassable.
+        if (this.conf.cfConnectingIp && request.headers['cf-connecting-ip']) {
             this.ip = request.headers['cf-connecting-ip'].split(/\s*,\s*/)[0];
         }
         else if (request.headers['x-forwarded-for']) {
