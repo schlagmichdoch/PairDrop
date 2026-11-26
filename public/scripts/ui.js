@@ -826,6 +826,10 @@ class LanguageSelectDialog extends Dialog {
 }
 
 class ReceiveDialog extends Dialog {
+    // These variables are made static so that they can be accessed and modified across child classes.
+    static fileNameInputValue = "";
+    static fileNameInputExtValue = "";
+
     constructor(id) {
         super(id);
         this.$fileDescription = this.$el.querySelector('.file-description');
@@ -836,6 +840,13 @@ class ReceiveDialog extends Dialog {
         this.$fileSize = this.$el.querySelector('.file-size');
         this.$previewBox = this.$el.querySelector('.file-preview');
         this.$receiveTitle = this.$el.querySelector('h2:first-of-type');
+
+        // Store reserved file names initially in an array
+        this.reservedNames = ["con", "prn", "aux", "nul"];
+        for (let i=1; i <= 9; i++) {
+            this.reservedNames.push(`com${i}`);
+            this.reservedNames.push(`lpt${i}`);
+        }
     }
 
     _formatFileSize(bytes) {
@@ -853,6 +864,24 @@ class ReceiveDialog extends Dialog {
         else {
             return bytes + ' Bytes';
         }
+    }
+
+    resetFileNameInput(files, fileNameInput, fileNameInputExt) {
+        // Reset file name inside input text box and file name extension.
+        const fileName = files[0].name;
+        const fileNameSplit = fileName.split('.');
+        const fileExtension = fileNameSplit.length > 1
+            ? '.' + fileNameSplit[fileNameSplit.length - 1]
+            : '';
+        if (files.length === 1) {
+            fileNameInput.value = fileName.substring(0, fileName.length - fileExtension.length);
+            fileNameInputExt.innerText = fileExtension;
+        } else {
+            fileNameInput.value = "PairDrop_files_{YYYY}{MM}{DD}_{hh}{mm}";
+            fileNameInputExt.innerText = ".zip";
+        }
+        ReceiveDialog.fileNameInputValue = fileNameInput.value;
+        ReceiveDialog.fileNameInputExtValue = fileNameInputExt.innerText;
     }
 
     _parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
@@ -882,7 +911,48 @@ class ReceiveDialog extends Dialog {
         this.$displayName.innerText = displayName;
         this.$displayName.title = connectionHash;
         this.$displayName.classList.remove("badge-room-ip", "badge-room-secret", "badge-room-public-id");
-        this.$displayName.classList.add(badgeClassName)
+        this.$displayName.classList.add(badgeClassName);
+    }
+
+    validateFileNameInput(fileNameInput, fileNameError, btn) {
+        // File name with invalid characters ("/", "\", ":", "*", "?", """,  "<" and ">") or reserved names or empty string is considered invalid.
+        // If the file name is invalid, then respective error is displayed and the button to download is disabled.
+        const fileNameInputVal = fileNameInput.value;
+        if (fileNameInputVal.includes("/")) {
+            fileNameError.innerText = "File name should not contain '/'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes("\\")) {
+            fileNameError.innerText = "File name should not contain '\\'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes(":")) {
+            fileNameError.innerText = "File name should not contain ':'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes("*")) {
+            fileNameError.innerText = "File name should not contain '*'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes("?")) {
+            fileNameError.innerText = "File name should not contain '?'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes("\"")) {
+            fileNameError.innerText = "File name should not contain '\"'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes("<")) {
+            fileNameError.innerText = "File name should not contain '<'.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.includes(">")) {
+            fileNameError.innerText = "File name should not contain '>'.";
+            btn.setAttribute('disabled', true);
+        } else if (this.reservedNames.includes(fileNameInputVal.toLowerCase())) {
+            fileNameError.innerText = "Reserved names cannot be set as file names.";
+            btn.setAttribute('disabled', true);
+        } else if (fileNameInputVal.trim() === "") {
+            fileNameError.innerText = "File name cannot be empty.";
+            btn.setAttribute('disabled', true);
+        } else {
+            ReceiveDialog.fileNameInputValue = fileNameInputVal;
+            fileNameError.innerText = "";
+            btn.removeAttribute('disabled');
+        }
     }
 }
 
@@ -893,6 +963,11 @@ class ReceiveFileDialog extends ReceiveDialog {
 
         this.$downloadBtn = this.$el.querySelector('#download-btn');
         this.$shareBtn = this.$el.querySelector('#share-btn');
+        this.$fileNameInput = this.$el.querySelector('#file-name-input-2');
+        this.$fileNameInputExt = this.$el.querySelector('#file-name-input-ext-2');
+        this.$resetNameBtn = this.$el.querySelector('#reset-name-2');
+        this.$fileNameError = this.$el.querySelector('#file-name-error-2');
+        this.$fileNameInput.addEventListener('input', _ => this.validateFileNameInput(this.$fileNameInput, this.$fileNameError, this.$downloadBtn));
 
         Events.on('files-received', e => this._onFilesReceived(e.detail.peerId, e.detail.files, e.detail.imagesOnly, e.detail.totalSize));
         this._filesQueue = [];
@@ -960,8 +1035,41 @@ class ReceiveFileDialog extends ReceiveDialog {
         });
     }
 
+    adjustFileName(fileName) {
+        // Method to replace the placeholders inside file name with respective timestamp values
+        let newFileName = fileName;
+        let now = new Date(Date.now());
+        let year = now.getFullYear().toString();
+        let month = (now.getMonth()+1).toString();
+        month = month.length < 2 ? "0" + month : month;
+        let date = now.getDate().toString();
+        date = date.length < 2 ? "0" + date : date;
+        let hours = now.getHours().toString();
+        hours = hours.length < 2 ? "0" + hours : hours;
+        let minutes = now.getMinutes().toString();
+        minutes = minutes.length < 2 ? "0" + minutes : minutes;
+        newFileName = newFileName.replaceAll("{YYYY}", year);
+        newFileName = newFileName.replaceAll("{MM}", month);
+        newFileName = newFileName.replaceAll("{DD}", date);
+        newFileName = newFileName.replaceAll("{hh}", hours);
+        newFileName = newFileName.replaceAll("{mm}", minutes);
+        console.log(newFileName);
+        return newFileName;
+    }
+
     async _displayFiles(peerId, displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName) {
         this._parseFileData(displayName, connectionHash, files, imagesOnly, totalSize, badgeClassName);
+
+        // Adjust the input content initially
+        this.$fileNameInput.value = ReceiveDialog.fileNameInputValue;
+        this.$fileNameInputExt.innerText = ReceiveDialog.fileNameInputExtValue;
+        this.$fileNameError.innerText = "";
+
+        this.$resetNameBtn.addEventListener("click", _ => {
+            this.resetFileNameInput(files, this.$fileNameInput, this.$fileNameInputExt);
+            this.$fileNameError.innerText = "";
+            this.$downloadBtn.removeAttribute('disabled');
+        });
 
         let descriptor, url, filenameDownload;
         if (files.length === 1) {
@@ -1029,7 +1137,11 @@ class ReceiveFileDialog extends ReceiveDialog {
         this.$downloadBtn.onclick = _ => {
             if (downloadZipped) {
                 let tmpZipBtn = document.createElement("a");
-                tmpZipBtn.download = filenameDownload;
+                if (ReceiveDialog.fileNameInputValue !== "") {
+                    tmpZipBtn.download = this.adjustFileName(ReceiveDialog.fileNameInputValue)+ReceiveDialog.fileNameInputExtValue;
+                } else {
+                    tmpZipBtn.download = filenameDownload;
+                }
                 tmpZipBtn.href = url;
                 tmpZipBtn.click();
             }
@@ -1080,7 +1192,11 @@ class ReceiveFileDialog extends ReceiveDialog {
     _downloadFilesIndividually(files) {
         let tmpBtn = document.createElement("a");
         for (let i=0; i<files.length; i++) {
-            tmpBtn.download = files[i].name;
+            if (ReceiveDialog.fileNameInputValue !== "") {
+                tmpBtn.download = this.adjustFileName(ReceiveDialog.fileNameInputValue)+ReceiveDialog.fileNameInputExtValue;
+            } else {
+                tmpBtn.download = files[i].name;
+            }
             tmpBtn.href = URL.createObjectURL(files[i]);
             tmpBtn.click();
         }
@@ -1107,6 +1223,11 @@ class ReceiveRequestDialog extends ReceiveDialog {
         this.$declineRequestBtn = this.$el.querySelector('#decline-request');
         this.$acceptRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(true));
         this.$declineRequestBtn.addEventListener('click', _ => this._respondToFileTransferRequest(false));
+        this.$fileNameInput = this.$el.querySelector('#file-name-input-1');
+        this.$fileNameInputExt = this.$el.querySelector('#file-name-input-ext-1');
+        this.$resetNameBtn = this.$el.querySelector('#reset-name-1');
+        this.$fileNameError = this.$el.querySelector('#file-name-error-1');
+        this.$fileNameInput.addEventListener('input', _ => this.validateFileNameInput(this.$fileNameInput, this.$fileNameError, this.$acceptRequestBtn));
 
         Events.on('files-transfer-request', e => this._onRequestFileTransfer(e.detail.request, e.detail.peerId))
         Events.on('keydown', e => this._onKeyDown(e));
@@ -1142,6 +1263,15 @@ class ReceiveRequestDialog extends ReceiveDialog {
         const badgeClassName = $(peerId).ui._badgeClassName();
 
         this._parseFileData(displayName, connectionHash, request.header, request.imagesOnly, request.totalSize, badgeClassName);
+
+        // Initially reset the file name inside input textbox
+        this.resetFileNameInput(request.header, this.$fileNameInput, this.$fileNameInputExt);
+
+        this.$resetNameBtn.addEventListener("click", _ => {
+            this.resetFileNameInput(request.header, this.$fileNameInput, this.$fileNameInputExt);
+            this.$fileNameError.innerText = "";
+            this.$acceptRequestBtn.removeAttribute('disabled');
+        });
 
         if (request.thumbnailDataUrl && request.thumbnailDataUrl.substring(0, 22) === "data:image/jpeg;base64") {
             let element = document.createElement('img');
