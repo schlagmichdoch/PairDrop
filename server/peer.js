@@ -195,14 +195,12 @@ export default class Peer {
     }
 
     addRoomSecret(roomSecret) {
-        if (!(roomSecret in this.roomSecrets)) {
+        if (!this.roomSecrets.includes(roomSecret)) {
             this.roomSecrets.push(roomSecret);
         }
     }
 
     removeRoomSecret(roomSecret) {
-        if (roomSecret in this.roomSecrets) {
-            delete this.roomSecrets[roomSecret];
-        }
+        this.roomSecrets = this.roomSecrets.filter(secret => secret !== roomSecret);
     }
 }

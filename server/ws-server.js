@@ -12,10 +12,16 @@ export default class PairDropWsServer {
         this._rooms = {}; // { roomId: peers[] }
 
         this._roomSecrets = {}; // { pairKey: roomSecret }
-        this._keepAliveTimers = {};
+
+        this._keepAliveTimers = new Map(); // { peer: lastBeat }
 
         this._wss = new WebSocketServer({ server });
         this._wss.on('connection', (socket, request) => this._onConnection(new Peer(socket, request, conf)));
+
+        // Sweep all peers once per second instead of running
+        // one setTimeout chain per peer (O(1) timers instead of O(peers))
+        this._keepAliveSweepTimer = setInterval(_ => this._sweepKeepAlives(), 1000);
+        this._keepAliveSweepTimer.unref();
     }
 
     _onConnection(peer) {
@@ -139,7 +145,6 @@ export default class PairDropWsServer {
         sender.pairKey = null;
 
         this._cancelKeepAlive(sender);
-        delete this._keepAliveTimers[sender.id];
 
         this._leaveIpRoom(sender, true);
         this._leaveAllSecretRooms(sender, true);
@@ -437,8 +442,10 @@ export default class PairDropWsServer {
     }
 
     _leaveAllSecretRooms(peer, disconnect = false) {
-        for (let i=0; i<peer.roomSecrets.length; i++) {
-            this._leaveSecretRoom(peer, peer.roomSecrets[i], disconnect);
+        // iterate over a copy as _leaveSecretRoom mutates peer.roomSecrets
+        const roomSecrets = [...peer.roomSecrets];
+        for (let i=0; i<roomSecrets.length; i++) {
+            this._leaveSecretRoom(peer, roomSecrets[i], disconnect);
         }
     }
 
@@ -450,36 +457,31 @@ export default class PairDropWsServer {
     }
 
     _keepAlive(peer) {
-        this._cancelKeepAlive(peer);
-        let timeout = 1000;
+        // Called once per connection. Always (re)set the last beat so a
+        // stale entry of a previous connection cannot cause an immediate
+        // disconnect of the new one.
+        this._keepAliveTimers.set(peer, Date.now());
+    }
 
-        if (!this._keepAliveTimers[peer.id]) {
-            this._keepAliveTimers[peer.id] = {
-                timer: 0,
-                lastBeat: Date.now()
-            };
+    _sweepKeepAlives() {
+        for (const [peer, lastBeat] of this._keepAliveTimers) {
+            if (Date.now() - lastBeat > 5000) {
+                // Disconnect peer if unresponsive for 5s
+                this._disconnect(peer);
+                continue;
+            }
+
+            this._send(peer, { type: 'ping' });
         }
-
-        if (Date.now() - this._keepAliveTimers[peer.id].lastBeat > 5 * timeout) {
-            // Disconnect peer if unresponsive for 10s
-            this._disconnect(peer);
-            return;
-        }
-
-        this._send(peer, { type: 'ping' });
-
-        this._keepAliveTimers[peer.id].timer = setTimeout(() => this._keepAlive(peer), timeout);
     }
 
     _cancelKeepAlive(peer) {
-        if (this._keepAliveTimers[peer.id]?.timer) {
-            clearTimeout(this._keepAliveTimers[peer.id].timer);
-        }
+        this._keepAliveTimers.delete(peer);
     }
 
     _setKeepAliveTimerToNow(peer) {
-        if (this._keepAliveTimers[peer.id]?.lastBeat) {
-            this._keepAliveTimers[peer.id].lastBeat = Date.now();
+        if (this._keepAliveTimers.has(peer)) {
+            this._keepAliveTimers.set(peer, Date.now());
         }
     }
 }

@@ -451,11 +451,14 @@ function changeFavicon(src) {
 }
 
 function arrayBufferToBase64(buffer) {
+    // Build the binary string in 32k blocks instead of concatenating
+    // per byte: string concatenation reallocates on every `+=` which
+    // dominates the runtime for 64k chunks sent via the WS fallback.
+    const bytes = new Uint8Array(buffer);
+    const blockSize = 0x8000;
     let binary = '';
-    let bytes = new Uint8Array(buffer);
-    let len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
+    for (let i = 0; i < bytes.length; i += blockSize) {
+        binary += String.fromCharCode.apply(null, bytes.subarray(i, i + blockSize));
     }
     return window.btoa( binary );
 }
