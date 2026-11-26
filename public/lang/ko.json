@@ -51,7 +51,7 @@
         "paired-device-removed": "페어링된 장치가 제거되었습니다.",
         "paired-devices-wrapper_data-empty": "페어링된 장치가 없습니다.",
         "auto-accept": "자동 수신",
-        "auto-accept-instructions-1": "",
+        "auto-accept-instructions-1": "활성화하다",
         "auto-accept-instructions-2": "을 활성화하여 이 장치에서 보내는 모든 파일을 자동으로 수신하세요.",
         "close": "닫기",
         "join": "참가",

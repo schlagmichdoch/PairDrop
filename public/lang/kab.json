@@ -16,24 +16,52 @@
         "close": "Mdel",
         "accept": "Qbel",
         "share": "Beṭṭu",
-        "download": "Asider",
+        "download": "Asader",
         "language-selector-title": "Sbedd tutlayt",
         "system-language": "Tutlayt n unagraw",
-        "cancel": "Sefsex"
+        "cancel": "Sefsex",
+        "base64-title-files": "Ifuyla yettwabḍan",
+        "join": "Zeddi",
+        "leave": "Eǧǧ",
+        "decline": "Agwi",
+        "base64-processing": "Asesfer…",
+        "download-again": "Zdem-it-id tikkelt nniḍen",
+        "share-text-title": "Bḍu aḍris n yizen",
+        "base64-title-text": "Aḍris yettwabḍan"
     },
     "about": {
         "github_title": "PairDrop deg GitHub",
-        "close-about_aria-label": "Mdel Ɣef PairDrop"
+        "close-about_aria-label": "Mdel Ɣef PairDrop",
+        "tweet_title": "Twiti ɣef PairDrop",
+        "faq_title": "Isteqsiyen i d-yettuɣalen s waṭas",
+        "custom_title": "Ḍfer-aɣ-d"
     },
     "notifications": {
         "connecting": "Tuqqna…",
-        "connected": "Yeqqen"
+        "connected": "Yeqqen",
+        "pairing-key-invalid": "Tasarut d tarameɣtut",
+        "copied-to-clipboard": "Yettwanɣel ɣef afus",
+        "offline": "Aqli-k·m ur teqqineḍ ara"
     },
     "header": {
         "about_aria-label": "Ldi Ɣef PairDrop",
         "about_title": "Ɣef PairDrop",
         "language-selector_title": "Fren tutlayt",
         "install_title": "Sbedd PairDrop",
-        "edit-share-mode": "Ẓreg"
+        "edit-share-mode": "Ẓreg",
+        "notification_title": "Rmed ulɣuten",
+        "cancel-share-mode": "Semmet"
+    },
+    "peer-ui": {
+        "waiting": "Yettraǧu…",
+        "preparing": "Aheyyi…"
+    },
+    "footer": {
+        "display-name_data-placeholder": "Aɛebbi…",
+        "on-this-network": "ɣef uẓeṭṭa-ayi"
+    },
+    "instructions": {
+        "activate-share-mode-and-other-file": "akked ufaylu nniḍen",
+        "activate-share-mode-and-other-files-plural": "akked {{count}} n ifuyla nniḍen"
     }
 }

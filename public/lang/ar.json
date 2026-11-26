@@ -58,20 +58,20 @@
         "notifications-permissions-error": "لم يتم منح إذن الإشعارات حيث أن المستخدم أغلق نافذة السماح عدة مرات. يمكن إعادة تعيين هذا في معلومات الصفحة التي يمكن فتحها بالضغط على رمز القفل بجانب شريط عنوان صفحة الإنترنت."
     },
     "header": {
-        "cancel-share-mode": "تمّ",
+        "cancel-share-mode": "إلغاء",
         "theme-auto_title": "تغيير المظهر تلقائيا من النظام",
         "install_title": "تثبيت PairDrop",
-        "theme-dark_title": "إستخدم دائما المظهر المظلم",
+        "theme-dark_title": "إستخدم دائما السمة المظلمة",
         "pair-device_title": "قم بإقران أجهزتك بشكل دائم",
         "join-public-room_title": "انضم إلى الغرفة العامة مؤقتًا",
         "notification_title": "تفعيل الإشعارات",
         "edit-paired-devices_title": "عدل الأجهزة المقترنة",
-        "language-selector_title": "إختر اللغة",
+        "language-selector_title": "العربية",
         "about_title": "حول PairDrop",
         "about_aria-label": "افتح حول PairDrop",
-        "theme-light_title": "إستخدم دائماً المظهر الفاتح",
+        "theme-light_title": "إستخدم دائماً السمة الفاتحة",
         "edit-share-mode": "عدل",
-        "expand_title": "Expand header button row"
+        "expand_title": "توسيع صف الأزرار في الترويسة"
     },
     "instructions": {
         "x-instructions_mobile": "انقر لإرسال الملفات أو انقر لفترة طويلة لإرسال رسالة",
@@ -82,9 +82,9 @@
         "no-peers-subtitle": "قم بإقران الأجهزة أو ادخل إلى غرفة عامة لتتمكن من أن تكتشف على الشبكات الأخرى",
         "activate-share-mode-shared-text": "النص المشترك",
         "x-instructions_desktop": "انقر لإرسال الملفات أو انقر بزر الفأرة الأيمن لإرسال رسالة",
-        "no-peers-title": "افتح PairDrop على الأجهزة الأخرى لإرسال الملفات",
+        "no-peers-title": "افتح PairDrop على أجهزة أخرى لإرسال الملفات",
         "x-instructions_data-drop-bg": "حرر لتحديد المستلم",
-        "no-peers_data-drop-bg": "حرر لتحديد المستلم",
+        "no-peers_data-drop-bg": "اترك لتحديد المستلم",
         "x-instructions_data-drop-peer": "قم بالتحرير لإرسالها إلى القرين",
         "activate-share-mode-and-other-file": "وملف واحد آخر",
         "activate-share-mode-shared-files-plural": "{{count}} ملفات مشاركة",
