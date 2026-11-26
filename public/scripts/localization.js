@@ -3,11 +3,15 @@ class Localization {
         Localization.$htmlRoot = document.querySelector('html');
 
         Localization.defaultLocale = "en";
+        // Add the language codes of any languages that have been translated by at least 80%
         Localization.supportedLocales = [
-            "ar", "be", "bg", "ca", "cs", "da", "de", "en", "es", "et", "eu", "fa", "fr", "he", "hu", "id", "it", "ja",
-            "kn", "ko", "ml", "nb", "nl", "nn", "pl", "pt-BR", "ro", "ru", "sk", "ta", "te", "tr", "uk", "zh-CN", "zh-HK", "zh-TW"
+            "ar", "az", "be", "bg", "bn", "ca", "cs", "da", "de", "el",
+            "en", "es", "et", "eu", "fa", "fi", "fr", "he", "hu", "id",
+            "it", "ja", "kn", "ko", "ml", "nb", "nl", "nn", "pl", "pt",
+            "pt-BR", "ro", "ru", "sk", "sl", "sr", "sv", "ta", "te", "th",
+            "tr", "uk", "uz", "vi", "zh-CN", "zh-HK", "zh-TW"
         ];
-        Localization.supportedLocalesRtl = ["ar", "he"];
+        Localization.supportedLocalesRtl = ["ar", "he", "fa"];
 
         Localization.translations = {};
         Localization.translationsDefaultLocale = {};

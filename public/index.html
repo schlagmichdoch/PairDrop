@@ -184,6 +184,7 @@
                 <div class="row center p-2">
                     <h2 class="dialog-title" data-i18n-key="dialogs.language-selector-title" data-i18n-attrs="text"></h2>
                 </div>
+                <!-- Language buttons sorted by language code -->
                 <div class="language-buttons p2">
                     <button class="btn fw wrap">
                         <span data-i18n-key="dialogs.system-language" data-i18n-attrs="text"></span>
@@ -193,15 +194,20 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Arabic)</span>
                     </button>
+                    <button class="btn fw wrap" value="az">
+                        <span lang="az">Azərbaycan dili</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Azerbaijani)</span>
+                    </button>
                     <button class="btn fw wrap" value="be">
                         <span lang="be">беларуская</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Belarusian)</span>
                     </button>
-                    <button class="btn fw wrap" value="nb">
-                        <span lang="nb">Bokmål</span>
+                    <button class="btn fw wrap" value="bn">
+                        <span lang="bn">বাংলা</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Norwegian Bokmål)</span>
+                        <span>(Bengali)</span>
                     </button>
                     <button class="btn fw wrap" value="bg">
                         <span lang="bg">български</span>
@@ -228,6 +234,11 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(German)</span>
                     </button>
+                    <button class="btn fw wrap" value="el">
+                        <span lang="el">Ελληνικά</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Greek)</span>
+                    </button>
                     <button class="btn fw wrap" value="en">
                         <span lang="en">English</span>
                     </button>
@@ -251,10 +262,25 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Persian)</span>
                     </button>
+                    <button class="btn fw wrap" value="fi">
+                        <span lang="fi">Suomi</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Finnish)</span>
+                    </button>
                     <button class="btn fw wrap" value="fr">
                         <span lang="fr">Français</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(French)</span>
+                    </button>
+                    <button class="btn fw wrap" value="he">
+                        <span lang="he" dir="rtl">עִבְרִית</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Hebrew)</span>
+                    </button>
+                    <button class="btn fw wrap" value="hu">
+                        <span lang="hu">Magyar</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Hungarian)</span>
                     </button>
                     <button class="btn fw wrap" value="id">
                         <span lang="id">Bahasa Indonesia</span>
@@ -266,20 +292,30 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Italian)</span>
                     </button>
-                    <button class="btn fw wrap" value="he">
-                        <span lang="he" dir="rtl">עִבְרִית</span>
+                    <button class="btn fw wrap" value="ja">
+                        <span lang="ja">日本語</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Hebrew)</span>
+                        <span>(Japanese)</span>
                     </button>
                     <button class="btn fw wrap" value="kn">
                         <span lang="kn">ಕನ್ನಡ</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Kannada)</span>
                     </button>
-                    <button class="btn fw wrap" value="hu">
-                        <span lang="hu">Magyar</span>
+                    <button class="btn fw wrap" value="ko">
+                        <span lang="ko">한국어</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Hungarian)</span>
+                        <span>(Korean)</span>
+                    </button>
+                    <button class="btn fw wrap" value="ml">
+                        <span lang="ml">മലയാളം</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Malayalam)</span>
+                    </button>
+                    <button class="btn fw wrap" value="nb">
+                        <span lang="nb">Bokmål</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Norwegian Bokmål)</span>
                     </button>
                     <button class="btn fw wrap" value="nl">
                         <span lang="nl">Nederlands</span>
@@ -295,6 +331,11 @@
                         <span lang="pl">Polski</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Polish)</span>
+                    </button>
+                    <button class="btn fw wrap" value="pt">
+                        <span lang="pt">Português</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Portuguese)</span>
                     </button>
                     <button class="btn fw wrap" value="pt-BR">
                         <span lang="pt-BR">Português do Brasil</span>
@@ -316,6 +357,21 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Slovak)</span>
                     </button>
+                    <button class="btn fw wrap" value="sl">
+                        <span lang="sl">Slovenščina</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Slovenian)</span>
+                    </button>
+                    <button class="btn fw wrap" value="sr">
+                        <span lang="sr">Српски</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Serbian)</span>
+                    </button>
+                    <button class="btn fw wrap" value="sw">
+                        <span lang="sw">Svenska</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Swedish)</span>
+                    </button>
                     <button class="btn fw wrap" value="ta">
                         <span lang="ta">தமிழ்</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
@@ -326,6 +382,11 @@
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Telugu)</span>
                     </button>
+                    <button class="btn fw wrap" value="th">
+                        <span lang="th">ภาษาไทย</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Thai)</span>
+                    </button>
                     <button class="btn fw wrap" value="tr">
                         <span lang="tr">Türkçe</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
@@ -335,6 +396,16 @@
                         <span lang="uk">Українська</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Ukrainian)</span>
+                    </button>
+                    <button class="btn fw wrap" value="uz">
+                        <span lang="uz">Özbekça</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Uzbek)</span>
+                    </button>
+                    <button class="btn fw wrap" value="vi">
+                        <span lang="vi">Tiếng Việt</span>
+                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
+                        <span>(Vietnamese)</span>
                     </button>
                     <button class="btn fw wrap" value="zh-CN">
                         <span lang="zh-CN">简体中文</span>
@@ -350,21 +421,6 @@
                         <span lang="zh-TW">繁體中文</span>
                         <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
                         <span>(Traditional Chinese)</span>
-                    </button>
-                    <button class="btn fw wrap" value="ja">
-                        <span lang="ja">日本語</span>
-                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Japanese)</span>
-                    </button>
-                    <button class="btn fw wrap" value="ko">
-                        <span lang="ko">한국어</span>
-                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Korean)</span>
-                    </button>
-                    <button class="btn fw wrap" value="ml">
-                        <span lang="ml">മലയാളം</span>
-                        <span>&nbsp;&nbsp;-&nbsp;&nbsp;</span>
-                        <span>(Malayalam)</span>
                     </button>
                 </div>
                 <div class="center row-reverse btn-row wrap">
