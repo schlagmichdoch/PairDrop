@@ -49,6 +49,7 @@ const relativePathsToCache = [
     'lang/ja.json',
     'lang/kn.json',
     'lang/ko.json',
+    'lang/ml.json',
     'lang/nb.json',
     'lang/nl.json',
     'lang/nn.json',
