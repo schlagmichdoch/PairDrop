@@ -171,6 +171,7 @@ class PairDrop {
         this.receiveFileDialog = new ReceiveFileDialog();
         this.receiveRequestDialog = new ReceiveRequestDialog();
         this.sendTextDialog = new SendTextDialog();
+        this.sendFoldersDialog = new SendFoldersDialog();
         this.receiveTextDialog = new ReceiveTextDialog();
         this.pairDeviceDialog = new PairDeviceDialog();
         this.clearDevicesDialog = new EditPairedDevicesDialog();

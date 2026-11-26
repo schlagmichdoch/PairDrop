@@ -72,6 +72,21 @@ const zipper = (() => {
         addFile(file, options) {
             return zipWriter.add(file.name, new zip.BlobReader(file), options);
         },
+        async createZipFileFromFiles(files, filename, onbytes) {
+            // Uses a dedicated ZipWriter to not interfere with concurrent usage of the shared zipWriter above
+            // If set, the relativePath of a file read from a dropped directory is used to preserve the directory structure
+            const dedicatedZipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true, level: 0 });
+            let bytesCompleted = 0;
+            for (let i = 0; i < files.length; i++) {
+                await dedicatedZipWriter.add(files[i].relativePath || files[i].name, new zip.BlobReader(files[i]), {
+                    onprogress: (progress) => {
+                        if (onbytes) onbytes(bytesCompleted + progress);
+                    }
+                });
+                bytesCompleted += files[i].size;
+            }
+            return new File([await dedicatedZipWriter.close()], filename, {type: "application/zip"});
+        },
         async getBlobURL() {
             if (zipWriter) {
                 const blobURL = URL.createObjectURL(await zipWriter.close());
@@ -101,6 +116,88 @@ const zipper = (() => {
     };
 
 })();
+
+async function getFilesFromDataTransferItems(dataTransferItems) {
+    // Reads all files from dropped items including the contents of dropped directories
+    // by using the File and Directory Entries API
+    // Files read from a directory are marked with their path relative to the drop
+    // via the custom property `relativePath`
+
+    // Entries must be gathered synchronously as the DataTransferItemList
+    // is emptied as soon as the drop event handler yields
+    let entries = [];
+    let files = [];
+    for (let i = 0; i < dataTransferItems.length; i++) {
+        const item = dataTransferItems[i];
+        if (item.kind !== 'file') continue;
+
+        const entry = item.webkitGetAsEntry
+            ? item.webkitGetAsEntry()
+            : null;
+
+        if (entry) {
+            entries.push(entry);
+        }
+        else {
+            const file = item.getAsFile();
+            if (file) files.push(file);
+        }
+    }
+
+    let folderNames = [];
+    for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        if (entry.isDirectory) {
+            folderNames.push(entry.name);
+            await readDirectoryEntryRecursively(entry, `${entry.name}/`, files);
+        }
+        else {
+            try {
+                files.push(await getFileFromFileEntry(entry));
+            } catch (e) {
+                // skip unreadable entries instead of aborting the whole drop
+                console.error(`Could not read dropped file "${entry.name}":`, e);
+            }
+        }
+    }
+
+    return { files: files, folderNames: folderNames };
+}
+
+async function readDirectoryEntryRecursively(directoryEntry, path, files) {
+    const directoryReader = directoryEntry.createReader();
+    let entries;
+    do {
+        try {
+            // readEntries returns at most 100 entries per call and must be called until it returns an empty array
+            entries = await new Promise((resolve, reject) => directoryReader.readEntries(resolve, reject));
+        } catch (e) {
+            // skip unreadable directories instead of aborting the whole drop
+            console.error(`Could not read dropped directory "${path}":`, e);
+            return;
+        }
+        for (let i = 0; i < entries.length; i++) {
+            const entry = entries[i];
+            if (entry.isDirectory) {
+                await readDirectoryEntryRecursively(entry, `${path}${entry.name}/`, files);
+            }
+            else {
+                try {
+                    const file = await getFileFromFileEntry(entry);
+                    file.relativePath = path + file.name;
+                    files.push(file);
+                } catch (e) {
+                    // skip unreadable entries instead of aborting the whole drop
+                    console.error(`Could not read dropped file "${path}${entry.name}":`, e);
+                }
+            }
+        }
+    } while (entries.length);
+}
+
+function getFileFromFileEntry(fileEntry) {
+    return new Promise((resolve, reject) => fileEntry.file(resolve, reject));
+}
 
 const mime = (() => {
 
