@@ -1,4 +1,4 @@
-const cacheVersion = 'v1.11.1';
+const cacheVersion = 'v1.11.2';
 const cacheTitle = `pairdrop-cache-${cacheVersion}`;
 const relativePathsToCache = [
     './',
@@ -49,6 +49,7 @@ const relativePathsToCache = [
     'lang/ja.json',
     'lang/kn.json',
     'lang/ko.json',
+    'lang/ml.json',
     'lang/nb.json',
     'lang/nl.json',
     'lang/nn.json',
@@ -151,7 +152,14 @@ const updateCache = request => new Promise((resolve, reject) => {
 // 2. If cache is not available: Fetch from network and update cache.
 // This way, cached files are only updated if the cacheVersion is changed
 self.addEventListener('fetch', function(event) {
-    if (event.request.method === "POST") {
+    const swOrigin = new URL(self.location.href).origin;
+    const requestOrigin = new URL(event.request.url).origin;
+
+    if (swOrigin !== requestOrigin) {
+        // Do not handle requests from other origin
+        event.respondWith(fetch(event.request));
+    }
+    else if (event.request.method === "POST") {
         // Requests related to Web Share Target.
         event.respondWith((async () => {
             const share_url = await evaluateRequestData(event.request);
