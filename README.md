@@ -92,6 +92,9 @@ Connect to others in complex network situations, or over the Internet.
 * When hosting PairDrop yourself, you can [set your own STUN/TURN servers](docs/host-your-own.md#specify-stunturn-servers)
 * Translations.
 
+### Isn't Sold to 3rd-Party
+* Unlike Snapdrop, We will NEVER Sell Pairdrop to ANY 3rd-Party.
+
 </details>
 
 ## Translate PairDrop on [Hosted Weblate](https://hosted.weblate.org/engage/pairdrop/)
