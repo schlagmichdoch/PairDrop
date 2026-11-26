@@ -1910,10 +1910,13 @@ class SendTextDialog extends Dialog {
         this.$peerDisplayName = this.$el.querySelector('.display-name');
         this.$form = this.$el.querySelector('form');
         this.$submit = this.$el.querySelector('button[type="submit"]');
+        this.$paste = this.$el.querySelector('#paste');
         this.$form.addEventListener('submit', e => this._onSubmit(e));
         this.$text.addEventListener('input', _ => this._onInput());
         this.$text.addEventListener('paste', e => this._onPaste(e));
         this.$text.addEventListener('drop', e => this._onDrop(e));
+        this.$paste.addEventListener('pointerdown', e => e.preventDefault());
+        this.$paste.addEventListener('click', _ => this._onPasteBtn());
 
         Events.on('text-recipient', e => this._onRecipient(e.detail.peerId, e.detail.deviceName));
         Events.on('keydown', e => this._onKeyDown(e));
@@ -1930,6 +1933,57 @@ class SendTextDialog extends Dialog {
 
             this._send();
         }
+    }
+
+    async _onPasteBtn() {
+        if (!navigator.clipboard || !navigator.clipboard.readText) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-paste-error"));
+            console.log("`navigator.clipboard.readText()` is not available on this browser.");
+            return;
+        }
+
+        try {
+            const text = await navigator.clipboard.readText();
+            this._insertText(text);
+        }
+        catch (e) {
+            Events.fire('notify-user', Localization.getTranslation("notifications.clipboard-paste-error"));
+            console.log("Reading clipboard failed.", e);
+        }
+    }
+
+    _insertText(text) {
+        if (!text) return;
+
+        const selection = window.getSelection();
+
+        if (selection.rangeCount && this.$text.contains(selection.anchorNode)) {
+            selection.deleteFromDocument();
+            const textNode = document.createTextNode(text);
+            const range = document.createRange();
+            range.setStart(textNode, textNode.length);
+            range.collapse(true);
+            selection.getRangeAt(0).insertNode(textNode);
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        else {
+            if (this._textEmpty()) {
+                this.$text.innerText = text;
+            }
+            else {
+                this.$text.innerText += text;
+            }
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(this.$text);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        this.$text.focus();
+        this._onInput();
     }
 
     async _onDrop(e) {
@@ -1950,20 +2004,7 @@ class SendTextDialog extends Dialog {
         e.preventDefault()
 
         const text = (e.clipboardData || window.clipboardData).getData('text');
-        const selection = window.getSelection();
-
-        if (selection.rangeCount) {
-            selection.deleteFromDocument();
-            const textNode = document.createTextNode(text);
-            const range = document.createRange();
-            range.setStart(textNode, textNode.length);
-            range.collapse(true);
-            selection.getRangeAt(0).insertNode(textNode);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
-
-        this._onInput();
+        this._insertText(text);
     }
 
     _textEmpty() {
