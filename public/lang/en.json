@@ -40,6 +40,7 @@
         "discovery": "You can be discovered:",
         "on-this-network": "on this network",
         "on-this-network_title": "You can be discovered by everyone on this network.",
+        "on-this-network-toggle_title": "Toggle whether you can be discovered by everyone on this network",
         "paired-devices": "by paired devices",
         "paired-devices_title": "You can be discovered by paired devices at all times independent of the network.",
         "public-room-devices": "in room {{roomId}}",
@@ -162,7 +163,9 @@
         "message-transfer-completed": "Message transfer completed",
         "unfinished-transfers-warning": "There are unfinished transfers. Are you sure you want to close PairDrop?",
         "rate-limit-join-key": "Rate limit reached. Wait 10 seconds and try again.",
-        "selected-peer-left": "Selected peer left"
+        "selected-peer-left": "Selected peer left",
+        "ip-discovery-enabled": "You are now discoverable on this network",
+        "ip-discovery-disabled": "You are no longer discoverable on this network"
     },
     "document-titles": {
         "file-received": "File Received",

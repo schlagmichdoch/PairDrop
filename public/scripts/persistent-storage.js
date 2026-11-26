@@ -57,6 +57,32 @@ class PersistentStorage {
         console.log("This browser does not support IndexedDB. Paired devices will be gone after the browser is closed.");
     }
 
+    static isIpDiscoveryEnabled() {
+        return new Promise((resolve) => {
+            PersistentStorage.get('ip_discovery_enabled')
+                .then(value => {
+                    // default to enabled unless explicitly disabled
+                    resolve(value !== false);
+                })
+                .catch(_ => {
+                    const stored = localStorage.getItem('ip_discovery_enabled');
+                    resolve(stored !== 'false');
+                });
+        });
+    }
+
+    static setIpDiscoveryEnabled(enabled) {
+        return new Promise((resolve) => {
+            PersistentStorage.set('ip_discovery_enabled', enabled)
+                .then(_ => resolve(enabled))
+                .catch(_ => {
+                    console.log("This browser does not support IndexedDB. Use localStorage instead.");
+                    localStorage.setItem('ip_discovery_enabled', enabled ? 'true' : 'false');
+                    resolve(enabled);
+                });
+        });
+    }
+
     static set(key, value) {
         return new Promise((resolve, reject) => {
             const DBOpenRequest = window.indexedDB.open('pairdrop_store');

@@ -61,6 +61,9 @@ export default class PairDropWsServer {
             case 'join-ip-room':
                 this._joinIpRoom(sender);
                 break;
+            case 'leave-ip-room':
+                this._onLeaveIpRoom(sender);
+                break;
             case 'room-secrets':
                 this._onRoomSecrets(sender, message);
                 break;
@@ -311,6 +314,10 @@ export default class PairDropWsServer {
 
     _joinIpRoom(peer) {
         this._joinRoom(peer, 'ip', peer.ip);
+    }
+
+    _onLeaveIpRoom(peer) {
+        this._leaveIpRoom(peer, true);
     }
 
     _joinSecretRoom(peer, roomSecret) {
