@@ -8,7 +8,7 @@
 <br>
 
 Here is a good guide on how to install PWAs on different platforms: \
-https://www.cdc.gov/niosh/mining/content/hearingloss/installPWA.html
+https://www.cdc.gov/niosh/mining/tools/installpwa.html
 
 
 **Chromium-based browser on Desktop (Chrome, Edge, Vivaldi, Brave, etc.)** \
