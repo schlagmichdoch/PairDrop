@@ -1,0 +1,12 @@
+{
+  "name": "pairdrop-cli-headless",
+  "private": true,
+  "type": "module",
+  "description": "Optional headless transport for PairDrop CLI",
+  "scripts": {
+    "test": "node test-headless.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

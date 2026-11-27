@@ -1050,7 +1050,7 @@ class PeersManager {
         if (window.isRtcSupported && rtcSupported) {
             this.peers[peerId] = new RTCPeer(this._server, isCaller, peerId, roomType, roomId, this._wsConfig.rtcConfig);
         }
-        else if (this._wsConfig.wsFallback) {
+        else if (this._wsConfig.wsFallback || !rtcSupported) {
             this.peers[peerId] = new WSPeer(this._server, isCaller, peerId, roomType, roomId);
         }
         else {
@@ -1070,9 +1070,9 @@ class PeersManager {
     }
 
     _onWsRelay(message) {
-        if (!this._wsConfig.wsFallback) return;
-
         const messageJSON = JSON.parse(message);
+        if (!this._wsConfig.wsFallback && messageJSON.sender?.rtcSupported !== false) return;
+
         if (messageJSON.type === 'ws-chunk') message = base64ToArrayBuffer(messageJSON.chunk);
         this.peers[messageJSON.sender.id]._onMessage(message);
     }
@@ -1124,7 +1124,7 @@ class PeersManager {
     }
 
     _onWsDisconnected() {
-        if (!this._wsConfig || !this._wsConfig.wsFallback) return;
+        if (!this._wsConfig) return;
 
         for (const peerId in this.peers) {
             if (!this._webRtcSupported(peerId)) {
